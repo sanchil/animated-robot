@@ -1,0 +1,651 @@
+//+------------------------------------------------------------------+
+//|                                                SanStrategies.mqh |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                                             https://www.mql5.com |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2024, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property strict
+#include <Sandeep/SanSignals.mqh>
+
+
+ORDERPARAMS       op1;
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+class SanStrategies
+  {
+private:
+   int               ticket;
+public:
+                     SanStrategies();
+                    ~SanStrategies();
+   SIGBUFF           imaSt1(const INDDATA &indData);
+   SIGBUFF           paSt1(const INDDATA &indData);
+
+   struct SS:public SANSIGNALS
+     {
+
+                     SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
+        {
+
+         //closeTrendSIG = sig.acfStdSIG(indData.ima5,10,SHIFT).closeTrendSIG;
+         //trendStrengthSIG = sig.acfStdSIG(indData.ima5,10,SHIFT).trendStrengthSIG;
+
+         tradeSIG = sig.tradeSignal(indData.std[SHIFT],indData.mfi[SHIFT],indData.atr,indData.adx[SHIFT],indData.adxPlus[SHIFT],indData.adxMinus[SHIFT]);
+         adxSIG =  sig.adxSIG(indData.adx[SHIFT],indData.adxPlus[SHIFT],indData.adxMinus[SHIFT]);
+         atrSIG =  sig.atrSIG(indData.atr,10);
+         priceActionSIG =  sig.priceActionCandleSIG(indData.open,indData.high,indData.low,indData.close);
+
+         fastIma514SIG = sig.fastSlowSIG(indData.ima5[SHIFT],indData.ima14[SHIFT],10);
+         fastIma1430SIG = sig.fastSlowSIG(indData.ima14[SHIFT],indData.ima30[SHIFT],10);
+         fastIma530SIG = sig.fastSlowSIG(indData.ima5[SHIFT],indData.ima30[SHIFT],10);
+
+         ima514SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima14,5,1);
+         ima1430SIG = sig.fastSlowTrendSIG(indData.ima14,indData.ima30,5,1);
+         ima530SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima30,5,1);
+         ima530_21SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima30,10,1);
+
+         //  ss.profitSIG = sig.closeOnProfitSIG(indData.closeProfit,0);
+         profitPercentageSIG = sig.closeOnProfitPercentageSIG(indData.currProfit,indData.maxProfit,indData.closeProfit);
+
+         fsig5 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima5[SHIFT],10);
+         fsig14 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima14[SHIFT],10);
+         fsig30 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima30[SHIFT],10);
+         sig5 = sig.fastSlowTrendSIG(indData.close, indData.ima5,5,1);
+         sig14 = sig.fastSlowTrendSIG(indData.close, indData.ima14,5,1);
+         sig30 = sig.fastSlowTrendSIG(indData.close, indData.ima30,5,1);
+         candleImaSIG = sig.candleImaSIG(indData.open,indData.close,indData.ima5,indData.ima14,indData.ima30,5,SHIFT);
+
+         volSIG =  sig.volumeSIG(indData.tick_volume,SHIFT,10);
+         lossSIG = sig.closeOnLossSIG(indData.stopLoss,0);
+         //        adxCovDivSIG = sig.adxCovDivSIG(indData.adx,indData.adxPlus,indData.adxMinus);
+
+         //cpSDSIG = sig.stdDevSIG(indData.close,"CP",10,SHIFT);
+         //ima5SDSIG = sig.stdDevSIG(indData.ima5,"IMA5",10,SHIFT);
+         //ima14SDSIG = sig.stdDevSIG(indData.ima14,"IMA14",10,SHIFT);
+         //ima30SDSIG = sig.stdDevSIG(indData.ima30,"IMA30",10,SHIFT);
+         cpSDSIG = sig.stdDevSIG(indData.close,"CP",21,SHIFT);
+         ima5SDSIG = sig.stdDevSIG(indData.ima5,"IMA5",21,SHIFT);
+         ima14SDSIG = sig.stdDevSIG(indData.ima14,"IMA14",21,SHIFT);
+         ima30SDSIG = sig.stdDevSIG(indData.ima30,"IMA30",21,SHIFT);
+
+
+         candleVolSIG = sig.candleVolSIG(indData.open,indData.close,indData.tick_volume,10,SHIFT);
+         candlePattStarSIG = sig.candleStar(indData.open,indData.high,indData.low,indData.close,0.1,0.5,10,1);
+
+         trendScatter5SIG = sig.trendScatterPlotSIG(indData.ima5,"Scatter-IMA5",0.1,5);
+         trendScatter14SIG = sig.trendScatterPlotSIG(indData.ima14,"Scatter-IMA14",0.1,5);
+         trendScatter30SIG =sig.trendScatterPlotSIG(indData.ima30,"Scatter-IMA30",0.1,5);
+         trendSlope5SIG = sig.trendSlopeSIG(indData.ima5,"IMA5",5);
+         trendSlope14SIG = sig.trendSlopeSIG(indData.ima14,"IMA14",5);
+         trendSlope30SIG = sig.trendSlopeSIG(indData.ima30,"IMA30",5);
+
+
+         if(_Period<PERIOD_M15)
+           {
+            // Print("Slope for: <M15: IMA30");
+            trendSlopeSIG = trendSlope30SIG;
+            trendScatterSIG = trendScatter30SIG;
+            closeTrendSIG = sig.acfStdSIG(indData.ima30,5,SHIFT).closeTrendSIG;
+            trendStrengthSIG = sig.acfStdSIG(indData.ima30,5,SHIFT).trendStrengthSIG;
+            trendVolRatioSIG =  sig.trendVolRatioSIG(indData.ima30,indData.volume,5,SHIFT).closeTrendSIG;
+            trendVolRatioStrengthSIG = sig.trendVolRatioSIG(indData.ima30,indData.volume,5,SHIFT).trendStrengthSIG;
+
+           }
+         else
+            if(_Period<PERIOD_H1)
+              {
+               //  Print("Slope for: <H1: IMA14");
+               trendSlopeSIG = trendSlope14SIG;
+               trendScatterSIG = trendScatter14SIG;
+               closeTrendSIG = sig.acfStdSIG(indData.ima14,5,SHIFT).closeTrendSIG;
+               trendStrengthSIG = sig.acfStdSIG(indData.ima14,5,SHIFT).trendStrengthSIG;
+               trendVolRatioSIG =  sig.trendVolRatioSIG(indData.ima14,indData.volume,5,SHIFT).closeTrendSIG;
+               trendVolRatioStrengthSIG = sig.trendVolRatioSIG(indData.ima14,indData.volume,5,SHIFT).trendStrengthSIG;
+              }
+            else
+               if(_Period<=PERIOD_D1)
+                 {
+                  //   Print("Slope for: <D1: IMA5");
+                  trendSlopeSIG = trendSlope5SIG;
+                  trendScatterSIG = trendScatter5SIG;
+                  closeTrendSIG = sig.acfStdSIG(indData.ima5,5,SHIFT).closeTrendSIG;
+                  trendStrengthSIG = sig.acfStdSIG(indData.ima5,5,SHIFT).trendStrengthSIG;
+                  trendVolRatioSIG =  sig.trendVolRatioSIG(indData.ima5,indData.volume,5,SHIFT).closeTrendSIG;
+                  trendVolRatioStrengthSIG = sig.trendVolRatioSIG(indData.ima5,indData.volume,5,SHIFT).trendStrengthSIG;
+                 }
+               else
+                 {
+                  //Print("Slope for else: IMA5");
+                  trendSlopeSIG = trendSlope5SIG;
+                  closeTrendSIG = sig.acfStdSIG(indData.ima5,3,SHIFT).closeTrendSIG;
+                  trendStrengthSIG = sig.acfStdSIG(indData.ima5,3,SHIFT).trendStrengthSIG;
+                  trendVolRatioSIG =  sig.trendVolRatioSIG(indData.ima5,indData.volume,5,SHIFT).closeTrendSIG;
+                  trendVolRatioStrengthSIG = sig.trendVolRatioSIG(indData.ima5,indData.volume,5,SHIFT).trendStrengthSIG;
+                 }
+         //mfiSIG = sig.mfiSIG(indData.mfi,trendSlopeSIG,10,1);
+         mfiSIG = sig.mfiSIG(indData.mfi,trendScatterSIG,10,1);
+
+        }
+
+                    ~SS() {}
+
+      void              printSignalStruct(SanUtils &util)
+        {
+         double currSpread = (int)MarketInfo(_Symbol,MODE_SPREAD);
+         Print("profitPercentageSIG: "+util.getSigString(profitPercentageSIG)+" lossSIG: "+util.getSigString(lossSIG)+" profitSIG: "+util.getSigString(profitSIG)+" cpSDSIG: "+util.getSigString(cpSDSIG)+" ima5SDSIG: "+util.getSigString(ima5SDSIG)+" ima14SDSIG: "+util.getSigString(ima14SDSIG)+" ima30SDSIG: "+util.getSigString(ima30SDSIG));
+         Print("ScatterTrend: "+util.getSigString(trendScatterSIG)+" ScatterTrend5: "+util.getSigString(trendScatter5SIG)+" ScatterTrend14: "+util.getSigString(trendScatter14SIG)+" ScatterTrend30: "+util.getSigString(trendScatter30SIG)+" trendVolSIG: "+util.getSigString(trendVolRatioSIG)+" trendVolStrengthSIG: "+util.getSigString(trendVolRatioStrengthSIG));
+         Print("Trend slope: "+util.getSigString(trendSlopeSIG)+" Trend5 slope: "+util.getSigString(trendSlope5SIG)+" Trend14 slope: "+util.getSigString(trendSlope14SIG)+"  Trend30 slope: "+util.getSigString(trendSlope30SIG)+" closeTrendSIG: "+util.getSigString(closeTrendSIG)+" trendStrengthSIG: "+util.getSigString(trendStrengthSIG));
+         Print("priceActionSIG: "+util.getSigString(priceActionSIG)+" volSIG: "+util.getSigString(volSIG)+" candleImaSIG: "+util.getSigString(candleImaSIG)+" candleVolSIG: "+util.getSigString(candleVolSIG)+" candlePattStarSIG: "+util.getSigString(candlePattStarSIG)+" adxSIG: "+util.getSigString(adxSIG)+" atrSIG: "+util.getSigString(atrSIG)+" mfiSIG: "+util.getSigString(mfiSIG));
+         Print("sig5: "+util.getSigString(sig5)+" sig14: "+util.getSigString(sig14)+" sig30: "+util.getSigString(sig30)+" ima514SIG: "+util.getSigString(ima514SIG)+" ima1430SIG: "+util.getSigString(ima1430SIG)+" ima530SIG: "+util.getSigString(ima530SIG)+" ima530_21SIG: "+util.getSigString(ima530_21SIG));
+         Print("fsig5: "+util.getSigString(fsig5)+" fsig14: "+util.getSigString(fsig14)+" fsig30: "+util.getSigString(fsig30)+" fastIma514SIG: "+util.getSigString(fastIma514SIG)+" fastIma1430SIG: "+util.getSigString(fastIma1430SIG)+" fastIma530SIG: "+util.getSigString(fastIma530SIG));
+         Print("Spread: "+currSpread+" openSIG: "+util.getSigString(openSIG)+" closeSIG: "+util.getSigString(closeSIG)+" tradeSIG: "+util.getSigString(tradeSIG));
+        }
+     };
+
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SanStrategies::SanStrategies()
+  {
+
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SanStrategies::~SanStrategies()
+  {
+  }
+
+
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
+  {
+   SIGBUFF sigBuff;
+
+// Set the trade strategy used by EA to open and close trades
+   sigBuff.buff3[0]=(int)STRATEGYTYPE::IMACLOSE;
+
+   int totalOrders=OrdersTotal();
+//  util.initTrade();
+   SAN_SIGNAL tradePosition = SAN_SIGNAL::NOSIG;
+
+   if(totalOrders>0)
+     {
+      for(int i=0; i<totalOrders; i++)
+        {
+         if(OrderSelect(i,SELECT_BY_POS))
+           {
+            if(OrderType()==OP_BUY)
+               tradePosition=SAN_SIGNAL::BUY;
+            if(OrderType()==OP_SELL)
+               tradePosition=SAN_SIGNAL::SELL;
+            if((OrderType()!=OP_SELL)&&(OrderType()!=OP_BUY)&&(OrderType()!=OP_SELLLIMIT)&&(OrderType()!=OP_BUYLIMIT)&&(OrderType()!=OP_SELLSTOP)&&(OrderType()!=OP_BUYSTOP))
+               tradePosition=SAN_SIGNAL::NOSIG;
+           }
+        }
+     }
+
+
+   if(util.isNewBar())
+     {
+      op1.NEWCANDLE = true;
+      op1.TRADED=false;
+     }
+   if(!(util.isNewBar()) && (totalOrders > 0))
+     {
+      op1.NEWCANDLE = false;
+      op1.TRADED=true;
+     }
+
+
+//SANSIGNALS ss;
+//TRENDSTRUCT t;
+//TRENDSTRUCT tVol;
+//TRENDSTRUCT tTrend;
+   TRENDSTRUCT tRatioTrend;
+
+   int SHIFT = (indData.shift || 1);
+
+   SS ss(sig,indData,SHIFT);
+   SAN_SIGNAL openSIG = SAN_SIGNAL::NOSIG;
+   SAN_SIGNAL closeSIG = SAN_SIGNAL::NOSIG;
+   SAN_SIGNAL closeCondSIG = SAN_SIGNAL::NOSIG;
+
+//   t = sig.acfStdSIG(indData.ima5,10,SHIFT);
+//   ss.closeTrendSIG = t.closeTrendSIG;
+//   ss.trendStrengthSIG = t.trendStrengthSIG;
+//
+//
+//// tVol = sig.acfStdSIG(indData.tick_volume,10,SHIFT);
+//// Print("tVol trend: "+util.getSigString(tVol.closeTrendSIG)+" tVol slope: "+util.getSigString(tVol.trendStrengthSIG));
+//
+//  tRatioTrend = sig.trendRatioSIG(indData.ima5,"ima5");
+//   Print("tRatio trend: "+util.getSigString(tRatioTrend.closeTrendSIG)+" tRatioTrend Slope: "+util.getSigString(tRatioTrend.trendStrengthSIG));
+// sig.trendSlopeSIG(indData.ima5,"IMA5");
+//
+
+// ################# Open Signal ###################################################
+
+//bool spreadBool = (currspread < tl.spreadLimit);
+//   Print("currspread: "+currspread+" indData.currSpread: "+indData.currSpread);
+   bool spreadBool = (indData.currSpread < tl.spreadLimit);
+
+   SANSIGBOOL sb(ss);
+   sb.spreadBool = spreadBool;
+
+//   sb.printStruct();
+
+   bool openOrder = (op1.NEWCANDLE && (totalOrders==0));
+
+
+   bool spreadVolBool = (sb.spreadBool && (ss.volSIG==SAN_SIGNAL::OPEN));
+   bool trendBool = (sb.healthyTrendBool && sb.healthyTrendStrengthBool && !sb.flatTrendBool);
+   bool atrBool = ((ss.atrSIG == SANTRENDSTRENGTH::NORMAL)||(ss.atrSIG == SANTRENDSTRENGTH::HIGH));
+   bool sig5TrendBool = ((ss.sig5!=SAN_SIGNAL::NOSIG) && (ss.sig5==ss.priceActionSIG) && (ss.sig5==ss.adxSIG) && atrBool);
+   bool tradeBool = (ss.tradeSIG==SAN_SIGNAL::TRADE);
+   bool notFlatBool = ((ss.adxSIG != SAN_SIGNAL::SIDEWAYS)&&(ss.adxSIG!=SAN_SIGNAL::NOSIG)&&(ss.trendSlopeSIG!=SANTREND::FLAT)&&(ss.trendSlopeSIG!=SANTREND::NOTREND));
+   bool mfiTradeBool = (ss.mfiSIG == SAN_SIGNAL::TRADE);
+   bool mfiSIGBool = ((ss.mfiSIG == SAN_SIGNAL::BUY)||(ss.mfiSIG == SAN_SIGNAL::SELL));
+
+   bool slowOpenTrade1 = (spreadVolBool && (ss.mfiSIG==util.convTrendToSig(ss.trendSlopeSIG)) && notFlatBool && tradeBool);
+   bool slowOpenTrade2 = (spreadVolBool && (ss.mfiSIG==util.convTrendToSig(ss.trendSlopeSIG)) && notFlatBool && (sb.sigBool||sb.sigBool1) && ((ss.ima530_21SIG==ss.sig5) || (ss.sig5==util.convTrendToSig(ss.trendSlopeSIG))));
+   bool slowOpenTrade3 = (spreadVolBool && (ss.mfiSIG==util.convTrendToSig(ss.trendSlopeSIG)) && notFlatBool && (sb.imaWaveBool||sb.imaWaveBool1) && ((ss.ima530_21SIG==ss.ima530SIG) || (ss.sig5==util.convTrendToSig(ss.trendSlopeSIG))));
+
+   bool slowOpenTrade4 = (spreadVolBool && notFlatBool && (ss.sig5==ss.fsig5) && sb.fsigBool && sb.sigBool);
+   bool slowOpenTrade5 = (spreadVolBool && ((ss.trendSlopeSIG==SANTREND::UP)||(ss.trendSlopeSIG==SANTREND::DOWN)));
+   bool slowOpenTrade6 = (spreadVolBool && ((ss.trendVolRatioSIG==SANTREND::UP)||(ss.trendVolRatioSIG==SANTREND::DOWN)));
+
+   bool slowOpenTrade7 = (spreadVolBool &&(util.convTrendToSig(ss.trendVolRatioSIG)==ss.candleVolSIG) && (ss.candleVolSIG==SAN_SIGNAL::SELL)||(ss.candleVolSIG==SAN_SIGNAL::BUY)&&((ss.trendVolRatioSIG==SANTREND::UP)||(ss.trendVolRatioSIG==SANTREND::DOWN)));
+   bool slowOpenTrade8 = (spreadVolBool &&(util.convTrendToSig(ss.trendScatterSIG)==ss.candleVolSIG) && (ss.candleVolSIG==SAN_SIGNAL::SELL)||(ss.candleVolSIG==SAN_SIGNAL::BUY)&&((ss.trendScatterSIG==SANTREND::UP)||(ss.trendScatterSIG==SANTREND::DOWN)));
+   bool slowOpenTrade9 = (spreadVolBool &&(util.convTrendToSig(ss.trendSlopeSIG)==ss.candleVolSIG) && (ss.candleVolSIG==SAN_SIGNAL::SELL)||(ss.candleVolSIG==SAN_SIGNAL::BUY)&&((ss.trendSlopeSIG==SANTREND::UP)||(ss.trendScatterSIG==SANTREND::DOWN)));
+
+
+   SANTREND slopeTrendSIG = ss.trendSlopeSIG;
+   bool slowSlopeTrend = (spreadVolBool && (ss.mfiSIG!=SAN_SIGNAL::NOSIG) && (ss.mfiSIG==ss.candleVolSIG)&&(ss.candleVolSIG==util.convTrendToSig(slopeTrendSIG)));//(spreadVolBool && (ss.mfiSIG==util.convTrendToSig(slopeTrendSIG))&&((slopeTrendSIG==SANTREND::UP)||(slopeTrendSIG==SANTREND::DOWN))&&(util.convTrendToSig(slopeTrendSIG)==ss.candleVolSIG) && (ss.candleVolSIG==SAN_SIGNAL::SELL)||(ss.candleVolSIG==SAN_SIGNAL::BUY));
+   bool slowOpenTrade10 = (spreadVolBool && (ss.mfiSIG!=SAN_SIGNAL::NOSIG) && (ss.mfiSIG==ss.candleVolSIG));
+
+
+   bool fastOpenTrade1 = (spreadBool  && (ss.candleImaSIG!=SAN_SIGNAL::NOSIG));
+   bool fastOpenTrade2 = (spreadBool  && trendBool && ((ss.priceActionSIG==SAN_SIGNAL::BUY)||(ss.priceActionSIG==SAN_SIGNAL::SELL)));
+
+   bool fastOpenTrade3 = (spreadBool  && (ss.fsig5==ss.sig5));
+   bool fastOpenTrade4 = (spreadBool  && (ss.fastIma530SIG==ss.ima530SIG));
+//   bool fastOpenTrade5 = ((ss.fsig14 == ss.fastIma530SIG) && sb.fimaWaveBool);
+   bool fastOpenTrade5 = (spreadBool  && util.equivalentSigTrend(ss.fastIma530SIG,ss.trendSlopeSIG));
+   bool fastOpenTrade6 = (spreadBool  && sb.imaWaveBool1);
+   bool fastOpenTrade7 = (spreadBool  && (ss.sig5!=SAN_SIGNAL::NOSIG) && (ss.sig5==ss.priceActionSIG));
+   bool fastOpenTrade8 = (spreadBool  && sb.sigBool1);
+   bool fastOpenTrade9 = (spreadBool  && sb.fsigBool);
+   bool fastOpenTrade10 = (spreadBool && (ss.trendSlopeSIG==SANTREND::UP)||(ss.trendSlopeSIG!=SANTREND::DOWN));
+   bool fastOpenTrade11 = (spreadBool && sb.sigBool);
+   bool fastOpenTrade12 = (spreadBool  && sb.imaWaveBool);
+   bool fastOpenTrade13 = (spreadBool && sb.starBool);
+
+
+   bool slowOpenTrend = (openOrder && (slowOpenTrade1));
+   bool slowOpenSig = (openOrder && (slowOpenTrade2));
+   bool slowOpenIma = (openOrder && slowOpenTrade3);
+   bool slowOpenCandleTrendVol = (openOrder && slowSlopeTrend);
+   bool slowMfiCandleVol = (openOrder && slowOpenTrade10);
+
+
+//bool openTrade = (fastOpenTrade1 || fastOpenTrade4 || fastOpenTrade5);
+   bool openCandleIma = (openOrder && fastOpenTrade1);
+   bool openTradePriceAction = (openOrder && fastOpenTrade2);
+   bool openTradefSig5 = (openOrder && (fastOpenTrade3 && fastOpenTrade9));
+   bool openImaWave = (openOrder && (fastOpenTrade12));
+   bool openTradeSig5 = (openOrder && (fastOpenTrade11));
+
+   bool openTradeTrend = (openOrder && fastOpenTrade10);
+   bool openStar = (openOrder && fastOpenTrade13);
+
+
+
+
+
+
+
+
+
+
+
+//   bool openTrade = (fastOpenTrade2);
+
+
+//bool closeLoss = ((_Period >= PERIOD_M15) && (ss.lossSIG == SAN_SIGNAL::CLOSE));
+//bool closeProfitLoss = ((_Period >= PERIOD_M15) && (ss.profitPercentageSIG == SAN_SIGNAL::CLOSE));
+//   bool closeLoss = (((_Period > PERIOD_H1)&&(_Period < PERIOD_D1)) && (ss.lossSIG == SAN_SIGNAL::CLOSE));
+   bool closeLoss = (ss.lossSIG == SAN_SIGNAL::CLOSE);
+   bool closeProfitLoss = (ss.profitPercentageSIG == SAN_SIGNAL::CLOSE);
+
+   bool atrCloseTrade = ((ss.atrSIG==SANTRENDSTRENGTH::WEAK)||(ss.atrSIG==SANTRENDSTRENGTH::POOR));
+   bool closeTrade1 = sb.flatTrendBool;
+   bool closeTrade2 = (ss.trendSlopeSIG==SANTREND::FLAT);
+   bool closeTrade3 = (ss.adxSIG==SAN_SIGNAL::SIDEWAYS)||(ss.candleVolSIG==SAN_SIGNAL::SIDEWAYS)||(ss.trendScatterSIG==SANTREND::FLAT);
+   bool closeTrade4 = (util.oppSignal(util.convTrendToSig(ss.trendSlopeSIG),tradePosition));
+   bool closeTrade5 = (util.oppSignal(util.convTrendToSig(ss.trendSlopeSIG),tradePosition));
+   bool closeTrade6 = (util.oppSignal(util.convTrendToSig(ss.closeTrendSIG),tradePosition));
+   bool closeTrade7 = (util.oppSignal(util.convTrendToSig(ss.trendVolRatioSIG),tradePosition));
+   bool closeTrade8 = (util.oppSignal(util.convTrendToSig(ss.trendScatterSIG),tradePosition));
+
+   bool closeFlatTrade = (spreadBool && (closeTrade1||closeTrade2||closeTrade3));
+
+//bool closeTrade = (closeTrade7);
+//closeCondSIG = util.convTrendToSig(ss.trendVolRatioSIG);
+
+   bool closeTrade = (closeTrade5);
+   closeCondSIG = util.convTrendToSig(ss.trendSlopeSIG);
+
+
+
+
+   bool noCloseConditions = (!closeFlatTrade);
+//   bool noCloseConditions = (true);
+
+   bool shortCycle = true;
+   bool longCycle = false;
+   bool allCycle = true;
+
+   if(shortCycle && (_Period <= PERIOD_M15) && slowOpenIma && noCloseConditions)
+     {
+      openSIG = ss.ima530SIG;
+      closeSIG = ss.ima530SIG;
+     }
+   else
+      if(shortCycle && (_Period <= PERIOD_M15) && slowOpenSig && noCloseConditions)
+        {
+         openSIG = ss.sig5;
+         closeSIG = ss.sig5;
+        }
+      else
+         if(longCycle && (_Period >= PERIOD_M30) && openCandleIma)
+           {
+            openSIG = ss.candleImaSIG;
+            //closeSIG = ss.candleImaSIG;
+           }
+         else
+            if(longCycle && (_Period >= PERIOD_M30) && openTradeSig5 && noCloseConditions)
+              {
+               openSIG = ss.sig5;
+               //closeSIG = ss.sig5;
+              }
+            else
+               if(longCycle && (_Period >= PERIOD_M30) && openImaWave && noCloseConditions)
+                 {
+                  openSIG = ss.fastIma530SIG;
+                  // closeSIG = ss.fastIma530SIG;
+                 }
+               else
+                  if(longCycle && (_Period >= PERIOD_M30) && openTradeTrend && noCloseConditions)
+                    {
+                     openSIG = util.convTrendToSig(ss.trendSlopeSIG);
+                     //closeSIG = util.convTrendToSig(ss.trendSlopeSIG);
+                    }
+                  else
+                     if(longCycle && (_Period >= PERIOD_M30) && openTradefSig5 && noCloseConditions)
+                       {
+                        openSIG = ss.fsig5;
+                        //        closeSIG = ss.fsig5;
+                       }
+                     else
+                        if(longCycle && (_Period >= PERIOD_M30) && openTradePriceAction && noCloseConditions)
+                          {
+                           openSIG = ss.priceActionSIG;
+                           //         closeSIG = ss.priceActionSIG;
+                          }
+                        else
+                           if(longCycle && (_Period >= PERIOD_M30) && openStar && noCloseConditions)
+                             {
+                              openSIG = ss.candlePattStarSIG;
+                              //          closeSIG = ss.candlePattStarSIG;
+                             }
+                           else
+                              if(allCycle && slowOpenTrend && noCloseConditions)
+                                {
+                                 openSIG = util.convTrendToSig(ss.closeTrendSIG);
+                                 // closeSIG = util.convTrendToSig(ss.closeTrendSIG);
+                                }
+                              //else
+                              //   if(allCycle && slowOpenCandleTrendVol && noCloseConditions)
+                              //     {
+                              //      openSIG = ss.candleVolSIG;
+                              //      closeSIG = ss.candleVolSIG;
+                              //     }
+                                 else
+                                    if(allCycle && slowMfiCandleVol && noCloseConditions)
+                                      {
+                                       openSIG = ss.mfiSIG;
+                                       closeSIG = ss.mfiSIG;
+                                      }
+                                    else
+                                       if(false && closeLoss)
+                                         {
+                                          closeSIG = SAN_SIGNAL::CLOSE;
+                                          sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
+                                          Print("[imaSt1]: closeLoss CLOSE detected:."+ util.getSigString(closeSIG));
+                                          // util.writeData("close_order.txt","[imaSt1]: profitPercentage CLOSE detected:."+ util.getSigString(ss.closeSIG));
+                                         }
+                                       else
+                                          if(false && closeProfitLoss)
+                                            {
+                                             closeSIG = SAN_SIGNAL::CLOSE;
+                                             sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
+                                             Print("[imaSt1]: profitPercentage CLOSE detected:."+ util.getSigString(closeSIG));
+                                             // util.writeData("close_order.txt","[imaSt1]: profitPercentage CLOSE detected:."+ util.getSigString(ss.closeSIG));
+                                            }
+                                          else
+                                             if(false  && closeFlatTrade)
+                                               {
+                                                closeSIG = SAN_SIGNAL::CLOSE;
+                                                sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
+                                                Print("[imaSt1]: closeTrade: "+closeTrade+" close detected: "+ util.getSigString(closeSIG));
+                                                //util.writeData("close_order.txt",""[imaSt1]: closeTrade4: "+closeTrade5+" close detected: "+ util.getSigString(ss.closeSIG));
+                                               }
+                                             else
+                                                if(true && closeTrade)
+                                                  {
+                                                   closeSIG = SAN_SIGNAL::CLOSE;
+                                                   sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
+                                                   Print("[imaSt1]: closeTrade: "+closeTrade+" close detected: "+ util.getSigString(closeSIG));
+                                                   //util.writeData("close_order.txt",""[imaSt1]: closeTrade4: "+closeTrade5+" close detected: "+ util.getSigString(ss.closeSIG));
+                                                  }
+//bool b = (closeSIG!=SAN_SIGNAL::NOSIG)&&(!closeTrade5)&&(openSIG)
+   if(openSIG == closeCondSIG)
+      ss.openSIG = openSIG;
+   ss.closeSIG = closeSIG;
+
+//##############################################################################################
+//##############################################################################################
+//Print("New Candle: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" closeProfit: "+closeProfitLoss);
+   if(((int)ss.openSIG!=SAN_SIGNAL::NOSIG)||((int)ss.closeSIG!=SAN_SIGNAL::NOSIG))
+      Print("New Candle: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" buff sig: openSig: "+util.getSigString((int)ss.openSIG)+" closeSig: "+util.getSigString((int)ss.closeSIG)+" closeProfit: "+closeProfitLoss);
+//Print("buff sig: openSig: "+util.getSigString((int)ss.openSIG)+" closeSig: "+util.getSigString((int)ss.closeSIG));
+   sigBuff.buff1[0]=(int)ss.openSIG;
+   sigBuff.buff2[0]=(int)ss.closeSIG;
+   sigBuff.buff4[0] = (int)ss.tradeSIG;
+
+
+////Print("Value of BUY: "+SAN_SIGNAL::BUY);
+//sigBuff.buff1[0]=(int)SAN_SIGNAL::BUY;
+//sigBuff.buff2[0]=(int)ss.closeSIG;
+
+// ss.printSignalStruct(util);
+//Print("closeProfitLoss: "+closeProfitLoss+" closeLoss: "+closeLoss+" closeTrade5 "+closeTrade5+" closeTrade6 "+closeTrade6+" closeTrade7 "+closeTrade7+" closeTrade: "+closeTrade);
+//Print("openCandleIma: "+openCandleIma+" openImaWave: "+openImaWave+" openTradefSig5: "+openTradefSig5+" openTradeSig5: "+openTradeSig5+" openTradePriceAction: "+openTradePriceAction+" openTradeTrend: "+openTradeTrend+" openStar: "+openStar);
+//   Print("fsig5: "+util.getSigString(fsig5)+" fsig14: "+util.getSigString(fsig14)+" fsig30: "+util.getSigString(fsig30)+" fastIma514SIG: "+util.getSigString(fastIma514SIG)+" fastIma1430SIG: "+util.getSigString(fastIma1430SIG)+" fastIma530SIG: "+util.getSigString(fastIma530SIG));
+
+   Print("ScatterTrend: "+util.getSigString(ss.trendScatterSIG)+" ScatterTrend5: "+util.getSigString(ss.trendScatter5SIG)+" ScatterTrend14: "+util.getSigString(ss.trendScatter14SIG)+" ScatterTrend30: "+util.getSigString(ss.trendScatter30SIG)+" trendVolSIG: "+util.getSigString(ss.trendVolRatioSIG)+" trendVolStrengthSIG: "+util.getSigString(ss.trendVolRatioStrengthSIG)+" mfiSIG: "+util.getSigString(ss.mfiSIG));
+   Print("Trend slope: "+util.getSigString(ss.trendSlopeSIG)+" Trend5 slope: "+util.getSigString(ss.trendSlope5SIG)+" Trend14 slope: "+util.getSigString(ss.trendSlope14SIG)+"  Trend30 slope: "+util.getSigString(ss.trendSlope30SIG)+" closeTrendSIG: "+util.getSigString(ss.closeTrendSIG)+" trendStrengthSIG: "+util.getSigString(ss.trendStrengthSIG));
+   Print("sig5: "+util.getSigString(ss.sig5)+" sig14: "+util.getSigString(ss.sig14)+" sig30: "+util.getSigString(ss.sig30)+" ima514SIG: "+util.getSigString(ss.ima514SIG)+" ima1430SIG: "+util.getSigString(ss.ima1430SIG)+" ima530SIG: "+util.getSigString(ss.ima530SIG)+" ima530_21SIG: "+util.getSigString(ss.ima530_21SIG)+" volSIG: "+util.getSigString(ss.volSIG)+" candleImaSIG: "+util.getSigString(ss.candleImaSIG)+" candleVolSIG: "+util.getSigString(ss.candleVolSIG));
+
+   Print("slowOpenTrend: "+slowOpenTrend+" slowOpenSig: "+slowOpenSig+" slowOpenIma: "+slowOpenIma+" slowOpenCandleTrendVol: "+slowOpenCandleTrendVol+" slowMfiCandleVol: "+slowMfiCandleVol);
+   Print("[newCandle]: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" Current position: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" "+ " flatCandle: "+closeFlatTrade+" closeTrade: "+closeTrade);
+
+   return sigBuff;
+  }
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SIGBUFF SanStrategies::paSt1(const INDDATA &indData)
+  {
+   SIGBUFF sigBuff;
+// Set the trade strategy used by EA to open and close trades
+   sigBuff.buff3[0]=(int)STRATEGYTYPE::IMACLOSE;
+
+   int totalOrders=OrdersTotal();
+
+   if(util.isNewBar())
+      op1.NEWCANDLE = true;
+   if(!(util.isNewBar()) && (totalOrders > 0))
+      op1.NEWCANDLE = false;
+
+
+//if(util.isNewBar())
+//  {
+//   op1.NEWCANDLE = true;
+//  }
+//else
+//   if(!(util.isNewBar()) && (totalOrders==0))
+//     {
+//      op1.NEWCANDLE = -10000.314;
+//     }
+//   else
+//      if(!(util.isNewBar()) && (totalOrders > 0))
+//        {
+//         op1.NEWCANDLE = false;
+//        }
+
+
+//SANSIGNALS ss;
+   TRENDSTRUCT t;
+
+   int SHIFT = (indData.shift || 1);
+   SS  ss(sig,indData,SHIFT);
+
+
+
+// ################# Open Signal ###################################################
+
+   bool spreadBool = (indData.currSpread < tl.spreadLimit);
+
+   SANSIGBOOL sb(ss);
+   sb.spreadBool = spreadBool;
+   string printStr="";
+
+//   sb.printStruct();
+
+//   SANSIGBOOL sb = sig.getSigBool(indData) ;
+
+
+   bool spreadVolBool = (sb.spreadBool && (ss.volSIG==SAN_SIGNAL::OPEN));
+
+// f(ima,volTrend and atradx). A very conservative signal
+// current spread within limit
+// adx signal matches 1430 signal
+// atr says trade
+// 514 matches 1430
+// signal5 matches 1430
+// vol is open trend is acceptable and reasonably strong
+
+//   bool paOpenTrade1 = (spreadBool && (ss.priceActionSIG != SAN_SIGNAL::NOSIG) && (ss.priceActionSIG == ss.ima1430SIG));
+   bool paOpenTrade1 = (spreadBool && (ss.priceActionSIG != SAN_SIGNAL::NOSIG) && (ss.priceActionSIG == ss.ima530SIG));
+   bool paOpenTrade2 = (spreadBool && (ss.priceActionSIG != SAN_SIGNAL::NOSIG)&& (ss.priceActionSIG == ss.candleVolSIG));
+   bool paOpenTrade3 = (spreadBool && (ss.priceActionSIG != SAN_SIGNAL::NOSIG) && (ss.priceActionSIG==ss.sig5));
+   bool paOpenTrade4 = (spreadBool && (ss.priceActionSIG != SAN_SIGNAL::NOSIG)&& (ss.priceActionSIG == ss.candleImaSIG));
+//bool paOpenTrade = (paOpenTrade1||paOpenTrade2||paOpenTrade3||paOpenTrade4);
+   bool paOpenTrade = (paOpenTrade3);
+
+   bool openTrade7 = (spreadVolBool && (ss.candlePattStarSIG!=SAN_SIGNAL::NOSIG));
+
+
+   bool closeTrade1 = (sb.spreadBool && (ss.volSIG==SAN_SIGNAL::CLOSE) && sb.imaSDNoNoTradeBool);
+   bool closeTrade2 = (sb.spreadBool && (ss.volSIG==SAN_SIGNAL::CLOSE) && sb.imaSDNoTradeBool);
+
+
+   bool paCloseBool = (sb.spreadBool&&(ss.volSIG==SAN_SIGNAL::CLOSE) && (ss.priceActionSIG != SAN_SIGNAL::NOSIG) && ((ss.priceActionSIG!=ss.sig5)&&(ss.priceActionSIG!=ss.candleVolSIG)&&(ss.priceActionSIG == ss.ima530SIG)&&(ss.priceActionSIG == ss.candleImaSIG)));
+//     bool paCloseBool = (sb.spreadBool&&(ss.volSIG==SAN_SIGNAL::CLOSE) && (ss.priceActionSIG != SAN_SIGNAL::NOSIG) && (ss.priceActionSIG!=ss.fsig5));
+
+   bool closeLoss = (ss.lossSIG == SAN_SIGNAL::CLOSE);
+   bool closeProfitLoss = (ss.profitPercentageSIG == SAN_SIGNAL::CLOSE);
+
+   printStr += "paOpenTrade1: "+paOpenTrade1+" paOpenTrade2: "+paOpenTrade2+" paOpenTrade3: "+paOpenTrade3+" paOpenTrade4: "+paOpenTrade4+" paCloseBool: "+paCloseBool+" closeProfitLoss: "+closeProfitLoss+" closeLoss: "+closeLoss+" NewCandle: "+op1.NEWCANDLE;
+
+   if(true && paOpenTrade && !closeProfitLoss && !closeLoss)
+     {
+      ss.openSIG = ss.priceActionSIG;
+      ss.closeSIG = ss.priceActionSIG;
+      Print("(paOpenTrade) OPEN detected: "+printStr+" :: " + util.getSigString(ss.openSIG));
+      //util.writeData("open_order.txt","(paOpenTrade1) OPEN detected: "+ util.getSigString(ss.openSIG));
+
+     }
+   if(true && openTrade7 && !closeProfitLoss && !closeLoss)
+     {
+      ss.openSIG = ss.candlePattStarSIG;
+      ss.closeSIG = ss.candlePattStarSIG;
+      Print("(openTrade7) OPEN detected: "+ util.getSigString(ss.openSIG));
+      //util.writeData("open_order.txt","(openTrade7) OPEN detected: "+ util.getSigString(ss.openSIG));
+
+     }
+
+   else
+      if(true && closeLoss)
+        {
+         ss.closeSIG = ss.lossSIG;
+         sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
+         Print("lossSignal close detected:."+ util.getSigString(ss.closeSIG));
+         //util.writeData("close_order.txt","lossSignal CLOSE detected:."+ util.getSigString(ss.closeSIG));
+        }
+      else
+         if(true && closeProfitLoss)
+           {
+            ss.closeSIG = ss.profitPercentageSIG;
+            sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
+            Print("PriceAction]: profitPercentage close detected:."+ util.getSigString(ss.closeSIG));
+            //util.writeData("close_order.txt","PriceAction]: profitPercentage CLOSE detected:."+ util.getSigString(ss.closeSIG));
+           }
+         else
+            if(true && paCloseBool)
+              {
+               ss.closeSIG = SAN_SIGNAL::CLOSE;
+               sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
+               Print("paCloseBool close detected:."+ util.getSigString(ss.closeSIG));
+               //util.writeData("close_order.txt","paCloseBool CLOSE detected:."+ util.getSigString(ss.closeSIG));
+              }
+
+
+   Print(printStr);
+
+
+//##############################################################################################
+//##############################################################################################
+
+
+   sigBuff.buff2[0]=(int)ss.closeSIG;
+   sigBuff.buff4[0] = (int)ss.tradeSIG;
+   sigBuff.buff1[0]=(int)ss.openSIG;
+   util.printSignalStruct(ss);
+   return sigBuff;
+
+  }
+
+
+SanStrategies st1;
+
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
