@@ -1,6 +1,7 @@
 Logs/
 **/*.log
 # Compiled MQL4 files
+**/*.ex4
 *.ex4
 
 # MetaTrader 4 temporary and log files
@@ -10,6 +11,8 @@ Logs/
 *.fxt
 *.tks
 *.ord
+**/*.fxt
+**/*.hst
 
 # MetaEditor temporary files
 *.bak
@@ -23,6 +26,8 @@ Remote/
 config/
 history/
 logs/
+tester/
+templates/
 
 # Project-specific build outputs
 *.exp
