@@ -2,7 +2,6 @@ Logs/
 **/*.log
 # Compiled MQL4 files
 **/*.ex4
-*.ex4
 
 # MetaTrader 4 temporary and log files
 *.log
