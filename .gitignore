@@ -1,9 +1,6 @@
 Logs/
 **/*.log
 # Compiled MQL4 files
-Experts/Sandeep/ea1.ex4
-Indicators/Sandeep/ind1.ex4
-
 **/*.ex4
 
 # MetaTrader 4 temporary and log files

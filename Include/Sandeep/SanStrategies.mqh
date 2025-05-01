@@ -403,7 +403,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
       // util.writeData("close_order.txt","[imaSt1]: profitPercentage CLOSE detected:."+ util.getSigString(ss.closeSIG));
      }
    else
-      if(true && closeOrder && closeProfitLoss)// && sb.candlePipAlarm)
+      if(false && closeOrder && closeProfitLoss)// && sb.candlePipAlarm)
         {
          closeSIG = SAN_SIGNAL::CLOSE;
          sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
