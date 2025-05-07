@@ -367,6 +367,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool closeTradeL1 = (closeTrade14);
    bool closeTradeL2 = (closeTrade9||closeTrade14);
    bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade27||closeTrade28||closeTrade29);
+   bool closeTradeL5 = (closeTrade29);
 //   bool closeTradeL4 = (closeTrade14||closeTrade18||closeTrade19||closeTrade20||closeTrade26||closeTrade27||closeTrade28||closeTrade29);
 //   bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade29);
 // bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade27||closeTrade29);
@@ -384,7 +385,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool openCandleVol = (fastOpenTrade12||fastOpenTrade13);
    bool openStar = (fastOpenTrade2);
    bool closeFlatTrade = (spreadBool && (flatBool));
-   bool closeTrade = (closeTradeL3);
+   bool closeTrade = (closeTradeL5);
    bool noCloseConditions = (!closeFlatTrade);
 
 //#################################################################################
@@ -470,7 +471,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
 //   if(cond1 && cond2 && cond3)
 // if(cond3 && cond5 && cond6)
 // if(cond6)
-   if(!closeTradeL3)
+   if(!closeTrade)
       ss.openSIG = openSIG;
    ss.closeSIG = closeSIG;
 
