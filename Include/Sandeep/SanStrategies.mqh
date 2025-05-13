@@ -471,8 +471,8 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
 //   if(cond1 && cond2 && cond3)
 // if(cond3 && cond5 && cond6)
 // if(cond6)
-//   if(!closeTrade)
-   ss.openSIG = openSIG;
+   if(!closeTrade)
+      ss.openSIG = openSIG;
    ss.closeSIG = closeSIG;
 
 
