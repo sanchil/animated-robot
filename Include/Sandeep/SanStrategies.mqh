@@ -232,6 +232,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
 
 //################################################################
 //################################################################
+   //bool openOrder = ((totalOrders==0));   
    bool openOrder = (op1.NEWCANDLE && (totalOrders==0));
    bool closeOrder = (!op1.NEWCANDLE && (totalOrders>0));
 //SANTREND slopeTrendSIG = ss.acfTrendSIG;
