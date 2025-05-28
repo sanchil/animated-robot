@@ -54,7 +54,7 @@ public:
          ima530SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima30,21,1);
          ima530_21SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima30,21,1);
 
-         //  ss.profitSIG = sig.closeOnProfitSIG(indData.closeProfit,0);
+         profitSIG = sig.closeOnProfitSIG(indData.currProfit,indData.closeProfit,0);
          profitPercentageSIG = sig.closeOnProfitPercentageSIG(indData.currProfit,indData.maxProfit,indData.closeProfit);
 
          fsig5 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima5[SHIFT],21);
@@ -232,7 +232,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
 
 //################################################################
 //################################################################
-   //bool openOrder = ((totalOrders==0));   
+//bool openOrder = ((totalOrders==0));
    bool openOrder = (op1.NEWCANDLE && (totalOrders==0));
    bool closeOrder = (!op1.NEWCANDLE && (totalOrders>0));
 //SANTREND slopeTrendSIG = ss.acfTrendSIG;
@@ -315,14 +315,16 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
 //// #################################################################################
    bool fastOpenTrade10 = (fastOpenTrade3||fastOpenTrade4||fastOpenTrade5||fastOpenTrade6);
    bool fastOpenTrade11 = (slopeTrendVarBool && (dominantSIG!=SAN_SIGNAL::NOSIG) && (dominantSIG!=SAN_SIGNAL::CLOSE));
-   
+
    bool fastOpenTrade12 = (fastOpenTrade11 && (dominantSIG==hSig.mainFastSIG));
    bool fastOpenTrade13 = (fastOpenTrade11 && (dominantSIG==hSig.slopeFastSIG));
    bool fastOpenTrade14 = (fastOpenTrade11 && (dominantSIG==hSig.rsiFastSIG));
 
 
    bool closeLoss = (ss.lossSIG == SAN_SIGNAL::CLOSE);
-   bool closeProfitLoss = ((_Period >= PERIOD_M1) && (ss.profitPercentageSIG == SAN_SIGNAL::CLOSE));
+//bool closeProfitLoss = ((_Period >= PERIOD_M1) && (ss.profitPercentageSIG == SAN_SIGNAL::CLOSE));
+   bool closeProfitLoss = ((_Period >= PERIOD_M1) && (ss.profitSIG == SAN_SIGNAL::CLOSE));
+
 
 //SAN_SIGNAL pp = SAN_SIGNAL::CLOSE;
 //bool closeProfitLoss1 = ((_Period >= PERIOD_M1) && (pp == SAN_SIGNAL::CLOSE));
@@ -449,7 +451,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
                      ss.closeSIG = commonSIG;
                     }
                   else
-                     if(true && closeOrder && closeTrade)// && !openCandleIma)// && !slowMfi)
+                     if(false && closeOrder && closeTrade)// && !openCandleIma)// && !slowMfi)
                        {
                         closeSIG = SAN_SIGNAL::CLOSE;
                         sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
