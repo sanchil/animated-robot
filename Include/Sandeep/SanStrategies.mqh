@@ -367,7 +367,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool closeTrade27 = (closeTrade16 && closeTrade17 && (dominantSIG!=SAN_SIGNAL::SIDEWAYS));
    bool closeTrade28 = ((closeTrade8&&closeTrade10)&&(closeTrade9||closeTrade11||closeTrade12));
 
-   bool closeTrade29 = (dominantSIG == SAN_SIGNAL::CLOSE);
+   bool closeTrade29 = ((dominantSIG == SAN_SIGNAL::CLOSE)||(util.oppSignal(dominantSIG,tradePosition)));
    bool closeTradeL1 = (closeTrade14);
    bool closeTradeL2 = (closeTrade9||closeTrade14);
    bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade27||closeTrade28||closeTrade29);
