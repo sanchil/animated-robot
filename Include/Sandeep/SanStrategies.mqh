@@ -432,7 +432,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
                commonSIG=dominantSIG;
                if(openOrder)
                   openSIG = commonSIG;
-               closeSIG = commonSIG;
+               // closeSIG = commonSIG;
                commonSIG=SAN_SIGNAL::NOSIG;
               }
             else
@@ -463,8 +463,8 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
 
 
 
-   if(!closeTrade)
-      ss.openSIG = openSIG;
+//  if(!closeTrade)
+   ss.openSIG = openSIG;
    ss.closeSIG = closeSIG;
 
 
