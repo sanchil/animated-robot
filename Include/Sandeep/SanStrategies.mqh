@@ -320,6 +320,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool fastOpenTrade12 = (fastOpenTrade11 && (dominantSIG==hSig.mainFastSIG));
    bool fastOpenTrade13 = (fastOpenTrade11 && (dominantSIG==hSig.slopeFastSIG));
    bool fastOpenTrade14 = (fastOpenTrade11 && (dominantSIG==hSig.rsiFastSIG));
+   bool fastOpenTrade15 = (slopeTrendVarBool && (ss.fsig5!=SAN_SIGNAL::NOSIG) && (ss.fsig5!=SAN_SIGNAL::CLOSE));
 
 
    bool closeLoss = (ss.lossSIG == SAN_SIGNAL::CLOSE);
