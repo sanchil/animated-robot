@@ -3,6 +3,9 @@ Logs/
 # Compiled MQL4 files
 **/*.ex4
 
+# ignore .csv files
+**/*.csv
+*.csv
 # MetaTrader 4 temporary and log files
 *.log
 *.hst
