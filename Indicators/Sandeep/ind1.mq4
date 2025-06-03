@@ -19,6 +19,10 @@ input double stopLoss; // Loss at which a trade is condsidered for closing.
 input double closeProfit; // Profit at which a trade is condsidered for closing.
 input double currProfit; // The profit of the currently held trade
 input double maxProfit; // The current profit is adjusted by subtracting the spread and a margin added.
+input bool recordData; // begin recording data for vector database for a RAG AI application.
+input SAN_SIGNAL recordSignal; // This is the default signal recorded for vector database for a RAG AI application.
+input string dataFileName;// This is the default signal data file name recorded for vector database for a RAG AI application.
+
 
 const int SHIFT = 1;
 
@@ -143,6 +147,7 @@ int OnCalculate(const int rates_total,
       //Print("Indicators: StdDev: "+NormalizeDouble(indData.std[SHIFT],2)+" MFI: "+NormalizeDouble(indData.mfi[SHIFT],2)+" Adx Main: "+NormalizeDouble(indData.adx[SHIFT],2)+" DI+: "+NormalizeDouble(indData.adxPlus[SHIFT],2)+" DI-: "+NormalizeDouble(indData.adxMinus[SHIFT],2)," Atr: "+indData.atr[SHIFT]+" Volume: "+indData.volume[SHIFT]+" tick_volume: "+indData.tick_volume[SHIFT]);
       //initCalc(indData);
      }
+
    initCalc(indData);
 
 //--- return value of prev_calculated for next call
@@ -159,7 +164,11 @@ void initCalc(const INDDATA &indData)
   {
 
    buff1[0] = buySell(indData);
+   if(recordData)
+      util.writeStructData(dataFileName,indData,recordSignal,1);
 // Print("Signal in buff1[0]: "+buff1[0]);
+//   Print("recordData : "+recordData);
+
   }
 
 //+------------------------------------------------------------------+
