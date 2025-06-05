@@ -4,8 +4,9 @@ Logs/
 **/*.ex4
 
 # ignore .csv files
+
 NEWDATA.csv
-*.csv
+
 # MetaTrader 4 temporary and log files
 *.log
 *.hst

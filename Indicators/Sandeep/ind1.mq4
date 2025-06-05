@@ -22,6 +22,7 @@ input double maxProfit; // The current profit is adjusted by subtracting the spr
 input bool recordData; // begin recording data for vector database for a RAG AI application.
 input SAN_SIGNAL recordSignal; // This is the default signal recorded for vector database for a RAG AI application.
 input string dataFileName;// This is the default signal data file name recorded for vector database for a RAG AI application.
+input bool flipSig; // flips signals. BUY is SELL and SELL is BUY.
 
 
 const int SHIFT = 1;
@@ -162,8 +163,8 @@ int OnCalculate(const int rates_total,
 //+------------------------------------------------------------------+
 void initCalc(const INDDATA &indData)
   {
-
    buff1[0] = buySell(indData);
+
    if(recordData)
       util.writeStructData(dataFileName,indData,recordSignal,1);
 // Print("Signal in buff1[0]: "+buff1[0]);
