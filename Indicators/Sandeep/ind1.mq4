@@ -182,7 +182,16 @@ double buySell(const INDDATA &indData)
 
    if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL))
      {
-      buff2[0] = sbuff.buff2[0];
+      //buff2[0] = sbuff.buff2[0];
+      if(!flipSig)
+        {
+         buff2[0] = sbuff.buff2[0];
+        }
+      else
+         if(flipSig)
+           {
+            buff2[0] = util.flipSig((SAN_SIGNAL)sbuff.buff2[0]);
+           }
      }
    else
      {
@@ -213,7 +222,18 @@ double buySell(const INDDATA &indData)
      }
 
    if((sbuff.buff1[0]!=EMPTY) && (sbuff.buff1[0]!=EMPTY_VALUE) && (sbuff.buff1[0]!=NULL))
-      return sbuff.buff1[0];
+     {
+      if(!flipSig)
+        {
+         return sbuff.buff1[0];
+        }
+      else
+         if(flipSig)
+           {
+            sbuff.buff1[0] = util.flipSig((SAN_SIGNAL)sbuff.buff1[0]);
+            return  sbuff.buff1[0];
+           }
+     }
 
    return sbuff.buff1[0];
   }
