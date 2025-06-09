@@ -166,9 +166,10 @@ void initCalc(const INDDATA &indData)
    buff1[0] = buySell(indData);
 
    if(recordData)
+     {
+     // if(util.fileSizeCheck(dataFileName,0.5))Print("File size is greater that 0.5 mb");      
       util.writeStructData(dataFileName,indData,recordSignal,1);
-// Print("Signal in buff1[0]: "+buff1[0]);
-//   Print("recordData : "+recordData);
+     }
 
   }
 
