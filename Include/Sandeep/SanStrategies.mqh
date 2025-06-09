@@ -293,11 +293,12 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool basicOpenVolBool = (spreadVolBool && notFlatBool);
    bool basicOpenBool = (spreadBool && notFlatBool);
 
-   bool slopeTrendVarBool = (basicOpenVolBool && slopeTrendBool && varBool);
+//   bool slopeTrendVarBool = (basicOpenVolBool && slopeTrendBool && varBool);
+   bool slopeTrendVarBool = (basicOpenBool && slopeTrendBool && varBool);
    bool candleVolVar120Bool = (basicOpenVolBool && candleVol120Bool && varBool);
 
-//FSIG fSig(ss, util);
-//SSIG sSig(ss, util);
+//   Print("[BOOLS]: basicOpenBool: "+basicOpenBool+" basicOpenVolBool: "+basicOpenVolBool+" slopeTrendBool: "+slopeTrendBool+" varBool:"+varBool);
+
    HSIG hSig(ss, util);
 
 //dominantSIG = sig.dominantTrendSIG(fSig,sSig);
@@ -326,7 +327,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool closeLoss = (ss.lossSIG == SAN_SIGNAL::CLOSE);
 //bool closeProfitLoss = ((_Period >= PERIOD_M1) && (ss.profitPercentageSIG == SAN_SIGNAL::CLOSE));
    bool closeProfitLoss = ((_Period >= PERIOD_M1) && (ss.profitSIG == SAN_SIGNAL::CLOSE));
-
+   
 
 //SAN_SIGNAL pp = SAN_SIGNAL::CLOSE;
 //bool closeProfitLoss1 = ((_Period >= PERIOD_M1) && (pp == SAN_SIGNAL::CLOSE));
@@ -492,7 +493,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    Print("[SIG][FSIG]:: fSig5: "+util.getSigString(ss.fsig5)+" fSig14: "+util.getSigString(ss.fsig14)+" fSig30: "+util.getSigString(ss.fsig30)+" fSig120: "+util.getSigString(ss.fsig120)+" fSig240: "+util.getSigString(ss.fsig240)+" fSig500: "+util.getSigString(ss.fsig500));
 //   Print("[SIG][SIG] :: sig5: "+util.getSigString(ss.sig5)+" sig14: "+util.getSigString(ss.sig14)+" sig30: "+util.getSigString(ss.sig30)+" sig120: "+util.getSigString(ss.sig120)+" sig240: "+util.getSigString(ss.sig240)+" sig500: "+util.getSigString(ss.sig500));
 
-   Print("[newCandle]: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" CurrPos: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" Flat: "+closeFlatTrade+" PL:"+util.getSigString(ss.profitPercentageSIG)+" Loss:"+util.getSigString(ss.lossSIG));
+   Print("[newCandle]: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" CurrPos: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" Flat: "+closeFlatTrade+" PL:"+util.getSigString(ss.profitPercentageSIG)+" Loss:"+util.getSigString(ss.lossSIG)+" slopeTrendVarBool: "+slopeTrendVarBool);
 
    return sigBuff;
   }
