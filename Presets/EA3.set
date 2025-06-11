@@ -1,0 +1,8 @@
+magicNumber=1001
+noOfCandles=21
+TAKE_PROFIT=2.0
+STOP_LOSS=0.3
+recordData=true
+dataFileName=NEWDATA.csv
+recordSignal=1000
+flipSig=false

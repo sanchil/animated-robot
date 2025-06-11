@@ -10,7 +10,7 @@ NEWDATA.csv
 # MetaTrader 4 temporary and log files
 *.log
 *.hst
-*.set
+#*.set
 *.fxt
 *.tks
 *.ord
