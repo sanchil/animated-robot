@@ -180,6 +180,8 @@ double buySell(const INDDATA &indData)
   {
 
    SIGBUFF sbuff = st1.imaSt1(indData);
+   
+  
 
    if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL))
      {
@@ -208,6 +210,7 @@ double buySell(const INDDATA &indData)
      }
    if((sbuff.buff4[0]!=EMPTY) && (sbuff.buff4[0]!=EMPTY_VALUE) && (sbuff.buff4[0]!=NULL))
      {
+     // Setting Market type. Trending or flat 
       buff4[0] = sbuff.buff4[0];
      }
    else

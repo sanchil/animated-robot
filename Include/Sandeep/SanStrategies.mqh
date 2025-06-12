@@ -110,7 +110,11 @@ public:
          trendRatio120SIG = sig.trendRatioSIG(indData.ima120,"IMA120",2,21);
          trendRatio240SIG = sig.trendRatioSIG(indData.ima240,"IMA240",2,21);
          trendRatio500SIG = sig.trendRatioSIG(indData.ima500,"IMA500",2,21);
+
          trendRatioSIG = trendRatio120SIG;
+
+         //trendSumSig = sig.trendSIG(trendRatio5SIG,trendRatio120SIG,trendRatio500SIG);
+
 
          //mfiSIG = sig.mfiSIG(indData.mfi,trendSlopeSIG,10,1);
          mfiSIG = sig.mfiSIG(indData.mfi,trendRatioSIG,21,1);
@@ -474,8 +478,8 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
 
    sigBuff.buff1[0]=(int)ss.openSIG;
    sigBuff.buff2[0]=(int)ss.closeSIG;
-   sigBuff.buff4[0] = (int)ss.tradeSIG;
-
+//sigBuff.buff4[0] = (int)ss.tradeSIG;
+   sigBuff.buff4[0] = (int)hSig.mktType;
 
 //Print("[CLOSE SIG]:: closeTradeL5: "+closeTradeL5+" 9: "+closeTrade9+"11: "+closeTrade11+" 12: "+closeTrade12+" 16: "+closeTrade16+" 14: "+closeTrade14+" 26: "+closeTrade26+" 27: "+closeTrade27+" 28: "+closeTrade28+" 29: "+closeTrade29);
 //Print("[SLOW]:: IMA30120TR240: "+util.getSigString(hSig.dominantTrendIma120SIG)+" trendRatioSIG: "+util.getSigString(slopeTrendSIG)+" CP120 : "+util.getSigString(ss.cpScatterSIG)+" ima30120SIG: "+util.getSigString(ss.ima30120SIG)+" ima120240SIG: "+util.getSigString(ss.ima120240SIG)+" fsig120: "+util.getSigString(ss.fsig120)+" fsig240: "+util.getSigString(ss.fsig240)+" sig30: "+util.getSigString(ss.sig30)+" sig120: "+util.getSigString(ss.sig120)+" sig240: "+util.getSigString(ss.sig240));
@@ -494,7 +498,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    Print("[SIG][FSIG]:: fSig5: "+util.getSigString(ss.fsig5)+" fSig14: "+util.getSigString(ss.fsig14)+" fSig30: "+util.getSigString(ss.fsig30)+" fSig120: "+util.getSigString(ss.fsig120)+" fSig240: "+util.getSigString(ss.fsig240)+" fSig500: "+util.getSigString(ss.fsig500));
 //   Print("[SIG][SIG] :: sig5: "+util.getSigString(ss.sig5)+" sig14: "+util.getSigString(ss.sig14)+" sig30: "+util.getSigString(ss.sig30)+" sig120: "+util.getSigString(ss.sig120)+" sig240: "+util.getSigString(ss.sig240)+" sig500: "+util.getSigString(ss.sig500));
 
-   Print("[newCandle]: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" CurrPos: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" Flat: "+closeFlatTrade+" PL:"+util.getSigString(ss.profitPercentageSIG)+" Loss:"+util.getSigString(ss.lossSIG)+" slopeTrendVarBool: "+slopeTrendVarBool);
+   Print("[newCandle]: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" CurrPos: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" Flat: "+closeFlatTrade+" PL:"+util.getSigString(ss.profitPercentageSIG)+" Loss:"+util.getSigString(ss.lossSIG)+" slopeTrendVarBool: "+slopeTrendVarBool+"Mkt Type: "+util.getSigString(hSig.mktType));
 
    return sigBuff;
   }
