@@ -19,12 +19,6 @@ class SanStrategies
   {
 private:
    int               ticket;
-public:
-                     SanStrategies();
-                    ~SanStrategies();
-   SIGBUFF           imaSt1(const INDDATA &indData);
-   SIGBUFF           paSt1(const INDDATA &indData);
-   SIGBUFF           paSt2(const INDDATA &indData);
 
    struct SS:public SANSIGNALS
      {
@@ -56,6 +50,7 @@ public:
 
          profitSIG = sig.closeOnProfitSIG(indData.currProfit,indData.closeProfit,0);
          profitPercentageSIG = sig.closeOnProfitPercentageSIG(indData.currProfit,indData.maxProfit,indData.closeProfit);
+         lossSIG = sig.closeOnLossSIG(indData.stopLoss,0);
 
          fsig5 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima5[SHIFT],21);
          fsig14 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima14[SHIFT],21);
@@ -72,7 +67,7 @@ public:
          candleImaSIG = sig.candleImaSIG(indData.open,indData.close,indData.ima5,indData.ima14,indData.ima30,5,SHIFT);
 
          volSIG =  sig.volumeSIG_v2(indData.tick_volume,60,11,SHIFT);
-         lossSIG = sig.closeOnLossSIG(indData.stopLoss,0);
+
          //        adxCovDivSIG = sig.adxCovDivSIG(indData.adx,indData.adxPlus,indData.adxMinus);
 
          cpSDSIG = sig.stdDevSIG(indData.close,"CP",21,SHIFT);
@@ -138,6 +133,14 @@ public:
          Print("Spread: "+currSpread+" openSIG: "+util.getSigString(openSIG)+" closeSIG: "+util.getSigString(closeSIG)+" tradeSIG: "+util.getSigString(tradeSIG));
         }
      };
+ 
+
+public:
+                     SanStrategies();
+                    ~SanStrategies();
+   SIGBUFF           imaSt1(const INDDATA &indData);
+   SIGBUFF           paSt1(const INDDATA &indData);
+   SIGBUFF           paSt2(const INDDATA &indData);
 
   };
 //+------------------------------------------------------------------+
@@ -257,31 +260,32 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool mfiTradeTrendBool = (ss.mfiSIG==util.convTrendToSig(slopeTrendSIG));
    bool slopeTrendBool = ((slopeTrendSIG==SANTREND::UP)||(slopeTrendSIG==SANTREND::DOWN));
 
+//########################################################################################
+
    double var30Val = util.getSigVarBool(ss.ima30SDSIG);
    bool var30Bool = ((var30Val!=0) && ((var30Val==1.314)||(var30Val==-1.314)));
    bool var30PosBool = ((var30Val!=0) && (var30Val==1.314));
    bool var30NegBool = ((var30Val!=0) && (var30Val==-1.314));
+   bool var30FlatBool = (var30Val==0);
 
    double var120Val = util.getSigVarBool(ss.ima120SDSIG);
    bool var120Bool = ((var120Val!=0) && ((var120Val==1.314)||(var120Val==-1.314)));
    bool var120PosBool = ((var120Val!=0) && (var120Val==1.314));
    bool var120NegBool = ((var120Val!=0) && (var120Val==-1.314));
-
+   bool var120FlatBool = (var120Val==0);
 
    double var240Val = util.getSigVarBool(ss.ima240SDSIG);
    bool var240Bool = ((var240Val!=0) && ((var240Val==1.314)||(var240Val==-1.314)));
    bool var240PosBool = ((var240Val!=0) && (var240Val==1.314));
    bool var240NegBool = ((var240Val!=0) && (var240Val==-1.314));
-
-
+   bool var240FlatBool = (var240Val==0);
+   
    bool varBool = (var30Bool&&var120Bool&&var240Bool);
    bool varPosBool = (varBool && (var30PosBool&&var120PosBool&&var240PosBool));
    bool varNegBool = (varBool && (var30NegBool&&var120NegBool&&var240NegBool));
+   bool varFlatBool = (var30FlatBool||var120FlatBool||var240FlatBool);
 
-//double variabilityVal = util.getSigVariabilityBool(varSIG,"IMA120");
-//bool variabilityBool = ((variabilityVal!=0) && ((variabilityVal==1.314)||(variabilityVal==-1.314)));
-//bool variabilityPosBool = ((variabilityVal!=0) && (variabilityVal==1.314));
-//bool variabilityNegBool = ((variabilityVal!=0) && (variabilityVal==-1.314));
+//########################################################################################
 
 
    bool noVolWindPressure = ((ss.volSIG==SAN_SIGNAL::REVERSETRADE)||(ss.volSIG==SAN_SIGNAL::CLOSE));
@@ -291,8 +295,15 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool candleVol120Bool = (((ss.candleVol120SIG==SAN_SIGNAL::SELL)&&varNegBool)||((ss.candleVol120SIG==SAN_SIGNAL::BUY)&&varPosBool));
    bool slopeVarBool = (ss.slopeVarSIG==SAN_SIGNAL::SELL||ss.slopeVarSIG==SAN_SIGNAL::BUY);
 
-   bool notFlatBool = (varBool &&(((slopeTrendSIG!=SANTREND::FLAT)&&(slopeTrendSIG!=SANTREND::NOTREND))||((ss.candleVol120SIG!=SAN_SIGNAL::SIDEWAYS)&&(ss.candleVol120SIG!=SAN_SIGNAL::NOSIG))));
-   bool flatBool = (noVarBool && ((slopeTrendSIG==SANTREND::FLAT)||(ss.candleVol120SIG==SAN_SIGNAL::SIDEWAYS)||(ss.slopeVarSIG==SAN_SIGNAL::SIDEWAYS)));
+   HSIG hSig(ss, util);
+   dominantSIG = sig.dominantTrendSIG(ss,hSig);
+
+   //bool notFlatBool = (varBool &&(((slopeTrendSIG!=SANTREND::FLAT)&&(slopeTrendSIG!=SANTREND::NOTREND))||((ss.candleVol120SIG!=SAN_SIGNAL::SIDEWAYS)&&(ss.candleVol120SIG!=SAN_SIGNAL::NOSIG))));
+   //bool flatBool = (noVarBool && ((slopeTrendSIG==SANTREND::FLAT)||(ss.candleVol120SIG==SAN_SIGNAL::SIDEWAYS)||(ss.slopeVarSIG==SAN_SIGNAL::SIDEWAYS)));
+
+   bool notFlatBool = (varBool && (hSig.mktType==MKTTYP::MKTTR));
+   bool flatBool = (varFlatBool || (hSig.mktType==MKTTYP::MKTFLAT));
+   
 
    bool basicOpenVolBool = (spreadVolBool && notFlatBool);
    bool basicOpenBool = (spreadBool && notFlatBool);
@@ -301,13 +312,6 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool slopeTrendVarBool = (basicOpenBool && slopeTrendBool && varBool);
    bool candleVolVar120Bool = (basicOpenVolBool && candleVol120Bool && varBool);
 
-
-   HSIG hSig(ss, util);
-
-//dominantSIG = sig.dominantTrendSIG(fSig,sSig);
-   dominantSIG = sig.dominantTrendSIG(ss,hSig);
-
-//cp120SIG = ss.cpScatterSIG;
 
 
    bool fastOpenTrade1 = (spreadBool  && (ss.candleImaSIG!=SAN_SIGNAL::NOSIG));
@@ -498,7 +502,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    Print("[SIG][FSIG]:: fSig5: "+util.getSigString(ss.fsig5)+" fSig14: "+util.getSigString(ss.fsig14)+" fSig30: "+util.getSigString(ss.fsig30)+" fSig120: "+util.getSigString(ss.fsig120)+" fSig240: "+util.getSigString(ss.fsig240)+" fSig500: "+util.getSigString(ss.fsig500));
 //   Print("[SIG][SIG] :: sig5: "+util.getSigString(ss.sig5)+" sig14: "+util.getSigString(ss.sig14)+" sig30: "+util.getSigString(ss.sig30)+" sig120: "+util.getSigString(ss.sig120)+" sig240: "+util.getSigString(ss.sig240)+" sig500: "+util.getSigString(ss.sig500));
 
-   Print("[newCandle]: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" CurrPos: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" Flat: "+closeFlatTrade+" PL:"+util.getSigString(ss.profitPercentageSIG)+" Loss:"+util.getSigString(ss.lossSIG)+" slopeTrendVarBool: "+slopeTrendVarBool+"Mkt Type: "+util.getSigString(hSig.mktType));
+   Print("[newCandle]: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" CurrPos: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" Flat: "+closeFlatTrade+" PL:"+util.getSigString(ss.profitPercentageSIG)+" Loss:"+util.getSigString(ss.lossSIG)+" Mkt Type: "+util.getSigString(hSig.mktType)+" var: "+varBool+" varFlat: "+varFlatBool+" slpTrVar: "+slopeTrendVarBool);
 
    return sigBuff;
   }
