@@ -133,7 +133,7 @@ private:
          Print("Spread: "+currSpread+" openSIG: "+util.getSigString(openSIG)+" closeSIG: "+util.getSigString(closeSIG)+" tradeSIG: "+util.getSigString(tradeSIG));
         }
      };
- 
+
 
 public:
                      SanStrategies();
@@ -279,7 +279,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool var240PosBool = ((var240Val!=0) && (var240Val==1.314));
    bool var240NegBool = ((var240Val!=0) && (var240Val==-1.314));
    bool var240FlatBool = (var240Val==0);
-   
+
    bool varBool = (var30Bool&&var120Bool&&var240Bool);
    bool varPosBool = (varBool && (var30PosBool&&var120PosBool&&var240PosBool));
    bool varNegBool = (varBool && (var30NegBool&&var120NegBool&&var240NegBool));
@@ -298,12 +298,12 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    HSIG hSig(ss, util);
    dominantSIG = sig.dominantTrendSIG(ss,hSig);
 
-   //bool notFlatBool = (varBool &&(((slopeTrendSIG!=SANTREND::FLAT)&&(slopeTrendSIG!=SANTREND::NOTREND))||((ss.candleVol120SIG!=SAN_SIGNAL::SIDEWAYS)&&(ss.candleVol120SIG!=SAN_SIGNAL::NOSIG))));
-   //bool flatBool = (noVarBool && ((slopeTrendSIG==SANTREND::FLAT)||(ss.candleVol120SIG==SAN_SIGNAL::SIDEWAYS)||(ss.slopeVarSIG==SAN_SIGNAL::SIDEWAYS)));
+//bool notFlatBool = (varBool &&(((slopeTrendSIG!=SANTREND::FLAT)&&(slopeTrendSIG!=SANTREND::NOTREND))||((ss.candleVol120SIG!=SAN_SIGNAL::SIDEWAYS)&&(ss.candleVol120SIG!=SAN_SIGNAL::NOSIG))));
+//bool flatBool = (noVarBool && ((slopeTrendSIG==SANTREND::FLAT)||(ss.candleVol120SIG==SAN_SIGNAL::SIDEWAYS)||(ss.slopeVarSIG==SAN_SIGNAL::SIDEWAYS)));
 
    bool notFlatBool = (varBool && (hSig.mktType==MKTTYP::MKTTR));
    bool flatBool = (varFlatBool || (hSig.mktType==MKTTYP::MKTFLAT));
-   
+
 
    bool basicOpenVolBool = (spreadVolBool && notFlatBool);
    bool basicOpenBool = (spreadBool && notFlatBool);
@@ -410,41 +410,37 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool longCycle = false;
    bool allCycle = false;
 
-   if(true && closeOrder && closeLoss)// && sb.candlePipAlarm)
+   if(true && closeOrder && closeLoss)
      {
       closeSIG = SAN_SIGNAL::CLOSE;
       sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
       Print("[imaSt1]: closeLoss CLOSE detected:."+ util.getSigString(closeSIG));
-      // util.writeData("close_order.txt","[imaSt1]: profitPercentage CLOSE detected:."+ util.getSigString(ss.closeSIG));
      }
    else
-      if(true && closeOrder && closeProfitLoss)// && sb.candlePipAlarm)
+      if(true && closeOrder && closeProfitLoss)
         {
          closeSIG = SAN_SIGNAL::CLOSE;
          sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
          Print("[imaSt1]: profitPercentage CLOSE detected:."+ util.getSigString(closeSIG));
-         // util.writeData("close_order.txt","[imaSt1]: profitPercentage CLOSE detected:."+ util.getSigString(ss.closeSIG));
         }
       else
-         if(openTradeTrend && noCloseConditions && allCycle)
+         if(false && closeOrder && closeFlatTrade)
            {
-            commonSIG=ss.ima1430SIG;
-            if(openOrder)
-               openSIG = commonSIG;
-            closeSIG = commonSIG;
-            commonSIG=SAN_SIGNAL::NOSIG;
+            closeSIG = SAN_SIGNAL::CLOSE;
+            sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
+            Print("[imaSt1]: closeFlatTrade CLOSE detected:."+ util.getSigString(closeSIG));
            }
          else
-            if(openSlope && noCloseConditions)
+            if(openTradeTrend && noCloseConditions && allCycle)
               {
-               commonSIG=dominantSIG;
+               commonSIG=ss.ima1430SIG;
                if(openOrder)
                   openSIG = commonSIG;
                closeSIG = commonSIG;
                commonSIG=SAN_SIGNAL::NOSIG;
               }
             else
-               if(openCandleVol && noCloseConditions && allCycle)
+               if(openSlope && noCloseConditions)
                  {
                   commonSIG=dominantSIG;
                   if(openOrder)
@@ -453,21 +449,30 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
                   commonSIG=SAN_SIGNAL::NOSIG;
                  }
                else
-                  if(openCandleIma && allCycle)
+                  if(openCandleVol && noCloseConditions && allCycle)
                     {
-                     commonSIG=ss.candleImaSIG;
+                     commonSIG=dominantSIG;
                      if(openOrder)
-                        ss.openSIG = commonSIG;
-                     ss.closeSIG = commonSIG;
+                        openSIG = commonSIG;
+                     closeSIG = commonSIG;
+                     commonSIG=SAN_SIGNAL::NOSIG;
                     }
                   else
-                     if(false && closeOrder && closeTrade)// && !openCandleIma)// && !slowMfi)
+                     if(openCandleIma && allCycle)
                        {
-                        closeSIG = SAN_SIGNAL::CLOSE;
-                        sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
-                        Print("[imaSt1]: closeTrade: "+closeTrade+" close detected: "+ util.getSigString(closeSIG));
-                        //util.writeData("close_order.txt",""[imaSt1]: closeTrade4: "+closeTrade5+" close detected: "+ util.getSigString(ss.closeSIG));
+                        commonSIG=ss.candleImaSIG;
+                        if(openOrder)
+                           ss.openSIG = commonSIG;
+                        ss.closeSIG = commonSIG;
                        }
+                     else
+                        if(false && closeOrder && closeTrade)// && !openCandleIma)// && !slowMfi)
+                          {
+                           closeSIG = SAN_SIGNAL::CLOSE;
+                           sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
+                           Print("[imaSt1]: closeTrade: "+closeTrade+" close detected: "+ util.getSigString(closeSIG));
+                           //util.writeData("close_order.txt",""[imaSt1]: closeTrade4: "+closeTrade5+" close detected: "+ util.getSigString(ss.closeSIG));
+                          }
 
 
 
