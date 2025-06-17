@@ -410,7 +410,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool longCycle = false;
    bool allCycle = false;
 
-   if(true && closeOrder && closeLoss)
+   if(false && closeOrder && closeLoss)
      {
       closeSIG = SAN_SIGNAL::CLOSE;
       sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
@@ -424,7 +424,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
          Print("[imaSt1]: profitPercentage CLOSE detected:."+ util.getSigString(closeSIG));
         }
       else
-         if(false && closeOrder && closeFlatTrade)
+         if(true && closeOrder && closeFlatTrade)
            {
             closeSIG = SAN_SIGNAL::CLOSE;
             sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;

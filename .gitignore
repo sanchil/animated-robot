@@ -7,6 +7,9 @@ Logs/
 
 NEWDATA.csv
 
+# ignore swap files
+*.kate-swp
+
 # MetaTrader 4 temporary and log files
 *.log
 *.hst
