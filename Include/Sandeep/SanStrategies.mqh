@@ -302,15 +302,15 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
 //bool flatBool = (noVarBool && ((slopeTrendSIG==SANTREND::FLAT)||(ss.candleVol120SIG==SAN_SIGNAL::SIDEWAYS)||(ss.slopeVarSIG==SAN_SIGNAL::SIDEWAYS)));
 
    bool notFlatBool = (varBool && (hSig.mktType==MKTTYP::MKTTR));
-   bool flatBool = (varFlatBool || (hSig.mktType==MKTTYP::MKTFLAT));
+   bool flatBool = (varFlatBool && (hSig.mktType==MKTTYP::MKTFLAT));
 
 
    bool basicOpenVolBool = (spreadVolBool && notFlatBool);
    bool basicOpenBool = (spreadBool && notFlatBool);
 
 //   bool slopeTrendVarBool = (basicOpenVolBool && slopeTrendBool && varBool);
-   bool slopeTrendVarBool = (basicOpenBool && slopeTrendBool && varBool);
-   bool candleVolVar120Bool = (basicOpenVolBool && candleVol120Bool && varBool);
+   bool slopeTrendVarBool = (basicOpenBool && slopeTrendBool);
+   bool candleVolVar120Bool = (basicOpenVolBool && candleVol120Bool);
 
 
 
@@ -323,7 +323,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
 //
 //// #################################################################################
    bool fastOpenTrade10 = (fastOpenTrade3||fastOpenTrade4||fastOpenTrade5||fastOpenTrade6);
-   bool fastOpenTrade11 = (slopeTrendVarBool && (dominantSIG!=SAN_SIGNAL::NOSIG) && (dominantSIG!=SAN_SIGNAL::CLOSE));
+   bool fastOpenTrade11 = (slopeTrendVarBool && (dominantSIG!=SAN_SIGNAL::NOSIG) && (dominantSIG!=SAN_SIGNAL::CLOSE) && (dominantSIG!=SAN_SIGNAL::SIDEWAYS));
 
    bool fastOpenTrade12 = (fastOpenTrade11 && (dominantSIG==hSig.mainFastSIG));
    bool fastOpenTrade13 = (fastOpenTrade11 && (dominantSIG==hSig.slopeFastSIG));
@@ -398,7 +398,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool openSlope = (fastOpenTrade11);//||fastOpenTrade4);
    bool openCandleVol = (fastOpenTrade12||fastOpenTrade13);
    bool openStar = (fastOpenTrade2);
-   bool closeFlatTrade = (spreadBool && (flatBool));
+   bool closeFlatTrade = (spreadBool && ((flatBool)||(dominantSIG!=SAN_SIGNAL::SIDEWAYS)));
    bool closeTrade = (closeTradeL5);
    bool noCloseConditions = (!closeFlatTrade);
 
