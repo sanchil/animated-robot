@@ -144,9 +144,17 @@ int OnCalculate(const int rates_total,
          indData.ima240[i]= iMA(_Symbol,PERIOD_CURRENT,240,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.ima500[i]= iMA(_Symbol,PERIOD_CURRENT,500,0,MODE_SMMA, PRICE_CLOSE,i);
         }
+      
       //Print("ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21] );
       //Print("Indicators: StdDev: "+NormalizeDouble(indData.std[SHIFT],2)+" MFI: "+NormalizeDouble(indData.mfi[SHIFT],2)+" Adx Main: "+NormalizeDouble(indData.adx[SHIFT],2)+" DI+: "+NormalizeDouble(indData.adxPlus[SHIFT],2)+" DI-: "+NormalizeDouble(indData.adxMinus[SHIFT],2)," Atr: "+indData.atr[SHIFT]+" Volume: "+indData.volume[SHIFT]+" tick_volume: "+indData.tick_volume[SHIFT]);
       //initCalc(indData);
+      
+      if(GetLastError() == 4001) // ERR_NOT_ENOUGH_MEMORY
+        {
+         Print("Memory error at bar ", i);
+         return(0); // Stop calculation
+        }
+
      }
 
    initCalc(indData);
@@ -167,7 +175,7 @@ void initCalc(const INDDATA &indData)
 
    if(recordData)
      {
-     // if(util.fileSizeCheck(dataFileName,0.5))Print("File size is greater that 0.5 mb");      
+      // if(util.fileSizeCheck(dataFileName,0.5))Print("File size is greater that 0.5 mb");
       util.writeStructData(dataFileName,indData,recordSignal,1);
      }
 
@@ -180,8 +188,8 @@ double buySell(const INDDATA &indData)
   {
 
    SIGBUFF sbuff = st1.imaSt1(indData);
-   
-  
+
+
 
    if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL))
      {
@@ -210,7 +218,7 @@ double buySell(const INDDATA &indData)
      }
    if((sbuff.buff4[0]!=EMPTY) && (sbuff.buff4[0]!=EMPTY_VALUE) && (sbuff.buff4[0]!=NULL))
      {
-     // Setting Market type. Trending or flat 
+      // Setting Market type. Trending or flat
       buff4[0] = sbuff.buff4[0];
      }
    else
