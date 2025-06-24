@@ -39,6 +39,8 @@ bool renameFile(string oldFileName, string newFileName)
 void OnStart()
   {
    Print("Hello script");
+   //Comment("Hello script");
+   Comment("");
 //    renameFile("NEWDATA.csv","NEWDATA.csv-"+TimeToString(TimeCurrent,TIME_DATE));
   }
 //+------------------------------------------------------------------+
