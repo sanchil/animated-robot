@@ -1,2 +1,7 @@
+*.mq4 text eol=lf
 *.mqh text eol=lf
 *.ex4 binary
+
+*.sh text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
