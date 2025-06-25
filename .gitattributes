@@ -1,5 +1,5 @@
-*.mq4 text eol=crlf
-*.mqh text eol=crlf
+*.mq4 text eol=lf
+*.mqh text eol=lf
 *.ex4 binary
 
 *.sh text eol=lf
