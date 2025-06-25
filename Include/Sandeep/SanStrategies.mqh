@@ -400,7 +400,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool openSlope = (fastOpenTrade11);//||fastOpenTrade4);
    bool openCandleVol = (fastOpenTrade12||fastOpenTrade13);
    bool openStar = (fastOpenTrade2);
-   bool closeFlatTrade = (spreadBool && closeTrade21 && ((flatBool)||(dominantSIG==SAN_SIGNAL::SIDEWAYS)));
+   bool closeFlatTrade = (spreadBool && ((flatBool)||(dominantSIG==SAN_SIGNAL::SIDEWAYS)));
    bool closeTrade = (closeTradeL5);
    bool noCloseConditions = (!closeFlatTrade);
 
