@@ -361,7 +361,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool closeTrade18 = (util.oppSignal(hSig.mainFastSIG,dominantSIG));
    bool closeTrade19 = (util.oppSignal(hSig.slopeFastSIG,dominantSIG));
    bool closeTrade20 = (util.oppSignal(hSig.rsiFastSIG,dominantSIG));
-   bool closeTrade21 = (util.oppSignal(ss.fsig120,tradePosition));
+   bool closeTrade21 = (util.oppSignal(ss.fsig30,tradePosition));
    
 
 
