@@ -1,2 +1,2 @@
-*.mqh text
+*.mqh text eol=lf
 *.ex4 binary
