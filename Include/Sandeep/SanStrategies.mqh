@@ -395,8 +395,8 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool closeTradeL1 = (closeTrade14);
    bool closeTradeL2 = (closeTrade9||closeTrade14);
    bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade27||closeTrade28||closeTrade29);
-   //bool closeTradeL5 = (closeTrade29);
-   bool closeTradeL5 = (closeTrade21);
+   bool closeTradeL5 = (closeTrade29);
+   //bool closeTradeL5 = (closeTrade21);
 //   bool closeTradeL4 = (closeTrade14||closeTrade18||closeTrade19||closeTrade20||closeTrade26||closeTrade27||closeTrade28||closeTrade29);
 //   bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade29);
 // bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade27||closeTrade29);
@@ -413,7 +413,8 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
    bool openSlope = (fastOpenTrade11);//||fastOpenTrade4);
    bool openCandleVol = (fastOpenTrade12||fastOpenTrade13);
    bool openStar = (fastOpenTrade2);
-   bool closeFlatTrade = (spreadBool &&  ((flatBool)||(dominantSIG==SAN_SIGNAL::SIDEWAYS)));
+//   bool closeFlatTrade = (spreadBool &&  ((flatBool)||(dominantSIG==SAN_SIGNAL::SIDEWAYS)));
+   bool closeFlatTrade = (spreadBool &&  (dominantSIG==SAN_SIGNAL::SIDEWAYS));
    
    bool closeTrade = (closeTradeL5);
    bool noCloseConditions = (!closeFlatTrade);
@@ -440,7 +441,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
          Print("[imaSt1]: profitPercentage CLOSE detected:."+ util.getSigString(closeSIG));
         }
       else
-         if(false && closeOrder && closeFlatTrade)
+         if(true && closeOrder && closeFlatTrade)
            {
             closeSIG = SAN_SIGNAL::CLOSE;
             sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
@@ -482,7 +483,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
                         ss.closeSIG = commonSIG;
                        }
                      else
-                        if(true && closeOrder && closeTrade)// && !openCandleIma)// && !slowMfi)
+                        if(false && closeOrder && closeTrade)// && !openCandleIma)// && !slowMfi)
                           {
                            closeSIG = SAN_SIGNAL::CLOSE;
                            sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
@@ -492,8 +493,8 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData)
 
 
 
-   if(!closeTrade)
-   //if(!closeFlatTrade)
+   //if(!closeTrade)
+   if(!closeFlatTrade)
       ss.openSIG = openSIG;
    ss.closeSIG = closeSIG;
 
