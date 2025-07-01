@@ -383,8 +383,13 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool closeTradeL1 = (closeTrade14);
    bool closeTradeL2 = (closeTrade9||closeTrade14);
    bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade27||closeTrade28||closeTrade29);
-   bool closeTradeL5 = (closeTrade29);
-   //bool closeTradeL5 = (closeTrade21);
+   //bool closeTradeL5 = (closeTrade29);
+   bool closeTradeL5 = (
+                          (util.oppSignal(dominantSIG,tradePosition))
+                          ||closeTrade21
+                          //||closeTrade29
+                       );
+
 //   bool closeTradeL4 = (closeTrade14||closeTrade18||closeTrade19||closeTrade20||closeTrade26||closeTrade27||closeTrade28||closeTrade29);
 //   bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade29);
 // bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade27||closeTrade29);
@@ -438,6 +443,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
       if(openOrder)
          openSIG = commonSIG;
       closeSIG = commonSIG;
+      // Print("[imaSt1]: openSlope OPEN and CLOSE detected:."+ openSlope+" SIG: "+util.getSigString(commonSIG));
       commonSIG=SAN_SIGNAL::NOSIG;
    } else if(openCandleVol && noCloseConditions && allCycle) {
       commonSIG=dominantSIG;
@@ -450,7 +456,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
       if(openOrder)
          ss.openSIG = commonSIG;
       ss.closeSIG = commonSIG;
-   } else if(false && closeOrder && closeTrade) { // && !openCandleIma)// && !slowMfi)
+   } else if(true && closeOrder && closeTrade) { // && !openCandleIma)// && !slowMfi)
       closeSIG = SAN_SIGNAL::CLOSE;
       sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
       Print("[imaSt1]: closeTrade: "+closeTrade+" close detected: "+ util.getSigString(closeSIG));
@@ -460,7 +466,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 
    //if(!closeTrade)
-   if(!closeFlatTrade)
+   if((!closeFlatTrade)&&(!closeTrade))
       ss.openSIG = openSIG;
    ss.closeSIG = closeSIG;
 
