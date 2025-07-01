@@ -41,8 +41,7 @@ INDDATA indData;
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
-int OnInit()
-  {
+int OnInit() {
 
    ArrayInitialize(buff1,EMPTY);
    ArrayInitialize(buff2,EMPTY);
@@ -69,7 +68,7 @@ int OnInit()
 
 //---
    return(INIT_SUCCEEDED);
-  }
+}
 //+------------------------------------------------------------------+
 //| Custom indicator iteration function                              |
 //+------------------------------------------------------------------+
@@ -82,8 +81,7 @@ int OnCalculate(const int rates_total,
                 const double &close[],
                 const long &tick_volume[],
                 const long &volume[],
-                const int &spread[])
-  {
+                const int &spread[]) {
 //---
 
 //ArraySetAsSeries(time,true);
@@ -106,13 +104,11 @@ int OnCalculate(const int rates_total,
 //   Print("Spread in indicator: "+(int)MarketInfo(_Symbol,MODE_SPREAD));
 
 //if(rates_total>prev_calculated)
-   for(int i = prev_calculated; i < rates_total; i++)
-     {
+   for(int i = prev_calculated; i < rates_total; i++) {
 
 
 
-      for(int i=0; i<31; i++)
-        {
+      for(int i=0; i<31; i++) {
          //indData.open[i] = open[i];
          indData.high[i] = high[i];
          indData.low[i] = low[i];
@@ -133,35 +129,33 @@ int OnCalculate(const int rates_total,
          //         indData.ima120[i]= iMA(_Symbol,PERIOD_CURRENT,120,0,MODE_SMMA, PRICE_CLOSE,i);
          //         indData.ima240[i]= iMA(_Symbol,PERIOD_CURRENT,240,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.atr[i] = iATR(_Symbol,PERIOD_CURRENT,noOfCandles,i);
-        }
+      }
 
-      for(int i=0; i<201; i++)
-        {
+      for(int i=0; i<201; i++) {
          indData.open[i] = open[i];
          indData.close[i] = close[i];
          indData.tick_volume[i]=tick_volume[i];
          indData.ima120[i]= iMA(_Symbol,PERIOD_CURRENT,120,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.ima240[i]= iMA(_Symbol,PERIOD_CURRENT,240,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.ima500[i]= iMA(_Symbol,PERIOD_CURRENT,500,0,MODE_SMMA, PRICE_CLOSE,i);
-        }
-      
+      }
+
       //Print("ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21] );
       //Print("Indicators: StdDev: "+NormalizeDouble(indData.std[SHIFT],2)+" MFI: "+NormalizeDouble(indData.mfi[SHIFT],2)+" Adx Main: "+NormalizeDouble(indData.adx[SHIFT],2)+" DI+: "+NormalizeDouble(indData.adxPlus[SHIFT],2)+" DI-: "+NormalizeDouble(indData.adxMinus[SHIFT],2)," Atr: "+indData.atr[SHIFT]+" Volume: "+indData.volume[SHIFT]+" tick_volume: "+indData.tick_volume[SHIFT]);
       //initCalc(indData);
-      
-      if(GetLastError() == 4001) // ERR_NOT_ENOUGH_MEMORY
-        {
+
+      if(GetLastError() == 4001) { // ERR_NOT_ENOUGH_MEMORY
          Print("Memory error at bar ", i);
          return(0); // Stop calculation
-        }
+      }
 
-     }
+   }
 
    initCalc(indData);
 
 //--- return value of prev_calculated for next call
    return(rates_total);
-  }
+}
 //+------------------------------------------------------------------+
 
 
@@ -169,86 +163,64 @@ int OnCalculate(const int rates_total,
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void initCalc(const INDDATA &indData)
-  {
+void initCalc(const INDDATA &indData) {
    buff1[0] = buySell(indData);
 
-   if(recordData)
-     {
+   if(recordData) {
       // if(util.fileSizeCheck(dataFileName,0.5))Print("File size is greater that 0.5 mb");
       util.writeStructData(dataFileName,indData,recordSignal,1);
-     }
+   }
 
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double buySell(const INDDATA &indData)
-  {
+double buySell(const INDDATA &indData) {
 
    SIGBUFF sbuff = st1.imaSt1(indData);
 
 
 
-   if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL))
-     {
+   if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL)) {
       //buff2[0] = sbuff.buff2[0];
-      if(!flipSig)
-        {
+      if(!flipSig) {
          buff2[0] = sbuff.buff2[0];
-        }
-      else
-         if(flipSig)
-           {
-            buff2[0] = util.flipSig((SAN_SIGNAL)sbuff.buff2[0]);
-           }
-     }
-   else
-     {
+      } else if(flipSig) {
+         buff2[0] = util.flipSig((SAN_SIGNAL)sbuff.buff2[0]);
+      }
+   } else {
       buff2[0] = EMPTY_VALUE;
-     }
-   if((sbuff.buff3[0]!=EMPTY) && (sbuff.buff3[0]!=EMPTY_VALUE) && (sbuff.buff3[0]!=NULL))
-     {
+   }
+   if((sbuff.buff3[0]!=EMPTY) && (sbuff.buff3[0]!=EMPTY_VALUE) && (sbuff.buff3[0]!=NULL)) {
       buff3[0] = sbuff.buff3[0];
-     }
-   else
-     {
+   } else {
       buff3[0] = EMPTY_VALUE;
-     }
-   if((sbuff.buff4[0]!=EMPTY) && (sbuff.buff4[0]!=EMPTY_VALUE) && (sbuff.buff4[0]!=NULL))
-     {
+   }
+   if((sbuff.buff4[0]!=EMPTY) && (sbuff.buff4[0]!=EMPTY_VALUE) && (sbuff.buff4[0]!=NULL)) {
       // Setting Market type. Trending or flat
       buff4[0] = sbuff.buff4[0];
-     }
-   else
-     {
+   } else {
       buff4[0] = EMPTY_VALUE;
-     }
+   }
 
-   if(((sbuff.buff1[0]==EMPTY) || (sbuff.buff1[0]==EMPTY_VALUE) || (sbuff.buff1[0]==NULL)))
-     {
+   if(((sbuff.buff1[0]==EMPTY) || (sbuff.buff1[0]==EMPTY_VALUE) || (sbuff.buff1[0]==NULL))) {
       //sbuff.buff1[0]=1000.314;
       sbuff.buff1[0]=EMPTY_VALUE;
       return sbuff.buff1[0];
-     }
+   }
 
-   if((sbuff.buff1[0]!=EMPTY) && (sbuff.buff1[0]!=EMPTY_VALUE) && (sbuff.buff1[0]!=NULL))
-     {
-      if(!flipSig)
-        {
+   if((sbuff.buff1[0]!=EMPTY) && (sbuff.buff1[0]!=EMPTY_VALUE) && (sbuff.buff1[0]!=NULL)) {
+      if(!flipSig) {
          return sbuff.buff1[0];
-        }
-      else
-         if(flipSig)
-           {
-            sbuff.buff1[0] = util.flipSig((SAN_SIGNAL)sbuff.buff1[0]);
-            return  sbuff.buff1[0];
-           }
-     }
+      } else if(flipSig) {
+         sbuff.buff1[0] = util.flipSig((SAN_SIGNAL)sbuff.buff1[0]);
+         return  sbuff.buff1[0];
+      }
+   }
 
    return sbuff.buff1[0];
-  }
+}
 
 
 
@@ -256,8 +228,7 @@ double buySell(const INDDATA &indData)
 //|                                                                  |
 //+------------------------------------------------------------------+
 bool calculateNow(const int rates_total,
-                  const int prev_calculated)
-  {
+                  const int prev_calculated) {
 
    int i=rates_total-prev_calculated-1;
    if(i<0)
@@ -267,5 +238,5 @@ bool calculateNow(const int rates_total,
 
 
    return false;
-  }
+}
 //+------------------------------------------------------------------+
