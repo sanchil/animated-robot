@@ -431,11 +431,11 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
       closeSIG = SAN_SIGNAL::CLOSE;
       sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
       Print("[imaSt1]: closeLoss CLOSE detected:."+ util.getSigString(closeSIG));
-   } else if(true && closeOrder && closeProfitLoss) {
+   } else if(false && closeOrder && closeProfitLoss) {
       closeSIG = SAN_SIGNAL::CLOSE;
       sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
       Print("[imaSt1]: profitPercentage CLOSE detected:."+ util.getSigString(closeSIG));
-   } else if(true && closeOrder && closeFlatTrade) {
+   } else if(false && closeOrder && closeFlatTrade) {
       closeSIG = SAN_SIGNAL::CLOSE;
       sigBuff.buff3[0] = (int)STRATEGYTYPE::CLOSEPOSITIONS;
       Print("[imaSt1]: closeFlatTrade CLOSE detected:."+ util.getSigString(closeSIG));
@@ -502,7 +502,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 // Print("[VARIANCE]:: cpSDSIG: "+util.getSigString(ss.cpSDSIG)+" ima30SDSIG: "+util.getSigString(ss.ima30SDSIG)+" ima120SDSIG: "+util.getSigString(varSIG)+" ima240SDSIG: "+util.getSigString(ss.ima240SDSIG)+" ima500SDSIG: "+util.getSigString(ss.ima500SDSIG));
 // Print("[TRADEABILITY]:: volSIG: "+util.getSigString(ss.volSIG)+" varBool: "+varBool+" varPosBool: "+varPosBool+" varNegBool: "+varNegBool+" ima120SDSIG: "+util.getSigString(varSIG));
 // Print("openCandleVol: "+openCandleVol+" openSlope: "+openSlope+" closeProfitLoss: "+closeProfitLoss+" fastOpenTrade11: "+fastOpenTrade11+" fastOpenTrade12: "+fastOpenTrade12+" fastOpenTrade13: "+fastOpenTrade13);
-
+   Print("[CLUSTER] ratios: rFM: "+ss.clusterSIG.matrixD[0]+" rMS: "+ss.clusterSIG.matrixD[1]+" rFS: "+ss.clusterSIG.matrixD[2]);
 // Print("[SIG][FIMA]:: fIma514: "+util.getSigString(ss.fastIma514SIG)+" fIma1430: "+util.getSigString(ss.fastIma1430SIG)+" fIma30120: "+util.getSigString(ss.fastIma30120SIG)+" fIma120240: "+util.getSigString(ss.fastIma120240SIG)+" fIma240500: "+util.getSigString(ss.fastIma240500SIG));
 // Print("[SIG][IMA] :: ima514:: "+util.getSigString(ss.ima514SIG)+" ima1430: "+util.getSigString(ss.ima1430SIG)+" ima30120: "+util.getSigString(ss.ima30120SIG)+" ima120240: "+util.getSigString(ss.ima120240SIG)+" ima240500: "+util.getSigString(ss.ima240500SIG));
    Print("[SIG][FSIG]:: fSig5: "+util.getSigString(ss.fsig5)+" fSig14: "+util.getSigString(ss.fsig14)+" fSig30: "+util.getSigString(ss.fsig30)+" fSig120: "+util.getSigString(ss.fsig120)+" fSig240: "+util.getSigString(ss.fsig240)+" fSig500: "+util.getSigString(ss.fsig500));
