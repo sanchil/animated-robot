@@ -83,6 +83,7 @@ class SanStrategies {
          //slopeVarSIG = sig.slopeVarSIG(indData.ima14,indData.ima30,indData.ima120,21,1);
          //slopeVarSIG = sig.slopeVarSIG(indData.ima5,indData.ima14,indData.ima30,21,1);
          slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,21,1);
+         imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,21,1);
          cpScatter21SIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.1,21);
          cpScatterSIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.1,120);
 
@@ -235,7 +236,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    SANTREND slopeTrendSIG = ss.trendRatioSIG;
    SIGMAVARIABILITY varSIG = ss.ima120SDSIG;
    bool spreadVolBool = (sb.spreadBool && (ss.volSIG==SAN_SIGNAL::TRADE));
-   DataTransport imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,21,1);
+   // DataTransport imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,21,1);
 
 
 //################################################################
@@ -350,21 +351,47 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool closeTrade18 = (util.oppSignal(hSig.mainFastSIG,dominantSIG));
    bool closeTrade19 = (util.oppSignal(hSig.slopeFastSIG,dominantSIG));
    bool closeTrade20 = (util.oppSignal(hSig.rsiFastSIG,dominantSIG));
-   bool closeTrade21 = ((fabs(imaSlopesData.matrixD[0])>2.5)&&(fabs(imaSlopesData.matrixD[1])>1.5))
+
+   // (2.5,1.5)->fsig5
+   // (2,1)->fsig14
+   // (1.8,0.8)->fsig30
+   // everything else -> fsig120
+
+//   bool closeTrade21 = ((fabs(ss.imaSlopesData.matrixD[0])>2.5)&&(fabs(ss.imaSlopesData.matrixD[1])>1.5))
+//                       ?
+//                       (util.oppSignal(ss.fsig5,tradePosition))
+//                       :
+//                       (
+//                          ((fabs(ss.imaSlopesData.matrixD[0])>2)&&(fabs(ss.imaSlopesData.matrixD[1])>1))
+//                          ?
+//                          (util.oppSignal(ss.fsig14,tradePosition))
+//                          :
+//                          (
+//                             ((fabs(ss.imaSlopesData.matrixD[0])>1.8)&&(fabs(ss.imaSlopesData.matrixD[1])>0.8))
+//                             ?
+//                             (util.oppSignal(ss.fsig30,tradePosition))
+//                             :
+//                             (util.oppSignal(ss.fsig120,tradePosition))
+//                          )
+//                       )
+//
+//                       ;
+
+   bool closeTrade21 = ((fabs(ss.imaSlopesData.matrixD[0])>2.5)&&(fabs(ss.imaSlopesData.matrixD[1])>1.5))
                        ?
-                       (util.oppSignal(ss.fsig5,tradePosition))
+                       (util.oppSignal(ss.fsig14,tradePosition))
                        :
                        (
-                          ((fabs(imaSlopesData.matrixD[0])>2)&&(fabs(imaSlopesData.matrixD[1])>1))
+                          ((fabs(ss.imaSlopesData.matrixD[0])>2)&&(fabs(ss.imaSlopesData.matrixD[1])>1))
                           ?
-                          (util.oppSignal(ss.fsig14,tradePosition))
+                          (util.oppSignal(ss.fsig30,tradePosition))
                           :
                           (
-                             ((fabs(imaSlopesData.matrixD[0])>1.8)&&(fabs(imaSlopesData.matrixD[1])>0.8))
+                             ((fabs(ss.imaSlopesData.matrixD[0])>1.8)&&(fabs(ss.imaSlopesData.matrixD[1])>0.8))
                              ?
-                             (util.oppSignal(ss.fsig30,tradePosition))
-                             :
                              (util.oppSignal(ss.fsig120,tradePosition))
+                             :
+                             (util.oppSignal(ss.fsig240,tradePosition))
                           )
                        )
 
@@ -373,9 +400,6 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 
 
-//bool closeTrade19 = (closeTrade10 || closeTrade14);
-
-//bool closeTrade26 = ((noVolWindPressure &&(closeTrade8&&closeTrade10&&closeTrade9))||closeTrade14);
    bool closeTrade26 = (noVolWindPressure && (
                            (ss.candleVol120SIG==SAN_SIGNAL::SIDEWAYS)
                            ||(ss.slopeVarSIG==SAN_SIGNAL::SIDEWAYS)
@@ -390,7 +414,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool closeTradeL1 = (closeTrade14);
    bool closeTradeL2 = (closeTrade9||closeTrade14);
    bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade27||closeTrade28||closeTrade29);
-   //bool closeTradeL5 = (closeTrade29);
+//   bool closeTradeL5 = (closeTrade29);
    bool closeTradeL5 = (
                           (util.oppSignal(dominantSIG,tradePosition))
                           ||closeTrade21
