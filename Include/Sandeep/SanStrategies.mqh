@@ -377,25 +377,49 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //
 //                       ;
 
-   bool closeTrade21 = ((fabs(ss.imaSlopesData.matrixD[0])>2.5)&&(fabs(ss.imaSlopesData.matrixD[1])>1.5))
-                       ?
-                       (util.oppSignal(ss.fsig14,tradePosition))
-                       :
-                       (
-                          ((fabs(ss.imaSlopesData.matrixD[0])>2)&&(fabs(ss.imaSlopesData.matrixD[1])>1))
-                          ?
-                          (util.oppSignal(ss.fsig30,tradePosition))
-                          :
-                          (
-                             ((fabs(ss.imaSlopesData.matrixD[0])>1.8)&&(fabs(ss.imaSlopesData.matrixD[1])>0.8))
-                             ?
-                             (util.oppSignal(ss.fsig120,tradePosition))
-                             :
-                             (util.oppSignal(ss.fsig240,tradePosition))
-                          )
-                       )
-
-                       ;
+   bool closeTrade21 =  (
+                           (
+                              ((fabs(ss.imaSlopesData.matrixD[0])<=0.1)&&(fabs(ss.imaSlopesData.matrixD[1])<=0.9)&&(fabs(ss.imaSlopesData.matrixD[2])<=0.6))
+                              ||(((ss.imaSlopesData.matrixD[0])>0.6)&&((ss.imaSlopesData.matrixD[2])<=-0.3))
+                              ||(((ss.imaSlopesData.matrixD[0])<-0.6)&&((ss.imaSlopesData.matrixD[2])>=0.3))
+                           )
+                           ?
+                           (util.oppSignal(ss.fsig120,tradePosition))
+                           :
+                           (
+                              (
+                                 ((fabs(ss.imaSlopesData.matrixD[0])<=0.3)&&(fabs(ss.imaSlopesData.matrixD[1])<=1.2)&&(fabs(ss.imaSlopesData.matrixD[2])<=0.9))
+                                 ||(((ss.imaSlopesData.matrixD[0])>1.0)&&(((ss.imaSlopesData.matrixD[1])<=-0.1)||((ss.imaSlopesData.matrixD[1])>=0.1))&&((ss.imaSlopesData.matrixD[2])<=-0.5))
+                                 ||(((ss.imaSlopesData.matrixD[0])<-1.0)&&(((ss.imaSlopesData.matrixD[1])<=-0.1)||((ss.imaSlopesData.matrixD[1])>=0.1))&&((ss.imaSlopesData.matrixD[2])>=0.5))
+                              )
+                              ?
+                              (util.oppSignal(ss.fsig30,tradePosition))
+                              :
+                              (
+                                 (
+                                    ((fabs(ss.imaSlopesData.matrixD[0])<=0.7)&&(fabs(ss.imaSlopesData.matrixD[1])<=1.5)&&(fabs(ss.imaSlopesData.matrixD[2])<=1.2))
+                                    ||(((ss.imaSlopesData.matrixD[0])>1.1)&&(((ss.imaSlopesData.matrixD[1])<=-0.2)||((ss.imaSlopesData.matrixD[1])>=0.2))&&((ss.imaSlopesData.matrixD[2])<=-0.6))
+                                    ||(((ss.imaSlopesData.matrixD[0])<-1.1)&&(((ss.imaSlopesData.matrixD[1])<=-0.2)||((ss.imaSlopesData.matrixD[1])>=0.2))&&((ss.imaSlopesData.matrixD[2])>=0.6))
+                                 )
+                                 ?
+                                 (util.oppSignal(ss.fsig14,tradePosition))
+                                 :
+                                 (
+                                    (
+                                       ((fabs(ss.imaSlopesData.matrixD[0])<=1.0)&&(fabs(ss.imaSlopesData.matrixD[1])<=1.8)&&(fabs(ss.imaSlopesData.matrixD[2])<=1.5))
+                                       ||(((ss.imaSlopesData.matrixD[0])>1.3)&&(((ss.imaSlopesData.matrixD[1])<=-0.3)||((ss.imaSlopesData.matrixD[1])>=0.3))&&((ss.imaSlopesData.matrixD[2])<=-0.8))
+                                       ||(((ss.imaSlopesData.matrixD[0])<-1.3)&&(((ss.imaSlopesData.matrixD[1])<=-0.3)||((ss.imaSlopesData.matrixD[1])>=0.3))&&((ss.imaSlopesData.matrixD[2])>=0.8))
+                                    )
+                                    ?
+                                    (util.oppSignal(ss.fsig5,tradePosition))
+                                    :
+                                    false
+                                    //(util.oppSignal(ss.fsig240,tradePosition))
+                                 )
+                              )
+                           )
+                        )
+                        ;
 
 
 
@@ -497,7 +521,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 
    if(!closeTrade)
-  // if((!closeFlatTrade)&&(!closeTrade))
+      // if((!closeFlatTrade)&&(!closeTrade))
       ss.openSIG = openSIG;
    ss.closeSIG = closeSIG;
 
@@ -531,7 +555,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 // Print("[SIG][IMA] :: ima514:: "+util.getSigString(ss.ima514SIG)+" ima1430: "+util.getSigString(ss.ima1430SIG)+" ima30120: "+util.getSigString(ss.ima30120SIG)+" ima120240: "+util.getSigString(ss.ima120240SIG)+" ima240500: "+util.getSigString(ss.ima240500SIG));
    Print("[SIG][FSIG]:: fSig5: "+util.getSigString(ss.fsig5)+" fSig14: "+util.getSigString(ss.fsig14)+" fSig30: "+util.getSigString(ss.fsig30)+" fSig120: "+util.getSigString(ss.fsig120)+" fSig240: "+util.getSigString(ss.fsig240)+" fSig500: "+util.getSigString(ss.fsig500));
 // Print("[SIG][SIG] :: sig5: "+util.getSigString(ss.sig5)+" sig14: "+util.getSigString(ss.sig14)+" sig30: "+util.getSigString(ss.sig30)+" sig120: "+util.getSigString(ss.sig120)+" sig240: "+util.getSigString(ss.sig240)+" sig500: "+util.getSigString(ss.sig500));
-   Print("[MARKET]: Mkt Type: "+util.getSigString(hSig.mktType)+" var: "+varBool+" varFlat: "+varFlatBool+" slpTrVar: "+slopeTrendVarBool);
+   Print("[MARKET]: Mkt Type: "+util.getSigString(hSig.mktType)+" var: "+varBool+" varFlat: "+varFlatBool+" slpTrVar: "+slopeTrendVarBool+" trendSig14_30_120:"+util.getSigString(hSig.trend_5_14_30_SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG));
    Print("[SIGNAL]: New Candle: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" CurrPos: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" PL:"+util.getSigString(ss.profitPercentageSIG)+" Loss:"+util.getSigString(ss.lossSIG));
 
    return sigBuff;
