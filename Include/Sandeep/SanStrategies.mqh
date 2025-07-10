@@ -114,7 +114,7 @@ class SanStrategies {
          rsiSIG = sig.rsiSIG(indData.rsi,21,1);
          tradeVolVarSIG = sig.tradeVolVarSignal(volSIG,ima30SDSIG,ima120SDSIG,ima240SDSIG);
          clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
- //        varDt = sig.varSIG(ima30SDSIG,ima120SDSIG,ima240SDSIG);
+//        varDt = sig.varSIG(ima30SDSIG,ima120SDSIG,ima240SDSIG);
 
       }
 
@@ -296,14 +296,13 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //bool notFlatBool = (varBool &&(((slopeTrendSIG!=SANTREND::FLAT)&&(slopeTrendSIG!=SANTREND::NOTREND))||((ss.candleVol120SIG!=SAN_SIGNAL::SIDEWAYS)&&(ss.candleVol120SIG!=SAN_SIGNAL::NOSIG))));
 //bool flatBool = (noVarBool && ((slopeTrendSIG==SANTREND::FLAT)||(ss.candleVol120SIG==SAN_SIGNAL::SIDEWAYS)||(ss.slopeVarSIG==SAN_SIGNAL::SIDEWAYS)));
 
-   bool notFlatBool = (varBool && (hSig.mktType==MKTTYP::MKTTR));
+   bool notFlatBool = (varBool && (varPosBool||varNegBool) && (hSig.mktType==MKTTYP::MKTTR));
    bool flatBool = (varFlatBool && (hSig.mktType==MKTTYP::MKTFLAT));
 
 
    bool basicOpenVolBool = (spreadVolBool && notFlatBool);
    bool basicOpenBool = (spreadBool && notFlatBool);
 
-//   bool slopeTrendVarBool = (basicOpenVolBool && slopeTrendBool && varBool);
    bool slopeTrendVarBool = (basicOpenBool && slopeTrendBool);
    bool candleVolVar120Bool = (basicOpenVolBool && candleVol120Bool);
 
@@ -318,8 +317,8 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //
 //// #################################################################################
    bool fastOpenTrade10 = (fastOpenTrade3||fastOpenTrade4||fastOpenTrade5||fastOpenTrade6);
-   bool fastOpenTrade11 = (slopeTrendVarBool && (dominantSIG!=SAN_SIGNAL::NOSIG) && (dominantSIG!=SAN_SIGNAL::CLOSE) && (dominantSIG!=SAN_SIGNAL::SIDEWAYS));
-
+   //bool fastOpenTrade11 = (slopeTrendVarBool && (dominantSIG!=SAN_SIGNAL::NOSIG) && (dominantSIG!=SAN_SIGNAL::CLOSE) && (dominantSIG!=SAN_SIGNAL::SIDEWAYS));
+   bool fastOpenTrade11 = (basicOpenBool && ((dominantSIG==SAN_SIGNAL::BUY)||(dominantSIG==SAN_SIGNAL::SELL)));
    bool fastOpenTrade12 = (fastOpenTrade11 && (dominantSIG==hSig.mainFastSIG));
    bool fastOpenTrade13 = (fastOpenTrade11 && (dominantSIG==hSig.slopeFastSIG));
    bool fastOpenTrade14 = (fastOpenTrade11 && (dominantSIG==hSig.rsiFastSIG));
@@ -525,8 +524,8 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 
 
-   if(!closeTrade)
-      // if((!closeFlatTrade)&&(!closeTrade))
+   //if(!closeTrade)
+   if((!closeFlatTrade)&&(!closeTrade))
       ss.openSIG = openSIG;
    ss.closeSIG = closeSIG;
 
