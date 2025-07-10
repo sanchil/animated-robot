@@ -114,6 +114,7 @@ class SanStrategies {
          rsiSIG = sig.rsiSIG(indData.rsi,21,1);
          tradeVolVarSIG = sig.tradeVolVarSignal(volSIG,ima30SDSIG,ima120SDSIG,ima240SDSIG);
          clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
+ //        varDt = sig.varSIG(ima30SDSIG,ima120SDSIG,ima240SDSIG);
 
       }
 
@@ -229,14 +230,11 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 //################################################################
 //################################################################
-//bool openOrder = ((totalOrders==0));
    bool openOrder = (op1.NEWCANDLE && (totalOrders==0));
    bool closeOrder = (!op1.NEWCANDLE && (totalOrders>0));
-//SANTREND slopeTrendSIG = ss.acfTrendSIG;
    SANTREND slopeTrendSIG = ss.trendRatioSIG;
    SIGMAVARIABILITY varSIG = ss.ima120SDSIG;
    bool spreadVolBool = (sb.spreadBool && (ss.volSIG==SAN_SIGNAL::TRADE));
-   // DataTransport imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,21,1);
 
 
 //################################################################
@@ -252,28 +250,35 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 //########################################################################################
 
-   double var30Val = util.getSigVarBool(ss.ima30SDSIG);
-   bool var30Bool = ((var30Val!=0) && ((var30Val==1.314)||(var30Val==-1.314)));
-   bool var30PosBool = ((var30Val!=0) && (var30Val==1.314));
-   bool var30NegBool = ((var30Val!=0) && (var30Val==-1.314));
-   bool var30FlatBool = (var30Val==0);
+//   double var30Val = util.getSigVarBool(ss.ima30SDSIG);
+//   bool var30Bool = ((var30Val!=0) && ((var30Val==1.314)||(var30Val==-1.314)));
+//   bool var30PosBool = ((var30Val!=0) && (var30Val==1.314));
+//   bool var30NegBool = ((var30Val!=0) && (var30Val==-1.314));
+//   bool var30FlatBool = (var30Val==0);
+//
+//   double var120Val = util.getSigVarBool(ss.ima120SDSIG);
+//   bool var120Bool = ((var120Val!=0) && ((var120Val==1.314)||(var120Val==-1.314)));
+//   bool var120PosBool = ((var120Val!=0) && (var120Val==1.314));
+//   bool var120NegBool = ((var120Val!=0) && (var120Val==-1.314));
+//   bool var120FlatBool = (var120Val==0);
+//
+//   double var240Val = util.getSigVarBool(ss.ima240SDSIG);
+//   bool var240Bool = ((var240Val!=0) && ((var240Val==1.314)||(var240Val==-1.314)));
+//   bool var240PosBool = ((var240Val!=0) && (var240Val==1.314));
+//   bool var240NegBool = ((var240Val!=0) && (var240Val==-1.314));
+//   bool var240FlatBool = (var240Val==0);
+//
+//   bool varBool = (var30Bool&&var120Bool&&var240Bool);
+//   bool varPosBool = (varBool && (var30PosBool&&var120PosBool&&var240PosBool));
+//   bool varNegBool = (varBool && (var30NegBool&&var120NegBool&&var240NegBool));
+//   bool varFlatBool = (var30FlatBool||var120FlatBool||var240FlatBool);
 
-   double var120Val = util.getSigVarBool(ss.ima120SDSIG);
-   bool var120Bool = ((var120Val!=0) && ((var120Val==1.314)||(var120Val==-1.314)));
-   bool var120PosBool = ((var120Val!=0) && (var120Val==1.314));
-   bool var120NegBool = ((var120Val!=0) && (var120Val==-1.314));
-   bool var120FlatBool = (var120Val==0);
+   DataTransport varDt = sig.varSIG(ss.ima30SDSIG,ss.ima120SDSIG,ss.ima240SDSIG);
+   bool varPosBool = varDt.matrixBool[0];
+   bool varNegBool = varDt.matrixBool[1];
+   bool varFlatBool = varDt.matrixBool[2];
+   bool varBool = varDt.matrixBool[3];
 
-   double var240Val = util.getSigVarBool(ss.ima240SDSIG);
-   bool var240Bool = ((var240Val!=0) && ((var240Val==1.314)||(var240Val==-1.314)));
-   bool var240PosBool = ((var240Val!=0) && (var240Val==1.314));
-   bool var240NegBool = ((var240Val!=0) && (var240Val==-1.314));
-   bool var240FlatBool = (var240Val==0);
-
-   bool varBool = (var30Bool&&var120Bool&&var240Bool);
-   bool varPosBool = (varBool && (var30PosBool&&var120PosBool&&var240PosBool));
-   bool varNegBool = (varBool && (var30NegBool&&var120NegBool&&var240NegBool));
-   bool varFlatBool = (var30FlatBool||var120FlatBool||var240FlatBool);
 
 //########################################################################################
 
@@ -542,15 +547,15 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 // Print("[TIME] : Current: "+ TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES)+" GMT: "+ TimeToString(TimeGMT(), TIME_DATE|TIME_MINUTES));
 
    Print("[MAIN][SLOW]:: domSIG: "+util.getSigString(dominantSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" dom240:: "+util.getSigString(hSig.dominant240SIG)+" IMA120240TR240:: "+util.getSigString(hSig.dominantTrendIma240SIG)+" dom120:: "+util.getSigString(hSig.dominant120SIG)+" IMA30120TR240:: "+util.getSigString(hSig.dominantTrendIma120SIG)+" cpSlopeVarFAST: "+util.getSigString(hSig.cpSlopeVarFastSIG)+" VolVar: "+util.getSigString(hSig.domVolVarSIG)+" TrCP: "+util.getSigString(hSig.dominantTrendCPSIG)+" TrIMA: "+util.getSigString(hSig.domTrIMA));
-   Print("[MAIN][FAST]:: mainFast: "+util.getSigString(hSig.mainFastSIG)+" slopeFast: "+util.getSigString(hSig.slopeFastSIG)+" rsiFAST: "+util.getSigString(hSig.rsiFastSIG)+" cpFAST: "+util.getSigString(hSig.cpFastSIG)+" candleVol120SIG: "+util.getSigString(ss.candleVol120SIG)+" slopeSIG: "+util.getSigString(ss.slopeVarSIG)+" CP120: "+util.getSigString(ss.cpScatterSIG)+" ima1430: "+util.getSigString(ss.ima1430SIG));
+//   Print("[MAIN][FAST]:: mainFast: "+util.getSigString(hSig.mainFastSIG)+" slopeFast: "+util.getSigString(hSig.slopeFastSIG)+" rsiFAST: "+util.getSigString(hSig.rsiFastSIG)+" cpFAST: "+util.getSigString(hSig.cpFastSIG)+" candleVol120SIG: "+util.getSigString(ss.candleVol120SIG)+" slopeSIG: "+util.getSigString(ss.slopeVarSIG)+" CP120: "+util.getSigString(ss.cpScatterSIG)+" ima1430: "+util.getSigString(ss.ima1430SIG));
    Print("[CLOSE] :: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" closeTrade21: "+closeTrade21);
-
+//   Print("[VARBOOLS]: varBool: "+varBool+" varBoolDt: "+ss.varDt.matrixBool[3] +" varPosBool: "+varPosBool+" varPosBoolDt: "+ss.varDt.matrixBool[0]+" varNegBool: "+varNegBool+" varNegBoolDt: "+ss.varDt.matrixBool[1]+" varFlatBool: "+varFlatBool+" varFlatBoolDt: "+ss.varDt.matrixBool[2]);
    //Print("[SLOPES]: FAST: "+ imaSlopesData.matrixD[0]+" : "+(0.15+(1.5*0.1))+" MEDIUM: "+imaSlopesData.matrixD[1]+" : "+(0.15+0.1)+" SLOW: "+imaSlopesData.matrixD[2]+" : 0.15  :SLOWWIDE: "+imaSlopesData.matrixD[3]+" : 0.1");
 // Print("[TREND]:: tr5: "+util.getSigString(ss.trendRatio5SIG)+" tr14: "+util.getSigString(ss.trendRatio14SIG)+" tr30: "+util.getSigString(ss.trendRatio30SIG)+" tr120: "+util.getSigString(ss.trendRatio120SIG)+" tr240: "+util.getSigString(ss.trendRatio240SIG)+" tr500: "+util.getSigString(ss.trendRatio500SIG));
 // Print("[VARIANCE]:: cpSDSIG: "+util.getSigString(ss.cpSDSIG)+" ima30SDSIG: "+util.getSigString(ss.ima30SDSIG)+" ima120SDSIG: "+util.getSigString(varSIG)+" ima240SDSIG: "+util.getSigString(ss.ima240SDSIG)+" ima500SDSIG: "+util.getSigString(ss.ima500SDSIG));
 // Print("[TRADEABILITY]:: volSIG: "+util.getSigString(ss.volSIG)+" varBool: "+varBool+" varPosBool: "+varPosBool+" varNegBool: "+varNegBool+" ima120SDSIG: "+util.getSigString(varSIG));
 // Print("openCandleVol: "+openCandleVol+" openSlope: "+openSlope+" closeProfitLoss: "+closeProfitLoss+" fastOpenTrade11: "+fastOpenTrade11+" fastOpenTrade12: "+fastOpenTrade12+" fastOpenTrade13: "+fastOpenTrade13);
-   Print("[CLUSTER] ratios: rFM: "+ss.clusterSIG.matrixD[0]+" rMS: "+ss.clusterSIG.matrixD[1]+" rFS: "+ss.clusterSIG.matrixD[2]);
+// Print("[CLUSTER] ratios: rFM: "+ss.clusterSIG.matrixD[0]+" rMS: "+ss.clusterSIG.matrixD[1]+" rFS: "+ss.clusterSIG.matrixD[2]);
 // Print("[SIG][FIMA]:: fIma514: "+util.getSigString(ss.fastIma514SIG)+" fIma1430: "+util.getSigString(ss.fastIma1430SIG)+" fIma30120: "+util.getSigString(ss.fastIma30120SIG)+" fIma120240: "+util.getSigString(ss.fastIma120240SIG)+" fIma240500: "+util.getSigString(ss.fastIma240500SIG));
 // Print("[SIG][IMA] :: ima514:: "+util.getSigString(ss.ima514SIG)+" ima1430: "+util.getSigString(ss.ima1430SIG)+" ima30120: "+util.getSigString(ss.ima30120SIG)+" ima120240: "+util.getSigString(ss.ima120240SIG)+" ima240500: "+util.getSigString(ss.ima240500SIG));
    Print("[SIG][FSIG]:: fSig5: "+util.getSigString(ss.fsig5)+" fSig14: "+util.getSigString(ss.fsig14)+" fSig30: "+util.getSigString(ss.fsig30)+" fSig120: "+util.getSigString(ss.fsig120)+" fSig240: "+util.getSigString(ss.fsig240)+" fSig500: "+util.getSigString(ss.fsig500));
