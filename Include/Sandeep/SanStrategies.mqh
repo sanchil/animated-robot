@@ -381,43 +381,6 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //
 //                       ;
 
-   bool closeTrade21 =  (
-                                    (
-                                       ((fabs(ss.imaSlopesData.matrixD[0])>=2.8)&&(fabs(ss.imaSlopesData.matrixD[1])>=1.8)&&((fabs(ss.imaSlopesData.matrixD[2])>=1.2)||(fabs(ss.imaSlopesData.matrixD[3])>=1.5)))
-                                    )
-                                    ?
-                                    (util.oppSignal(ss.fsig5,tradePosition))
-                                    :
-                                    (
-                                       ((fabs(ss.imaSlopesData.matrixD[0])>=2.2)&&(fabs(ss.imaSlopesData.matrixD[1])>=1.2)&&((fabs(ss.imaSlopesData.matrixD[2])>=0.9)||(fabs(ss.imaSlopesData.matrixD[3])>=1.0)))
-                                       ?
-                                       (util.oppSignal(ss.fsig14,tradePosition))
-                                       :
-                                       (
-                                          ((fabs(ss.imaSlopesData.matrixD[0])>=1.8)&&(fabs(ss.imaSlopesData.matrixD[1])>=1.0)&&((fabs(ss.imaSlopesData.matrixD[2])>=0.6)||(fabs(ss.imaSlopesData.matrixD[3])>=0.8)))
-                                          ?
-                                          (util.oppSignal(ss.fsig30,tradePosition))
-                                          :
-                                          (
-                                             ((fabs(ss.imaSlopesData.matrixD[0])>=1.2)&&(fabs(ss.imaSlopesData.matrixD[1])>=0.8)&&((fabs(ss.imaSlopesData.matrixD[2])>=0.4)||(fabs(ss.imaSlopesData.matrixD[3])>=0.6)))
-                                             ?
-                                             (util.oppSignal(ss.fsig120,tradePosition))
-                                             :
-                                             (
-                                                   ((fabs(ss.imaSlopesData.matrixD[0])>=0.6)&&(fabs(ss.imaSlopesData.matrixD[1])>=0.3)&&((fabs(ss.imaSlopesData.matrixD[2])>=0.1)||(fabs(ss.imaSlopesData.matrixD[3])>=0.2)))
-                                                   ?
-                                                   (util.oppSignal(ss.fsig240,tradePosition))
-                                                   :
-                                                   false
-                                             )
-                                          )
-                                       )
-                                    )
-                                 )
-                                 ;
-
-
-
 
    bool closeTrade26 = (noVolWindPressure && (
                            (ss.candleVol120SIG==SAN_SIGNAL::SIDEWAYS)
@@ -434,17 +397,6 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool closeTradeL2 = (closeTrade9||closeTrade14);
    bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade27||closeTrade28||closeTrade29);
    bool closeTradeL5 = (closeTrade29);
-   //bool closeTradeL5 = (
-   //                       (util.oppSignal(dominantSIG,tradePosition))
-   //                       ||closeTrade21
-   //                       //||closeTrade29
-   //                    );
-
-//   bool closeTradeL4 = (closeTrade14||closeTrade18||closeTrade19||closeTrade20||closeTrade26||closeTrade27||closeTrade28||closeTrade29);
-//   bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade29);
-// bool closeTradeL3 = (closeTrade14||closeTrade26||closeTrade27||closeTrade29);
-
-//   bool closeTradeL3 = (closeTrade26||closeTrade28||closeTrade29);
 
 //#################################################################################
 
@@ -538,7 +490,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
    Print("[MAIN][SLOW]:: domSIG: "+util.getSigString(dominantSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" dom240:: "+util.getSigString(hSig.dominant240SIG)+" IMA120240TR240:: "+util.getSigString(hSig.dominantTrendIma240SIG)+" dom120:: "+util.getSigString(hSig.dominant120SIG)+" IMA30120TR240:: "+util.getSigString(hSig.dominantTrendIma120SIG)+" cpSlopeVarFAST: "+util.getSigString(hSig.cpSlopeVarFastSIG)+" VolVar: "+util.getSigString(hSig.domVolVarSIG)+" TrCP: "+util.getSigString(hSig.dominantTrendCPSIG)+" TrIMA: "+util.getSigString(hSig.domTrIMA));
 //   Print("[MAIN][FAST]:: mainFast: "+util.getSigString(hSig.mainFastSIG)+" slopeFast: "+util.getSigString(hSig.slopeFastSIG)+" rsiFAST: "+util.getSigString(hSig.rsiFastSIG)+" cpFAST: "+util.getSigString(hSig.cpFastSIG)+" candleVol120SIG: "+util.getSigString(ss.candleVol120SIG)+" slopeSIG: "+util.getSigString(ss.slopeVarSIG)+" CP120: "+util.getSigString(ss.cpScatterSIG)+" ima1430: "+util.getSigString(ss.ima1430SIG));
-   Print("[CLOSE] :: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" closeTrade21: "+closeTrade21);
+   Print("[CLOSE] :: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade);
 //   Print("[VARBOOLS]: varBool: "+varBool+" varBoolDt: "+ss.varDt.matrixBool[3] +" varPosBool: "+varPosBool+" varPosBoolDt: "+ss.varDt.matrixBool[0]+" varNegBool: "+varNegBool+" varNegBoolDt: "+ss.varDt.matrixBool[1]+" varFlatBool: "+varFlatBool+" varFlatBoolDt: "+ss.varDt.matrixBool[2]);
    //Print("[SLOPES]: FAST: "+ imaSlopesData.matrixD[0]+" : "+(0.15+(1.5*0.1))+" MEDIUM: "+imaSlopesData.matrixD[1]+" : "+(0.15+0.1)+" SLOW: "+imaSlopesData.matrixD[2]+" : 0.15  :SLOWWIDE: "+imaSlopesData.matrixD[3]+" : 0.1");
 // Print("[TREND]:: tr5: "+util.getSigString(ss.trendRatio5SIG)+" tr14: "+util.getSigString(ss.trendRatio14SIG)+" tr30: "+util.getSigString(ss.trendRatio30SIG)+" tr120: "+util.getSigString(ss.trendRatio120SIG)+" tr240: "+util.getSigString(ss.trendRatio240SIG)+" tr500: "+util.getSigString(ss.trendRatio500SIG));
