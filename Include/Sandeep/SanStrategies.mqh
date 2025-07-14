@@ -382,48 +382,39 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //                       ;
 
    bool closeTrade21 =  (
-                           (
-                              ((fabs(ss.imaSlopesData.matrixD[0])<=0.1)&&(fabs(ss.imaSlopesData.matrixD[1])<=0.9)&&(fabs(ss.imaSlopesData.matrixD[2])<=0.6))
-                              ||(((ss.imaSlopesData.matrixD[0])>0.6)&&((ss.imaSlopesData.matrixD[2])<=-0.3))
-                              ||(((ss.imaSlopesData.matrixD[0])<-0.6)&&((ss.imaSlopesData.matrixD[2])>=0.3))
-                           )
-                           ?
-                           (util.oppSignal(ss.fsig120,tradePosition))
-                           :
-                           (
-                              (
-                                 ((fabs(ss.imaSlopesData.matrixD[0])<=0.3)&&(fabs(ss.imaSlopesData.matrixD[1])<=1.2)&&(fabs(ss.imaSlopesData.matrixD[2])<=0.9))
-                                 ||(((ss.imaSlopesData.matrixD[0])>1.0)&&(((ss.imaSlopesData.matrixD[1])<=-0.1)||((ss.imaSlopesData.matrixD[1])>=0.1))&&((ss.imaSlopesData.matrixD[2])<=-0.5))
-                                 ||(((ss.imaSlopesData.matrixD[0])<-1.0)&&(((ss.imaSlopesData.matrixD[1])<=-0.1)||((ss.imaSlopesData.matrixD[1])>=0.1))&&((ss.imaSlopesData.matrixD[2])>=0.5))
-                              )
-                              ?
-                              (util.oppSignal(ss.fsig30,tradePosition))
-                              :
-                              (
-                                 (
-                                    ((fabs(ss.imaSlopesData.matrixD[0])<=0.7)&&(fabs(ss.imaSlopesData.matrixD[1])<=1.5)&&(fabs(ss.imaSlopesData.matrixD[2])<=1.2))
-                                    ||(((ss.imaSlopesData.matrixD[0])>1.1)&&(((ss.imaSlopesData.matrixD[1])<=-0.2)||((ss.imaSlopesData.matrixD[1])>=0.2))&&((ss.imaSlopesData.matrixD[2])<=-0.6))
-                                    ||(((ss.imaSlopesData.matrixD[0])<-1.1)&&(((ss.imaSlopesData.matrixD[1])<=-0.2)||((ss.imaSlopesData.matrixD[1])>=0.2))&&((ss.imaSlopesData.matrixD[2])>=0.6))
-                                 )
-                                 ?
-                                 (util.oppSignal(ss.fsig14,tradePosition))
-                                 :
-                                 (
                                     (
-                                       ((fabs(ss.imaSlopesData.matrixD[0])<=1.0)&&(fabs(ss.imaSlopesData.matrixD[1])<=1.8)&&(fabs(ss.imaSlopesData.matrixD[2])<=1.5))
-                                       ||(((ss.imaSlopesData.matrixD[0])>1.3)&&(((ss.imaSlopesData.matrixD[1])<=-0.3)||((ss.imaSlopesData.matrixD[1])>=0.3))&&((ss.imaSlopesData.matrixD[2])<=-0.8))
-                                       ||(((ss.imaSlopesData.matrixD[0])<-1.3)&&(((ss.imaSlopesData.matrixD[1])<=-0.3)||((ss.imaSlopesData.matrixD[1])>=0.3))&&((ss.imaSlopesData.matrixD[2])>=0.8))
+                                       ((fabs(ss.imaSlopesData.matrixD[0])>=2.8)&&(fabs(ss.imaSlopesData.matrixD[1])>=1.8)&&((fabs(ss.imaSlopesData.matrixD[2])>=1.2)||(fabs(ss.imaSlopesData.matrixD[3])>=1.5)))
                                     )
                                     ?
                                     (util.oppSignal(ss.fsig5,tradePosition))
                                     :
-                                    false
-                                    //(util.oppSignal(ss.fsig240,tradePosition))
+                                    (
+                                       ((fabs(ss.imaSlopesData.matrixD[0])>=2.2)&&(fabs(ss.imaSlopesData.matrixD[1])>=1.2)&&((fabs(ss.imaSlopesData.matrixD[2])>=0.9)||(fabs(ss.imaSlopesData.matrixD[3])>=1.0)))
+                                       ?
+                                       (util.oppSignal(ss.fsig14,tradePosition))
+                                       :
+                                       (
+                                          ((fabs(ss.imaSlopesData.matrixD[0])>=1.8)&&(fabs(ss.imaSlopesData.matrixD[1])>=1.0)&&((fabs(ss.imaSlopesData.matrixD[2])>=0.6)||(fabs(ss.imaSlopesData.matrixD[3])>=0.8)))
+                                          ?
+                                          (util.oppSignal(ss.fsig30,tradePosition))
+                                          :
+                                          (
+                                             ((fabs(ss.imaSlopesData.matrixD[0])>=1.2)&&(fabs(ss.imaSlopesData.matrixD[1])>=0.8)&&((fabs(ss.imaSlopesData.matrixD[2])>=0.4)||(fabs(ss.imaSlopesData.matrixD[3])>=0.6)))
+                                             ?
+                                             (util.oppSignal(ss.fsig120,tradePosition))
+                                             :
+                                             (
+                                                   ((fabs(ss.imaSlopesData.matrixD[0])>=0.6)&&(fabs(ss.imaSlopesData.matrixD[1])>=0.3)&&((fabs(ss.imaSlopesData.matrixD[2])>=0.1)||(fabs(ss.imaSlopesData.matrixD[3])>=0.2)))
+                                                   ?
+                                                   (util.oppSignal(ss.fsig240,tradePosition))
+                                                   :
+                                                   false
+                                             )
+                                          )
+                                       )
+                                    )
                                  )
-                              )
-                           )
-                        )
-                        ;
+                                 ;
 
 
 
