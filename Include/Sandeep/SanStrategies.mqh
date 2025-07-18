@@ -82,8 +82,11 @@ class SanStrategies {
          //trendRatioSIG = sig.trendRatioSIG(indData.ima30,"IMA30",21);
          //slopeVarSIG = sig.slopeVarSIG(indData.ima14,indData.ima30,indData.ima120,21,1);
          //slopeVarSIG = sig.slopeVarSIG(indData.ima5,indData.ima14,indData.ima30,21,1);
+         
          slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,21,1);
          imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,21,1);
+         slopeRatioData = sig.slopeRatioData(indData.ima30,indData.ima120,indData.ima240,21,1);
+         
          cpScatter21SIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.1,21);
          cpScatterSIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.1,120);
 
