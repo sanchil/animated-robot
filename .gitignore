@@ -48,6 +48,7 @@ Thumbs.db
 
 # ignore temp files
 _tmp_*
+_temp_*
 *.tmp
 *.temp
 
