@@ -46,6 +46,11 @@ Thumbs.db
 *.user
 *.code-workspace
 
+# ignore temp files
+_tmp_*
+*.tmp
+*.temp
+
 # Dependency directories (if using external tools)
 node_modules/
 vendor/
