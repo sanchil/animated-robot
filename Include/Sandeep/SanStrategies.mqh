@@ -296,6 +296,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool slopeVarBool = (ss.slopeVarSIG==SAN_SIGNAL::SELL||ss.slopeVarSIG==SAN_SIGNAL::BUY);
 
    HSIG hSig(ss, util);
+   
    dominantSIG = sig.dominantTrendSIG(ss,hSig);
 
 //bool notFlatBool = (varBool &&(((slopeTrendSIG!=SANTREND::FLAT)&&(slopeTrendSIG!=SANTREND::NOTREND))||((ss.candleVol120SIG!=SAN_SIGNAL::SIDEWAYS)&&(ss.candleVol120SIG!=SAN_SIGNAL::NOSIG))));
