@@ -35,7 +35,10 @@
 //########################################################################################################
 
 struct HSIG {
-
+   
+   SanUtils* ut;
+   SANSIGNALS ssSIG;
+   
    MKTTYP            mktType;
    DataTransport     imaSlopesData;
    DataTransport     slopeRatioData;
@@ -150,7 +153,10 @@ struct HSIG {
    }
 
    HSIG(const SANSIGNALS &ss, SanUtils &util) {
-
+   
+      ut = util;
+      ssSIG = ss;
+      
       mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
       slopeFastSIG = matchSIG(ss.slopeVarSIG, ss.ima1430SIG);
       rsiFastSIG = matchSIG(ss.rsiSIG, ss.ima1430SIG);
