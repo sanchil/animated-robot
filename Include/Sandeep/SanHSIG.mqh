@@ -242,13 +242,13 @@ struct HSIG {
                           );
 
       // getMktCloseOnVariableSlope(ss,util): This is great for close signals when the signals are steep
-      bool closeTradeBool = getMktCloseOnVariableSlope(ss,util);
+      bool closeTradeBool = getMktCloseOnVariableSlope(ss);
 
       // getMktCloseOnFlat(fastSIG,flatMktBool): This is great for handling close when market is flat.
       bool closeFlatTradeBool = getMktCloseOnFlat(fastSIG,flatMktBool);
 
       // This is a simple basic close signal on reversal of trade signal with current position.
-      bool closeSigTrReversalBool =  getMktCloseOnReversal(fastSIG, util);
+      bool closeSigTrReversalBool =  getMktCloseOnReversal(fastSIG);
 
       // Close in flat market strategies are different from close when market is steep and trending
 
@@ -276,7 +276,7 @@ struct HSIG {
             closeSIG = SAN_SIGNAL::NOSIG;
          }
 
-         Print("[NEWCLOSEONFLAT]: Close on fsig flat: "+closeFlatTradeBool+" Close slopesrev: "+getMktCloseOnSlopeReversal(ss,util)+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util));
+         Print("[NEWCLOSEONFLAT]: Close on fsig flat: "+closeFlatTradeBool+" Close slopesrev: "+getMktCloseOnSlopeReversal(ss)+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG));
       }
 // #########################################################################################################################
 
@@ -287,7 +287,7 @@ struct HSIG {
       if(tr == TRADE_STRATEGIES::SIMPLESIG) {
 
          openSIG = simple_5_14_SIG;
-         bool closeSimpleTrReversalBool =  getMktCloseOnReversal(simpleTrend_14_SIG, util);
+         bool closeSimpleTrReversalBool =  getMktCloseOnReversal(simpleTrend_14_SIG);
          if(closeSimpleTrReversalBool) {
             mktType=MKTTYP::MKTCLOSE;
             closeSIG = SAN_SIGNAL::CLOSE;
@@ -829,7 +829,7 @@ struct HSIG {
 //|  Close Signal: 1: Close on Slope ratios                                                                 |
 //+------------------------------------------------------------------+
 
-   bool  getMktCloseOnSlopeRatio(const SANSIGNALS &ss, SanUtils &util) {
+   bool  getMktCloseOnSlopeRatio(const SANSIGNALS &ss) {
       double slopeR = ss.slopeRatioData.matrixD[0];
       double slopeWideR = ss.slopeRatioData.matrixD[1];
       //Print("Slopes Ratio: slopeR: "+slopeR+" slopeWideR: "+slopeWideR);
@@ -856,7 +856,7 @@ struct HSIG {
 //  below.                                                                  |
 //+------------------------------------------------------------------+
 
-   bool getMktCloseOnReversal(const SAN_SIGNAL &sig,SanUtils &util) {
+   bool getMktCloseOnReversal(const SAN_SIGNAL &sig) {
       SAN_SIGNAL tradePosition = util.getCurrTradePosition();
       return (util.oppSignal(sig,tradePosition))?true:false;
    }
@@ -888,7 +888,7 @@ struct HSIG {
 //+------------------------------------------------------------------+
 
 
-   bool  getMktCloseOnVariableSlope(const SANSIGNALS &ss, SanUtils &util) {
+   bool  getMktCloseOnVariableSlope(const SANSIGNALS &ss) {
       // slopes of 30,120,240 ma curves
       SAN_SIGNAL tradePosition = util.getCurrTradePosition();
 
@@ -952,7 +952,7 @@ struct HSIG {
 // and not the current traded position.                                                                |
 //+------------------------------------------------------------------+
 
-   bool  getMktCloseOnSlopeReversal(const SANSIGNALS &ss, SanUtils &util, const double SLOPE_REDUCTION_LEVEL=0.3) {
+   bool  getMktCloseOnSlopeReversal(const SANSIGNALS &ss, const double SLOPE_REDUCTION_LEVEL=0.3) {
 
       // slopes of 30,120,240 ma curves
 
