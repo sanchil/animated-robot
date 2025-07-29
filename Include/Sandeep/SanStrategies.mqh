@@ -8,6 +8,7 @@
 #property version   "1.00"
 #property strict
 #include <Sandeep/SanSignals.mqh>
+#include <Sandeep/SanHSIG.mqh>
 
 
 ORDERPARAMS       op1;

@@ -422,6 +422,12 @@ enum MKTTYP {
    NOMKT=960
 };
 
+enum TRADE_STRATEGIES {
+   FASTSIG=1000,
+   SIMPLESIG=1020
+};
+
+
 struct TRENDSTRUCT {
    SANTREND          closeTrendSIG;
    SANTRENDSTRENGTH  trendStrengthSIG;
@@ -859,3 +865,4 @@ struct SANSIGBOOL {
       Print("SpreadBool: "+spreadBool+" imaWaveBool: "+imaWaveBool+" signal514Bool: "+signal514Bool+" signal1430Bool: "+signal1430Bool+" signal5Wave14Bool: "+signal5Wave14Bool+" signal14Wave1430Bool: "+signal14Wave1430Bool+" signal5Wave1430Bool: "+signal5Wave1430Bool+" safeSig1Bool:"+safeSig1Bool+" safeSig2Bool: "+safeSig2Bool+" imaSig1Bool: "+imaSig1Bool);
    }
 };
+//+------------------------------------------------------------------+
