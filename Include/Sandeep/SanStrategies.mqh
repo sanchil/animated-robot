@@ -107,6 +107,8 @@ class SanStrategies {
          trendRatio500SIG = sig.trendRatioSIG(indData.ima500,"IMA500",2,21);
 
          trendRatioSIG = trendRatio120SIG;
+         //sig.determinantVarSIG(indData.close,2);
+        // sig.determinantVarSIG(indData.open,indData.high,indData.low,indData.close,2);
 
          //trendSumSig = sig.trendSIG(trendRatio5SIG,trendRatio120SIG,trendRatio500SIG);
 
