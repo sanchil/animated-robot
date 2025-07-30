@@ -35,11 +35,12 @@
 //########################################################################################################
 
 struct HSIG {
-   
+
    SanUtils* ut;
    SANSIGNALS ssSIG;
-   
+
    MKTTYP            mktType;
+   TRADE_STRATEGIES trdStgy;
    DataTransport     imaSlopesData;
    DataTransport     slopeRatioData;
 
@@ -78,7 +79,8 @@ struct HSIG {
    SAN_SIGNAL        trend_14_30_120_SIG;
 
    HSIG() {
-      mktType=MKTTYP::NOMKT;
+      mktType= MKTTYP::NOMKT;
+      trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
       openSIG =  SAN_SIGNAL::NOSIG;
       closeSIG =  SAN_SIGNAL::NOSIG;
       slopeTrendBool=false;
@@ -116,6 +118,7 @@ struct HSIG {
    }
    ~HSIG() {
       mktType=MKTTYP::NOMKT;
+      trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
       openSIG =  SAN_SIGNAL::NOSIG;
       closeSIG =  SAN_SIGNAL::NOSIG;
       slopeTrendBool=false;
@@ -153,10 +156,10 @@ struct HSIG {
    }
 
    HSIG(const SANSIGNALS &ss, SanUtils &util) {
-   
+
       ut = util;
       ssSIG = ss;
-      
+
       mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
       slopeFastSIG = matchSIG(ss.slopeVarSIG, ss.ima1430SIG);
       rsiFastSIG = matchSIG(ss.rsiSIG, ss.ima1430SIG);
@@ -232,8 +235,10 @@ struct HSIG {
 // ##############################################################################################################
 
 
-      //const TRADE_STRATEGIES tr = TRADE_STRATEGIES::FASTSIG;
-      const TRADE_STRATEGIES tr = TRADE_STRATEGIES::SIMPLESIG;
+      // const TRADE_STRATEGIES tr = TRADE_STRATEGIES::FASTSIG;
+      // const TRADE_STRATEGIES tr = TRADE_STRATEGIES::SIMPLESIG;
+      //trdStgy = TRADE_STRATEGIES::FASTSIG;
+      trdStgy = TRADE_STRATEGIES::SIMPLESIG;
 
 
 // ##############################################################################################################
@@ -260,7 +265,7 @@ struct HSIG {
 
       // Close in flat market strategies are different from close when market is steep and trending
 
-      if(tr == TRADE_STRATEGIES::FASTSIG) {
+      if(trdStgy == TRADE_STRATEGIES::FASTSIG) {
          openSIG = fastSIG;
 
 
@@ -292,7 +297,7 @@ struct HSIG {
 // ################### Open strategies for simpleTrend_14_SIG #############################################################
 // ##############################################################################################################
 
-      if(tr == TRADE_STRATEGIES::SIMPLESIG) {
+      if(trdStgy == TRADE_STRATEGIES::SIMPLESIG) {
 
          openSIG = simple_5_14_SIG;
          bool closeSimpleTrReversalBool =  getMktCloseOnReversal(simpleTrend_14_SIG, util);
@@ -1155,3 +1160,4 @@ struct HSIG {
 };
 
 //###########################################################################################################
+//+------------------------------------------------------------------+
