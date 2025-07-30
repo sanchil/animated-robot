@@ -41,6 +41,7 @@ struct HSIG {
 
    MKTTYP            mktType;
    TRADE_STRATEGIES trdStgy;
+   SAN_SIGNAL       baseTrendSIG;
    DataTransport     imaSlopesData;
    DataTransport     slopeRatioData;
 
@@ -69,10 +70,12 @@ struct HSIG {
    SAN_SIGNAL        simple_30_SIG;
    SAN_SIGNAL        simple_5_14_SIG;
    SAN_SIGNAL        simple_14_30_SIG;
+   SAN_SIGNAL        simple_30_120_SIG;
    SAN_SIGNAL        simpleTrend_14_SIG;
    SAN_SIGNAL        simpleTrend_30_SIG;
    SAN_SIGNAL        simpleTrend_5_14_SIG;
    SAN_SIGNAL        simpleTrend_14_30_SIG;
+   SAN_SIGNAL        simpleTrend_30_120_SIG;
    SAN_SIGNAL        trend_5_120_500_SIG;
    SAN_SIGNAL        trend_5_30_120_SIG;
    SAN_SIGNAL        trend_5_14_30_SIG;
@@ -81,6 +84,7 @@ struct HSIG {
    HSIG() {
       mktType= MKTTYP::NOMKT;
       trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
+      baseTrendSIG=SAN_SIGNAL::NOSIG;
       openSIG =  SAN_SIGNAL::NOSIG;
       closeSIG =  SAN_SIGNAL::NOSIG;
       slopeTrendBool=false;
@@ -106,10 +110,12 @@ struct HSIG {
       simple_30_SIG = SAN_SIGNAL::NOSIG;
       simple_5_14_SIG = SAN_SIGNAL::NOSIG;
       simple_14_30_SIG = SAN_SIGNAL::NOSIG;
+      simple_30_120_SIG = SAN_SIGNAL::NOSIG;
       simpleTrend_14_SIG = SAN_SIGNAL::NOSIG;
       simpleTrend_30_SIG = SAN_SIGNAL::NOSIG;
       simpleTrend_5_14_SIG = SAN_SIGNAL::NOSIG;
       simpleTrend_14_30_SIG = SAN_SIGNAL::NOSIG;
+      simpleTrend_30_120_SIG = SAN_SIGNAL::NOSIG;
       trend_5_120_500_SIG = SAN_SIGNAL::NOSIG;
       trend_5_30_120_SIG = SAN_SIGNAL::NOSIG;
       trend_14_30_120_SIG = SAN_SIGNAL::NOSIG;
@@ -119,6 +125,7 @@ struct HSIG {
    ~HSIG() {
       mktType=MKTTYP::NOMKT;
       trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
+      baseTrendSIG=SAN_SIGNAL::NOSIG;
       openSIG =  SAN_SIGNAL::NOSIG;
       closeSIG =  SAN_SIGNAL::NOSIG;
       slopeTrendBool=false;
@@ -143,10 +150,12 @@ struct HSIG {
       simple_30_SIG = SAN_SIGNAL::NOSIG;
       simple_5_14_SIG = SAN_SIGNAL::NOSIG;
       simple_14_30_SIG = SAN_SIGNAL::NOSIG;
+      simple_30_120_SIG = SAN_SIGNAL::NOSIG;
       simpleTrend_14_SIG = SAN_SIGNAL::NOSIG;
       simpleTrend_30_SIG = SAN_SIGNAL::NOSIG;
       simpleTrend_5_14_SIG = SAN_SIGNAL::NOSIG;
       simpleTrend_14_30_SIG = SAN_SIGNAL::NOSIG;
+      simpleTrend_30_120_SIG = SAN_SIGNAL::NOSIG;
       trend_5_120_500_SIG = SAN_SIGNAL::NOSIG;
       trend_5_30_120_SIG = SAN_SIGNAL::NOSIG;
       trend_5_14_30_SIG = SAN_SIGNAL::NOSIG;
@@ -159,7 +168,7 @@ struct HSIG {
 
       ut = util;
       ssSIG = ss;
-
+      baseTrendSIG = imaTrendSIG(ss.ima120240SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
       mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
       slopeFastSIG = matchSIG(ss.slopeVarSIG, ss.ima1430SIG);
       rsiFastSIG = matchSIG(ss.rsiSIG, ss.ima1430SIG);
@@ -174,10 +183,12 @@ struct HSIG {
       simple_30_SIG = simpleSIG(ss.fsig30);
       simple_5_14_SIG = simpleSIG(ss.fsig5, ss.fsig14);
       simple_14_30_SIG = simpleSIG(ss.fsig14, ss.fsig30);
+      simple_30_120_SIG = simpleSIG(ss.fsig30, ss.fsig120);
       simpleTrend_14_SIG = simpleTrendSIG(ss.trendRatio14SIG);
       simpleTrend_30_SIG = simpleTrendSIG(ss.trendRatio30SIG);
       simpleTrend_5_14_SIG =  simpleTrendSIG(ss.trendRatio5SIG,ss.trendRatio14SIG);
       simpleTrend_14_30_SIG =  simpleTrendSIG(ss.trendRatio14SIG,ss.trendRatio30SIG);
+      simpleTrend_30_120_SIG =  simpleTrendSIG(ss.trendRatio30SIG,ss.trendRatio120SIG);
       trend_5_120_500_SIG = trendSIG(ss.trendRatio5SIG,ss.trendRatio120SIG,ss.trendRatio500SIG);
       trend_5_30_120_SIG = trendSIG(ss.trendRatio5SIG,ss.trendRatio30SIG,ss.trendRatio120SIG);
       trend_5_14_30_SIG = trendSIG(ss.trendRatio5SIG,ss.trendRatio14SIG,ss.trendRatio30SIG);
@@ -263,13 +274,14 @@ struct HSIG {
       // This is a simple basic close signal on reversal of trade signal with current position.
       bool closeSigTrReversalBool =  getMktCloseOnReversal(fastSIG, util);
 
+      //bool closeSimpleTrReversalBool =  getMktCloseOnReversal(simpleTrend_14_SIG, util);
+      bool closeSimpleTrReversalBool =  getMktCloseOnReversal(simpleTrend_14_30_SIG, util);
+      
+
       // Close in flat market strategies are different from close when market is steep and trending
 
       if(trdStgy == TRADE_STRATEGIES::FASTSIG) {
          openSIG = fastSIG;
-
-
-
          if(closeTradeBool) {
             mktType=MKTTYP::MKTCLOSE;
             closeSIG = SAN_SIGNAL::CLOSE;
@@ -300,7 +312,7 @@ struct HSIG {
       if(trdStgy == TRADE_STRATEGIES::SIMPLESIG) {
 
          openSIG = simple_5_14_SIG;
-         bool closeSimpleTrReversalBool =  getMktCloseOnReversal(simpleTrend_14_SIG, util);
+
          if(closeSimpleTrReversalBool) {
             mktType=MKTTYP::MKTCLOSE;
             closeSIG = SAN_SIGNAL::CLOSE;
