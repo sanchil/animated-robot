@@ -87,6 +87,7 @@ class SanStrategies {
          //imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,21,1);
          slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,5,10,1);
          //imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,5,10,1);
+         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
          
          slopeRatioData = sig.slopeRatioData(indData.ima30,indData.ima120,indData.ima240,21,1);
 
