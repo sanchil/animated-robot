@@ -42,7 +42,6 @@ struct HSIG {
    MKTTYP            mktType;
    TRADE_STRATEGIES trdStgy;
    SAN_SIGNAL       baseTrendSIG;
-   SAN_SIGNAL       baseSlopeSIG;
    DataTransport     imaSlopesData;
    DataTransport     slopeRatioData;
 
@@ -86,7 +85,6 @@ struct HSIG {
       mktType= MKTTYP::NOMKT;
       trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
       baseTrendSIG=SAN_SIGNAL::NOSIG;
-      baseSlopeSIG=SAN_SIGNAL::NOSIG;
       openSIG =  SAN_SIGNAL::NOSIG;
       closeSIG =  SAN_SIGNAL::NOSIG;
       slopeTrendBool=false;
@@ -128,7 +126,6 @@ struct HSIG {
       mktType=MKTTYP::NOMKT;
       trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
       baseTrendSIG=SAN_SIGNAL::NOSIG;
-      baseSlopeSIG=SAN_SIGNAL::NOSIG;
       openSIG =  SAN_SIGNAL::NOSIG;
       closeSIG =  SAN_SIGNAL::NOSIG;
       slopeTrendBool=false;
@@ -343,9 +340,6 @@ struct HSIG {
 
    }
 
-   //SAN_SIGNAL baseSlopeSIG() {
-   //   return SAN_SIGNAL::NOSIG;
-   //}
 
    SAN_SIGNAL  matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2=EMPTY, bool slowStrategy=false) {
 
