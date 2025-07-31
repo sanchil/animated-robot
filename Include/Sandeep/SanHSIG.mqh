@@ -163,11 +163,18 @@ struct HSIG {
       imaSlopesData.freeData();
       slopeRatioData.freeData();
    }
-
+ 
    HSIG(const SANSIGNALS &ss, SanUtils &util) {
 
       ut = util;
       ssSIG = ss;
+      initSIG(ss,util);
+   }
+   
+   
+
+   void initSIG(const SANSIGNALS &ss, SanUtils &util){
+
       baseTrendSIG = imaTrendSIG(ss.ima120240SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
       mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
       slopeFastSIG = matchSIG(ss.slopeVarSIG, ss.ima1430SIG);
@@ -329,8 +336,9 @@ struct HSIG {
 
 // #########################################################################################################################
 
-   }
 
+   
+   }
 
    SAN_SIGNAL        matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2=EMPTY, bool slowStrategy=false) {
 
