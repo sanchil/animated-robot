@@ -624,11 +624,12 @@ struct SANSIGNALS {
    DataTransport     imaSlopesData;
    DataTransport     varDt;
    DataTransport     slopeRatioData;
+   DataTransport     baseSlopeData;
 
 
    SANSIGNALS() {
       openSIG = SAN_SIGNAL::NOSIG;
-      closeSIG = SAN_SIGNAL::NOSIG;
+      closeSIG = SAN_SIGNAL::NOSIG;      
       priceActionSIG = SAN_SIGNAL::NOSIG;
       candlePattStarSIG = SAN_SIGNAL::NOSIG;
       adxSIG = SAN_SIGNAL::NOSIG;
@@ -712,6 +713,7 @@ struct SANSIGNALS {
       imaSlopesData.freeData();
       varDt.freeData();
       slopeRatioData.freeData();
+      baseSlopeData.freeData();
    }
 
 };

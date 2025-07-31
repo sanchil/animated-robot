@@ -85,11 +85,9 @@ class SanStrategies {
          //slopeVarSIG = sig.slopeVarSIG(indData.ima5,indData.ima14,indData.ima30,21,1);
          //slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,21,1);
          //imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,21,1);
+
          slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,5,10,1);
-         //imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,5,10,1);
-         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
-         
-         slopeRatioData = sig.slopeRatioData(indData.ima30,indData.ima120,indData.ima240,21,1);
+
 
          cpScatter21SIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.1,21);
          cpScatterSIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.1,120);
@@ -123,6 +121,12 @@ class SanStrategies {
          rsiSIG = sig.rsiSIG(indData.rsi,21,1);
          tradeVolVarSIG = sig.tradeVolVarSignal(volSIG,ima30SDSIG,ima120SDSIG,ima240SDSIG);
          clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
+         //############# DataTransport vars used in HSIG mostly ########################################
+         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
+         slopeRatioData = sig.slopeRatioData(indData.ima30,indData.ima120,indData.ima240,21,1);
+         baseSlopeData=sig.baseSlope(indData.ima240,5,21,1);
+         //#############################################################################################
+
 //        varDt = sig.varSIG(ima30SDSIG,ima120SDSIG,ima240SDSIG);
 
       }
@@ -516,7 +520,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 // Print("[SIG][IMA] :: ima514:: "+util.getSigString(ss.ima514SIG)+" ima1430: "+util.getSigString(ss.ima1430SIG)+" ima30120: "+util.getSigString(ss.ima30120SIG)+" ima120240: "+util.getSigString(ss.ima120240SIG)+" ima240500: "+util.getSigString(ss.ima240500SIG));
    Print("[SIG][FSIG]:: fSig5: "+util.getSigString(ss.fsig5)+" fSig14: "+util.getSigString(ss.fsig14)+" fSig30: "+util.getSigString(ss.fsig30)+" fSig120: "+util.getSigString(ss.fsig120)+" fSig240: "+util.getSigString(ss.fsig240)+" fSig500: "+util.getSigString(ss.fsig500));
 // Print("[SIG][SIG] :: sig5: "+util.getSigString(ss.sig5)+" sig14: "+util.getSigString(ss.sig14)+" sig30: "+util.getSigString(ss.sig30)+" sig120: "+util.getSigString(ss.sig120)+" sig240: "+util.getSigString(ss.sig240)+" sig500: "+util.getSigString(ss.sig500));
-   Print("[MARKET]: Mkt Type: "+util.getSigString(hSig.mktType)+" Trade strategy: "+util.getSigString(hSig.trdStgy)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" var: "+varBool+" varFlat: "+varFlatBool+" slpTrVar: "+slopeTrendVarBool+" fastSIG: "+util.getSigString(hSig.fastSIG));
+   Print("[MARKET]: Mkt Type: "+util.getSigString(hSig.mktType)+" Trade strategy: "+util.getSigString(hSig.trdStgy)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" var: "+varBool+" varFlat: "+varFlatBool+" slpTrVar: "+slopeTrendVarBool+" fastSIG: "+util.getSigString(hSig.fastSIG));
    Print("[SIGNAL]: New Candle: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" CurrPos: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" PL:"+util.getSigString(ss.profitPercentageSIG)+" Loss:"+util.getSigString(ss.lossSIG));
 
    return sigBuff;
