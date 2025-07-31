@@ -168,7 +168,9 @@ void initCalc(const INDDATA &indData) {
 
    if(recordData) {
       // if(util.fileSizeCheck(dataFileName,0.5))Print("File size is greater that 0.5 mb");
-      util.writeStructData(dataFileName,indData,recordSignal,1);
+      //util.writeStructData(dataFileName,indData,recordSignal,1);
+      util.writeJsonData(dataFileName,indData,recordSignal,1);
+       
    }
 
 }

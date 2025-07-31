@@ -6,6 +6,7 @@ Logs/
 # ignore .csv files
 
 NEWDATA.csv
+NEWDATA.json
 
 # ignore swap files
 *.kate-swp
