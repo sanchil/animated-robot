@@ -122,9 +122,13 @@ class SanStrategies {
          tradeVolVarSIG = sig.tradeVolVarSignal(volSIG,ima30SDSIG,ima120SDSIG,ima240SDSIG);
          clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
          //############# DataTransport vars used in HSIG mostly ########################################
-         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
-         slopeRatioData = sig.slopeRatioData(indData.ima30,indData.ima120,indData.ima240,21,1);
-         baseSlopeData=sig.baseSlope(indData.ima240,5,21,1);
+         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);         
+         //slopeRatioData = sig.slopeRatioData(indData.ima30,indData.ima120,indData.ima240,5,21,1);         
+         imaSlope14Data=sig.slopeSIG(indData.ima14,5,21,1);
+         imaSlope30Data=sig.slopeSIG(indData.ima30,5,21,1);
+         imaSlope120Data=sig.slopeSIG(indData.ima120,5,21,1);
+         baseSlopeData=sig.slopeSIG(indData.ima240,5,21,1);
+         
          //#############################################################################################
 
 //        varDt = sig.varSIG(ima30SDSIG,ima120SDSIG,ima240SDSIG);

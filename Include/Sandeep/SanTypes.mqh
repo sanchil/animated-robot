@@ -88,13 +88,13 @@ struct DataTransport {
    int               matrixI2[20];
    bool              matrixBool[20];
    DataTransport() {
-      ArrayInitialize(matrixD,0);
-      ArrayInitialize(matrixD1,0);
-      ArrayInitialize(matrixD2,0);
-      ArrayInitialize(matrixI,0);
-      ArrayInitialize(matrixI1,0);
-      ArrayInitialize(matrixI2,0);
-      ArrayInitialize(matrixBool,false);
+      ArrayInitialize(matrixD,EMPTY_VALUE);
+      ArrayInitialize(matrixD1,EMPTY_VALUE);
+      ArrayInitialize(matrixD2,EMPTY_VALUE);
+      ArrayInitialize(matrixI,EMPTY);
+      ArrayInitialize(matrixI1,EMPTY);
+      ArrayInitialize(matrixI2,EMPTY);
+      ArrayInitialize(matrixBool,EMPTY);
    }
    void freeData() {
       ArrayFree(matrixD);
@@ -622,14 +622,18 @@ struct SANSIGNALS {
    SAN_SIGNAL        candlePattStarSIG;
    DataTransport     clusterSIG;
    DataTransport     imaSlopesData;
+   DataTransport     imaSlope14Data;
+   DataTransport     imaSlope30Data;
+   DataTransport     imaSlope120Data;
    DataTransport     varDt;
-   DataTransport     slopeRatioData;
+//   DataTransport     slopeRatioData;
    DataTransport     baseSlopeData;
+
 
 
    SANSIGNALS() {
       openSIG = SAN_SIGNAL::NOSIG;
-      closeSIG = SAN_SIGNAL::NOSIG;      
+      closeSIG = SAN_SIGNAL::NOSIG;
       priceActionSIG = SAN_SIGNAL::NOSIG;
       candlePattStarSIG = SAN_SIGNAL::NOSIG;
       adxSIG = SAN_SIGNAL::NOSIG;
@@ -712,8 +716,11 @@ struct SANSIGNALS {
       clusterSIG.freeData();
       imaSlopesData.freeData();
       varDt.freeData();
-      slopeRatioData.freeData();
+//      slopeRatioData.freeData();
       baseSlopeData.freeData();
+      imaSlope14Data.freeData();
+      imaSlope30Data.freeData();
+      imaSlope120Data.freeData();
    }
 
 };

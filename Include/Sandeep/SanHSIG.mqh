@@ -36,13 +36,13 @@
 
 struct HSIG {
 
-   SanUtils* ut;
-   SANSIGNALS ssSIG;
+   SanUtils*         ut;
+   SANSIGNALS        ssSIG;
 
    MKTTYP            mktType;
-   TRADE_STRATEGIES trdStgy;
-   SAN_SIGNAL       baseTrendSIG;
-   SAN_SIGNAL       baseSlopeSIG;
+   TRADE_STRATEGIES  trdStgy;
+   SAN_SIGNAL        baseTrendSIG;
+   SAN_SIGNAL        baseSlopeSIG;
    DataTransport     imaSlopesData;
    DataTransport     slopeRatioData;
 
@@ -82,7 +82,7 @@ struct HSIG {
    SAN_SIGNAL        trend_5_14_30_SIG;
    SAN_SIGNAL        trend_14_30_120_SIG;
 
-   HSIG() {
+                     HSIG() {
       mktType= MKTTYP::NOMKT;
       trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
       baseTrendSIG=SAN_SIGNAL::NOSIG;
@@ -124,7 +124,7 @@ struct HSIG {
       trend_5_14_30_SIG = SAN_SIGNAL::NOSIG;
 
    }
-   ~HSIG() {
+                    ~HSIG() {
       mktType=MKTTYP::NOMKT;
       trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
       baseTrendSIG=SAN_SIGNAL::NOSIG;
@@ -167,7 +167,7 @@ struct HSIG {
       slopeRatioData.freeData();
    }
 
-   HSIG(const SANSIGNALS &ss, SanUtils &util) {
+                     HSIG(const SANSIGNALS &ss, SanUtils &util) {
 
       ut = util;
       ssSIG = ss;
@@ -176,7 +176,7 @@ struct HSIG {
 
 
 
-   void initSIG(const SANSIGNALS &ss, SanUtils &util) {
+   void              initSIG(const SANSIGNALS &ss, SanUtils &util) {
 
       baseTrendSIG = imaTrendSIG(ss.ima120240SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
       baseSlopeSIG = getBaseSlopeSIG(ss.baseSlopeData);
@@ -205,7 +205,8 @@ struct HSIG {
       trend_5_14_30_SIG = trendSIG(ss.trendRatio5SIG,ss.trendRatio14SIG,ss.trendRatio30SIG);
       trend_14_30_120_SIG = trendSIG(ss.trendRatio14SIG,ss.trendRatio30SIG,ss.trendRatio120SIG);
       imaSlopesData =    ss.imaSlopesData;
-      slopeRatioData = ss.slopeRatioData;
+//      slopeRatioData = ss.slopeRatioData;
+      slopeRatioData = getSlopeRatioData(ss.imaSlope30Data, ss.imaSlope120Data, ss.baseSlopeData);
       //dominantTrendSIG = trendVolVarSIG(ss.tradeVolVarSIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
       //dominantTrendSIG = trendSIG(ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG,ss.trendRatio500SIG);
       //dominantTrendSIG = trendSIG(ss.trendRatio14SIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG,ss.trendRatio500SIG);
@@ -287,8 +288,10 @@ struct HSIG {
 
       //bool closeSimpleTrReversalBool =  getMktCloseOnReversal(simpleTrend_14_SIG, util);
       bool closeSimpleTrReversalBool =  getMktCloseOnReversal(simpleTrend_14_30_SIG, util);
-
-
+     
+      bool closeSlopeRatios = getMktCloseOnSlopeRatio();
+     
+      Print("[CLOSEBOOLS]: Close on fsig flat: "+closeFlatTradeBool+" Close slopesrev: "+getMktCloseOnSlopeReversal(ss,util)+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Close on Slope Ratios: " +closeSlopeRatios);
       // Close in flat market strategies are different from close when market is steep and trending
 
       if(trdStgy == TRADE_STRATEGIES::FASTSIG) {
@@ -311,8 +314,6 @@ struct HSIG {
             mktType=MKTTYP::MKTTR;
             closeSIG = SAN_SIGNAL::NOSIG;
          }
-
-         Print("[NEWCLOSEONFLAT]: Close on fsig flat: "+closeFlatTradeBool+" Close slopesrev: "+getMktCloseOnSlopeReversal(ss,util)+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util));
       }
 // #########################################################################################################################
 
@@ -344,10 +345,10 @@ struct HSIG {
 
    }
 
-   SAN_SIGNAL getBaseSlopeSIG(const DataTransport& slopeDt) {
+   SAN_SIGNAL        getBaseSlopeSIG(const DataTransport& slopeDt) {
 
       Print("[BASE SLOPE]:: narrow: "+ slopeDt.matrixD[0]+" Wide Slope: "+ slopeDt.matrixD[1]);
-      
+
       if((slopeDt.matrixD[0]>=-0.2)&&(slopeDt.matrixD[0]<=0.2)) return SAN_SIGNAL::SIDEWAYS;
       if((slopeDt.matrixD[0]>=-0.3)&&(slopeDt.matrixD[0]<=0.3)) return SAN_SIGNAL::NOTRADE;
       if(slopeDt.matrixD[0]>0.3)return SAN_SIGNAL::BUY;
@@ -355,7 +356,7 @@ struct HSIG {
       return SAN_SIGNAL::NOSIG;
    }
 
-   SAN_SIGNAL  matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2=EMPTY, bool slowStrategy=false) {
+   SAN_SIGNAL        matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2=EMPTY, bool slowStrategy=false) {
 
       // ###################################################################
 
@@ -475,7 +476,7 @@ struct HSIG {
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   SAN_SIGNAL  simpleSIG(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2=EMPTY) {
+   SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2=EMPTY) {
 
       if(sig2!=EMPTY) {
          if((sig1==SAN_SIGNAL::NOSIG)
@@ -498,7 +499,7 @@ struct HSIG {
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   SAN_SIGNAL  simpleTrendSIG(SANTREND tr1, SANTREND tr2=EMPTY) {
+   SAN_SIGNAL        simpleTrendSIG(SANTREND tr1, SANTREND tr2=EMPTY) {
 
       if(tr2!=EMPTY) {
          if((tr1==SANTREND::NOTREND)
@@ -726,7 +727,7 @@ struct HSIG {
    }
 
 
-   SAN_SIGNAL   fSigSlowTrendSIG(
+   SAN_SIGNAL        fSigSlowTrendSIG(
       const SAN_SIGNAL baseSig,
       const SANTREND baseTrend
    ) {
@@ -847,7 +848,56 @@ struct HSIG {
       return SAN_SIGNAL::NOSIG;
    }
 
-   bool getMktFlatBoolSignal(
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+   DataTransport     getSlopeRatioData(
+      const DataTransport &fast,
+      const DataTransport &medium,
+      const DataTransport &slow
+   ) {
+
+      double fastSlope=0;
+      double mediumSlope=0;
+      double slowSlope=0;
+      double slowSlopeWide=0;
+
+      double fMR=0;
+      double mSR=0;
+      double mSWR=0;
+      double fSR=0;
+      double fSWR=0;
+      double fMSR = 0;
+      double fMSWR = 0;
+
+      //DataTransport slopesData = slopeFastMediumSlow(fast,medium,slow,SLOPEDENOM,SLOPEDENOM_WIDE,shift);
+
+      DataTransport dt;
+      fastSlope = fast.matrixD[0];
+      mediumSlope = medium.matrixD[0];
+      slowSlope = slow.matrixD[0];
+      slowSlopeWide = slow.matrixD[1];
+
+      fMR = ((fastSlope!=0)&&(mediumSlope!=0))?NormalizeDouble((fastSlope/mediumSlope),4):EMPTY_VALUE;
+      mSR = ((mediumSlope!=0)&&(slowSlope!=0))?NormalizeDouble((mediumSlope/slowSlope),4):EMPTY_VALUE;
+      mSWR = ((mediumSlope!=0)&&(slowSlopeWide!=0))?NormalizeDouble((mediumSlope/slowSlopeWide),4):EMPTY_VALUE;
+      fSR = ((fastSlope!=0)&&(slowSlope!=0))?NormalizeDouble((fastSlope/slowSlope),4):EMPTY_VALUE;
+      fSWR = ((fastSlope!=0)&&(slowSlopeWide!=0))?NormalizeDouble((fastSlope/slowSlopeWide),4):EMPTY_VALUE;
+      fMSR = ((fMR!=0)&&(mSR!=0)&&(fMR!=EMPTY_VALUE)&&(mSR!=EMPTY_VALUE))?NormalizeDouble((fMR/mSR),4):EMPTY_VALUE;
+      fMSWR = ((fMR!=0)&&(mSWR!=0)&&(fMR!=EMPTY_VALUE)&&(mSWR!=EMPTY_VALUE))?NormalizeDouble((fMR/mSWR),4):EMPTY_VALUE;
+
+//   Print("[SLOPESRATIO] fMR: "+fMR+" mSR: "+mSR+" mSWR: "+mSWR+" fSR: "+fSR+" fSWR: "+fSWR+" fMSR: "+fMSR+" fMSWR: "+fMSWR);
+      dt.matrixD[0]=fMSR;
+      dt.matrixD[1]=fMSWR;
+      dt.matrixD[2]=fMR;
+      dt.matrixD[3]=mSR;
+      dt.matrixD[4]=mSWR;
+
+      return dt;
+   }
+   bool              getMktFlatBoolSignal(
       const SAN_SIGNAL candleVol120SIG,
       const SAN_SIGNAL slopeVarSIG,
       const SANTREND cpScatterSIG,
@@ -877,10 +927,14 @@ struct HSIG {
 //|  Close Signal: 1: Close on Slope ratios                                                                 |
 //+------------------------------------------------------------------+
 
-   bool  getMktCloseOnSlopeRatio(const SANSIGNALS &ss, SanUtils &util) {
-      double slopeR = ss.slopeRatioData.matrixD[0];
-      double slopeWideR = ss.slopeRatioData.matrixD[1];
-      //Print("Slopes Ratio: slopeR: "+slopeR+" slopeWideR: "+slopeWideR);
+   bool  getMktCloseOnSlopeRatio() {
+
+      //double slopeR = ss.slopeRatioData.matrixD[0];
+      //double slopeWideR = ss.slopeRatioData.matrixD[1];
+      
+      double slopeR = slopeRatioData.matrixD[0];
+      double slopeWideR = slopeRatioData.matrixD[1];
+      Print("Slopes Ratio: slopeR: "+slopeR+" slopeWideR: "+slopeWideR);
       bool closeOnSlopeRatioBool = false;
 
       if((slopeWideR<0.8)&&(slopeWideR!=EMPTY_VALUE))
@@ -904,7 +958,7 @@ struct HSIG {
 //  below.                                                                  |
 //+------------------------------------------------------------------+
 
-   bool getMktCloseOnReversal(const SAN_SIGNAL &sig,SanUtils &util) {
+   bool              getMktCloseOnReversal(const SAN_SIGNAL &sig,SanUtils &util) {
       SAN_SIGNAL tradePosition = util.getCurrTradePosition();
       return (util.oppSignal(sig,tradePosition))?true:false;
    }
@@ -918,7 +972,7 @@ struct HSIG {
 //  below.                                                                  |
 //+------------------------------------------------------------------+
 
-   bool  getMktCloseOnFlat(const SAN_SIGNAL &sig, const bool mktTypeFlat) {
+   bool              getMktCloseOnFlat(const SAN_SIGNAL &sig, const bool mktTypeFlat) {
       return ((sig==SAN_SIGNAL::CLOSE)&&(mktTypeFlat))?true:false;
    }
 
@@ -936,7 +990,7 @@ struct HSIG {
 //+------------------------------------------------------------------+
 
 
-   bool  getMktCloseOnVariableSlope(const SANSIGNALS &ss, SanUtils &util) {
+   bool              getMktCloseOnVariableSlope(const SANSIGNALS &ss, SanUtils &util) {
       // slopes of 30,120,240 ma curves
       SAN_SIGNAL tradePosition = util.getCurrTradePosition();
 
@@ -1000,7 +1054,7 @@ struct HSIG {
 // and not the current traded position.                                                                |
 //+------------------------------------------------------------------+
 
-   bool  getMktCloseOnSlopeReversal(const SANSIGNALS &ss, SanUtils &util, const double SLOPE_REDUCTION_LEVEL=0.3) {
+   bool              getMktCloseOnSlopeReversal(const SANSIGNALS &ss, SanUtils &util, const double SLOPE_REDUCTION_LEVEL=0.3) {
 
       // slopes of 30,120,240 ma curves
 
@@ -1039,7 +1093,7 @@ struct HSIG {
       static bool slope0_08=false;
 
 
-      //bool slopeRBool = getMktCloseOnSlopeRatio(ss,util);
+      //bool slopeRBool = getMktCloseOnSlopeRatio();
 
       bool closeOnSlopeReverseBool = false;
 
@@ -1080,7 +1134,7 @@ struct HSIG {
    }
 
 
-   bool   getMktClose(
+   bool              getMktClose(
       const SAN_SIGNAL candleVol120SIG,
       const SAN_SIGNAL slopeVarSIG,
       const SAN_SIGNAL trend_5_120_500_SIG,
@@ -1096,7 +1150,7 @@ struct HSIG {
 
    }
 
-   bool  getMktCloseOnFlat(
+   bool              getMktCloseOnFlat(
       const SAN_SIGNAL candleVol120SIG,
       const SAN_SIGNAL slopeVarSIG,
       const SANTREND cpScatterSIG,
