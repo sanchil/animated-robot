@@ -16,7 +16,7 @@ string prntStrOpen=" {";
 string prntStrClose=" }";
 string JSONFILE = "NEWDATA_v1.json";
 datetime lastMinute = 0;
-int min1=EMPTY;
+uint spreadLimit=0;
 
 struct DataTransport {
    double            matrixD[20];
@@ -423,6 +423,20 @@ bool getMktCloseOnVariableSlope(const DataTransport& imaSlopesData,const INDDATA
    return closeBool;
 }
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void setSpreadLimit(uint& spreadLimit) {
+   if(_Period <PERIOD_M15) {
+      spreadLimit = 20;
+   } else if(_Period <=PERIOD_M30) {
+      spreadLimit = 40;
+   } else if(_Period <=PERIOD_H1) {
+      spreadLimit = 60;
+   } else if(_Period <=PERIOD_D1) {
+      spreadLimit = 80;
+   }
+}
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -430,6 +444,7 @@ bool getMktCloseOnVariableSlope(const DataTransport& imaSlopesData,const INDDATA
 int OnInit() {
 //---
    EventSetTimer(60);
+   setSpreadLimit(spreadLimit);
 //---
    return(INIT_SUCCEEDED);
 }
@@ -446,29 +461,11 @@ void OnDeinit(const int reason) {
 //+------------------------------------------------------------------+
 //void OnTick()
 void OnTimer() {
-   
-   datetime currentTime = TimeCurrent();
-   
-   //Print("Minute tick B4: ", TimeToString(currentTime, TIME_DATE|TIME_MINUTES|TIME_SECONDS)+" Minute: "+TimeMinute(currentTime)+" Seconds: "+TimeSeconds(currentTime));
 
-   datetime currentMinute = currentTime - (currentTime % 60);
-   //if(min1!=TimeMinute(currentTime)){
-   //  min1 = TimeMinute(currentTime);
-   //  Print(" +Min:"+min1+" Now do your thing");
-   //}
-   if (currentMinute != lastMinute)
-   {
-      // Update the last processed minute
-      lastMinute = currentMinute;
-      
-      // Action to perform every minute
-      Print("Minute tick After: ", TimeToString(currentTime, TIME_DATE|TIME_MINUTES|TIME_SECONDS)+" Minute: "+TimeMinute(currentTime)+" Seconds: "+TimeSeconds(currentTime));
-      
-      // Add your custom code here (executes once per minute)
-      // For example: Check indicators, place trades, etc.
-   }
-   
+
    prntStr="";
+   setSpreadLimit(spreadLimit);
+
    for(int i=0; i<noOfCandles; i++) {
 
       indData.std[i]= iStdDev(_Symbol,PERIOD_CURRENT,noOfCandles,0,MODE_EMA,PRICE_CLOSE,i);
@@ -486,7 +483,11 @@ void OnTimer() {
       indData.ima240[i]= iMA(_Symbol,PERIOD_CURRENT,240,0,MODE_SMMA, PRICE_CLOSE,i);
       indData.ima500[i]= iMA(_Symbol,PERIOD_CURRENT,500,0,MODE_SMMA, PRICE_CLOSE,i);
    }
-   TRADESIG = getSlopeSIG(slopeVal(indData.ima30,5,21,1),0);
+
+   TRADESIG = ((int)MarketInfo(_Symbol,MODE_SPREAD)<spreadLimit)?
+              getSlopeSIG(slopeVal(indData.ima30,5,21,1),0)
+              :
+              SAN_SIGNAL::NOTRADE;
    prntStr += prntStrOpen;
 
    //{"DateTime","CurrencyPair","TimeFrame","Spread","High","Open","Close","Low","Volume","CpStdDev","ATR","RSI","MovingAvg5","MovingAvg14","MovingAvg30","MovingAvg60","MovingAvg120","MovingAvg240","MovingAvg500","ORDER"}
@@ -513,8 +514,21 @@ void OnTimer() {
    prntStr += " \"ORDER\":\""+getSigString(TRADESIG)+"\"";
 
    prntStr += prntStrClose;
-   //writeOHLCVJsonData(JSONFILE,prntStr);
-   //Print(prntStr);
+
+   datetime currentTime = TimeCurrent();
+   datetime currentMinute = currentTime - (currentTime % 60);
+   //if(min1!=TimeMinute(currentTime)){
+   //  min1 = TimeMinute(currentTime);
+   //  Print(" +Min:"+min1+" Now do your thing");
+   //}
+   if (currentMinute != lastMinute) {
+      // Update the last processed minute
+      lastMinute = currentMinute;
+      writeOHLCVJsonData(JSONFILE,prntStr);
+      Print(prntStr);
+   }
+
 
 //---
 }
+//+------------------------------------------------------------------+
