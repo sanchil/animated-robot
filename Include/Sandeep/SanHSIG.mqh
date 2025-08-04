@@ -81,8 +81,11 @@ struct HSIG {
    SAN_SIGNAL        trend_5_30_120_SIG;
    SAN_SIGNAL        trend_5_14_30_SIG;
    SAN_SIGNAL        trend_14_30_120_SIG;
+   SAN_SIGNAL        simpleSlope_30_SIG;
+   SAN_SIGNAL        simpleSlope_120_SIG;
+   SAN_SIGNAL        simpleSlope_240_SIG;
 
-                     HSIG() {
+   HSIG() {
       mktType= MKTTYP::NOMKT;
       trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
       baseTrendSIG=SAN_SIGNAL::NOSIG;
@@ -124,7 +127,7 @@ struct HSIG {
       trend_5_14_30_SIG = SAN_SIGNAL::NOSIG;
 
    }
-                    ~HSIG() {
+   ~HSIG() {
       mktType=MKTTYP::NOMKT;
       trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
       baseTrendSIG=SAN_SIGNAL::NOSIG;
@@ -167,7 +170,7 @@ struct HSIG {
       slopeRatioData.freeData();
    }
 
-                     HSIG(const SANSIGNALS &ss, SanUtils &util) {
+   HSIG(const SANSIGNALS &ss, SanUtils &util) {
 
       ut = util;
       ssSIG = ss;
@@ -207,6 +210,11 @@ struct HSIG {
       imaSlopesData =    ss.imaSlopesData;
 //      slopeRatioData = ss.slopeRatioData;
       slopeRatioData = getSlopeRatioData(ss.imaSlope30Data, ss.imaSlope120Data, ss.baseSlopeData);
+
+      simpleSlope_30_SIG = getSlopeSIG(ss.imaSlope30Data,0);
+      simpleSlope_120_SIG = getSlopeSIG(ss.imaSlope120Data,1);
+      simpleSlope_240_SIG = getSlopeSIG(ss.baseSlopeData,2);
+
       //dominantTrendSIG = trendVolVarSIG(ss.tradeVolVarSIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
       //dominantTrendSIG = trendSIG(ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG,ss.trendRatio500SIG);
       //dominantTrendSIG = trendSIG(ss.trendRatio14SIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG,ss.trendRatio500SIG);
@@ -257,11 +265,11 @@ struct HSIG {
 // ################### Open strategies for fastSIG #############################################################
 // ##############################################################################################################
 
-
-      // const TRADE_STRATEGIES tr = TRADE_STRATEGIES::FASTSIG;
-      // const TRADE_STRATEGIES tr = TRADE_STRATEGIES::SIMPLESIG;
+      //NOTRDSTGY=-1050
       //trdStgy = TRADE_STRATEGIES::FASTSIG;
-      trdStgy = TRADE_STRATEGIES::SIMPLESIG;
+      //trdStgy = TRADE_STRATEGIES::SIMPLESIG;
+      trdStgy = TRADE_STRATEGIES::SLOPESIG;
+      //trdStgy = TRADE_STRATEGIES::SLOPERATIOSIG;
 
 
 // ##############################################################################################################
@@ -288,9 +296,9 @@ struct HSIG {
 
       //bool closeSimpleTrReversalBool =  getMktCloseOnReversal(simpleTrend_14_SIG, util);
       bool closeSimpleTrReversalBool =  getMktCloseOnReversal(simpleTrend_14_30_SIG, util);
-     
+
       bool closeSlopeRatios = getMktCloseOnSlopeRatio();
-     
+
       Print("[CLOSEBOOLS]: Close on fsig flat: "+closeFlatTradeBool+" Close slopesrev: "+getMktCloseOnSlopeReversal(ss,util)+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Close on Slope Ratios: " +closeSlopeRatios);
       // Close in flat market strategies are different from close when market is steep and trending
 
@@ -342,8 +350,56 @@ struct HSIG {
 // #########################################################################################################################
 
 
+// ##############################################################################################################
+// ################### Open strategies for simpleSlope_30_SIG #############################################################
+// ##############################################################################################################
+
+      if(trdStgy == TRADE_STRATEGIES::SLOPESIG) {
+
+         openSIG = simpleSlope_30_SIG;
+
+         if(getMktCloseOnReversal(simpleSlope_30_SIG, util)||(simpleSlope_30_SIG==SAN_SIGNAL::SIDEWAYS)) {
+            mktType=MKTTYP::MKTCLOSE;
+            closeSIG = SAN_SIGNAL::CLOSE;
+         } else if(flatMktBool) {
+            mktType=MKTTYP::MKTFLAT;
+            closeSIG = SAN_SIGNAL::NOSIG;
+         } else {
+            mktType=MKTTYP::MKTTR;
+            closeSIG = SAN_SIGNAL::NOSIG;
+         }
+
+
+      }
+
+// #########################################################################################################################
+
+
 
    }
+
+
+   SAN_SIGNAL        getSlopeSIG(const DataTransport& signalDt, const int signalType=0) {
+
+      if(signalType==0) {
+         if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::SIDEWAYS;
+         if((signalDt.matrixD[0]>=-0.4)&&(signalDt.matrixD[0]<=0.4)) return SAN_SIGNAL::NOTRADE;
+         if(signalDt.matrixD[0]>0.4)return SAN_SIGNAL::BUY;
+         if(signalDt.matrixD[0]<-0.4)return SAN_SIGNAL::SELL;
+      } else if(signalType==1) {
+            if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2)) return SAN_SIGNAL::SIDEWAYS;
+            if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::NOTRADE;
+            if(signalDt.matrixD[0]>0.3)return SAN_SIGNAL::BUY;
+            if(signalDt.matrixD[0]<-0.3)return SAN_SIGNAL::SELL;
+         } else if(signalType==2) {
+               if((signalDt.matrixD[0]>=-0.1)&&(signalDt.matrixD[0]<=0.1)) return SAN_SIGNAL::SIDEWAYS;
+               if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2)) return SAN_SIGNAL::NOTRADE;
+               if(signalDt.matrixD[0]>0.2)return SAN_SIGNAL::BUY;
+               if(signalDt.matrixD[0]<-0.2)return SAN_SIGNAL::SELL;
+            }
+      return SAN_SIGNAL::NOSIG;
+   }
+
 
    SAN_SIGNAL        getBaseSlopeSIG(const DataTransport& slopeDt) {
 
@@ -355,6 +411,8 @@ struct HSIG {
       if(slopeDt.matrixD[0]<-0.3)return SAN_SIGNAL::SELL;
       return SAN_SIGNAL::NOSIG;
    }
+
+
 
    SAN_SIGNAL        matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2=EMPTY, bool slowStrategy=false) {
 
@@ -897,7 +955,10 @@ struct HSIG {
 
       return dt;
    }
-   bool              getMktFlatBoolSignal(
+
+
+
+   bool getMktFlatBoolSignal(
       const SAN_SIGNAL candleVol120SIG,
       const SAN_SIGNAL slopeVarSIG,
       const SANTREND cpScatterSIG,
@@ -931,7 +992,7 @@ struct HSIG {
 
       //double slopeR = ss.slopeRatioData.matrixD[0];
       //double slopeWideR = ss.slopeRatioData.matrixD[1];
-      
+
       double slopeR = slopeRatioData.matrixD[0];
       double slopeWideR = slopeRatioData.matrixD[1];
       Print("Slopes Ratio: slopeR: "+slopeR+" slopeWideR: "+slopeWideR);
