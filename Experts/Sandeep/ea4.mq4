@@ -488,6 +488,7 @@ void OnTimer() {
               getSlopeSIG(slopeVal(indData.ima30,5,21,1),0)
               :
               SAN_SIGNAL::NOTRADE;
+              
    prntStr += prntStrOpen;
 
    //{"DateTime","CurrencyPair","TimeFrame","Spread","High","Open","Close","Low","Volume","CpStdDev","ATR","RSI","MovingAvg5","MovingAvg14","MovingAvg30","MovingAvg60","MovingAvg120","MovingAvg240","MovingAvg500","ORDER"}
