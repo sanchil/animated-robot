@@ -96,7 +96,7 @@ struct DataTransport {
       ArrayInitialize(matrixI2,EMPTY);
       ArrayInitialize(matrixBool,EMPTY);
    }
-   void freeData() {
+   void              freeData() {
       ArrayFree(matrixD);
       ArrayFree(matrixI);
       ArrayFree(matrixD1);
@@ -427,6 +427,7 @@ enum TRADE_STRATEGIES {
    SIMPLESIG=11100,
    SLOPESIG=11200,
    SLOPERATIOSIG=11300,
+   SLOPESTD_CSIG=11400,
    NOTRDSTGY=-10000340
 };
 
@@ -615,9 +616,12 @@ struct SANSIGNALS {
    SAN_SIGNAL        candleImaSIG;
    SAN_SIGNAL        candleVolSIG;
    SAN_SIGNAL        candleVol120SIG;
+   SAN_SIGNAL        simpleSlope_14_SIG;
    SAN_SIGNAL        simpleSlope_30_SIG;
    SAN_SIGNAL        simpleSlope_120_SIG;
    SAN_SIGNAL        simpleSlope_240_SIG;
+   SAN_SIGNAL        simpleSlope_500_SIG;
+   SAN_SIGNAL        c_SIG;
    SIGMAVARIABILITY        cpSDSIG;
    SIGMAVARIABILITY        ima5SDSIG;
    SIGMAVARIABILITY        ima14SDSIG;
@@ -627,13 +631,14 @@ struct SANSIGNALS {
    SIGMAVARIABILITY        ima500SDSIG;
    SAN_SIGNAL        candlePattStarSIG;
    DataTransport     clusterSIG;
-   DataTransport     imaSlopesData;
+//  DataTransport     imaSlopesData;
    DataTransport     imaSlope14Data;
    DataTransport     imaSlope30Data;
    DataTransport     imaSlope120Data;
+   DataTransport     baseSlopeData;
    DataTransport     varDt;
    DataTransport     slopeRatioData;
-   DataTransport     baseSlopeData;
+
 
 
 
@@ -706,9 +711,12 @@ struct SANSIGNALS {
       candleImaSIG = SAN_SIGNAL::NOSIG;
       candleVolSIG = SAN_SIGNAL::NOSIG;
       candleVol120SIG = SAN_SIGNAL::NOSIG;
+      simpleSlope_14_SIG=  SAN_SIGNAL::NOSIG;
       simpleSlope_30_SIG = SAN_SIGNAL::NOSIG;
       simpleSlope_120_SIG = SAN_SIGNAL::NOSIG;
       simpleSlope_240_SIG = SAN_SIGNAL::NOSIG;
+      simpleSlope_500_SIG =  SAN_SIGNAL::NOSIG;
+      c_SIG =  SAN_SIGNAL::NOSIG;
       cpSDSIG = SIGMAVARIABILITY::SIGMA_NULL;
       ima5SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
       ima14SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
@@ -723,7 +731,7 @@ struct SANSIGNALS {
 
    ~SANSIGNALS() {
       clusterSIG.freeData();
-      imaSlopesData.freeData();
+//      imaSlopesData.freeData();
       varDt.freeData();
       slopeRatioData.freeData();
       baseSlopeData.freeData();

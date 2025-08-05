@@ -64,6 +64,7 @@ class SanStrategies {
 //         //trendRatioSIG = sig.trendRatioSIG(indData.ima30,"IMA30",2,21);
 //         //adxCovDivSIG = sig.adxCovDivSIG(indData.adx,indData.adxPlus,indData.adxMinus);
            //rsiSIG = sig.rsiSIG(indData.rsi,21,1);
+//         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
 
 
          priceActionSIG =  sig.priceActionCandleSIG(indData.open,indData.high,indData.low,indData.close);
@@ -116,17 +117,18 @@ class SanStrategies {
          clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
          //############# DataTransport vars used in HSIG mostly ########################################
 
-         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
 
          imaSlope14Data=sig.slopeSIGData(indData.ima14,5,21,1);
          imaSlope30Data=sig.slopeSIGData(indData.ima30,5,21,1);
          imaSlope120Data=sig.slopeSIGData(indData.ima120,5,21,1);
          baseSlopeData=sig.slopeSIGData(indData.ima240,5,21,1);
-         slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);
-
+         simpleSlope_14_SIG = sig.slopeSIG(imaSlope14Data,0);   
          simpleSlope_30_SIG = sig.slopeSIG(imaSlope30Data,0);
          simpleSlope_120_SIG = sig.slopeSIG(imaSlope120Data,1);
          simpleSlope_240_SIG = sig.slopeSIG(baseSlopeData,2);
+         
+         slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);         
+         c_SIG = sig.cSIG(indData,util,1);
 
          //#############################################################################################
 
