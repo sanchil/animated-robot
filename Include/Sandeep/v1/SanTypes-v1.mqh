@@ -431,6 +431,7 @@ enum TRADE_STRATEGIES {
 };
 
 
+
 struct TRENDSTRUCT {
    SANTREND          closeTrendSIG;
    SANTRENDSTRENGTH  trendStrengthSIG;
