@@ -36,8 +36,10 @@
 
 struct HSIG {
 
+
    SanUtils*         ut;
    SANSIGNALS        ssSIG;
+
 
    MKTTYP            mktType;
    TRADE_STRATEGIES  trdStgy;
@@ -177,6 +179,13 @@ struct HSIG {
       initSIG(ss,util);
    }
 
+//   HSIG(const SANSIGNALS &ss, SanUtils &util,const TRADE_STRATEGIES& strategy) {
+//
+//      ut = util;
+//      ssSIG = ss;
+//      trdStgy = strategy;
+//      initSIG(ss,util);
+//   }
 
 
    void              initSIG(const SANSIGNALS &ss, SanUtils &util) {
@@ -212,7 +221,7 @@ struct HSIG {
 
 //      slopeRatioData = getSlopeRatioData(ss.imaSlope30Data, ss.imaSlope120Data, ss.baseSlopeData);
       slopeRatioData = ss.slopeRatioData;
-      
+
 
       //simpleSlope_30_SIG = getSlopeSIG(ss.imaSlope30Data,0);
       //simpleSlope_120_SIG = getSlopeSIG(ss.imaSlope120Data,1);
@@ -221,7 +230,7 @@ struct HSIG {
       simpleSlope_120_SIG = ss.simpleSlope_120_SIG;
       simpleSlope_240_SIG = ss.simpleSlope_240_SIG;
 
-      
+
       dominantTrendSIG = matchSIG(
                             // trendSIG(ss.trendRatio5SIG,ss.trendRatio14SIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG,ss.trendRatio500SIG),
                             ss.fsig5,
@@ -260,14 +269,19 @@ struct HSIG {
       //NOTRDSTGY=-1050
       //trdStgy = TRADE_STRATEGIES::FASTSIG;
       //trdStgy = TRADE_STRATEGIES::SIMPLESIG;
-      trdStgy = TRADE_STRATEGIES::SLOPESIG;
+      //trdStgy = TRADE_STRATEGIES::SLOPESIG;
       //trdStgy = TRADE_STRATEGIES::SLOPERATIOSIG;
-
-
+//      enum TRADE_STRATEGIES {
+//   FASTSIG=3000,
+//   SIMPLESIG=3020,
+//   SLOPESIG=3030,
+//   SLOPERATIOSIG=3040,
+//   NOTRDSTGY=-1000340
+//};
+      trdStgy = TRADE_STRATEGIES::SLOPESIG;
 // ##############################################################################################################
 // ################### Open strategies for fastSIG #############################################################
 // ##############################################################################################################
-
 
       bool flatMktBool =  getMktFlatBoolSignal(
                              ss.candleVol120SIG,
@@ -293,8 +307,12 @@ struct HSIG {
 
       Print("[CLOSEBOOLS]: Close on fsig flat: "+closeFlatTradeBool+" Close slopesrev: "+getMktCloseOnSlopeReversal(ss,util)+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Close on Slope Ratios: " +closeSlopeRatios);
       // Close in flat market strategies are different from close when market is steep and trending
+      //Print("[TRADESTRATEGY]:"+util.getSigString(trdStgy));
+      //Print("[TRADESTRATEGY]:"+trdStgy);
+
 
       if(trdStgy == TRADE_STRATEGIES::FASTSIG) {
+         Print("[TRADESTRATEGY]: FASTSIG");
          openSIG = fastSIG;
          if(closeTradeBool) {
             mktType=MKTTYP::MKTCLOSE;
@@ -322,7 +340,7 @@ struct HSIG {
 // ##############################################################################################################
 
       if(trdStgy == TRADE_STRATEGIES::SIMPLESIG) {
-
+         Print("[TRADESTRATEGY]: SIMPLESIG");
          openSIG = simple_5_14_SIG;
 
          if(closeSimpleTrReversalBool) {
@@ -347,7 +365,7 @@ struct HSIG {
 // ##############################################################################################################
 
       if(trdStgy == TRADE_STRATEGIES::SLOPESIG) {
-
+         Print("[TRADESTRATEGY]: SLOPESIG");
          openSIG = simpleSlope_30_SIG;
 
          if(getMktCloseOnReversal(simpleSlope_30_SIG, util)||(simpleSlope_30_SIG==SAN_SIGNAL::SIDEWAYS)) {

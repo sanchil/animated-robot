@@ -217,18 +217,6 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
       op1.NEWCANDLE = false;
       op1.TRADED=true;
    }
-//
-//   double candleSizePips = ((indData.close[0]-indData.close[1])/Point());
-//   double candlePipSpeed = op1.pipsPerTick(candleSizePips);
-//
-//   if((candleSizePips!=NULL)||(candleSizePips!=0)||(candleSizePips!=EMPTY_VALUE))
-//     {
-//      op1.MAXPIPS = candleSizePips;
-//      // Print("Current candle Pip Size: "+candleSizePips +" MaxPips: "+op1.MAXPIPS);
-//     }
-//
-//   if(candlePipSpeed!=EMPTY)
-//      //  Print("Pips per tick since new candle: "+candlePipSpeed);
 
    TRENDSTRUCT tRatioTrend;
 
