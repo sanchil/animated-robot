@@ -52,7 +52,7 @@ struct HSIG {
    SAN_SIGNAL        fastSIG;
    SAN_SIGNAL        mainFastSIG;
    SAN_SIGNAL        slopeFastSIG;
-   SAN_SIGNAL        rsiFastSIG;
+   //SAN_SIGNAL        rsiFastSIG;
    SAN_SIGNAL        cpFastSIG;
    SAN_SIGNAL        cpSlopeVarFastSIG;
    SAN_SIGNAL        dominantTrendSIG;
@@ -96,7 +96,7 @@ struct HSIG {
       fastSIG =  SAN_SIGNAL::NOSIG;
       mainFastSIG = SAN_SIGNAL::NOSIG;
       slopeFastSIG = SAN_SIGNAL::NOSIG;
-      rsiFastSIG = SAN_SIGNAL::NOSIG;
+      //rsiFastSIG = SAN_SIGNAL::NOSIG;
       cpFastSIG = SAN_SIGNAL::NOSIG;
       cpSlopeVarFastSIG = SAN_SIGNAL::NOSIG;
       dominantTrendSIG = SAN_SIGNAL::NOSIG;
@@ -138,7 +138,7 @@ struct HSIG {
       fastSIG =  SAN_SIGNAL::NOSIG;
       mainFastSIG = SAN_SIGNAL::NOSIG;
       slopeFastSIG = SAN_SIGNAL::NOSIG;
-      rsiFastSIG = SAN_SIGNAL::NOSIG;
+      //rsiFastSIG = SAN_SIGNAL::NOSIG;
       cpFastSIG = SAN_SIGNAL::NOSIG;
       cpSlopeVarFastSIG = SAN_SIGNAL::NOSIG;
       dominantTrendSIG = SAN_SIGNAL::NOSIG;
@@ -182,10 +182,11 @@ struct HSIG {
    void              initSIG(const SANSIGNALS &ss, SanUtils &util) {
 
       baseTrendSIG = imaTrendSIG(ss.ima120240SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
-      baseSlopeSIG = getBaseSlopeSIG(ss.baseSlopeData);
+      //baseSlopeSIG = getBaseSlopeSIG(ss.baseSlopeData);
+      baseSlopeSIG = ss.simpleSlope_240_SIG;
       mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
       slopeFastSIG = matchSIG(ss.slopeVarSIG, ss.ima1430SIG);
-      rsiFastSIG = matchSIG(ss.rsiSIG, ss.ima1430SIG);
+      //rsiFastSIG = matchSIG(ss.rsiSIG, ss.ima1430SIG);
       cpFastSIG = matchSIG(util.convTrendToSig(ss.cpScatterSIG), ss.ima1430SIG);
       cpSlopeVarFastSIG= matchSIG(util.convTrendToSig(ss.cpScatterSIG),ss.slopeVarSIG);
       dominantTrendIma240SIG = fastImaSlowTrendSIG(ss.ima120240SIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
@@ -213,9 +214,14 @@ struct HSIG {
       slopeRatioData = ss.slopeRatioData;
       
 
-      simpleSlope_30_SIG = getSlopeSIG(ss.imaSlope30Data,0);
-      simpleSlope_120_SIG = getSlopeSIG(ss.imaSlope120Data,1);
-      simpleSlope_240_SIG = getSlopeSIG(ss.baseSlopeData,2);
+      //simpleSlope_30_SIG = getSlopeSIG(ss.imaSlope30Data,0);
+      //simpleSlope_120_SIG = getSlopeSIG(ss.imaSlope120Data,1);
+      //simpleSlope_240_SIG = getSlopeSIG(ss.baseSlopeData,2);
+      simpleSlope_30_SIG = ss.simpleSlope_30_SIG;
+      simpleSlope_120_SIG = ss.simpleSlope_120_SIG;
+      simpleSlope_240_SIG = ss.simpleSlope_240_SIG;
+
+      
       dominantTrendSIG = matchSIG(
                             // trendSIG(ss.trendRatio5SIG,ss.trendRatio14SIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG,ss.trendRatio500SIG),
                             ss.fsig5,
@@ -365,38 +371,38 @@ struct HSIG {
    }
 
 
-   SAN_SIGNAL        getSlopeSIG(const DataTransport& signalDt, const int signalType=0) {
+//   SAN_SIGNAL        getSlopeSIG(const DataTransport& signalDt, const int signalType=0) {
+//
+//      if(signalType==0) {
+//         if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::SIDEWAYS;
+//         if((signalDt.matrixD[0]>=-0.4)&&(signalDt.matrixD[0]<=0.4)) return SAN_SIGNAL::NOTRADE;
+//         if(signalDt.matrixD[0]>0.4)return SAN_SIGNAL::BUY;
+//         if(signalDt.matrixD[0]<-0.4)return SAN_SIGNAL::SELL;
+//      } else if(signalType==1) {
+//            if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2)) return SAN_SIGNAL::SIDEWAYS;
+//            if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::NOTRADE;
+//            if(signalDt.matrixD[0]>0.3)return SAN_SIGNAL::BUY;
+//            if(signalDt.matrixD[0]<-0.3)return SAN_SIGNAL::SELL;
+//         } else if(signalType==2) {
+//               if((signalDt.matrixD[0]>=-0.1)&&(signalDt.matrixD[0]<=0.1)) return SAN_SIGNAL::SIDEWAYS;
+//               if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2)) return SAN_SIGNAL::NOTRADE;
+//               if(signalDt.matrixD[0]>0.2)return SAN_SIGNAL::BUY;
+//               if(signalDt.matrixD[0]<-0.2)return SAN_SIGNAL::SELL;
+//            }
+//      return SAN_SIGNAL::NOSIG;
+//   }
 
-      if(signalType==0) {
-         if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::SIDEWAYS;
-         if((signalDt.matrixD[0]>=-0.4)&&(signalDt.matrixD[0]<=0.4)) return SAN_SIGNAL::NOTRADE;
-         if(signalDt.matrixD[0]>0.4)return SAN_SIGNAL::BUY;
-         if(signalDt.matrixD[0]<-0.4)return SAN_SIGNAL::SELL;
-      } else if(signalType==1) {
-            if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2)) return SAN_SIGNAL::SIDEWAYS;
-            if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::NOTRADE;
-            if(signalDt.matrixD[0]>0.3)return SAN_SIGNAL::BUY;
-            if(signalDt.matrixD[0]<-0.3)return SAN_SIGNAL::SELL;
-         } else if(signalType==2) {
-               if((signalDt.matrixD[0]>=-0.1)&&(signalDt.matrixD[0]<=0.1)) return SAN_SIGNAL::SIDEWAYS;
-               if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2)) return SAN_SIGNAL::NOTRADE;
-               if(signalDt.matrixD[0]>0.2)return SAN_SIGNAL::BUY;
-               if(signalDt.matrixD[0]<-0.2)return SAN_SIGNAL::SELL;
-            }
-      return SAN_SIGNAL::NOSIG;
-   }
 
-
-   SAN_SIGNAL        getBaseSlopeSIG(const DataTransport& slopeDt) {
-
-      Print("[BASE SLOPE]:: narrow: "+ slopeDt.matrixD[0]+" Wide Slope: "+ slopeDt.matrixD[1]);
-
-      if((slopeDt.matrixD[0]>=-0.2)&&(slopeDt.matrixD[0]<=0.2)) return SAN_SIGNAL::SIDEWAYS;
-      if((slopeDt.matrixD[0]>=-0.3)&&(slopeDt.matrixD[0]<=0.3)) return SAN_SIGNAL::NOTRADE;
-      if(slopeDt.matrixD[0]>0.3)return SAN_SIGNAL::BUY;
-      if(slopeDt.matrixD[0]<-0.3)return SAN_SIGNAL::SELL;
-      return SAN_SIGNAL::NOSIG;
-   }
+//   SAN_SIGNAL        getBaseSlopeSIG(const DataTransport& slopeDt) {
+//
+//      Print("[BASE SLOPE]:: narrow: "+ slopeDt.matrixD[0]+" Wide Slope: "+ slopeDt.matrixD[1]);
+//
+//      if((slopeDt.matrixD[0]>=-0.2)&&(slopeDt.matrixD[0]<=0.2)) return SAN_SIGNAL::SIDEWAYS;
+//      if((slopeDt.matrixD[0]>=-0.3)&&(slopeDt.matrixD[0]<=0.3)) return SAN_SIGNAL::NOTRADE;
+//      if(slopeDt.matrixD[0]>0.3)return SAN_SIGNAL::BUY;
+//      if(slopeDt.matrixD[0]<-0.3)return SAN_SIGNAL::SELL;
+//      return SAN_SIGNAL::NOSIG;
+//   }
 
 
 

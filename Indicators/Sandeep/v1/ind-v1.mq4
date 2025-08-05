@@ -26,7 +26,7 @@ input bool flipSig; // flips signals. BUY is SELL and SELL is BUY.
 
 
 const int SHIFT = 1;
-
+datetime lastMinute = 0;
 
 
 double buff1[];
@@ -167,11 +167,16 @@ void initCalc(const INDDATA &indData) {
    buff1[0] = buySell(indData);
 
    if(recordData) {
+      datetime currentTime = TimeCurrent();
+      datetime currentMinute = currentTime - (currentTime % 60);
+      if(currentMinute!=lastMinute) {
+         lastMinute=currentMinute;
+         st1.writeOHLCVJsonData(dataFileName,indData,sig,util,1);
+         //util.writeJsonData(dataFileName,indData,recordSignal,1);
+      }
       // if(util.fileSizeCheck(dataFileName,0.5))Print("File size is greater that 0.5 mb");
       //util.writeStructData(dataFileName,indData,recordSignal,1);
 //      util.writeJsonData(dataFileName,indData,recordSignal,1);
-//      st1.writeOHLCVJsonData(dataFileName,indData,1);
-       
    }
 
 }

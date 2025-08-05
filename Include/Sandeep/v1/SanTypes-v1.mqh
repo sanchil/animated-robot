@@ -614,6 +614,9 @@ struct SANSIGNALS {
    SAN_SIGNAL        candleImaSIG;
    SAN_SIGNAL        candleVolSIG;
    SAN_SIGNAL        candleVol120SIG;
+   SAN_SIGNAL        simpleSlope_30_SIG;
+   SAN_SIGNAL        simpleSlope_120_SIG;
+   SAN_SIGNAL        simpleSlope_240_SIG;
    SIGMAVARIABILITY        cpSDSIG;
    SIGMAVARIABILITY        ima5SDSIG;
    SIGMAVARIABILITY        ima14SDSIG;
@@ -702,6 +705,9 @@ struct SANSIGNALS {
       candleImaSIG = SAN_SIGNAL::NOSIG;
       candleVolSIG = SAN_SIGNAL::NOSIG;
       candleVol120SIG = SAN_SIGNAL::NOSIG;
+      simpleSlope_30_SIG = SAN_SIGNAL::NOSIG;
+      simpleSlope_120_SIG = SAN_SIGNAL::NOSIG;
+      simpleSlope_240_SIG = SAN_SIGNAL::NOSIG;
       cpSDSIG = SIGMAVARIABILITY::SIGMA_NULL;
       ima5SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
       ima14SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
