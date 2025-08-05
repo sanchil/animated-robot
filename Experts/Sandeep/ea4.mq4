@@ -14,7 +14,7 @@ double stdDevVal[31];
 string prntStr="";
 string prntStrOpen=" {";
 string prntStrClose=" }";
-string JSONFILE = "NEWDATA_v1.json";
+string JSONFILE = "NEWDATA.json";
 datetime lastMinute = 0;
 uint spreadLimit=0;
 
@@ -323,7 +323,117 @@ DataTransport   slopeFastMediumSlow(
    return dt;
 }
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+DataTransport     getSlopeRatioData(
+   const DataTransport &fast,
+   const DataTransport &medium,
+   const DataTransport &slow
+) {
 
+   double fastSlope=0;
+   double mediumSlope=0;
+   double slowSlope=0;
+   double slowSlopeWide=0;
+
+   double fMR=0;
+   double mSR=0;
+   double mSWR=0;
+   double fSR=0;
+   double fSWR=0;
+   double fMSR = 0;
+   double fMSWR = 0;
+
+   //DataTransport slopesData = slopeFastMediumSlow(fast,medium,slow,SLOPEDENOM,SLOPEDENOM_WIDE,shift);
+
+   DataTransport dt;
+   fastSlope = fast.matrixD[0];
+   mediumSlope = medium.matrixD[0];
+   slowSlope = slow.matrixD[0];
+   slowSlopeWide = slow.matrixD[1];
+
+   fMR = ((fastSlope!=0)&&(mediumSlope!=0))?NormalizeDouble((fastSlope/mediumSlope),4):EMPTY_VALUE;
+   mSR = ((mediumSlope!=0)&&(slowSlope!=0))?NormalizeDouble((mediumSlope/slowSlope),4):EMPTY_VALUE;
+   mSWR = ((mediumSlope!=0)&&(slowSlopeWide!=0))?NormalizeDouble((mediumSlope/slowSlopeWide),4):EMPTY_VALUE;
+   fSR = ((fastSlope!=0)&&(slowSlope!=0))?NormalizeDouble((fastSlope/slowSlope),4):EMPTY_VALUE;
+   fSWR = ((fastSlope!=0)&&(slowSlopeWide!=0))?NormalizeDouble((fastSlope/slowSlopeWide),4):EMPTY_VALUE;
+   fMSR = ((fMR!=0)&&(mSR!=0)&&(fMR!=EMPTY_VALUE)&&(mSR!=EMPTY_VALUE))?NormalizeDouble((fMR/mSR),4):EMPTY_VALUE;
+   fMSWR = ((fMR!=0)&&(mSWR!=0)&&(fMR!=EMPTY_VALUE)&&(mSWR!=EMPTY_VALUE))?NormalizeDouble((fMR/mSWR),4):EMPTY_VALUE;
+
+//   Print("[SLOPESRATIO] fMR: "+fMR+" mSR: "+mSR+" mSWR: "+mSWR+" fSR: "+fSR+" fSWR: "+fSWR+" fMSR: "+fMSR+" fMSWR: "+fMSWR);
+   dt.matrixD[0]=fMSR;
+   dt.matrixD[1]=fMSWR;
+   dt.matrixD[2]=fMR;
+   dt.matrixD[3]=mSR;
+   dt.matrixD[4]=mSWR;
+
+   return dt;
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+DataTransport clusterSIG(const double fast,const double medium,const double slow=0) {
+   DataTransport dt;
+   int fastInt = fast;
+   int mediumInt = medium;
+   int slowInt = slow;
+   double rFM = (fast/medium);
+   double rMS = (medium/slow);
+   double rFS = (fast/slow);
+   double rDFM = fabs(fast-medium)/fabs((fast+medium)/2);
+   double rDMS = fabs(medium-slow)/fabs((medium+slow)/2);
+   double rDFS = fabs(fast-slow)/fabs((fast+slow)/2);
+
+
+   if(fastInt==mediumInt) {
+      rFM = ((fast-fastInt)/(medium-mediumInt));
+   } else if(fastInt>mediumInt) {
+      rFM = ((fast-mediumInt)/(medium-mediumInt));
+   } else if(fastInt<mediumInt) {
+      //rFM = ((fast-fastInt)/(medium-fastInt));
+      rFM = -1*((medium-fastInt)/(fast-fastInt));
+   }
+
+
+   if(mediumInt==slowInt) {
+      rMS = ((medium-mediumInt)/(slow-slowInt));
+   } else if(mediumInt>slowInt) {
+      rMS = ((medium-slowInt)/(slow-slowInt));
+   } else if(mediumInt<slowInt) {
+      // rMS = ((medium-mediumInt)/(slow-mediumInt));
+      rMS = -1*((slow-mediumInt)/(medium-mediumInt));
+   }
+
+   if(fastInt==slowInt) {
+      rFS = ((fast-fastInt)/(slow-slowInt));
+   } else if(fastInt>slowInt) {
+      rFS = ((fast-slowInt)/(slow-slowInt));
+   } else if(fastInt<slowInt) {
+      rFS = -1*((slow-fastInt)/(fast-fastInt));
+   }
+//   double gt=EMPTY_VALUE;
+//   gt = (rFM>rMS)?rFM:rMS;
+//   gt = (gt>rFS)?gt:rFS;
+
+   double v1 = NormalizeDouble(((fastInt==mediumInt)?(fast-fastInt):((fastInt>mediumInt)?(fast-mediumInt):((fastInt<mediumInt)?(-1*(fast-fastInt)):EMPTY_VALUE))),4);
+   double v2 = NormalizeDouble(((mediumInt==slowInt)?(medium-mediumInt):((mediumInt>slowInt)?(medium-slowInt):((mediumInt<slowInt)?(-1*(medium-mediumInt)):EMPTY_VALUE))),4);
+   double v3 = NormalizeDouble(((fastInt==slowInt)?(slow-slowInt):((fastInt>slowInt)?(slow-slowInt):((fastInt<slowInt)?(-1*(slow-fastInt)):EMPTY_VALUE))),4);
+
+//Print("[CLUSTER] ratios: rFM: "+NormalizeDouble(rFM,4)+" rMS: "+NormalizeDouble(rMS,4)+" rFS: "+NormalizeDouble(rFS,4));
+//      +" fastInt: "+ fastInt+" mediumInt: "+ mediumInt+" slowInt: "+slowInt
+//      +" fast: "+ v1
+//      +" medium: "+ v2
+//      +" slow: "+v3);
+
+   dt.matrixD[0] =  NormalizeDouble(rFM,6);
+   dt.matrixD[1] =  NormalizeDouble(rMS,6);
+   dt.matrixD[2] =  NormalizeDouble(rFS,6);
+//return NormalizeDouble(rFM,6);
+   return dt;
+
+}
 //+------------------------------------------------------------------+
 //| When the fast signal moves over slow signal
 // it is a buy and when a fast signal dives below a slow signal then it is a sell
@@ -484,11 +594,20 @@ void OnTimer() {
       indData.ima500[i]= iMA(_Symbol,PERIOD_CURRENT,500,0,MODE_SMMA, PRICE_CLOSE,i);
    }
 
+   DataTransport dt14 = slopeVal(indData.ima14,5,21,1);
+   DataTransport dt30 = slopeVal(indData.ima30,5,21,1);
+   DataTransport dt120 = slopeVal(indData.ima120,5,21,1);
+   DataTransport dt240 = slopeVal(indData.ima240,5,21,1);
+   DataTransport dt500 = slopeVal(indData.ima500,5,21,1);
+   DataTransport stdCPSlope = slopeVal(indData.std,5,21,1);
+   DataTransport clusterData = clusterSIG(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
+   DataTransport slopeRatioData = getSlopeRatioData(dt30,dt120,dt240);
+      
    TRADESIG = ((int)MarketInfo(_Symbol,MODE_SPREAD)<spreadLimit)?
-              getSlopeSIG(slopeVal(indData.ima30,5,21,1),0)
+              getSlopeSIG(dt30,0)
               :
               SAN_SIGNAL::NOTRADE;
-              
+
    prntStr += prntStrOpen;
 
    //{"DateTime","CurrencyPair","TimeFrame","Spread","High","Open","Close","Low","Volume","CpStdDev","ATR","RSI","MovingAvg5","MovingAvg14","MovingAvg30","MovingAvg60","MovingAvg120","MovingAvg240","MovingAvg500","ORDER"}
@@ -505,6 +624,19 @@ void OnTimer() {
    prntStr += " \"StdDevCp\":"+DoubleToString(indData.std[1],8)+",";
    prntStr += " \"ATR\":"+DoubleToString(indData.atr[1],8)+",";
    prntStr += " \"RSI\":"+DoubleToString(indData.rsi[1],8)+",";
+
+   prntStr += " \"SlopeIMA14\":"+DoubleToString(dt14.matrixD[0],8)+",";
+   prntStr += " \"SlopeIMA30\":"+DoubleToString(dt30.matrixD[0],8)+",";
+   prntStr += " \"SlopeIMA120\":"+DoubleToString(dt120.matrixD[0],8)+",";
+   prntStr += " \"SlopeIMA240\":"+DoubleToString(dt240.matrixD[0],8)+",";
+   prntStr += " \"SlopeIMA500\":"+DoubleToString(dt500.matrixD[0],8)+",";
+   prntStr += " \"STDSlope\":"+DoubleToString(stdCPSlope.matrixD[0],8)+",";
+   prntStr += " \"RFM\":"+DoubleToString(clusterData.matrixD[0],8)+",";
+   prntStr += " \"RMS\":"+DoubleToString(clusterData.matrixD[1],8)+",";
+   prntStr += " \"RFS\":"+DoubleToString(clusterData.matrixD[2],8)+",";
+   prntStr += " \"fMSR\":"+DoubleToString(slopeRatioData.matrixD[0],8)+",";
+   prntStr += " \"fMSWR\":"+DoubleToString(slopeRatioData.matrixD[1],8)+",";
+
    prntStr += " \"MovingAvg5\":"+DoubleToString(indData.ima5[1],8)+",";
    prntStr += " \"MovingAvg14\":"+DoubleToString(indData.ima14[1],8)+",";
    prntStr += " \"MovingAvg30\":"+DoubleToString(indData.ima30[1],8)+",";
