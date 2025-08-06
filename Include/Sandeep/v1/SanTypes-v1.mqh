@@ -640,9 +640,7 @@ struct SANSIGNALS {
    DataTransport     slopeRatioData;
 
 
-
-
-   SANSIGNALS() {
+   void initBase() {
       openSIG = SAN_SIGNAL::NOSIG;
       closeSIG = SAN_SIGNAL::NOSIG;
       priceActionSIG = SAN_SIGNAL::NOSIG;
@@ -725,8 +723,10 @@ struct SANSIGNALS {
       ima240SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
       ima500SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
       //clusterSIG = EMPTY_VALUE;
+   }
 
-
+   SANSIGNALS() {
+      initBase();
    }
 
    ~SANSIGNALS() {

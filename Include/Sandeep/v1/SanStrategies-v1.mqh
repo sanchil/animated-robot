@@ -23,6 +23,7 @@ class SanStrategies {
    struct SS:public SANSIGNALS {
 
       SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
+           //initBase();
          //Print("SS: ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21]);
          //########################################################################################################
          //########################################################################################################
@@ -232,8 +233,8 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
    bool spreadBool = (indData.currSpread < tl.spreadLimit);
 
-   SANSIGBOOL sb(ss);
-   sb.spreadBool = spreadBool;
+//   SANSIGBOOL sb(ss);
+//   sb.spreadBool = spreadBool;
 //   sb.printStruct();
 
 //################################################################
@@ -242,13 +243,13 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool closeOrder = (!op1.NEWCANDLE && (totalOrders>0));
    SANTREND slopeTrendSIG = ss.trendRatioSIG;
    SIGMAVARIABILITY varSIG = ss.ima120SDSIG;
-   bool spreadVolBool = (sb.spreadBool && (ss.volSIG==SAN_SIGNAL::TRADE));
+   bool spreadVolBool = (spreadBool && (ss.volSIG==SAN_SIGNAL::TRADE));
 
 
 //################################################################
 //################################################################
 
-   bool trendBool = (sb.healthyTrendBool && sb.healthyTrendStrengthBool && !sb.flatTrendBool);
+//   bool trendBool = (sb.healthyTrendBool && sb.healthyTrendStrengthBool && !sb.flatTrendBool);
    bool atrBool = ((ss.atrSIG == SANTRENDSTRENGTH::NORMAL)||(ss.atrSIG == SANTRENDSTRENGTH::HIGH));
    bool sig5TrendBool = ((ss.sig5!=SAN_SIGNAL::NOSIG) && (ss.sig5==ss.priceActionSIG) && (ss.sig5==ss.adxSIG) && atrBool);
    bool tradeBool = (ss.tradeSIG==SAN_SIGNAL::TRADE);
@@ -295,7 +296,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 
    bool fastOpenTrade1 = (spreadBool  && (ss.candleImaSIG!=SAN_SIGNAL::NOSIG));
-   bool fastOpenTrade2 = (spreadBool && sb.starBool);
+//   bool fastOpenTrade2 = (spreadBool && sb.starBool);
    bool fastOpenTrade3 = ((hSig.dominantTrendSIG!=SAN_SIGNAL::NOSIG)&&((hSig.slopeFastSIG==hSig.dominantTrendSIG) || (hSig.mainFastSIG==hSig.dominantTrendSIG)));
    bool fastOpenTrade4 = (slopeTrendVarBool && (ss.ima1430SIG!=SAN_SIGNAL::NOSIG) && (ss.ima1430SIG==hSig.dominantTrendSIG));   // ss.ima514SIG
    bool fastOpenTrade5 = (slopeTrendVarBool && (ss.slopeVarSIG!=SAN_SIGNAL::NOSIG) && (ss.slopeVarSIG==hSig.dominantTrendSIG));  // ss.slopeVarSIG
@@ -334,7 +335,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool openTradeTrend = (fastOpenTrade3);//||fastOpenTrade4);
    bool openSlope = (fastOpenTrade11);//||fastOpenTrade4);
    bool openCandleVol = (fastOpenTrade12||fastOpenTrade13);
-   bool openStar = (fastOpenTrade2);
+//   bool openStar = (fastOpenTrade2);
 //   bool closeFlatTrade = (spreadBool &&  ((flatBool)||(dominantSIG==SAN_SIGNAL::SIDEWAYS)));
    bool closeFlatTrade = (spreadBool && (dominantSIG==SAN_SIGNAL::SIDEWAYS));
 
