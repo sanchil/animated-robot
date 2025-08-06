@@ -456,11 +456,19 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    DataTransport stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);//
    DataTransport clusterData = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
    DataTransport slopeRatioData = sig.slopeRatioData(dt30,dt120,dt240);
-
+   
+   SAN_SIGNAL c_SIG = sig.cSIG(indData,util,1);
+   SAN_SIGNAL baseSIG = sig.slopeSIG(dt240,2);
+   //SAN_SIGNAL tradeSIG = (c_SIG==baseSIG)?c_SIG:SAN_SIGNAL::NOSIG;
+   SAN_SIGNAL tradeSIG = c_SIG;
+   
+   
    SAN_SIGNAL TRADESIG = (indData.currSpread < tl.spreadLimit)?
-                         sig.slopeSIG(dt30,0)
+//                         sig.slopeSIG(dt30,0)
+                         tradeSIG
                          :
                          SAN_SIGNAL::NOTRADE;
+       
 
    prntStr += " \"DateTime\":\""+(TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES))+"\",";
    prntStr += " \"CurrencyPair\":\""+util.getSymbolString(Symbol())+"\",";
