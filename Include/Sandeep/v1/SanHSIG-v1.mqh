@@ -391,7 +391,7 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 
    bool closeSlopeRatios = getMktCloseOnSlopeRatio();
 
-   Print("[CLOSEBOOLS]: Close on fsig flat: "+closeFlatTradeBool+" Close slopesrev: "+getMktCloseOnSlopeReversal(ss,util)+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Close on Slope Ratios: " +closeSlopeRatios);
+   Print("[CLOSEBOOLS]: Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ss,util)+" fsig flat: "+closeFlatTradeBool+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE));
    // Close in flat market strategies are different from close when market is steep and trending
    //Print("[TRADESTRATEGY]:"+util.getSigString(trdStgy));
    //Print("[TRADESTRATEGY]:"+trdStgy);
@@ -484,11 +484,13 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 
       if(c_SIG==SAN_SIGNAL::CLOSE) {
          mktType=MKTTYP::MKTCLOSE;
+         openSIG = SAN_SIGNAL::NOSIG;
          closeSIG = SAN_SIGNAL::CLOSE;
       } else if(c_SIG==SAN_SIGNAL::SIDEWAYS) {
          mktType=MKTTYP::MKTFLAT;
+         openSIG = SAN_SIGNAL::NOSIG;
          closeSIG = SAN_SIGNAL::NOSIG;
-      } else {
+      } else if(c_SIG==baseSlopeSIG){
          mktType=MKTTYP::MKTTR;
          openSIG = c_SIG;
          closeSIG = SAN_SIGNAL::NOSIG;
