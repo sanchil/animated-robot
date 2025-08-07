@@ -484,7 +484,7 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 
    baseTrendSIG = imaTrendSIG(ss.ima120240SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
 //baseSlopeSIG = getBaseSlopeSIG(ss.baseSlopeData);
-   baseSlopeSIG = ss.simpleSlope_240_SIG;
+   baseSlopeSIG = slopeSIG(ss.baseSlopeData,2);
 //  c_SIG = ss.c_SIG;
    c_SIG = cSIG(ss,util,1);
    mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
@@ -528,7 +528,7 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    simpleSlope_14_SIG = slopeSIG(ss.imaSlope14Data,0);
    simpleSlope_30_SIG = slopeSIG(ss.imaSlope30Data,0);
    simpleSlope_120_SIG = slopeSIG(ss.imaSlope120Data,1);
-   simpleSlope_240_SIG = slopeSIG(ss.baseSlopeData,2);
+   simpleSlope_240_SIG = baseSlopeSIG;
 
  //  Print("[SIMSLOPES]: simple14: "+ut.getSigString(simpleSlope_14_SIG)+" simple30:"+ ut.getSigString(simpleSlope_30_SIG)+" simple120:"+ut.getSigString(simpleSlope_120_SIG)+" simple240:"+ut.getSigString(simpleSlope_240_SIG));
 
