@@ -530,7 +530,7 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    simpleSlope_120_SIG = slopeSIG(ss.imaSlope120Data,1);
    simpleSlope_240_SIG = slopeSIG(ss.baseSlopeData,2);
 
-
+ //  Print("[SIMSLOPES]: simple14: "+ut.getSigString(simpleSlope_14_SIG)+" simple30:"+ ut.getSigString(simpleSlope_30_SIG)+" simple120:"+ut.getSigString(simpleSlope_120_SIG)+" simple240:"+ut.getSigString(simpleSlope_240_SIG));
 
    dominantTrendSIG = matchSIG(
 // trendSIG(ss.trendRatio5SIG,ss.trendRatio14SIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG,ss.trendRatio500SIG),

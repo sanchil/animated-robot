@@ -162,8 +162,8 @@ class SanStrategies {
    SIGBUFF           paSt1(const INDDATA &indData);
    SIGBUFF           paSt2(const INDDATA &indData);
    SAN_SIGNAL        getSlopeSIG(const DataTransport& signalDt, const int signalType=0);
-   string            getJsonData(const INDDATA &indData,SanSignals &sig,SanUtils& util,int shift=1);
-   bool              writeOHLCVJsonData(string filename, const INDDATA &indData,SanSignals &sig,SanUtils& util,int shift=1);
+   string            getJsonData(const INDDATA &indData,SanSignals &sig, SanUtils& util,int shift=1);
+   bool              writeOHLCVJsonData(string filename, const INDDATA &indData,SanSignals &sig, SanUtils& util,int shift=1);
 };
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -282,20 +282,14 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    HSIG hSig(ss, util);
    dominantSIG = sig.dominantTrendSIG(ss,hSig);
 
-//bool notFlatBool = (varBool &&(((slopeTrendSIG!=SANTREND::FLAT)&&(slopeTrendSIG!=SANTREND::NOTREND))||((ss.candleVol120SIG!=SAN_SIGNAL::SIDEWAYS)&&(ss.candleVol120SIG!=SAN_SIGNAL::NOSIG))));
-//bool flatBool = (noVarBool && ((slopeTrendSIG==SANTREND::FLAT)||(ss.candleVol120SIG==SAN_SIGNAL::SIDEWAYS)||(ss.slopeVarSIG==SAN_SIGNAL::SIDEWAYS)));
-
    bool notFlatBool = (varBool && (varPosBool||varNegBool) && (hSig.mktType==MKTTYP::MKTTR));
    bool flatBool = (varFlatBool && (hSig.mktType==MKTTYP::MKTFLAT));
-
 
    bool basicOpenVolBool = (spreadVolBool && notFlatBool);
    bool basicOpenBool = (spreadBool && notFlatBool);
 
    bool slopeTrendVarBool = (basicOpenBool && slopeTrendBool);
    bool candleVolVar120Bool = (basicOpenVolBool && candleVol120Bool);
-
-
 
    bool fastOpenTrade1 = (spreadBool  && (ss.candleImaSIG!=SAN_SIGNAL::NOSIG));
 //   bool fastOpenTrade2 = (spreadBool && sb.starBool);
@@ -423,7 +417,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    Print("[MAIN][SLOW]:: domSIG: "+util.getSigString(dominantSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" fastSIG:: "+util.getSigString(hSig.fastSIG));
    //Print("[MAIN][FAST]:: candleVol120SIG: "+util.getSigString(ss.candleVol120SIG)+" slopeSIG: "+util.getSigString(ss.slopeVarSIG)+" CP120: "+util.getSigString(ss.cpScatterSIG)+" ima1430: "+util.getSigString(ss.ima1430SIG));
    Print("[CLOSE] :: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" SimpleClose14_30:: "+util.getSigString(hSig.simpleTrend_14_30_SIG));
-   Print("[OPEN] ::  fastSIG: "+util.getSigString(hSig.fastSIG)+" simpleSig_5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cSIG: "+util.getSigString(ss.c_SIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG));
+   Print("[OPEN] ::  fastSIG: "+util.getSigString(hSig.fastSIG)+" simpleSig_5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG));
 
 //   Print("[VARBOOLS]: varBool: "+varBool+" varBoolDt: "+ss.varDt.matrixBool[3] +" varPosBool: "+varPosBool+" varPosBoolDt: "+ss.varDt.matrixBool[0]+" varNegBool: "+varNegBool+" varNegBoolDt: "+ss.varDt.matrixBool[1]+" varFlatBool: "+varFlatBool+" varFlatBoolDt: "+ss.varDt.matrixBool[2]);
    //Print("[SLOPES]: FAST: "+ imaSlopesData.matrixD[0]+" : "+(0.15+(1.5*0.1))+" MEDIUM: "+imaSlopesData.matrixD[1]+" : "+(0.15+0.1)+" SLOW: "+imaSlopesData.matrixD[2]+" : 0.15  :SLOWWIDE: "+imaSlopesData.matrixD[3]+" : 0.1");
@@ -513,7 +507,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool SanStrategies::writeOHLCVJsonData(string filename, const INDDATA &indData, SanSignals &sig,SanUtils& util,int shift=1) {
+bool SanStrategies::writeOHLCVJsonData(string filename, const INDDATA &indData, SanSignals &sig, SanUtils& util,int shift=1) {
    string data = getJsonData(indData,sig,util,shift);
    int fileHandle = FileOpen(filename, FILE_CSV|FILE_WRITE|FILE_READ);
    if(fileHandle == INVALID_HANDLE) {
