@@ -503,13 +503,15 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 //           ?
 //           domTrIMAFast:((util.oppSignal(domTrIMAFast,domTrIMA)||(domTrIMAFast==SAN_SIGNAL::CLOSE))?SAN_SIGNAL::CLOSE:SAN_SIGNAL::NOSIG);
 
-
+//######################################################################################
+   // SET Trade Strategies
    //trdStgy = TRADE_STRATEGIES::FASTSIG;
    //trdStgy = TRADE_STRATEGIES::SIMPLESIG;
    //trdStgy = TRADE_STRATEGIES::SLOPESIG;
    //trdStgy = TRADE_STRATEGIES::SLOPERATIOSIG;
    trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
    //trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
+//######################################################################################
 
 
 //trdStgy = TRADE_STRATEGIES::FASTSIG;
