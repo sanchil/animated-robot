@@ -15,6 +15,7 @@ string prntStr="";
 string prntStrOpen=" {";
 string prntStrClose=" }";
 string JSONFILE = "NEWDATA.json";
+//string JSONFILE = "NEWDATA_"+TimeToString(TimeCurrent(), TIME_DATE)+".json";
 datetime lastMinute = 0;
 uint spreadLimit=0;
 
