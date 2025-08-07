@@ -100,7 +100,8 @@ class HSIG {
    void              baseInit();
    void              setTradeStrategy(const TRADE_STRATEGIES& st);
    void              setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& st, SAN_SIGNAL closesig=SAN_SIGNAL::NOSIG);
-//   void              processSignalsWithStrategy(const TRADE_STRATEGIES& st);
+   void              processSignalsWithNoStrategy();
+   void              processSignalsWithStrategy();
    void              initSIG(const SANSIGNALS &ss, SanUtils &util);
    SAN_SIGNAL        matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2=EMPTY, bool slowStrategy=false);
    SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2=EMPTY);
@@ -319,20 +320,26 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 
 // This is a simple basic close signal on reversal of trade signal with current position.
    bool closeSigTrReversalBool =  getMktCloseOnReversal(opensig, ut);
+   bool closeSigTrCloseSigReversalBool =  getMktCloseOnReversal(closesig, ut);
+
 
    bool closeSlopeRatios = getMktCloseOnSlopeRatio();
 
-   Print("[CLOSEBOOLS]: Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ssSIG,ut)+" fsig flat: "+closeFlatTradeBool+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE));
+   bool openTradeBool = ((opensig==baseSlopeSIG)&&(stdCPSlope.matrixD[0]>-0.6));
+   bool closeTradeBool2 = ((!closeFlatTradeBool&&!closeSigTrReversalBool) && (stdCPSlope.matrixD[0]<=-0.6));
 
    // fastSIG
    if(trdStgy == TRADE_STRATEGIES::FASTSIG) {
       if(closeTradeBool) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(getMktCloseOnFlat(opensig,flatMktBool)) {
+      } else if(closeTradeBool2) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(getMktCloseOnReversal(opensig, ut)) {
+      } else if(closeFlatTradeBool) {
+         mktType=MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(closeSigTrReversalBool) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
       } else if(closeSlopeRatios) {
@@ -341,7 +348,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       } else if(flatMktBool) {
          mktType=MKTTYP::MKTFLAT;
          closeSIG = SAN_SIGNAL::NOSIG;
-      } else if(opensig==baseSlopeSIG) {
+      } else if(openTradeBool) {
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
@@ -353,16 +360,19 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 // close: simpleTrend_14_30_SIG
    if(trdStgy == TRADE_STRATEGIES::SIMPLESIG) {
 
-      if(getMktCloseOnFlat(opensig,flatMktBool)) {
+      if(closeTradeBool2) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(getMktCloseOnReversal(closesig, ut)) {
+      } else if(closeFlatTradeBool) {
+         mktType=MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(closeSigTrCloseSigReversalBool) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
       } else if(flatMktBool) {
          mktType=MKTTYP::MKTFLAT;
          closeSIG = SAN_SIGNAL::NOSIG;
-      } else if(opensig==baseSlopeSIG) {
+      } else if(openTradeBool) {
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
@@ -373,11 +383,13 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 //simpleSlope_30_SIG
    if(trdStgy == TRADE_STRATEGIES::SLOPESIG) {
 
-
-      if(getMktCloseOnFlat(opensig,flatMktBool)) {
+      if(closeTradeBool2) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(getMktCloseOnReversal(opensig, ut)) {
+      } else if(closeFlatTradeBool) {
+         mktType=MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(closeSigTrReversalBool) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
       } else if(opensig==SAN_SIGNAL::SIDEWAYS) {
@@ -386,7 +398,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       } else if(flatMktBool) {
          mktType=MKTTYP::MKTFLAT;
          closeSIG = SAN_SIGNAL::NOSIG;
-      } else if((opensig==baseSlopeSIG)&&(stdCPSlope.matrixD[0]>-0.5)) {
+      } else if(openTradeBool) {
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
@@ -396,27 +408,75 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 
 // sig: c_SIG
    if((trdStgy == TRADE_STRATEGIES::SLOPESTD_CSIG)||(trdStgy == TRADE_STRATEGIES::NOTRDSTGY)) {
+
       if(opensig==SAN_SIGNAL::CLOSE) {
          mktType=MKTTYP::MKTCLOSE;
          openSIG = SAN_SIGNAL::NOSIG;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(getMktCloseOnFlat(opensig,flatMktBool)) {
+      } else if(closeTradeBool2) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(getMktCloseOnReversal(opensig, ut)) {
+      } else if(closeFlatTradeBool) {
+         mktType=MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(closeSigTrReversalBool) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
       } else if((opensig==SAN_SIGNAL::SIDEWAYS)||flatMktBool) {
          mktType=MKTTYP::MKTFLAT;
          openSIG = SAN_SIGNAL::NOSIG;
          closeSIG = SAN_SIGNAL::NOSIG;
-      } else if(opensig==baseSlopeSIG) {
+      } else if(openTradeBool) {
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
       }
       Print("[TRADESTRATEGY]: SLOPESTD_CSIG "+ut.getSigString(openSIG));
    }
+   Print("[CLOSEBOOLS]: Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ssSIG,ut)+" fsig flat: "+closeFlatTradeBool+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE));
+
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void   HSIG::processSignalsWithNoStrategy() {
+
+   if(c_SIG!=SAN_SIGNAL::NOSIG) {
+      trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
+      setSIGForStrategy(c_SIG, trdStgy);
+   } else if(fastSIG!=SAN_SIGNAL::NOSIG) {
+      trdStgy = TRADE_STRATEGIES::FASTSIG;
+      setSIGForStrategy(fastSIG, trdStgy);
+   } else if(simpleSlope_30_SIG!=SAN_SIGNAL::NOSIG) {
+      trdStgy = TRADE_STRATEGIES::SLOPESIG;
+      setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
+   } else if(simpleTrend_5_14_SIG!=SAN_SIGNAL::NOSIG) {
+      trdStgy = TRADE_STRATEGIES::SIMPLESIG;
+      setSIGForStrategy(simpleTrend_5_14_SIG, trdStgy, simpleTrend_14_30_SIG);
+   }
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void   HSIG::processSignalsWithStrategy() {
+
+//trdStgy = TRADE_STRATEGIES::FASTSIG;
+   if(trdStgy==TRADE_STRATEGIES::FASTSIG)
+      setSIGForStrategy(fastSIG, trdStgy);
+
+//trdStgy = TRADE_STRATEGIES::SIMPLESIG;
+   if(trdStgy==TRADE_STRATEGIES::SIMPLESIG)
+      setSIGForStrategy(simpleTrend_5_14_SIG, trdStgy, simpleTrend_14_30_SIG);
+
+//trdStgy = TRADE_STRATEGIES::SLOPESIG;
+   if(trdStgy==TRADE_STRATEGIES::SLOPESIG)
+      setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
+
+//trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
+   if(trdStgy==TRADE_STRATEGIES::SLOPESTD_CSIG)
+      setSIGForStrategy(c_SIG, trdStgy);
 }
 
 
@@ -503,32 +563,39 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 //           ?
 //           domTrIMAFast:((util.oppSignal(domTrIMAFast,domTrIMA)||(domTrIMAFast==SAN_SIGNAL::CLOSE))?SAN_SIGNAL::CLOSE:SAN_SIGNAL::NOSIG);
 
-//######################################################################################
-   // SET Trade Strategies
-   //trdStgy = TRADE_STRATEGIES::FASTSIG;
-   //trdStgy = TRADE_STRATEGIES::SIMPLESIG;
-   //trdStgy = TRADE_STRATEGIES::SLOPESIG;
-   //trdStgy = TRADE_STRATEGIES::SLOPERATIOSIG;
-   trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
-   //trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
-//######################################################################################
+////######################################################################################
+//   // SET Trade Strategies
+//   //trdStgy = TRADE_STRATEGIES::FASTSIG;
+//   //trdStgy = TRADE_STRATEGIES::SIMPLESIG;
+//   //trdStgy = TRADE_STRATEGIES::SLOPESIG;
+//   //trdStgy = TRADE_STRATEGIES::SLOPERATIOSIG;
+     trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
+//   //trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
+////######################################################################################
+//
+////trdStgy = TRADE_STRATEGIES::FASTSIG;
+//   if(trdStgy==TRADE_STRATEGIES::FASTSIG)
+//      setSIGForStrategy(fastSIG, trdStgy);
+//
+////trdStgy = TRADE_STRATEGIES::SIMPLESIG;
+//   if(trdStgy==TRADE_STRATEGIES::SIMPLESIG)
+//      setSIGForStrategy(simpleTrend_5_14_SIG, trdStgy, simpleTrend_14_30_SIG);
+//
+////trdStgy = TRADE_STRATEGIES::SLOPESIG;
+//   if(trdStgy==TRADE_STRATEGIES::SLOPESIG)
+//      setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
+//
+////trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
+//   if(trdStgy==TRADE_STRATEGIES::SLOPESTD_CSIG)
+//      setSIGForStrategy(c_SIG, trdStgy);
+
+   if(trdStgy==TRADE_STRATEGIES::NOTRDSTGY) {
+      processSignalsWithNoStrategy();
+   } else {
+      processSignalsWithStrategy();
+   }
 
 
-//trdStgy = TRADE_STRATEGIES::FASTSIG;
-   if(trdStgy==TRADE_STRATEGIES::FASTSIG)
-      setSIGForStrategy(fastSIG, trdStgy);
-
-//trdStgy = TRADE_STRATEGIES::SIMPLESIG;
-   if(trdStgy==TRADE_STRATEGIES::SIMPLESIG)
-      setSIGForStrategy(simpleTrend_5_14_SIG, trdStgy, simpleTrend_14_30_SIG);
-
-//trdStgy = TRADE_STRATEGIES::SLOPESIG;
-   if(trdStgy==TRADE_STRATEGIES::SLOPESIG)
-      setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
-
-//trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
-   if(trdStgy==TRADE_STRATEGIES::SLOPESTD_CSIG)
-      setSIGForStrategy(c_SIG, trdStgy);
 
 } //initSIG
 
