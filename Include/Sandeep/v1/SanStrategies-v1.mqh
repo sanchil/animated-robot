@@ -123,11 +123,14 @@ class SanStrategies {
          imaSlope30Data=sig.slopeSIGData(indData.ima30,5,21,1);
          imaSlope120Data=sig.slopeSIGData(indData.ima120,5,21,1);
          baseSlopeData=sig.slopeSIGData(indData.ima240,5,21,1);
+         imaSlope500Data=sig.slopeSIGData(indData.ima500,5,21,1);
+         stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);
+         
          simpleSlope_14_SIG = sig.slopeSIG(imaSlope14Data,0);   
          simpleSlope_30_SIG = sig.slopeSIG(imaSlope30Data,0);
          simpleSlope_120_SIG = sig.slopeSIG(imaSlope120Data,1);
-         simpleSlope_240_SIG = sig.slopeSIG(baseSlopeData,2);
-         
+         simpleSlope_240_SIG = sig.slopeSIG(baseSlopeData,2);   
+               
          slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);         
          c_SIG = sig.cSIG(indData,util,1);
 

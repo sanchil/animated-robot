@@ -636,8 +636,10 @@ struct SANSIGNALS {
    DataTransport     imaSlope30Data;
    DataTransport     imaSlope120Data;
    DataTransport     baseSlopeData;
+   DataTransport     imaSlope500Data;
    DataTransport     varDt;
    DataTransport     slopeRatioData;
+   DataTransport     stdCPSlope;
 
 
    void initBase() {
@@ -738,6 +740,9 @@ struct SANSIGNALS {
       imaSlope14Data.freeData();
       imaSlope30Data.freeData();
       imaSlope120Data.freeData();
+      imaSlope500Data.freeData();
+      stdCPSlope.freeData();
+      
    }
 
 };
