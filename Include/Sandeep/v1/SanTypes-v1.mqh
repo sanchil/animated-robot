@@ -632,6 +632,7 @@ struct SANSIGNALS {
    SAN_SIGNAL        candlePattStarSIG;
    DataTransport     clusterSIG;
 //  DataTransport     imaSlopesData;
+   DataTransport     imaSlope5Data;
    DataTransport     imaSlope14Data;
    DataTransport     imaSlope30Data;
    DataTransport     imaSlope120Data;
@@ -737,12 +738,13 @@ struct SANSIGNALS {
       varDt.freeData();
       slopeRatioData.freeData();
       baseSlopeData.freeData();
+      imaSlope5Data.freeData();
       imaSlope14Data.freeData();
       imaSlope30Data.freeData();
       imaSlope120Data.freeData();
       imaSlope500Data.freeData();
       stdCPSlope.freeData();
-      
+
    }
 
 };

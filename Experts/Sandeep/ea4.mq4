@@ -645,7 +645,7 @@ void OnTimer() {
    prntStr += " \"MovingAvg120\":"+DoubleToString(indData.ima120[1],8)+",";
    prntStr += " \"MovingAvg240\":"+DoubleToString(indData.ima240[1],8)+",";
    prntStr += " \"MovingAvg500\":"+DoubleToString(indData.ima500[1],8)+",";
-   prntStr += " \"ORDER\":\""+getSigString(TRADESIG)+"\"";
+   prntStr += " \"TRADESIG\":\""+getSigString(TRADESIG)+"\"";
 
    prntStr += prntStrClose;
 

@@ -115,10 +115,9 @@ class SanStrategies {
          trendRatio500SIG = sig.trendRatioSIG(indData.ima500,"IMA500",2,21);
          trendRatioSIG = trendRatio120SIG;
 
-         clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
          //############# DataTransport vars used in HSIG mostly ########################################
 
-
+         imaSlope5Data=sig.slopeSIGData(indData.ima5,5,21,1);
          imaSlope14Data=sig.slopeSIGData(indData.ima14,5,21,1);
          imaSlope30Data=sig.slopeSIGData(indData.ima30,5,21,1);
          imaSlope120Data=sig.slopeSIGData(indData.ima120,5,21,1);
@@ -130,8 +129,12 @@ class SanStrategies {
          //simpleSlope_30_SIG = sig.slopeSIG(imaSlope30Data,0);
          //simpleSlope_120_SIG = sig.slopeSIG(imaSlope120Data,1);
          //simpleSlope_240_SIG = sig.slopeSIG(baseSlopeData,2);   
-               
-         slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);         
+
+         //clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.im7a240[1]);
+         //slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);    
+         clusterSIG = sig.clusterSIG(indData.ima5[1],indData.ima14[1],indData.ima30[1]);               
+         slopeRatioData = sig.slopeRatioData(imaSlope5Data,imaSlope14Data,imaSlope30Data);    
+              
          //c_SIG = sig.cSIG(indData,util,1);
 
          //#############################################################################################
@@ -499,7 +502,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    prntStr += " \"MovingAvg120\":"+DoubleToString(indData.ima120[1],8)+",";
    prntStr += " \"MovingAvg240\":"+DoubleToString(indData.ima240[1],8)+",";
    prntStr += " \"MovingAvg500\":"+DoubleToString(indData.ima500[1],8)+",";
-   prntStr += " \"ORDER\":\""+util.getSigString(TRADESIG)+"\"";
+   prntStr += " \"TRADESIG\":\""+util.getSigString(TRADESIG)+"\"";
 
    prntStr += prntStrClose;
    return prntStr;
