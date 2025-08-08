@@ -1094,22 +1094,24 @@ SAN_SIGNAL          HSIG::trendVolVarSIG(
 
 SAN_SIGNAL HSIG::slopeSIG(const DataTransport& signalDt, const int signalType=0) {
 
+   //if(signalType==0) {
+   //   if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::CLOSE;
+   //   if((signalDt.matrixD[0]>=-0.4)&&(signalDt.matrixD[0]<=0.4)) return SAN_SIGNAL::SIDEWAYS;
+   //   if(signalDt.matrixD[0]>0.4)return SAN_SIGNAL::BUY;
+   //   if(signalDt.matrixD[0]<-0.4)return SAN_SIGNAL::SELL;
+   //} else 
+   
    if(signalType==0) {
-      if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::CLOSE;
-      if((signalDt.matrixD[0]>=-0.4)&&(signalDt.matrixD[0]<=0.4)) return SAN_SIGNAL::SIDEWAYS;
-      if(signalDt.matrixD[0]>0.4)return SAN_SIGNAL::BUY;
-      if(signalDt.matrixD[0]<-0.4)return SAN_SIGNAL::SELL;
-   } else if(signalType==1) {
       if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2)) return SAN_SIGNAL::CLOSE;
       if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::SIDEWAYS;
       if(signalDt.matrixD[0]>0.3)return SAN_SIGNAL::BUY;
       if(signalDt.matrixD[0]<-0.3)return SAN_SIGNAL::SELL;
-   } else if(signalType==2) {
+   } else if(signalType==1) {
       if((signalDt.matrixD[0]>=-0.1)&&(signalDt.matrixD[0]<=0.1)) return SAN_SIGNAL::CLOSE;
       if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2)) return SAN_SIGNAL::SIDEWAYS;
       if(signalDt.matrixD[0]>0.2)return SAN_SIGNAL::BUY;
       if(signalDt.matrixD[0]<-0.2)return SAN_SIGNAL::SELL;
-   } else if(signalType==3) {
+   } else if(signalType==2) {
       if((signalDt.matrixD[0]>=-0.05)&&(signalDt.matrixD[0]<=0.05)) return SAN_SIGNAL::CLOSE;
       if((signalDt.matrixD[0]>=-0.1)&&(signalDt.matrixD[0]<=0.1)) return SAN_SIGNAL::SIDEWAYS;
       if(signalDt.matrixD[0]>0.1)return SAN_SIGNAL::BUY;
