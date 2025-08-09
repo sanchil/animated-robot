@@ -433,7 +433,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       }
       //Print("[TRADESTRATEGY]: SLOPESTD_CSIG "+ut.getSigString(openSIG));
    }
-   Print("[CLOSEBOOLS]: Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ssSIG,ut)+" fsig flat: "+closeFlatTradeBool+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE));
+  // Print("[CLOSEBOOLS]: Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ssSIG,ut)+" fsig flat: "+closeFlatTradeBool+" Mkt Rev fsig 5_14: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE));
 
 }
 
@@ -1203,8 +1203,6 @@ SAN_SIGNAL HSIG::cSIG(
 
    Print("[CSIGBOOLS-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool+" trendClusterBool "+trendClusterBool);
    Print("[CSIGBOOLS-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
-
-
    Print("[cSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
    return sig;
 }
@@ -1397,19 +1395,19 @@ bool              HSIG::getMktCloseOnSlopeVariable(const SANSIGNALS &ss, SanUtil
 //   Print("[SLOPES COMPARE] imaSlopesData: "+ ss.imaSlopesData.matrixD[0] + " slopes30: "+ss.imaSlope30Data.matrixD[0]+" Equal? "+(ss.imaSlope30Data.matrixD[0]==ss.imaSlopesData.matrixD[0]));
    if(fabs(ss.imaSlope30Data.matrixD[0])> SLOPE_5) {
       CLOSESIGNAL=ss.fsig5;
-      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig5,tradePosition))");
+//      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig5,tradePosition))");
    } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_14) {
       CLOSESIGNAL=ss.fsig14;
-      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig14,tradePosition))");
+//      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig14,tradePosition))");
    } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_30) {
       CLOSESIGNAL=ss.fsig30;
-      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig30,tradePosition))");
+//      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig30,tradePosition))");
    } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_120) {
       CLOSESIGNAL=ss.fsig120;
-      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig120,tradePosition))");
+//      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig120,tradePosition))");
    } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_240) {
       CLOSESIGNAL=ss.fsig240;
-      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig240,tradePosition))");
+//      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig240,tradePosition))");
    }
 
    closeBool= (CLOSESIGNAL!=SAN_SIGNAL::NOSIG)?(util.oppSignal(CLOSESIGNAL,tradePosition)):false;

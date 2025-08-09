@@ -20,14 +20,16 @@ input double closeProfit; // Profit at which a trade is condsidered for closing.
 input double currProfit; // The profit of the currently held trade
 input double maxProfit; // The current profit is adjusted by subtracting the spread and a margin added.
 input bool recordData; // begin recording data for vector database for a RAG AI application.
+//input int recordFreqInMinutes; // Record after the mentioned period. Default is record once every minute.
 input SAN_SIGNAL recordSignal; // This is the default signal recorded for vector database for a RAG AI application.
 input string dataFileName;// This is the default signal data file name recorded for vector database for a RAG AI application.
 input bool flipSig; // flips signals. BUY is SELL and SELL is BUY.
 
-
 const int SHIFT = 1;
-//datetime lastMinute = 0;
-int lastMinute = 0;
+
+//int recordFreq = _Period;
+//int currentRecordTime = 0;
+//int lastRecordTime = -1;
 
 
 
@@ -168,20 +170,31 @@ int OnCalculate(const int rates_total,
 void initCalc(const INDDATA &indData) {
    buff1[0] = buySell(indData);
 
-   if(recordData) {
-//      datetime currentTime = TimeCurrent();
-//      datetime currentMinute = currentTime - (currentTime % 60);
-      int currentMinute = TimeMinute(TimeCurrent());
-      if(currentMinute!=lastMinute) {
-         lastMinute=currentMinute;
-         st1.writeOHLCVJsonData(dataFileName,indData,sig,util,1);
-         //util.writeJsonData(dataFileName,indData,recordSignal,1);
-      }
-      // if(util.fileSizeCheck(dataFileName,0.5))Print("File size is greater that 0.5 mb");
-      //util.writeStructData(dataFileName,indData,recordSignal,1);
-//      util.writeJsonData(dataFileName,indData,recordSignal,1);
-   }
 
+//   if(_Period<60) {
+//      recordFreq=_Period;
+//      currentRecordTime = TimeMinute(TimeCurrent());
+//   } else if((_Period>=60)&&(_Period<=1440)) {
+//      recordFreq=(int)(_Period/60);
+//      currentRecordTime = TimeHour(TimeCurrent());
+//   } else {
+//      recordFreq=-1;
+//   }
+//
+//   Print("Record Frequency: "+recordFreq);
+//   if(recordData) {
+//      if((recordFreq>0)&&((currentRecordTime%recordFreq)==0)&&(currentRecordTime!=lastRecordTime)) {
+//         lastRecordTime=currentRecordTime;
+//         st1.writeOHLCVJsonData(dataFileName,indData,sig,util,1);
+//         //util.writeJsonData(dataFileName,indData,recordSignal,1);
+//      }
+//   }
+
+   if(recordData) {
+      if(util.isNewBarTime()) {
+            st1.writeOHLCVJsonData(dataFileName,indData,sig,util,1);
+      }
+   }
 }
 
 //+------------------------------------------------------------------+
@@ -190,8 +203,6 @@ void initCalc(const INDDATA &indData) {
 double buySell(const INDDATA &indData) {
 
    SIGBUFF sbuff = st1.imaSt1(indData);
-
-
 
    if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL)) {
       //buff2[0] = sbuff.buff2[0];
