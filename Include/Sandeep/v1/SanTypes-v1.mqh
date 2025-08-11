@@ -630,7 +630,7 @@ struct SANSIGNALS {
    SIGMAVARIABILITY        ima240SDSIG;
    SIGMAVARIABILITY        ima500SDSIG;
    SAN_SIGNAL        candlePattStarSIG;
-   DataTransport     clusterSIG;
+   DataTransport     clusterData;
 //  DataTransport     imaSlopesData;
    DataTransport     imaSlope5Data;
    DataTransport     imaSlope14Data;
@@ -733,7 +733,7 @@ struct SANSIGNALS {
    }
 
    ~SANSIGNALS() {
-      clusterSIG.freeData();
+      clusterData.freeData();
 //      imaSlopesData.freeData();
       varDt.freeData();
       slopeRatioData.freeData();

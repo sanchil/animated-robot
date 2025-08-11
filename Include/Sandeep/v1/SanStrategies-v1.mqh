@@ -132,7 +132,7 @@ class SanStrategies {
 
          //clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.im7a240[1]);
          //slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);    
-         clusterSIG = sig.clusterSIG(indData.ima5[1],indData.ima14[1],indData.ima30[1]);               
+         clusterData = sig.clusterData(indData.ima5[1],indData.ima14[1],indData.ima30[1]);               
          slopeRatioData = sig.slopeRatioData(imaSlope5Data,imaSlope14Data,imaSlope30Data);    
               
          //c_SIG = sig.cSIG(indData,util,1);
@@ -454,7 +454,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    DataTransport dt240 = sig.slopeSIGData(indData.ima240,5,21,1);
    DataTransport dt500 = sig.slopeSIGData(indData.ima500,5,21,1);
    DataTransport stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);//
-   DataTransport clusterData = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
+   DataTransport clusterData = sig.clusterData(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
    DataTransport slopeRatioData = sig.slopeRatioData(dt30,dt120,dt240);
    
    SAN_SIGNAL c_SIG = sig.cSIG(indData,util,1);
