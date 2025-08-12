@@ -1337,16 +1337,17 @@ SAN_SIGNAL HSIG::cSIG(
 
    SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
    const double STDSLOPE = -0.6;
+   const double SLOPE30LIMIT = 3;
    double stdCPSlope = ss.stdCPSlope.matrixD[0];
    bool trendStdCP = (stdCPSlope>STDSLOPE);
    SAN_SIGNAL slopesig = slopeSIG(ss.imaSlope30Data,0);
 
-   if(trendStdCP && (fabs(ss.imaSlope30Data.matrixD[0])>2)) {
+   if(trendStdCP && (fabs(ss.imaSlope30Data.matrixD[0])>SLOPE30LIMIT)) {
       sig = slopesig;
    } else if((tradeSIG==SAN_SIGNAL::TRADEBUY)&&(slopesig==SAN_SIGNAL::BUY)) {
-      sig = SAN_SIGNAL::BUY;
+      sig = slopesig;
    } else if((tradeSIG==SAN_SIGNAL::TRADESELL)&&(slopesig==SAN_SIGNAL::SELL)) {
-      sig = SAN_SIGNAL::SELL;
+      sig = slopesig;
    }
 
    //Print("[CSIGBOOLS-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " buyTrendClusterBool: "+buyTrendClusterBool+" sellTrendClusterBool: "+sellTrendClusterBool );
