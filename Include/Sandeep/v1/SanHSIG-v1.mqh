@@ -1325,7 +1325,7 @@ SAN_SIGNAL HSIG::cSIG(
 //      sig = SAN_SIGNAL::CLOSE;
 //   } else if((closeTrendStdCP&&trendSlopeRatioBool)||(closeTrendStdCP&&trendClusterBool)) {
 //      sig = sig = SAN_SIGNAL::NOSIG;
-//   } else if(trendStdCP && (ss.imaSlope30Data.matrixD[0]>2)) {
+//   } else if(trendStdCP && (fabs(ss.imaSlope30Data.matrixD[0])>2)) {
 //      sig = slopesig;
 //   } else if(trendStdCP && trendSlopeRatioBool) {
 //      sig = slopesig;
@@ -1341,7 +1341,7 @@ SAN_SIGNAL HSIG::cSIG(
    bool trendStdCP = (stdCPSlope>STDSLOPE);
    SAN_SIGNAL slopesig = slopeSIG(ss.imaSlope30Data,0);
 
-   if(trendStdCP && (ss.imaSlope30Data.matrixD[0]>2)) {
+   if(trendStdCP && (fabs(ss.imaSlope30Data.matrixD[0])>2)) {
       sig = slopesig;
    } else if((tradeSIG==SAN_SIGNAL::TRADEBUY)&&(slopesig==SAN_SIGNAL::BUY)) {
       sig = SAN_SIGNAL::BUY;
