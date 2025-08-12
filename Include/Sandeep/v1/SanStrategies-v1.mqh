@@ -153,7 +153,7 @@ class SanStrategies {
          Print("priceActionSIG: "+util.getSigString(priceActionSIG)+" volSIG: "+util.getSigString(volSIG)+" candleImaSIG: "+util.getSigString(candleImaSIG)+" candleVolSIG: "+util.getSigString(candleVolSIG)+" candlePattStarSIG: "+util.getSigString(candlePattStarSIG)+" adxSIG: "+util.getSigString(adxSIG)+" atrSIG: "+util.getSigString(atrSIG)+" mfiSIG: "+util.getSigString(mfiSIG));
          Print("sig5: "+util.getSigString(sig5)+" sig14: "+util.getSigString(sig14)+" sig30: "+util.getSigString(sig30)+" ima514SIG: "+util.getSigString(ima514SIG)+" ima1430SIG: "+util.getSigString(ima1430SIG)+" ima530SIG: "+util.getSigString(ima530SIG)+" ima530_21SIG: "+util.getSigString(ima530_21SIG)+" ima30120SIG: "+util.getSigString(ima30120SIG));
          Print("fsig5: "+util.getSigString(fsig5)+" fsig14: "+util.getSigString(fsig14)+" fsig30: "+util.getSigString(fsig30)+" fastIma514SIG: "+util.getSigString(fastIma514SIG)+" fastIma1430SIG: "+util.getSigString(fastIma1430SIG)+" fastIma530SIG: "+util.getSigString(fastIma530SIG)+" fastIma30120SIG: "+util.getSigString(fastIma30120SIG));
-         Print("Spread: "+currSpread+" openSIG: "+util.getSigString(openSIG)+" closeSIG: "+util.getSigString(closeSIG)+" tradeSIG: "+util.getSigString(tradeSIG));
+         Print("Spread: "+currSpread+" openSIG: "+util.getSigString(openSIG)+" closeSIG: "+util.getSigString(closeSIG));
       }
    };
 
@@ -258,7 +258,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //   bool trendBool = (sb.healthyTrendBool && sb.healthyTrendStrengthBool && !sb.flatTrendBool);
    bool atrBool = ((ss.atrSIG == SANTRENDSTRENGTH::NORMAL)||(ss.atrSIG == SANTRENDSTRENGTH::HIGH));
    bool sig5TrendBool = ((ss.sig5!=SAN_SIGNAL::NOSIG) && (ss.sig5==ss.priceActionSIG) && (ss.sig5==ss.adxSIG) && atrBool);
-   bool tradeBool = (ss.tradeSIG==SAN_SIGNAL::TRADE);
+//   bool tradeBool = (ss.tradeSIG==SAN_SIGNAL::TRADE);
    bool mfiSIGBool = ((ss.mfiSIG == SAN_SIGNAL::BUY)||(ss.mfiSIG == SAN_SIGNAL::SELL));
    bool mfiTradeTrendBool = (ss.mfiSIG==util.convTrendToSig(slopeTrendSIG));
    bool slopeTrendBool = ((slopeTrendSIG==SANTREND::UP)||(slopeTrendSIG==SANTREND::DOWN));
@@ -420,7 +420,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    //Print("[MAIN][SLOW]:: domSIG: "+util.getSigString(dominantSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" fastSIG:: "+util.getSigString(hSig.fastSIG));
    //Print("[MAIN][FAST]:: candleVol120SIG: "+util.getSigString(ss.candleVol120SIG)+" slopeSIG: "+util.getSigString(ss.slopeVarSIG)+" CP120: "+util.getSigString(ss.cpScatterSIG)+" ima1430: "+util.getSigString(ss.ima1430SIG));
    Print("[CLOSE] :: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" SimpleClose14_30:: "+util.getSigString(hSig.simpleTrend_14_30_SIG));
-   Print("[OPEN] ::  domSIG: "+util.getSigString(dominantSIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" 14_30:"+util.getSigString(hSig.simple_14_30_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" dominantTrendCPSIG: "+util.getSigString(hSig.dominantTrendCPSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG));
+   Print("[OPEN] ::  domSIG: "+util.getSigString(dominantSIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" 14_30:"+util.getSigString(hSig.simple_14_30_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" dominantTrendCPSIG: "+util.getSigString(hSig.dominantTrendCPSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Trade Sig: "+util.getSigString(hSig.tradeSIG));
 
 //   Print("[VARBOOLS]: varBool: "+varBool+" varBoolDt: "+ss.varDt.matrixBool[3] +" varPosBool: "+varPosBool+" varPosBoolDt: "+ss.varDt.matrixBool[0]+" varNegBool: "+varNegBool+" varNegBoolDt: "+ss.varDt.matrixBool[1]+" varFlatBool: "+varFlatBool+" varFlatBoolDt: "+ss.varDt.matrixBool[2]);
    //Print("[SLOPES]: FAST: "+ imaSlopesData.matrixD[0]+" : "+(0.15+(1.5*0.1))+" MEDIUM: "+imaSlopesData.matrixD[1]+" : "+(0.15+0.1)+" SLOW: "+imaSlopesData.matrixD[2]+" : 0.15  :SLOWWIDE: "+imaSlopesData.matrixD[3]+" : 0.1");

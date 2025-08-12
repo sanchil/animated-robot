@@ -494,6 +494,7 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    baseSlopeSIG = slopeSIG(ss.baseSlopeData,2);
 //  c_SIG = ss.c_SIG;
    c_SIG = cSIG(ss,util,1);
+   tradeSIG = cTradeSIG(ss,util,1);   
    mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
    slopeFastSIG = matchSIG(ss.slopeVarSIG, ss.ima1430SIG);
 //rsiFastSIG = matchSIG(ss.rsiSIG, ss.ima1430SIG);
@@ -1230,9 +1231,9 @@ SAN_SIGNAL HSIG::cTradeSIG(
       sig = SAN_SIGNAL::NOTRADE;
    }
 
-   Print("[CTRADESIGBOOLS-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " buyTrendClusterBool: "+buyTrendClusterBool+" sellTrendClusterBool: "+sellTrendClusterBool );
-   Print("[CTRADESIGBOOLS-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
-   Print("[cTradeSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" fMR: "+fMR+" mSR: "+mSR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
+   //Print("[CTRADESIGBOOLS-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " buyTrendClusterBool: "+buyTrendClusterBool+" sellTrendClusterBool: "+sellTrendClusterBool );
+   //Print("[CTRADESIGBOOLS-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
+   //Print("[cTradeSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" fMR: "+fMR+" mSR: "+mSR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
    return sig;
 }
 //+------------------------------------------------------------------+
