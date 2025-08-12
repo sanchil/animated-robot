@@ -1159,7 +1159,7 @@ SAN_SIGNAL HSIG::cSIG(
    double fMR = ss.slopeRatioData.matrixD[2];
    double mSR = ss.slopeRatioData.matrixD[3];
    double mSWR = ss.slopeRatioData.matrixD[4];
-   
+
 
 
    bool strictFlatClusterBool = ((rFM==1)&&(rMS==1)&&(rFS==1));
@@ -1179,8 +1179,8 @@ SAN_SIGNAL HSIG::cSIG(
 
 
 
-   bool closeSlopeRatioBool =  (fMSWR<0.0);
-//   bool closeSlopeRatioBool =  getMktCloseOnSlopeRatio();
+//   bool closeSlopeRatioBool =  (fMSWR<0.8);
+   bool closeSlopeRatioBool =  getMktCloseOnSlopeRatio();
    bool closeClusterBool =  (((rFM<0)&&(rMS<0))||((rMS<0)&&(rFS<0))||((rFM<0)&&(rFS<0)));
    bool closeTrendStdCP = (stdCPSlope<=-0.6);
 
@@ -1191,14 +1191,16 @@ SAN_SIGNAL HSIG::cSIG(
    bool buyTrendClusterBool = (
                                  (rFM>1.03)&&
                                  (rMS>1.03)&&
-                                 (rFS>1.03)
+                                 (rFS>1.03)&&
+                                 (rMS>rFM)
                               );
 
 
    bool sellTrendClusterBool = (
                                   ((rFM>=0)&&(rFM<0.97))&&
                                   ((rMS>=0)&&(rMS<0.97))&&
-                                  ((rFS>=0)&&(rFS<0.97))
+                                  ((rFS>=0)&&(rFS<0.97))&&
+                                  (rMS>rFM)
                                );
 
 
@@ -1216,7 +1218,7 @@ SAN_SIGNAL HSIG::cSIG(
    //bool sellTrendSlopeRatioBool  = ((fMSWR>=0)&&(fMSWR<0.8)&&(fabs(fMSWR)<=30));
    //bool trendSlopeRatioBool  = (buyTrendSlopeRatioBool||sellTrendSlopeRatioBool);
 
-   bool trendSlopeRatioBool  = ((fMSWR>=0)&&(fabs(fMSWR)<=30));
+   bool trendSlopeRatioBool  = ((fMSWR>=0.8)&&(fabs(fMSWR)<=20));
 
    bool trendStdCP = (stdCPSlope>-0.5);
 
@@ -1228,12 +1230,14 @@ SAN_SIGNAL HSIG::cSIG(
       sig = sig = SAN_SIGNAL::CLOSE;
    } else if(closeTrendStdCP&&flatBool) {
       sig = SAN_SIGNAL::CLOSE;
+   } else if(trendStdCP && (ss.imaSlope30Data.matrixD[0]>2)) {
+      sig = slopesig;
+   } else if(trendStdCP && trendSlopeRatioBool) {
+      sig = slopesig;
    } else if(trendStdCP&&buyTrendClusterBool) {
       sig = SAN_SIGNAL::BUY;
    } else if(trendStdCP&&sellTrendClusterBool) {
       sig = SAN_SIGNAL::SELL;
-   } else if(trendStdCP && trendSlopeRatioBool) {
-      sig = slopesig;
    }
 
 
@@ -1259,7 +1263,7 @@ SAN_SIGNAL HSIG::cSIG(
 
    Print("[CSIGBOOLS-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " buyTrendClusterBool: "+buyTrendClusterBool+" sellTrendClusterBool: "+sellTrendClusterBool );
    Print("[CSIGBOOLS-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
-   Print("[cSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
+   Print("[cSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" fMR: "+fMR+" mSR: "+mSR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
    return sig;
 }
 
@@ -1356,7 +1360,7 @@ bool  HSIG::getMktCloseOnSlopeRatio() {
 //Print("Slopes Ratio: slopeR: "+slopeR+" slopeWideR: "+slopeWideR);
    bool closeOnSlopeRatioBool = false;
 
-   if((slopeWideR<0.2)&&(slopeWideR!=EMPTY_VALUE))
+   if((slopeWideR<0.8)&&(slopeWideR!=EMPTY_VALUE))
       closeOnSlopeRatioBool=true;
    return closeOnSlopeRatioBool;
 
