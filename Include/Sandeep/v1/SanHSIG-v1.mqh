@@ -134,6 +134,13 @@ class HSIG {
       const SANTREND vSlowTrend=SANTREND::NOTREND
    );
    SAN_SIGNAL        slopeSIG(const DataTransport& signalDt, const int signalType=0);
+
+   SAN_SIGNAL cTradeSIG(
+      const SANSIGNALS &ss,
+      SanUtils& util,
+      const uint SHIFT=1
+   );
+
    SAN_SIGNAL        cSIG(
       const SANSIGNALS &ss,
       SanUtils& util,
@@ -1119,36 +1126,29 @@ SAN_SIGNAL HSIG::slopeSIG(const DataTransport& signalDt, const int signalType=0)
    }
    return SAN_SIGNAL::NOSIG;
 }
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL HSIG::cSIG(
+SAN_SIGNAL HSIG::cTradeSIG(
    const SANSIGNALS &ss,
    SanUtils& util,
    const uint SHIFT=1
 ) {
 
-   datetime timeCurrent =TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES);
-   int spread = (int)MarketInfo(_Symbol,MODE_SPREAD);
+   const double STDSLOPE = -0.6;
+   const double SLOPERATIO = 0.8;
+   const double SLOPERATIO_UPPERLIMIT = 20;
+   const double CLUSTERRANGEPLUS = (1+0.03);
+   const double CLUSTERRANGEMINUS = (1-0.03);
+   const int CLUSTERRANGEFLAT = 1;
+
+
+   //datetime timeCurrent =TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES);
+   //int spread = (int)MarketInfo(_Symbol,MODE_SPREAD);
    SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
 
-
-//DataTransport dt14 = slopeSIGData(indData.ima14,5,21,1);
-//DataTransport dt30 = slopeSIGData(indData.ima30,5,21,1);
-//DataTransport dt120 = slopeSIGData(indData.ima120,5,21,1);
-//DataTransport dt240 = slopeSIGData(indData.ima240,5,21,1);
-//DataTransport dt500 = slopeSIGData(indData.ima500,5,21,1);
-//DataTransport stdCPSlope = slopeSIGData(indData.std,5,21,1);
-//DataTransport clData = clusterData(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
-//DataTransport slopeRatioData = slopeRatioData(dt30,dt120,dt240);
-
-//double stdDevCp = indData.std[SHIFT];
-//double slopeIMA5 = ss.imaSlope5Data.matrixD[0];
-//double slopeIMA14 = ss.imaSlope14Data.matrixD[0];
    double slopeIMA30 = ss.imaSlope30Data.matrixD[0];
-//double slopeIMA120 = ss.imaSlope120Data.matrixD[0];
-//double slopeIMA240 = ss.baseSlopeData.matrixD[0];
-//double slopeIMA500 = ss.imaSlope500Data.matrixD[0];
 
    double stdCPSlope = ss.stdCPSlope.matrixD[0];
    double rFM =  ss.clusterData.matrixD[0];
@@ -1162,45 +1162,45 @@ SAN_SIGNAL HSIG::cSIG(
 
 
 
-   bool strictFlatClusterBool = ((rFM==1)&&(rMS==1)&&(rFS==1));
+   bool strictFlatClusterBool = ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT));
+
    bool flatClusterBool = (
-                             ((rFM==1)&&(rMS==1))||
-                             ((rMS==1)&&(rFS==1))||
-                             ((rFM==1)&&(rFS==1))
+                             ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT))||
+                             ((rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))||
+                             ((rFM==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))
                           );
 
-
    bool rangeFlatClusterBool = (
-                                  ((rFM>0)&&((rFM>=0.97)&&(rFM<=1.03)))
-                                  &&((rMS>0)&&((rMS>=0.97)&&(rMS<=1.03)))
-                                  &&((rFS>0)&&((rFS>=0.97)&&(rFS<=1.03)))
+                                  ((rFM>0)&&((rFM>=CLUSTERRANGEMINUS)&&(rFM<=CLUSTERRANGEPLUS)))
+                                  &&((rMS>0)&&((rMS>=CLUSTERRANGEMINUS)&&(rMS<=CLUSTERRANGEPLUS)))
+                                  &&((rFS>0)&&((rFS>=CLUSTERRANGEMINUS)&&(rFS<=CLUSTERRANGEPLUS)))
                                );
 
 
 
 
-//   bool closeSlopeRatioBool =  (fMSWR<0.8);
-   bool closeSlopeRatioBool =  getMktCloseOnSlopeRatio();
+   bool closeSlopeRatioBool =  (fMSWR<SLOPERATIO);
+//   bool closeSlopeRatioBool =  getMktCloseOnSlopeRatio();
    bool closeClusterBool =  (((rFM<0)&&(rMS<0))||((rMS<0)&&(rFS<0))||((rFM<0)&&(rFS<0)));
-   bool closeTrendStdCP = (stdCPSlope<=-0.6);
+   bool closeTrendStdCP = (stdCPSlope<=STDSLOPE);
 
 
    bool flatBool = (strictFlatClusterBool||rangeFlatClusterBool||flatClusterBool);
 
 
    bool buyTrendClusterBool = (
-                                 (rFM>1.03)&&
-                                 (rMS>1.03)&&
-                                 (rFS>1.03)&&
-                                 (rMS>rFM)
+                                 (rFM>CLUSTERRANGEPLUS)&&
+                                 (rMS>CLUSTERRANGEPLUS)&&
+                                 (rFS>CLUSTERRANGEPLUS)&&
+                                 (rFM<rMS)
                               );
 
 
    bool sellTrendClusterBool = (
-                                  ((rFM>=0)&&(rFM<0.97))&&
-                                  ((rMS>=0)&&(rMS<0.97))&&
-                                  ((rFS>=0)&&(rFS<0.97))&&
-                                  (rMS>rFM)
+                                  ((rFM>=0)&&(rFM<CLUSTERRANGEMINUS))&&
+                                  ((rMS>=0)&&(rMS<CLUSTERRANGEMINUS))&&
+                                  ((rFS>=0)&&(rFS<CLUSTERRANGEMINUS))&&
+                                  (rFM>rMS)
                                );
 
 
@@ -1209,25 +1209,121 @@ SAN_SIGNAL HSIG::cSIG(
                               buyTrendClusterBool||sellTrendClusterBool
                            );
 
+   bool trendSlopeRatioBool  = ((fMSWR>=SLOPERATIO)&&(fMSWR<=SLOPERATIO_UPPERLIMIT));
 
-   //bool buyTrendSlopeRatioBool  = ((fMSWR>=0.8)&&(fabs(fMSWR)<=30));
-   //bool sellTrendSlopeRatioBool  = ((fMSWR>=0)&&(fMSWR<0.8)&&(fabs(fMSWR)<=30));
-   //bool trendSlopeRatioBool  = (buyTrendSlopeRatioBool||sellTrendSlopeRatioBool);
+   bool trendStdCP = (stdCPSlope>STDSLOPE);
 
-   //bool buyTrendSlopeRatioBool  = ((fMR>1)&&(mSR>1)&&(mSR>fMR) (fabs(fMSWR)<=30));
-   //bool sellTrendSlopeRatioBool  = ((fMSWR>=0)&&(fMSWR<0.8)&&(fabs(fMSWR)<=30));
-   //bool trendSlopeRatioBool  = (buyTrendSlopeRatioBool||sellTrendSlopeRatioBool);
 
-   bool trendSlopeRatioBool  = ((fMSWR>=0.8)&&(fabs(fMSWR)<=20));
+   if((closeTrendStdCP&&closeSlopeRatioBool)||(closeTrendStdCP&&closeClusterBool)) {
+      sig = SAN_SIGNAL::NOTRADE;
+   } else if((closeTrendStdCP&&trendSlopeRatioBool)||(closeTrendStdCP&&trendClusterBool)) {
+      sig = sig = SAN_SIGNAL::NOSIG;
+   } else if(closeTrendStdCP&&flatBool) {
+      sig = SAN_SIGNAL::CLOSE;
+   } else if(trendStdCP&&trendSlopeRatioBool&&buyTrendClusterBool) {
+      sig = SAN_SIGNAL::TRADEBUY;
+   } else if(trendStdCP&&trendSlopeRatioBool&&sellTrendClusterBool) {
+      sig = SAN_SIGNAL::TRADESELL;
+   } else if(trendStdCP&&trendSlopeRatioBool&&trendClusterBool) {
+      sig = SAN_SIGNAL::TRADE;
+   } else {
+      sig = SAN_SIGNAL::NOTRADE;
+   }
 
-   bool trendStdCP = (stdCPSlope>-0.5);
+   Print("[CTRADESIGBOOLS-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " buyTrendClusterBool: "+buyTrendClusterBool+" sellTrendClusterBool: "+sellTrendClusterBool );
+   Print("[CTRADESIGBOOLS-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
+   Print("[cTradeSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" fMR: "+fMR+" mSR: "+mSR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
+   return sig;
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SAN_SIGNAL HSIG::cSIG(
+   const SANSIGNALS &ss,
+   SanUtils& util,
+   const uint SHIFT=1
+) {
+
+
+   const double STDSLOPE = -0.6;
+   const double SLOPERATIO = 0.8;
+   const double SLOPERATIO_UPPERLIMIT = 20;
+   const double CLUSTERRANGEPLUS = (1+0.03);
+   const double CLUSTERRANGEMINUS = (1-0.03);
+   const int CLUSTERRANGEFLAT = 1;
+
+   //datetime timeCurrent =TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES);
+   //int spread = (int)MarketInfo(_Symbol,MODE_SPREAD);
+   SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
+
+   double slopeIMA30 = ss.imaSlope30Data.matrixD[0];
+
+   double stdCPSlope = ss.stdCPSlope.matrixD[0];
+   double rFM =  ss.clusterData.matrixD[0];
+   double rMS =  ss.clusterData.matrixD[1];
+   double rFS =  ss.clusterData.matrixD[2];
+   double fMSR = ss.slopeRatioData.matrixD[0];
+   double fMSWR= ss.slopeRatioData.matrixD[1];
+   double fMR = ss.slopeRatioData.matrixD[2];
+   double mSR = ss.slopeRatioData.matrixD[3];
+   double mSWR = ss.slopeRatioData.matrixD[4];
+
+
+
+   bool strictFlatClusterBool = ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT));
+
+   bool flatClusterBool = (
+                             ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT))||
+                             ((rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))||
+                             ((rFM==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))
+                          );
+
+   bool rangeFlatClusterBool = (
+                                  ((rFM>0)&&((rFM>=CLUSTERRANGEMINUS)&&(rFM<=CLUSTERRANGEPLUS)))
+                                  &&((rMS>0)&&((rMS>=CLUSTERRANGEMINUS)&&(rMS<=CLUSTERRANGEPLUS)))
+                                  &&((rFS>0)&&((rFS>=CLUSTERRANGEMINUS)&&(rFS<=CLUSTERRANGEPLUS)))
+                               );
+
+   bool closeSlopeRatioBool =  (fMSWR<SLOPERATIO);
+   //bool closeSlopeRatioBool =  getMktCloseOnSlopeRatio();
+   bool closeClusterBool =  (((rFM<0)&&(rMS<0))||((rMS<0)&&(rFS<0))||((rFM<0)&&(rFS<0)));
+   bool closeTrendStdCP = (stdCPSlope<=STDSLOPE);
+
+
+   bool flatBool = (strictFlatClusterBool||rangeFlatClusterBool||flatClusterBool);
+
+
+   bool buyTrendClusterBool = (
+                                 (rFM>CLUSTERRANGEPLUS)&&
+                                 (rMS>CLUSTERRANGEPLUS)&&
+                                 (rFS>CLUSTERRANGEPLUS)&&
+                                 (rFM<rMS)
+                              );
+
+
+   bool sellTrendClusterBool = (
+                                  ((rFM>=0)&&(rFM<CLUSTERRANGEMINUS))&&
+                                  ((rMS>=0)&&(rMS<CLUSTERRANGEMINUS))&&
+                                  ((rFS>=0)&&(rFS<CLUSTERRANGEMINUS))&&
+                                  (rFM>rMS)
+                               );
+
+
+
+   bool trendClusterBool = (
+                              buyTrendClusterBool||sellTrendClusterBool
+                           );
+
+   bool trendSlopeRatioBool  = ((fMSWR>=SLOPERATIO)&&(fMSWR<=SLOPERATIO_UPPERLIMIT));
+
+   bool trendStdCP = (stdCPSlope>STDSLOPE);
 
    SAN_SIGNAL slopesig = slopeSIG(ss.imaSlope30Data,0);
 
    if((closeTrendStdCP&&closeSlopeRatioBool)||(closeTrendStdCP&&closeClusterBool)) {
       sig = SAN_SIGNAL::CLOSE;
    } else if((closeTrendStdCP&&trendSlopeRatioBool)||(closeTrendStdCP&&trendClusterBool)) {
-      sig = sig = SAN_SIGNAL::CLOSE;
+      sig = sig = SAN_SIGNAL::NOSIG;
    } else if(closeTrendStdCP&&flatBool) {
       sig = SAN_SIGNAL::CLOSE;
    } else if(trendStdCP && (ss.imaSlope30Data.matrixD[0]>2)) {
