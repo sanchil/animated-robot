@@ -1308,8 +1308,6 @@ SAN_SIGNAL HSIG::cSIG(
                                   (rFM>rMS)
                                );
 
-
-
    bool trendClusterBool = (
                               buyTrendClusterBool||sellTrendClusterBool
                            );
