@@ -23,7 +23,7 @@ class SanStrategies {
    struct SS:public SANSIGNALS {
 
       SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
-           //initBase();
+         //initBase();
          //Print("SS: ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21]);
          //########################################################################################################
          //########################################################################################################
@@ -64,7 +64,7 @@ class SanStrategies {
 //         trendSlopeSIG = trendSlope5SIG;
 //         //trendRatioSIG = sig.trendRatioSIG(indData.ima30,"IMA30",2,21);
 //         //adxCovDivSIG = sig.adxCovDivSIG(indData.adx,indData.adxPlus,indData.adxMinus);
-           //rsiSIG = sig.rsiSIG(indData.rsi,21,1);
+         //rsiSIG = sig.rsiSIG(indData.rsi,21,1);
 //         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
 
 
@@ -124,17 +124,17 @@ class SanStrategies {
          baseSlopeData=sig.slopeSIGData(indData.ima240,5,21,1);
          imaSlope500Data=sig.slopeSIGData(indData.ima500,5,21,1);
          stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);
-         
-         //simpleSlope_14_SIG = sig.slopeSIG(imaSlope14Data,0);   
+
+         //simpleSlope_14_SIG = sig.slopeSIG(imaSlope14Data,0);
          //simpleSlope_30_SIG = sig.slopeSIG(imaSlope30Data,0);
          //simpleSlope_120_SIG = sig.slopeSIG(imaSlope120Data,1);
-         //simpleSlope_240_SIG = sig.slopeSIG(baseSlopeData,2);   
+         //simpleSlope_240_SIG = sig.slopeSIG(baseSlopeData,2);
 
          //clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.im7a240[1]);
-         //slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);    
-         clusterData = sig.clusterData(indData.ima5[1],indData.ima14[1],indData.ima30[1]);               
-         slopeRatioData = sig.slopeRatioData(imaSlope5Data,imaSlope14Data,imaSlope30Data);    
-              
+         //slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);
+         clusterData = sig.clusterData(indData.ima5[1],indData.ima14[1],indData.ima30[1]);
+         slopeRatioData = sig.slopeRatioData(imaSlope5Data,imaSlope14Data,imaSlope30Data);
+
          //c_SIG = sig.cSIG(indData,util,1);
 
          //#############################################################################################
@@ -440,86 +440,222 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    return sigBuff;
 }
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUtils& util, int shift=1) {
+//   string prntStr="";
+//   string prntStrOpen="{ ";
+//   string prntStrClose=" }";
+//   prntStr += prntStrOpen;
+//   DataTransport dt14 = sig.slopeSIGData(indData.ima14,5,21,1);
+//   DataTransport dt30 = sig.slopeSIGData(indData.ima30,5,21,1);
+//   DataTransport dt120 = sig.slopeSIGData(indData.ima120,5,21,1);
+//   DataTransport dt240 = sig.slopeSIGData(indData.ima240,5,21,1);
+//   DataTransport dt500 = sig.slopeSIGData(indData.ima500,5,21,1);
+//   DataTransport stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);//
+//   DataTransport clusterData = sig.clusterData(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
+//   DataTransport slopeRatioData = sig.slopeRatioData(dt30,dt120,dt240);
+//
+//   SAN_SIGNAL c_SIG = sig.cSIG(indData,util,1);
+//   SAN_SIGNAL baseSIG = sig.slopeSIG(dt240,2);
+//   //SAN_SIGNAL tradeSIG = (c_SIG==baseSIG)?c_SIG:SAN_SIGNAL::NOSIG;
+//   SAN_SIGNAL tradeSIG = c_SIG;
+//
+//
+//   SAN_SIGNAL TRADESIG = (indData.currSpread < tl.spreadLimit)?
+////                         sig.slopeSIG(dt30,0)
+//                         tradeSIG
+//                         :
+//                         SAN_SIGNAL::NOTRADE;
+//
+//  
+//
+//   prntStr += " \"DateTime\":\""+(TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES))+"\",";
+//   prntStr += " \"CurrencyPair\":\""+util.getSymbolString(Symbol())+"\",";
+//   prntStr += " \"TimeFrame\":\""+util.getSymbolString(Period())+"\",";
+//   prntStr += " \"Spread\":"+(int)MarketInfo(_Symbol,MODE_SPREAD)+",";
+//   prntStr += " \"Open\":"+DoubleToString(Open[1],8)+",";
+//   prntStr += " \"High\":"+DoubleToString(High[1],8)+",";
+//   prntStr += " \"Low\":"+DoubleToString(Low[1],8)+",";
+//   prntStr += " \"Close\":"+DoubleToString(Close[1],8)+",";
+//   prntStr += " \"Volume\":"+DoubleToString(Volume[1],8)+",";
+//   prntStr += " \"StdDevCp\":"+DoubleToString(indData.std[1],8)+",";
+//   prntStr += " \"ATR\":"+DoubleToString(indData.atr[1],8)+",";
+//   prntStr += " \"RSI\":"+DoubleToString(indData.rsi[1],8)+",";
+//
+//   prntStr += " \"SlopeIMA14\":"+DoubleToString(dt14.matrixD[0],8)+",";
+//   prntStr += " \"SlopeIMA30\":"+DoubleToString(dt30.matrixD[0],8)+",";
+//   prntStr += " \"SlopeIMA120\":"+DoubleToString(dt120.matrixD[0],8)+",";
+//   prntStr += " \"SlopeIMA240\":"+DoubleToString(dt240.matrixD[0],8)+",";
+//   prntStr += " \"SlopeIMA500\":"+DoubleToString(dt500.matrixD[0],8)+",";
+//   prntStr += " \"STDSlope\":"+DoubleToString(stdCPSlope.matrixD[0],8)+",";
+//   prntStr += " \"RFM\":"+DoubleToString(clusterData.matrixD[0],8)+",";
+//   prntStr += " \"RMS\":"+DoubleToString(clusterData.matrixD[1],8)+",";
+//   prntStr += " \"RFS\":"+DoubleToString(clusterData.matrixD[2],8)+",";
+//   prntStr += " \"fMSR\":"+DoubleToString(slopeRatioData.matrixD[0],8)+",";
+//   prntStr += " \"fMSWR\":"+DoubleToString(slopeRatioData.matrixD[1],8)+",";
+//
+//   prntStr += " \"MovingAvg5\":"+DoubleToString(indData.ima5[1],8)+",";
+//   prntStr += " \"MovingAvg14\":"+DoubleToString(indData.ima14[1],8)+",";
+//   prntStr += " \"MovingAvg30\":"+DoubleToString(indData.ima30[1],8)+",";
+//   prntStr += " \"MovingAvg60\":"+DoubleToString(indData.ima60[1],8)+",";
+//   prntStr += " \"MovingAvg120\":"+DoubleToString(indData.ima120[1],8)+",";
+//   prntStr += " \"MovingAvg240\":"+DoubleToString(indData.ima240[1],8)+",";
+//   prntStr += " \"MovingAvg500\":"+DoubleToString(indData.ima500[1],8)+",";
+//   prntStr += " \"TRADESIG\":\""+util.getSigString(TRADESIG)+"\"";
+//
+//   prntStr += prntStrClose;
+//   return prntStr;
+//}
+
 string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUtils& util, int shift=1) {
-   string prntStr="";
-   string prntStrOpen="{ ";
-   string prntStrClose=" }";
+   string prntStr = "";
+   string prntStrOpen = "{ ";
+   string prntStrClose = " }";
    prntStr += prntStrOpen;
-   DataTransport dt14 = sig.slopeSIGData(indData.ima14,5,21,1);
-   DataTransport dt30 = sig.slopeSIGData(indData.ima30,5,21,1);
-   DataTransport dt120 = sig.slopeSIGData(indData.ima120,5,21,1);
-   DataTransport dt240 = sig.slopeSIGData(indData.ima240,5,21,1);
-   DataTransport dt500 = sig.slopeSIGData(indData.ima500,5,21,1);
-   DataTransport stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);//
-   DataTransport clusterData = sig.clusterData(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
-   DataTransport slopeRatioData = sig.slopeRatioData(dt30,dt120,dt240);
-   
-   SAN_SIGNAL c_SIG = sig.cSIG(indData,util,1);
-   SAN_SIGNAL baseSIG = sig.slopeSIG(dt240,2);
-   //SAN_SIGNAL tradeSIG = (c_SIG==baseSIG)?c_SIG:SAN_SIGNAL::NOSIG;
+
+   DataTransport dt14 = sig.slopeSIGData(indData.ima14, 5, 21, 1);
+   DataTransport dt30 = sig.slopeSIGData(indData.ima30, 5, 21, 1);
+   DataTransport dt120 = sig.slopeSIGData(indData.ima120, 5, 21, 1);
+   DataTransport dt240 = sig.slopeSIGData(indData.ima240, 5, 21, 1);
+   DataTransport dt500 = sig.slopeSIGData(indData.ima500, 5, 21, 1);
+   DataTransport stdCPSlope = sig.slopeSIGData(indData.std, 5, 21, 1);
+   DataTransport clusterData = sig.clusterData(indData.ima30[1], indData.ima120[1], indData.ima240[1]);
+   DataTransport slopeRatioData = sig.slopeRatioData(dt30, dt120, dt240);
+
+   SAN_SIGNAL c_SIG = sig.cSIG(indData, util, 1);
+   SAN_SIGNAL baseSIG = sig.slopeSIG(dt240, 2);
    SAN_SIGNAL tradeSIG = c_SIG;
-   
-   
-   SAN_SIGNAL TRADESIG = (indData.currSpread < tl.spreadLimit)?
-//                         sig.slopeSIG(dt30,0)
-                         tradeSIG
-                         :
-                         SAN_SIGNAL::NOTRADE;
-       
 
-   prntStr += " \"DateTime\":\""+(TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES))+"\",";
-   prntStr += " \"CurrencyPair\":\""+util.getSymbolString(Symbol())+"\",";
-   prntStr += " \"TimeFrame\":\""+util.getSymbolString(Period())+"\",";
-   prntStr += " \"Spread\":"+(int)MarketInfo(_Symbol,MODE_SPREAD)+",";
-   prntStr += " \"Open\":"+DoubleToString(Open[1],8)+",";
-   prntStr += " \"High\":"+DoubleToString(High[1],8)+",";
-   prntStr += " \"Low\":"+DoubleToString(Low[1],8)+",";
-   prntStr += " \"Close\":"+DoubleToString(Close[1],8)+",";
-   prntStr += " \"Volume\":"+DoubleToString(Volume[1],8)+",";
-   prntStr += " \"StdDevCp\":"+DoubleToString(indData.std[1],8)+",";
-   prntStr += " \"ATR\":"+DoubleToString(indData.atr[1],8)+",";
-   prntStr += " \"RSI\":"+DoubleToString(indData.rsi[1],8)+",";
+   SAN_SIGNAL TRADESIG = (indData.currSpread < tl.spreadLimit) ? tradeSIG : SAN_SIGNAL::NOTRADE;
 
-   prntStr += " \"SlopeIMA14\":"+DoubleToString(dt14.matrixD[0],8)+",";
-   prntStr += " \"SlopeIMA30\":"+DoubleToString(dt30.matrixD[0],8)+",";
-   prntStr += " \"SlopeIMA120\":"+DoubleToString(dt120.matrixD[0],8)+",";
-   prntStr += " \"SlopeIMA240\":"+DoubleToString(dt240.matrixD[0],8)+",";
-   prntStr += " \"SlopeIMA500\":"+DoubleToString(dt500.matrixD[0],8)+",";
-   prntStr += " \"STDSlope\":"+DoubleToString(stdCPSlope.matrixD[0],8)+",";
-   prntStr += " \"RFM\":"+DoubleToString(clusterData.matrixD[0],8)+",";
-   prntStr += " \"RMS\":"+DoubleToString(clusterData.matrixD[1],8)+",";
-   prntStr += " \"RFS\":"+DoubleToString(clusterData.matrixD[2],8)+",";
-   prntStr += " \"fMSR\":"+DoubleToString(slopeRatioData.matrixD[0],8)+",";
-   prntStr += " \"fMSWR\":"+DoubleToString(slopeRatioData.matrixD[1],8)+",";
+   // Validate numeric values
+   double spread = (int)MarketInfo(_Symbol, MODE_SPREAD);
+   double open = Open[1];
+   double high = High[1];
+   double low = Low[1];
+   double close = Close[1];
+   double volume = Volume[1];
+   double stdDevCp = indData.std[1];
+   double atr = indData.atr[1];
+   double rsi = indData.rsi[1];
+   double slopeIMA14 = dt14.matrixD[0];
+   double slopeIMA30 = dt30.matrixD[0];
+   double slopeIMA120 = dt120.matrixD[0];
+   double slopeIMA240 = dt240.matrixD[0];
+   double slopeIMA500 = dt500.matrixD[0];
+   double stdSlope = stdCPSlope.matrixD[0];
+   double rfm = clusterData.matrixD[0];
+   double rms = clusterData.matrixD[1];
+   double rfs = clusterData.matrixD[2];
+   double fMSR = slopeRatioData.matrixD[0];
+   double fMSWR = slopeRatioData.matrixD[1];
+   double movingAvg5 = indData.ima5[1];
+   double movingAvg14 = indData.ima14[1];
+   double movingAvg30 = indData.ima30[1];
+   double movingAvg60 = indData.ima60[1];
+   double movingAvg120 = indData.ima120[1];
+   double movingAvg240 = indData.ima240[1];
+   double movingAvg500 = indData.ima500[1];
 
-   prntStr += " \"MovingAvg5\":"+DoubleToString(indData.ima5[1],8)+",";
-   prntStr += " \"MovingAvg14\":"+DoubleToString(indData.ima14[1],8)+",";
-   prntStr += " \"MovingAvg30\":"+DoubleToString(indData.ima30[1],8)+",";
-   prntStr += " \"MovingAvg60\":"+DoubleToString(indData.ima60[1],8)+",";
-   prntStr += " \"MovingAvg120\":"+DoubleToString(indData.ima120[1],8)+",";
-   prntStr += " \"MovingAvg240\":"+DoubleToString(indData.ima240[1],8)+",";
-   prntStr += " \"MovingAvg500\":"+DoubleToString(indData.ima500[1],8)+",";
-   prntStr += " \"TRADESIG\":\""+util.getSigString(TRADESIG)+"\"";
+   // Use MathIsValidNumber to validate
+   spread = (spread > 0 && MathIsValidNumber(spread)) ? spread : 0.0;
+   open = (open > 0 && MathIsValidNumber(open)) ? open : 0.0;
+   high = (high > 0 && MathIsValidNumber(high)) ? high : 0.0;
+   low = (low > 0 && MathIsValidNumber(low)) ? low : 0.0;
+   close = (close > 0 && MathIsValidNumber(close)) ? close : 0.0;
+   volume = (volume > 0 && MathIsValidNumber(volume)) ? volume : 0.0;
+   stdDevCp = MathIsValidNumber(stdDevCp) ? stdDevCp : 0.0;
+   atr = MathIsValidNumber(atr) ? atr : 0.0;
+   rsi = MathIsValidNumber(rsi) ? rsi : 0.0;
+   slopeIMA14 = MathIsValidNumber(slopeIMA14) ? slopeIMA14 : 0.0;
+   slopeIMA30 = MathIsValidNumber(slopeIMA30) ? slopeIMA30 : 0.0;
+   slopeIMA120 = MathIsValidNumber(slopeIMA120) ? slopeIMA120 : 0.0;
+   slopeIMA240 = MathIsValidNumber(slopeIMA240) ? slopeIMA240 : 0.0;
+   slopeIMA500 = MathIsValidNumber(slopeIMA500) ? slopeIMA500 : 0.0;
+   stdSlope = MathIsValidNumber(stdSlope) ? stdSlope : 0.0;
+   rfm = MathIsValidNumber(rfm) ? rfm : 0.0;
+   rms = MathIsValidNumber(rms) ? rms : 0.0;
+   rfs = MathIsValidNumber(rfs) ? rfs : 0.0;
+   fMSR = MathIsValidNumber(fMSR) ? fMSR : 0.0;
+   fMSWR = MathIsValidNumber(fMSWR) ? fMSWR : 0.0;
+   movingAvg5 = MathIsValidNumber(movingAvg5) ? movingAvg5 : 0.0;
+   movingAvg14 = MathIsValidNumber(movingAvg14) ? movingAvg14 : 0.0;
+   movingAvg30 = MathIsValidNumber(movingAvg30) ? movingAvg30 : 0.0;
+   movingAvg60 = MathIsValidNumber(movingAvg60) ? movingAvg60 : 0.0;
+   movingAvg120 = MathIsValidNumber(movingAvg120) ? movingAvg120 : 0.0;
+   movingAvg240 = MathIsValidNumber(movingAvg240) ? movingAvg240 : 0.0;
+   movingAvg500 = MathIsValidNumber(movingAvg500) ? movingAvg500 : 0.0;
 
+   // Log invalid values for debugging
+   if (!MathIsValidNumber(stdDevCp)) Print("Invalid StdDevCp: ", stdDevCp);
+   if (!MathIsValidNumber(atr)) Print("Invalid ATR: ", atr);
+   if (!MathIsValidNumber(rsi)) Print("Invalid RSI: ", rsi);
+   if (!MathIsValidNumber(slopeIMA14)) Print("Invalid SlopeIMA14: ", slopeIMA14);
+   if (!MathIsValidNumber(slopeIMA30)) Print("Invalid SlopeIMA30: ", slopeIMA30);
+   if (!MathIsValidNumber(slopeIMA120)) Print("Invalid SlopeIMA120: ", slopeIMA120);
+   if (!MathIsValidNumber(slopeIMA240)) Print("Invalid SlopeIMA240: ", slopeIMA240);
+   if (!MathIsValidNumber(slopeIMA500)) Print("Invalid SlopeIMA500: ", slopeIMA500);
+   if (!MathIsValidNumber(stdSlope)) Print("Invalid STDSlope: ", stdSlope);
+   if (!MathIsValidNumber(rfm)) Print("Invalid RFM: ", rfm);
+   if (!MathIsValidNumber(rms)) Print("Invalid RMS: ", rms);
+   if (!MathIsValidNumber(rfs)) Print("Invalid RFS: ", rfs);
+   if (!MathIsValidNumber(fMSR)) Print("Invalid fMSR: ", fMSR);
+   if (!MathIsValidNumber(fMSWR)) Print("Invalid fMSWR: ", fMSWR);
+   if (!MathIsValidNumber(movingAvg5)) Print("Invalid MovingAvg5: ", movingAvg5);
+   if (!MathIsValidNumber(movingAvg14)) Print("Invalid MovingAvg14: ", movingAvg14);
+   if (!MathIsValidNumber(movingAvg30)) Print("Invalid MovingAvg30: ", movingAvg30);
+   if (!MathIsValidNumber(movingAvg60)) Print("Invalid MovingAvg60: ", movingAvg60);
+   if (!MathIsValidNumber(movingAvg120)) Print("Invalid MovingAvg120: ", movingAvg120);
+   if (!MathIsValidNumber(movingAvg240)) Print("Invalid MovingAvg240: ", movingAvg240);
+   if (!MathIsValidNumber(movingAvg500)) Print("Invalid MovingAvg500: ", movingAvg500);
+
+   prntStr += " \"DateTime\":\"" + TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES) + "\",";
+   prntStr += " \"CurrencyPair\":\"" + util.getSymbolString(Symbol()) + "\",";
+   prntStr += " \"TimeFrame\":\"" + util.getSymbolString(Period()) + "\",";
+   prntStr += " \"Spread\":" + DoubleToString(spread, 0) + ",";
+   prntStr += " \"Open\":" + DoubleToString(open, 8) + ",";
+   prntStr += " \"High\":" + DoubleToString(high, 8) + ",";
+   prntStr += " \"Low\":" + DoubleToString(low, 8) + ",";
+   prntStr += " \"Close\":" + DoubleToString(close, 8) + ",";
+   prntStr += " \"Volume\":" + DoubleToString(volume, 8) + ",";
+   prntStr += " \"StdDevCp\":" + DoubleToString(stdDevCp, 8) + ",";
+   prntStr += " \"ATR\":" + DoubleToString(atr, 8) + ",";
+   prntStr += " \"RSI\":" + DoubleToString(rsi, 8) + ",";
+   prntStr += " \"SlopeIMA14\":" + DoubleToString(slopeIMA14, 8) + ",";
+   prntStr += " \"SlopeIMA30\":" + DoubleToString(slopeIMA30, 8) + ",";
+   prntStr += " \"SlopeIMA120\":" + DoubleToString(slopeIMA120, 8) + ",";
+   prntStr += " \"SlopeIMA240\":" + DoubleToString(slopeIMA240, 8) + ",";
+   prntStr += " \"SlopeIMA500\":" + DoubleToString(slopeIMA500, 8) + ",";
+   prntStr += " \"STDSlope\":" + DoubleToString(stdSlope, 8) + ",";
+   prntStr += " \"RFM\":" + DoubleToString(rfm, 8) + ",";
+   prntStr += " \"RMS\":" + DoubleToString(rms, 8) + ",";
+   prntStr += " \"RFS\":" + DoubleToString(rfs, 8) + ",";
+   prntStr += " \"fMSR\":" + DoubleToString(fMSR, 8) + ",";
+   prntStr += " \"fMSWR\":" + DoubleToString(fMSWR, 8) + ",";
+   prntStr += " \"MovingAvg5\":" + DoubleToString(movingAvg5, 8) + ",";
+   prntStr += " \"MovingAvg14\":" + DoubleToString(movingAvg14, 8) + ",";
+   prntStr += " \"MovingAvg30\":" + DoubleToString(movingAvg30, 8) + ",";
+   prntStr += " \"MovingAvg60\":" + DoubleToString(movingAvg60, 8) + ",";
+   prntStr += " \"MovingAvg120\":" + DoubleToString(movingAvg120, 8) + ",";
+   prntStr += " \"MovingAvg240\":" + DoubleToString(movingAvg240, 8) + ",";
+   prntStr += " \"MovingAvg500\":" + DoubleToString(movingAvg500, 8) + ",";
+   prntStr += " \"TRADESIG\":\"" + util.getSigString(TRADESIG) + "\"";
    prntStr += prntStrClose;
    return prntStr;
 }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-bool SanStrategies::writeOHLCVJsonData(string filename, const INDDATA &indData, SanSignals &sig, SanUtils& util,int shift=1) {
-   string data = getJsonData(indData,sig,util,shift);
-   int fileHandle = FileOpen(filename, FILE_CSV|FILE_WRITE|FILE_READ);
+
+bool SanStrategies::writeOHLCVJsonData(string filename, const INDDATA &indData, SanSignals &sig, SanUtils& util, int shift=1) {
+   string data = getJsonData(indData, sig, util, shift);
+   int fileHandle = FileOpen(filename, FILE_TXT|FILE_WRITE|FILE_READ);
    if(fileHandle == INVALID_HANDLE) {
       Print("Error opening file: ", GetLastError());
       return false;
    }
    if(fileHandle != INVALID_HANDLE) {
       FileSeek(fileHandle, 0, SEEK_END);
-      FileWrite(fileHandle, data);
+      FileWriteString(fileHandle, data + "\n");
       FileClose(fileHandle);
       return true;
    } else {
