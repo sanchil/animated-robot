@@ -311,6 +311,10 @@ void HSIG::setTradeStrategy(const TRADE_STRATEGIES& st) {
 //+------------------------------------------------------------------+
 void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& st, SAN_SIGNAL closesig=SAN_SIGNAL::NOSIG) {
 
+
+   bool noTradeBool = ((tradeSIG==SAN_SIGNAL::NOTRADE)||(tradeSIG==SAN_SIGNAL::NOSIG));
+   bool tradeBool = ((tradeSIG==SAN_SIGNAL::TRADEBUY)||(tradeSIG==SAN_SIGNAL::TRADESELL)||(tradeSIG==SAN_SIGNAL::TRADE));
+
    bool flatMktBool =  getMktFlatBoolSignal(
                           ssSIG.candleVol120SIG,
                           ssSIG.slopeVarSIG,
@@ -332,18 +336,17 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 
    bool closeSlopeRatios = getMktCloseOnSlopeRatio();
 
-   bool tradeBool = ((tradeSIG==SAN_SIGNAL::TRADEBUY)||(tradeSIG==SAN_SIGNAL::TRADESELL)||(tradeSIG==SAN_SIGNAL::TRADE));
    //bool openTradeBool = ((opensig==baseSlopeSIG)&&(stdCPSlope.matrixD[0]>-0.6));
    bool openTradeBool = ((opensig==baseSlopeSIG)&&tradeBool);
-   bool closeTradeBool2 = ((!closeFlatTradeBool&&!closeSigTrReversalBool) && !tradeBool);
-
+   bool closeTradeBool2 = ((!closeFlatTradeBool&&!closeSigTrReversalBool) && noTradeBool);
+   bool closeTradeBool3 = ((opensig==SAN_SIGNAL::CLOSE) && noTradeBool);
 
 // fastSIG
    if(trdStgy == TRADE_STRATEGIES::FASTSIG) {
       if(closeTradeBool1) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(closeTradeBool2) {
+      } else if(closeTradeBool3) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
       } else if(closeFlatTradeBool) {
@@ -370,7 +373,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 // close: simpleTrend_14_30_SIG
    if(trdStgy == TRADE_STRATEGIES::SIMPLESIG) {
 
-      if(closeTradeBool2) {
+      if(closeTradeBool3) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
       } else if(closeFlatTradeBool) {
@@ -393,7 +396,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 //simpleSlope_30_SIG
    if(trdStgy == TRADE_STRATEGIES::SLOPESIG) {
 
-      if(closeTradeBool2) {
+      if(closeTradeBool3) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
       } else if(closeFlatTradeBool) {
