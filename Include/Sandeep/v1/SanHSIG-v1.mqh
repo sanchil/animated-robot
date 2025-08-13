@@ -1228,26 +1228,35 @@ SAN_SIGNAL HSIG::cTradeSIG(
 
    bool trendSlopeRatioBool  = ((fMSWR>=SLOPERATIO)&&(fMSWR<=SLOPERATIO_UPPERLIMIT));
 
-   if((closeTrendStdCP&&closeSlopeRatioBool)||(closeTrendStdCP&&closeClusterBool)) {
+   bool noTradeBoo11 = ((closeTrendStdCP&&closeSlopeRatioBool)||(closeTrendStdCP&&closeClusterBool));
+   bool noTradeBoo12 = (closeTrendStdCP&&flatBool);
+   bool noSigBool = ((closeTrendStdCP&&trendSlopeRatioBool)||(closeTrendStdCP&&trendClusterBool));
+   bool buyTradeBool = (trendStdCP&&trendSlopeRatioBool&&trendBuyClusterBool);
+   bool sellTradeBool = (trendStdCP&&trendSlopeRatioBool&&trendSellClusterBool);
+   bool tradeBool = (trendStdCP&&trendSlopeRatioBool);
+   
+   
+   if(noTradeBoo11) {
       sig = SAN_SIGNAL::NOTRADE;
-   } else if(closeTrendStdCP&&flatBool) {
+   } else if(noTradeBoo12) {
       sig = SAN_SIGNAL::NOTRADE;
-   } else if((closeTrendStdCP&&trendSlopeRatioBool)||(closeTrendStdCP&&trendClusterBool)) {
+   } else if(noSigBool) {
       sig = sig = SAN_SIGNAL::NOSIG;
-   }  else if(trendStdCP&&trendSlopeRatioBool&&trendBuyClusterBool) {
+   }  else if(buyTradeBool) {
       sig = SAN_SIGNAL::TRADEBUY;
-   } else if(trendStdCP&&trendSlopeRatioBool&&trendSellClusterBool) {
+   } else if(sellTradeBool) {
       sig = SAN_SIGNAL::TRADESELL;
-   } else if(trendStdCP&&trendSlopeRatioBool) {
+   } else if(tradeBool) {
       sig = SAN_SIGNAL::TRADE;
    } else {
       sig = SAN_SIGNAL::NOTRADE;
    }
 
-   Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" fMR: "+fMR+" mSR: "+mSR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
+   Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
    Print("[CTRADE-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
    Print("[CTRADE-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " trendBuyClusterBool: "+trendBuyClusterBool+" trendSellClusterBool: "+trendSellClusterBool );
-
+//   Print("[CTRADE_1] noTradeBoo11: "+noTradeBoo11+" noTradeBoo12: "+noTradeBoo12+" noSigBool: "+noSigBool+" buyTradeBool: "+buyTradeBool+" sellTradeBool: "+sellTradeBool+" tradeBool: "+tradeBool );
+   
    return sig;
 }
 //+------------------------------------------------------------------+
