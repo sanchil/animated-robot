@@ -1369,6 +1369,8 @@ SAN_SIGNAL HSIG::cSIG(
       sig = slopesig;
    } else if((tradeSIG==SAN_SIGNAL::TRADESELL)&&(slopesig==SAN_SIGNAL::SELL)) {
       sig = slopesig;
+   }else if((tradeSIG==SAN_SIGNAL::TRADE)) {
+      sig = slopesig;
    } else if(((tradeSIG==SAN_SIGNAL::NOTRADE)||(tradeSIG==SAN_SIGNAL::NOSIG))&&(slopesig==SAN_SIGNAL::CLOSE)) {
       sig = slopesig;
    }
