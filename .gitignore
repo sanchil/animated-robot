@@ -8,6 +8,7 @@ Logs/
 NEWDATA.csv
 NEWDATA.json
 NEWDATA_v1.json
+*.json
 
 # ignore swap files
 *.kate-swp
