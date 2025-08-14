@@ -1383,7 +1383,7 @@ SAN_SIGNAL HSIG::cSIG(
    //Print("[CSIGBOOLS-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " buyTrendClusterBool: "+buyTrendClusterBool+" sellTrendClusterBool: "+sellTrendClusterBool );
    //Print("[CSIGBOOLS-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
    //Print("[cSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" fMR: "+fMR+" mSR: "+mSR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
-   Print("[cSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" tradeSIG: "+ut.getSigString(tradeSIG)+" slopesig: "+ut.getSigString(slopesig));
+   //Print("[cSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" tradeSIG: "+ut.getSigString(tradeSIG)+" slopesig: "+ut.getSigString(slopesig)+"  slope30: "+fabs(ss.imaSlope30Data.matrixD[0]));
 
    return sig;
 }
