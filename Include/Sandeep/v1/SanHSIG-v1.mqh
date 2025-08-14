@@ -337,7 +337,11 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    bool closeSlopeRatios = getMktCloseOnSlopeRatio();
 
    //bool openTradeBool = ((opensig==baseSlopeSIG)&&(stdCPSlope.matrixD[0]>-0.6));
-   bool openTradeBool = ((opensig==baseSlopeSIG)&&tradeBool);
+   //bool openTradeBool = ((opensig==baseSlopeSIG)&&tradeBool);
+   bool openTradeBool1 = (tradeBool);
+   bool openTradeBool2 = (opensig==baseSlopeSIG);
+   bool openTradeBool3 = (openTradeBool1&&openTradeBool2);
+
    bool closeTradeBool2 = ((!closeFlatTradeBool&&!closeSigTrReversalBool) && noTradeBool);
    bool closeTradeBool3 = ((opensig==SAN_SIGNAL::CLOSE) && noTradeBool);
 
@@ -361,7 +365,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       } else if(flatMktBool) {
          mktType=MKTTYP::MKTFLAT;
          closeSIG = SAN_SIGNAL::NOSIG;
-      } else if(openTradeBool) {
+      } else if(openTradeBool1) {
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
@@ -385,7 +389,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       } else if(flatMktBool) {
          mktType=MKTTYP::MKTFLAT;
          closeSIG = SAN_SIGNAL::NOSIG;
-      } else if(openTradeBool) {
+      } else if(openTradeBool1) {
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
@@ -411,7 +415,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       } else if(flatMktBool) {
          mktType=MKTTYP::MKTFLAT;
          closeSIG = SAN_SIGNAL::NOSIG;
-      } else if(openTradeBool) {
+      } else if(openTradeBool1) {
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
@@ -443,7 +447,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       }
       //Print("[TRADESTRATEGY]: SLOPESTD_CSIG "+ut.getSigString(openSIG));
    }
-//  Print("[SETSIGBOOLS]: openTradeBool: "+openTradeBool+" closeTradeBool2: "+closeTradeBool2+" tradeBool: "+tradeBool+" Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ssSIG,ut)+" fsig flat: "+closeFlatTradeBool+" MkRev: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE)+" tradeSIG: ]"+ut.getSigString(tradeSIG));
+   Print("[SETSIGBOOLS]: openTradeBool1: "+openTradeBool1+" closeTradeBool3: "+closeTradeBool3+" tradeBool: "+tradeBool); //+" Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ssSIG,ut)+" fsig flat: "+closeFlatTradeBool+" MkRev: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE)+" tradeSIG: ]"+ut.getSigString(tradeSIG));
 
 }
 
@@ -495,9 +499,10 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    baseTrendSIG = imaTrendSIG(ss.ima120240SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
 //baseSlopeSIG = getBaseSlopeSIG(ss.baseSlopeData);
    baseSlopeSIG = slopeSIG(ss.baseSlopeData,2);
+   tradeSIG = cTradeSIG(ss,util,1);
+
 //  c_SIG = ss.c_SIG;
    c_SIG = cSIG(ss,util,1);
-   tradeSIG = cTradeSIG(ss,util,1);
    mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
    slopeFastSIG = matchSIG(ss.slopeVarSIG, ss.ima1430SIG);
 //rsiFastSIG = matchSIG(ss.rsiSIG, ss.ima1430SIG);
@@ -1234,8 +1239,8 @@ SAN_SIGNAL HSIG::cTradeSIG(
    bool buyTradeBool = (trendStdCP&&trendSlopeRatioBool&&trendBuyClusterBool);
    bool sellTradeBool = (trendStdCP&&trendSlopeRatioBool&&trendSellClusterBool);
    bool tradeBool = (trendStdCP&&trendSlopeRatioBool);
-   
-   
+
+
    if(noTradeBoo11) {
       sig = SAN_SIGNAL::NOTRADE;
    } else if(noTradeBoo12) {
@@ -1256,7 +1261,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
    Print("[CTRADE-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
    Print("[CTRADE-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " trendBuyClusterBool: "+trendBuyClusterBool+" trendSellClusterBool: "+trendSellClusterBool );
 //   Print("[CTRADE_1] noTradeBoo11: "+noTradeBoo11+" noTradeBoo12: "+noTradeBoo12+" noSigBool: "+noSigBool+" buyTradeBool: "+buyTradeBool+" sellTradeBool: "+sellTradeBool+" tradeBool: "+tradeBool );
-   
+
    return sig;
 }
 //+------------------------------------------------------------------+
@@ -1369,7 +1374,7 @@ SAN_SIGNAL HSIG::cSIG(
       sig = slopesig;
    } else if((tradeSIG==SAN_SIGNAL::TRADESELL)&&(slopesig==SAN_SIGNAL::SELL)) {
       sig = slopesig;
-   }else if((tradeSIG==SAN_SIGNAL::TRADE)) {
+   } else if((tradeSIG==SAN_SIGNAL::TRADE)) {
       sig = slopesig;
    } else if(((tradeSIG==SAN_SIGNAL::NOTRADE)||(tradeSIG==SAN_SIGNAL::NOSIG))&&(slopesig==SAN_SIGNAL::CLOSE)) {
       sig = slopesig;
@@ -1378,7 +1383,7 @@ SAN_SIGNAL HSIG::cSIG(
    //Print("[CSIGBOOLS-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " buyTrendClusterBool: "+buyTrendClusterBool+" sellTrendClusterBool: "+sellTrendClusterBool );
    //Print("[CSIGBOOLS-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
    //Print("[cSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" fMR: "+fMR+" mSR: "+mSR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
-   //Print("[cSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope);
+   Print("[cSIG] cSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" tradeSIG: "+ut.getSigString(tradeSIG)+" slopesig: "+ut.getSigString(slopesig));
 
    return sig;
 }
