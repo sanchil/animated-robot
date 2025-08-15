@@ -124,6 +124,7 @@ class SanStrategies {
          baseSlopeData=sig.slopeSIGData(indData.ima240,5,21,1);
          imaSlope500Data=sig.slopeSIGData(indData.ima500,5,21,1);
          stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);
+         obvCPSlope = sig.slopeSIGData(indData.obv,5,21,1);
 
          //simpleSlope_14_SIG = sig.slopeSIG(imaSlope14Data,0);
          //simpleSlope_30_SIG = sig.slopeSIG(imaSlope30Data,0);
@@ -416,9 +417,10 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    // Print("[MAIN][SLOW]:: domSIG: "+util.getSigString(dominantSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" dom240:: "+util.getSigString(hSig.dominant240SIG)+" IMA120240TR240:: "+util.getSigString(hSig.dominantTrendIma240SIG)+" dom120:: "+util.getSigString(hSig.dominant120SIG)+" IMA30120TR240:: "+util.getSigString(hSig.dominantTrendIma120SIG)+" cpSlopeVarFAST: "+util.getSigString(hSig.cpSlopeVarFastSIG)+" VolVar: "+util.getSigString(hSig.domVolVarSIG)+" TrCP: "+util.getSigString(hSig.dominantTrendCPSIG)+" TrIMA: "+util.getSigString(hSig.domTrIMA));
 //   Print("[MAIN][SLOW]:: domSIG: "+util.getSigString(dominantSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" fastSIG:: "+util.getSigString(hSig.fastSIG)+" IMA120240TR240:: "+util.getSigString(hSig.dominantTrendIma240SIG)+" dom120:: "+util.getSigString(hSig.dominant120SIG)+" IMA30120TR240:: "+util.getSigString(hSig.dominantTrendIma120SIG)+" cpSlopeVarFAST: "+util.getSigString(hSig.cpSlopeVarFastSIG)+" VolVar: "+util.getSigString(hSig.domVolVarSIG)+" TrCP: "+util.getSigString(hSig.dominantTrendCPSIG)+" TrIMA: "+util.getSigString(hSig.domTrIMA));
 //   Print("[MAIN][FAST]:: mainFast: "+util.getSigString(hSig.mainFastSIG)+" slopeFast: "+util.getSigString(hSig.slopeFastSIG)+" rsiFAST: "+util.getSigString(hSig.rsiFastSIG)+" cpFAST: "+util.getSigString(hSig.cpFastSIG)+" candleVol120SIG: "+util.getSigString(ss.candleVol120SIG)+" slopeSIG: "+util.getSigString(ss.slopeVarSIG)+" CP120: "+util.getSigString(ss.cpScatterSIG)+" ima1430: "+util.getSigString(ss.ima1430SIG));
-
    //Print("[MAIN][SLOW]:: domSIG: "+util.getSigString(dominantSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" fastSIG:: "+util.getSigString(hSig.fastSIG));
    //Print("[MAIN][FAST]:: candleVol120SIG: "+util.getSigString(ss.candleVol120SIG)+" slopeSIG: "+util.getSigString(ss.slopeVarSIG)+" CP120: "+util.getSigString(ss.cpScatterSIG)+" ima1430: "+util.getSigString(ss.ima1430SIG));
+
+   //Print("[BASICBOOLS] :: basicOpenBool: "+basicOpenBool+" spreadBool: "+spreadBool+" notFlatBool: "+notFlatBool+" openSlope: "+openSlope);
    Print("[CLOSE]:: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" SimpleClose14_30:: "+util.getSigString(hSig.simpleTrend_14_30_SIG));
    Print("[OPEN] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" domSIG: "+util.getSigString(dominantSIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" domTrCPSIG: "+util.getSigString(hSig.dominantTrendCPSIG));
 
@@ -521,6 +523,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    DataTransport dt240 = sig.slopeSIGData(indData.ima240, 5, 21, 1);
    DataTransport dt500 = sig.slopeSIGData(indData.ima500, 5, 21, 1);
    DataTransport stdCPSlope = sig.slopeSIGData(indData.std, 5, 21, 1);
+   DataTransport obvCPSlope = sig.slopeSIGData(indData.obv, 5, 21, 1);
    DataTransport clusterData = sig.clusterData(indData.ima30[1], indData.ima120[1], indData.ima240[1]);
    DataTransport slopeRatioData = sig.slopeRatioData(dt30, dt120, dt240);
 
@@ -546,6 +549,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    double slopeIMA240 = dt240.matrixD[0];
    double slopeIMA500 = dt500.matrixD[0];
    double stdSlope = stdCPSlope.matrixD[0];
+   double obvSlope = obvCPSlope.matrixD[0];
    double rfm = clusterData.matrixD[0];
    double rms = clusterData.matrixD[1];
    double rfs = clusterData.matrixD[2];
@@ -575,6 +579,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    slopeIMA240 = MathIsValidNumber(slopeIMA240) ? slopeIMA240 : 0.0;
    slopeIMA500 = MathIsValidNumber(slopeIMA500) ? slopeIMA500 : 0.0;
    stdSlope = MathIsValidNumber(stdSlope) ? stdSlope : 0.0;
+   obvSlope = MathIsValidNumber(obvSlope) ? obvSlope : 0.0;
    rfm = MathIsValidNumber(rfm) ? rfm : 0.0;
    rms = MathIsValidNumber(rms) ? rms : 0.0;
    rfs = MathIsValidNumber(rfs) ? rfs : 0.0;
@@ -598,6 +603,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    if (!MathIsValidNumber(slopeIMA240)) Print("Invalid SlopeIMA240: ", slopeIMA240);
    if (!MathIsValidNumber(slopeIMA500)) Print("Invalid SlopeIMA500: ", slopeIMA500);
    if (!MathIsValidNumber(stdSlope)) Print("Invalid STDSlope: ", stdSlope);
+   if (!MathIsValidNumber(obvSlope)) Print("Invalid OBVSlope: ", stdSlope);
    if (!MathIsValidNumber(rfm)) Print("Invalid RFM: ", rfm);
    if (!MathIsValidNumber(rms)) Print("Invalid RMS: ", rms);
    if (!MathIsValidNumber(rfs)) Print("Invalid RFS: ", rfs);
@@ -629,6 +635,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    prntStr += " \"SlopeIMA240\":" + DoubleToString(slopeIMA240, 8) + ",";
    prntStr += " \"SlopeIMA500\":" + DoubleToString(slopeIMA500, 8) + ",";
    prntStr += " \"STDSlope\":" + DoubleToString(stdSlope, 8) + ",";
+//   prntStr += " \"OBVSlope\":" + DoubleToString(obvSlope, 8) + ",";
    prntStr += " \"RFM\":" + DoubleToString(rfm, 8) + ",";
    prntStr += " \"RMS\":" + DoubleToString(rms, 8) + ",";
    prntStr += " \"RFS\":" + DoubleToString(rfs, 8) + ",";

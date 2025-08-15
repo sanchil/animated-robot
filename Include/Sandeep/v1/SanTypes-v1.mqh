@@ -465,9 +465,10 @@ struct INDDATA {
    double            volume[70];
    double            std[70];
    double            mfi[70];
+   double            obv[70];
    double            rsi[70];
    double            atr[70];
-   double            adx[70];
+   double            adx[70];   
    double            adxPlus[70];
    double            adxMinus[70];
    double            ima5[70];
@@ -497,6 +498,7 @@ struct INDDATA {
       ArrayFree(volume);
       ArrayFree(std);
       ArrayFree(mfi);
+      ArrayFree(obv);
       ArrayFree(atr);
       ArrayFree(adx);
       ArrayFree(adxPlus);
@@ -641,6 +643,7 @@ struct SANSIGNALS {
    DataTransport     varDt;
    DataTransport     slopeRatioData;
    DataTransport     stdCPSlope;
+   DataTransport     obvCPSlope;
 
 
    void initBase() {
@@ -744,6 +747,7 @@ struct SANSIGNALS {
       imaSlope120Data.freeData();
       imaSlope500Data.freeData();
       stdCPSlope.freeData();
+      obvCPSlope.freeData();
 
    }
 

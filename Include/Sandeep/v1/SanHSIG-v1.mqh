@@ -55,6 +55,7 @@ class HSIG {
 //   DataTransport     imaSlope30Data;
    DataTransport     slopeRatioData;
    DataTransport     stdCPSlope;
+   DataTransport     obvCPSlope;
 
    bool              slopeTrendBool;
    SAN_SIGNAL        openSIG;
@@ -284,6 +285,7 @@ HSIG::~HSIG() {
 //imaSlope30Data.freeData();
    slopeRatioData.freeData();
    stdCPSlope.freeData();
+   obvCPSlope.freeData();
 }
 
 //+------------------------------------------------------------------+
@@ -447,7 +449,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       }
       //Print("[TRADESTRATEGY]: SLOPESTD_CSIG "+ut.getSigString(openSIG));
    }
-   Print("[SETSIGBOOLS]: openTradeBool1: "+openTradeBool1+" closeTradeBool3: "+closeTradeBool3+" tradeBool: "+tradeBool); //+" Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ssSIG,ut)+" fsig flat: "+closeFlatTradeBool+" MkRev: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE)+" tradeSIG: ]"+ut.getSigString(tradeSIG));
+   //Print("[SETSIGBOOLS]: openTradeBool1: "+openTradeBool1+" closeTradeBool3: "+closeTradeBool3+" tradeBool: "+tradeBool); //+" Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ssSIG,ut)+" fsig flat: "+closeFlatTradeBool+" MkRev: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE)+" tradeSIG: ]"+ut.getSigString(tradeSIG));
 
 }
 
@@ -532,6 +534,7 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 //      slopeRatioData = getSlopeRatioData(ss.imaSlope30Data, ss.imaSlope120Data, ss.baseSlopeData);
    slopeRatioData = ss.slopeRatioData;
    stdCPSlope = ss.stdCPSlope;
+   obvCPSlope = ss.obvCPSlope;
 
 
 //simpleSlope_30_SIG = getSlopeSIG(ss.imaSlope30Data,0);
@@ -1147,6 +1150,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
 
 // Use three parameters for evaluating the trade signal.
 // CP StdDev slope.
+// obvCP slope. Currently not used and under observation and consideration
 // Cluster
 // SlopeRatio
 // Note: Slope30 is calculated but not used. Ideally it is best left to
@@ -1165,6 +1169,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
 
    double slopeIMA30 = ss.imaSlope30Data.matrixD[0];
    double stdCPSlope = ss.stdCPSlope.matrixD[0];
+   double obvCPSlope = ss.obvCPSlope.matrixD[0];
    double rFM =  ss.clusterData.matrixD[0];
    double rMS =  ss.clusterData.matrixD[1];
    double rFS =  ss.clusterData.matrixD[2];
@@ -1257,7 +1262,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
       sig = SAN_SIGNAL::NOTRADE;
    }
 
-   Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" Slope stdCP: "+stdCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" rFS: "+rFS);
+   Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" stdCPSlope: "+stdCPSlope+" obvCPSlope: "+obvCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS);//+" rFS: "+rFS);
    Print("[CTRADE-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
    Print("[CTRADE-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " trendBuyClusterBool: "+trendBuyClusterBool+" trendSellClusterBool: "+trendSellClusterBool );
 //   Print("[CTRADE_1] noTradeBoo11: "+noTradeBoo11+" noTradeBoo12: "+noTradeBoo12+" noSigBool: "+noSigBool+" buyTradeBool: "+buyTradeBool+" sellTradeBool: "+sellTradeBool+" tradeBool: "+tradeBool );

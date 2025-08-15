@@ -122,6 +122,7 @@ int OnCalculate(const int rates_total,
          indData.volume[i] = iVolume(_Symbol,PERIOD_CURRENT,i);
          indData.std[i]= iStdDev(_Symbol,PERIOD_CURRENT,noOfCandles,0,MODE_EMA,PRICE_CLOSE,i);
          indData.mfi[i]= iMFI(_Symbol,PERIOD_CURRENT, noOfCandles,i);
+         indData.obv[i]= iOBV(_Symbol,PERIOD_CURRENT, PRICE_CLOSE,i);
          indData.rsi[i]= iRSI(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_WEIGHTED,i);
          indData.adx[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MAIN,i);
          indData.adxPlus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_PLUSDI,i);
