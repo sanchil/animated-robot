@@ -29,6 +29,108 @@
 
 const double LARGE_VAL=123456.654321;
 
+struct CandleCharacter {
+   double         upperTail;
+   double         lowerTail;
+   bool           redCandle;
+   bool           greenCandle;
+   bool           noBodyTailCandle;
+   bool           noBodyUpperTailCandle;
+   bool           noBodyLowerTailCandle;
+   bool           bodyUpperTailCandle;
+   bool           bodyLowerTailCandle;
+   bool           noBodyCandle;
+   bool           fullBodyRedCandle;
+   bool           fullBodyGreenCandle;
+   bool           fullBodyCandle;
+   double         body;
+   double         candleRange;
+   double         bodyRatio;
+   bool           tailDominates;
+   bool           bodyDominates;
+
+   CandleCharacter() {
+      upperTail = -1;
+      lowerTail = -1;
+      redCandle = -1;
+      greenCandle =  -1;
+      noBodyTailCandle =  -1;
+      noBodyUpperTailCandle = -1;
+      noBodyLowerTailCandle = -1;
+      bodyUpperTailCandle = -1;
+      bodyLowerTailCandle = -1;
+      noBodyCandle =  -1 ;
+      fullBodyRedCandle =  -1;
+      fullBodyGreenCandle =  -1;
+      fullBodyCandle =  -1;
+      body =   -1;
+      candleRange =   -1;
+      bodyRatio =  -1;
+      tailDominates =  -1;
+      bodyDominates =  -1 ;
+   }
+
+
+   CandleCharacter(
+      const double &open[],
+      const double &high[],
+      const double &low[],
+      const double &close[],
+      const double limit,
+      const int shift=1) {
+
+      redCandle = (open[shift] > close[shift]);
+      greenCandle = (open[shift] < close[shift]);
+      noBodyCandle = ((open[shift] == close[shift]) && (low[shift] == high[shift])) ;
+      noBodyTailCandle = ((open[shift] == close[shift]) && (low[shift] != high[shift]));
+
+      if(!noBodyCandle && noBodyTailCandle && (fabs(open[shift]-low[shift])>0)) {
+         noBodyUpperTailCandle = ((fabs(high[shift]-open[shift])/fabs(open[shift]-low[shift]))>(1-limit));
+         noBodyLowerTailCandle = ((fabs(high[shift]-open[shift])/fabs(open[shift]-low[shift]))<=limit) ;
+      } else if(!noBodyCandle && noBodyTailCandle && (fabs(open[shift]-low[shift])==0)) {
+         noBodyUpperTailCandle = ((fabs(high[shift]-open[shift]))>(1-limit));
+         noBodyLowerTailCandle = ((fabs(high[shift]-open[shift]))<=limit) ;
+      }
+
+      fullBodyRedCandle = (redCandle && (open[shift] == high[shift]) && (close[shift] == low[shift]));
+      fullBodyGreenCandle = (greenCandle && (open[shift] == low[shift]) && (close[shift] == high[shift]));
+      fullBodyCandle = (fullBodyRedCandle || fullBodyGreenCandle);
+      body =  NormalizeDouble(fabs(open[shift]-close[shift]),_Digits);
+      candleRange =  NormalizeDouble(fabs(high[shift]-low[shift]),_Digits);
+      bodyRatio = (!noBodyTailCandle&&!fullBodyCandle && !noBodyCandle && (body>0)&&(candleRange>0))?NormalizeDouble((body/candleRange),2):NULL;
+      tailDominates = (noBodyTailCandle || (bodyRatio <= limit));
+      bodyDominates = (fullBodyCandle ||(bodyRatio > limit)) ;
+
+      if((redCandle||noBodyTailCandle) && !fullBodyCandle && !noBodyCandle) {
+         upperTail=(high[shift]-open[shift]);
+         lowerTail=(close[shift]-low[shift]);
+      } else if((greenCandle||noBodyTailCandle) && !fullBodyCandle && !noBodyCandle) {
+         upperTail=(high[shift]-close[shift]);
+         lowerTail=(open[shift]-low[shift]);
+      }
+      bodyUpperTailCandle = (tailDominates && (((upperTail==0)&&(lowerTail>0)) || ((upperTail!=0)&&(lowerTail!=0)&&(NormalizeDouble((fabs(upperTail)/fabs(lowerTail)),2)<=limit))));
+      bodyLowerTailCandle = (tailDominates && (((lowerTail==0)&&(upperTail>0)) || ((upperTail!=0)&&(lowerTail!=0)&&(NormalizeDouble((fabs(lowerTail)/fabs(upperTail)),2)<=limit))));
+
+   }
+   ~CandleCharacter() {
+
+      redCandle = NULL;
+      greenCandle = NULL;
+      noBodyTailCandle = NULL;
+      noBodyCandle = NULL;
+      fullBodyRedCandle = NULL;
+      fullBodyGreenCandle = NULL;
+      fullBodyCandle = NULL;
+      body =  NULL;
+      candleRange = NULL;
+      bodyRatio = NULL;
+      tailDominates = NULL;
+      bodyDominates = NULL ;
+
+   }
+
+};
+
 struct TRADELIMITS {
    int               spreadLimit;
    double            stdDevLimit;
@@ -468,7 +570,7 @@ struct INDDATA {
    double            obv[70];
    double            rsi[70];
    double            atr[70];
-   double            adx[70];   
+   double            adx[70];
    double            adxPlus[70];
    double            adxMinus[70];
    double            ima5[70];
