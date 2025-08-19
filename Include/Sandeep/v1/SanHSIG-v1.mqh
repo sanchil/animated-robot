@@ -354,7 +354,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    bool openTradeBool3 = (openTradeBool1&&openTradeBool2);
 
    bool closeTradeBool2 = ((!closeFlatTradeBool&&!closeSigTrReversalBool) && noTradeBool);
-   bool closeTradeBool3 = ((opensig==SAN_SIGNAL::CLOSE) && noTradeBool);
+   bool closeTradeBool3 = ((opensig==SAN_SIGNAL::CLOSE) || noTradeBool);
 
 // fastSIG
    if(trdStgy == TRADE_STRATEGIES::FASTSIG) {
@@ -471,7 +471,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 // sig: c_SIG
    if((trdStgy == TRADE_STRATEGIES::SLOPESTD_CSIG)||(trdStgy == TRADE_STRATEGIES::NOTRDSTGY)) {
 
-      if(opensig==SAN_SIGNAL::CLOSE) {
+      if(closeTradeBool3) {
          mktType=MKTTYP::MKTCLOSE;
          openSIG = SAN_SIGNAL::NOSIG;
          closeSIG = SAN_SIGNAL::CLOSE;
@@ -527,7 +527,7 @@ void   HSIG::processSignalsWithNoStrategy() {
 //+------------------------------------------------------------------+
 void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
 
-//   Print("[SIG]: cpSlopeCandle120SIG: "+ut.getSigString(cpSlopeCandle120SIG));
+   Print("[SIG]: cpSlopeCandle120SIG: "+ut.getSigString(cpSlopeCandle120SIG));
 //trdStgy = TRADE_STRATEGIES::FASTSIG;
    if(trdStgy==TRADE_STRATEGIES::FASTSIG)
       setSIGForStrategy(fastSIG, trdStgy);
@@ -553,7 +553,6 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
 void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 
    baseTrendSIG = imaTrendSIG(ss.ima120240SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
-//baseSlopeSIG = getBaseSlopeSIG(ss.baseSlopeData);
    baseSlopeSIG = slopeSIG(ss.baseSlopeData,2);
    tradeSIG = cTradeSIG(ss,util,1);
    c_SIG = cSIG(ss,util,1);
@@ -622,29 +621,12 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 //   //trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
 ////######################################################################################
 //
-////trdStgy = TRADE_STRATEGIES::FASTSIG;
-//   if(trdStgy==TRADE_STRATEGIES::FASTSIG)
-//      setSIGForStrategy(fastSIG, trdStgy);
-//
-////trdStgy = TRADE_STRATEGIES::SIMPLESIG;
-//   if(trdStgy==TRADE_STRATEGIES::SIMPLESIG)
-//      setSIGForStrategy(simpleTrend_5_14_SIG, trdStgy, simpleTrend_14_30_SIG);
-//
-////trdStgy = TRADE_STRATEGIES::SLOPESIG;
-//   if(trdStgy==TRADE_STRATEGIES::SLOPESIG)
-//      setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
-//
-////trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
-//   if(trdStgy==TRADE_STRATEGIES::SLOPESTD_CSIG)
-//      setSIGForStrategy(c_SIG, trdStgy);
 
    if(trdStgy==TRADE_STRATEGIES::NOTRDSTGY) {
       processSignalsWithNoStrategy();
    } else {
       processSignalsWithStrategy(trdStgy);
    }
-
-
 
 } //initSIG
 
@@ -1217,13 +1199,6 @@ SAN_SIGNAL          HSIG::trendVolVarSIG(
 
 SAN_SIGNAL HSIG::slopeSIG(const DataTransport& signalDt, const int signalType=0) {
 
-//if(signalType==0) {
-//   if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::CLOSE;
-//   if((signalDt.matrixD[0]>=-0.4)&&(signalDt.matrixD[0]<=0.4)) return SAN_SIGNAL::SIDEWAYS;
-//   if(signalDt.matrixD[0]>0.4)return SAN_SIGNAL::BUY;
-//   if(signalDt.matrixD[0]<-0.4)return SAN_SIGNAL::SELL;
-//} else
-
    if(signalType==0) {
       if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2)) return SAN_SIGNAL::CLOSE;
       if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3)) return SAN_SIGNAL::SIDEWAYS;
@@ -1508,7 +1483,7 @@ bool HSIG::getMktFlatBoolSignal(
    const SAN_SIGNAL trendSIG
 ) {
 
-//  Print("[FLATS]: candleVol120SIG: "+ ut.getSigString(candleVol120SIG)+" slopeVarSIG: "+ ut.getSigString(slopeVarSIG)+" cpScatterSIG: "+ut.getSigString(cpScatterSIG)+" trendRatioSIG: "+ut.getSigString(trendRatioSIG));
+   Print("[FLATS]: candleVol120SIG: "+ ut.getSigString(candleVol120SIG)+" slopeVarSIG: "+ ut.getSigString(slopeVarSIG)+" cpScatterSIG: "+ut.getSigString(cpScatterSIG)+" trendRatioSIG: "+ut.getSigString(trendRatioSIG));
 
    return (
              (
