@@ -131,6 +131,27 @@ struct CandleCharacter {
 
 };
 
+struct RITYPE {
+   double r;
+   double i;
+};
+
+struct SLOPETYPE {
+   double slope;
+   double intercept;
+};
+
+struct DTYPE {
+   double val1;
+   double val2;
+   double val3;
+   double val4;
+   double val5;
+};
+
+
+
+
 struct TRADELIMITS {
    int               spreadLimit;
    double            stdDevLimit;

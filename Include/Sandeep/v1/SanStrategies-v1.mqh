@@ -104,8 +104,8 @@ class SanStrategies {
          slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,5,10,1);
 
 
-         cpScatter21SIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.1,21);
-         cpScatterSIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.1,120);
+         cpScatter21SIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.06,21);
+         cpScatterSIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.06,120);
 
 
          trendRatio5SIG = sig.trendRatioSIG(indData.ima5,"IMA5",2,21);
