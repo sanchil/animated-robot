@@ -7,6 +7,7 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 #property strict
+
 #include <Sandeep/v1/SanSignals-v1.mqh>
 #include <Sandeep/v1/SanHSIG-v1.mqh>
 
@@ -408,6 +409,11 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //sigBuff.buff4[0] = (int)ss.tradeSIG;
    sigBuff.buff4[0] = (int)hSig.mktType;
 
+
+   //double c[];
+   //stats.sigMeanDeTrend(indData.close,c,5);
+   //Print("DETREND: c0: "+c[0]+" c1: "+c[1]+"c2: "+c[2]+"c3: "+c[3]+"c4: "+c[4]+" new mean: "+ stats.mean(c));
+
 //Print("[CLOSE SIG]:: closeTradeL5: "+closeTradeL5+" 9: "+closeTrade9+"11: "+closeTrade11+" 12: "+closeTrade12+" 16: "+closeTrade16+" 14: "+closeTrade14+" 26: "+closeTrade26+" 27: "+closeTrade27+" 28: "+closeTrade28+" 29: "+closeTrade29);
 //Print("[SLOW]:: IMA30120TR240: "+util.getSigString(hSig.dominantTrendIma120SIG)+" trendRatioSIG: "+util.getSigString(slopeTrendSIG)+" CP120 : "+util.getSigString(ss.cpScatterSIG)+" ima30120SIG: "+util.getSigString(ss.ima30120SIG)+" ima120240SIG: "+util.getSigString(ss.ima120240SIG)+" fsig120: "+util.getSigString(ss.fsig120)+" fsig240: "+util.getSigString(ss.fsig240)+" sig30: "+util.getSigString(ss.sig30)+" sig120: "+util.getSigString(ss.sig120)+" sig240: "+util.getSigString(ss.sig240));
 //Print("[FAST]::  ima514:: "+util.getSigString(ss.ima514SIG)+" ima1430: "+util.getSigString(ss.ima1430SIG)+" fIma514: "+util.getSigString(ss.fastIma514SIG)+" fIma1430: "+util.getSigString(ss.fastIma1430SIG)+" fIma30120: "+util.getSigString(ss.fastIma30120SIG)+" fIma120240: "+util.getSigString(ss.fastIma120240SIG)+": RSI::"+util.getSigString(ss.rsiSIG));
@@ -421,6 +427,9 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    //Print("[MAIN][FAST]:: candleVol120SIG: "+util.getSigString(ss.candleVol120SIG)+" slopeSIG: "+util.getSigString(ss.slopeVarSIG)+" CP120: "+util.getSigString(ss.cpScatterSIG)+" ima1430: "+util.getSigString(ss.ima1430SIG));
 
    //Print("[BASICBOOLS] :: basicOpenBool: "+basicOpenBool+" spreadBool: "+spreadBool+" notFlatBool: "+notFlatBool+" openSlope: "+openSlope);
+
+
+
    Print("[CLOSE]:: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" SimpleClose14_30:: "+util.getSigString(hSig.simpleTrend_14_30_SIG));
    Print("[OPEN] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" domSIG: "+util.getSigString(dominantSIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" domTrCPSIG: "+util.getSigString(hSig.dominantTrendCPSIG));
 
@@ -471,7 +480,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //                         :
 //                         SAN_SIGNAL::NOTRADE;
 //
-//  
+//
 //
 //   prntStr += " \"DateTime\":\""+(TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES))+"\",";
 //   prntStr += " \"CurrencyPair\":\""+util.getSymbolString(Symbol())+"\",";
@@ -511,6 +520,9 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //   return prntStr;
 //}
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUtils& util, int shift=1) {
    string prntStr = "";
    string prntStrOpen = "{ ";
@@ -653,6 +665,9 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    return prntStr;
 }
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 bool SanStrategies::writeOHLCVJsonData(string filename, const INDDATA &indData, SanSignals &sig, SanUtils& util, int shift=1) {
    string data = getJsonData(indData, sig, util, shift);
    int fileHandle = FileOpen(filename, FILE_TXT|FILE_WRITE|FILE_READ);

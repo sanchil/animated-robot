@@ -209,13 +209,6 @@ struct DataTransport {
    }
    ~DataTransport() {
       freeData();
-      //ArrayFree(matrixD);
-      //ArrayFree(matrixI);
-      //ArrayFree(matrixD1);
-      //ArrayFree(matrixI1);
-      //ArrayFree(matrixD2);
-      //ArrayFree(matrixI2);
-      //ArrayFree(matrixBool);
    }
 };
 
