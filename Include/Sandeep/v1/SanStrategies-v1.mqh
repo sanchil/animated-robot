@@ -136,6 +136,8 @@ class SanStrategies {
          //slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);
          clusterData = sig.clusterData(indData.ima5[1],indData.ima14[1],indData.ima30[1]);
          slopeRatioData = sig.slopeRatioData(imaSlope5Data,imaSlope14Data,imaSlope30Data);
+//         stats.hilbertTransform(indData.close,hilbertAmp,hilbertPhase,21,5);
+//         stats.dftTransform(indData.close,dftMag,dftPhase,dftPower,32);
 
          //c_SIG = sig.cSIG(indData,util,1);
 
@@ -432,6 +434,12 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
    Print("[CLOSE]:: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" SimpleClose14_30:: "+util.getSigString(hSig.simpleTrend_14_30_SIG));
    Print("[OPEN] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" domSIG: "+util.getSigString(dominantSIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" domTrCPSIG: "+util.getSigString(hSig.dominantTrendCPSIG));
+
+   //Print("[HILBERT] :: Amp1: "+ss.hilbertAmp[0]+" Amp4: "+ss.hilbertAmp[3]+" Amp9: "+ss.hilbertAmp[9]+" Amp21: "+ss.hilbertAmp[20]);
+   //Print("[HILBERT] :: Phase1: "+ss.hilbertPhase[0]+" Phase4: "+ss.hilbertPhase[3]+" Phase9: "+ss.hilbertPhase[9]+" Phase21: "+ss.hilbertPhase[20]);
+   //Print("[DFT] :: Mag1: "+ss.dftMag[0]+" Mag4: "+ss.dftMag[3]+" Mag9: "+ss.dftMag[9]+" Mag21: "+ss.dftMag[20]);
+   //Print("[DFT] :: Phase1: "+ss.dftPhase[0]+" Phase4: "+ss.dftPhase[3]+" Phase9: "+ss.dftPhase[9]+" Phase21: "+ss.dftPhase[20]);
+   //Print("[DFT] :: Power1: "+ss.dftPower[0]+" Power4: "+ss.dftPower[3]+" Power9: "+ss.dftPower[9]+" Power21: "+ss.dftPower[20]);
 
 //   Print("[VARBOOLS]: varBool: "+varBool+" varBoolDt: "+ss.varDt.matrixBool[3] +" varPosBool: "+varPosBool+" varPosBoolDt: "+ss.varDt.matrixBool[0]+" varNegBool: "+varNegBool+" varNegBoolDt: "+ss.varDt.matrixBool[1]+" varFlatBool: "+varFlatBool+" varFlatBoolDt: "+ss.varDt.matrixBool[2]);
    //Print("[SLOPES]: FAST: "+ imaSlopesData.matrixD[0]+" : "+(0.15+(1.5*0.1))+" MEDIUM: "+imaSlopesData.matrixD[1]+" : "+(0.15+0.1)+" SLOW: "+imaSlopesData.matrixD[2]+" : 0.15  :SLOWWIDE: "+imaSlopesData.matrixD[3]+" : 0.1");
