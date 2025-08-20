@@ -527,7 +527,7 @@ void   HSIG::processSignalsWithNoStrategy() {
 //+------------------------------------------------------------------+
 void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
 
-   Print("[SIG]: cpSlopeCandle120SIG: "+ut.getSigString(cpSlopeCandle120SIG));
+//   Print("[SIG]: cpSlopeCandle120SIG: "+ut.getSigString(cpSlopeCandle120SIG));
 //trdStgy = TRADE_STRATEGIES::FASTSIG;
    if(trdStgy==TRADE_STRATEGIES::FASTSIG)
       setSIGForStrategy(fastSIG, trdStgy);
