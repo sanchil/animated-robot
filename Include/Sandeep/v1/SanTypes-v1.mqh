@@ -667,7 +667,220 @@ struct SIGBUFF {
    }
 };
 
-struct SANSIGNALS {
+//struct SANSIGNALS {
+//   SAN_SIGNAL        openSIG;
+//   SAN_SIGNAL        closeSIG;
+//   SAN_SIGNAL        priceActionSIG;
+//   SAN_SIGNAL        adxSIG;
+//   SAN_SIGNAL        mfiSIG;
+//   SAN_SIGNAL        rsiSIG;
+//   SAN_SIGNAL        adxCovDivSIG;
+//   SAN_SIGNAL        fastIma514SIG;
+//   SAN_SIGNAL        fastIma1430SIG;
+//   SAN_SIGNAL        fastIma30120SIG;
+//   SAN_SIGNAL        fastIma120240SIG;
+//   SAN_SIGNAL        fastIma240500SIG;
+//   SAN_SIGNAL        fastIma530SIG;
+//   SAN_SIGNAL        ima514SIG;
+//   SAN_SIGNAL        ima1430SIG;
+//   SAN_SIGNAL        ima30120SIG;
+//   SAN_SIGNAL        ima30240SIG;
+//   SAN_SIGNAL        ima120240SIG;
+//   SAN_SIGNAL        ima120500SIG;
+//   SAN_SIGNAL        ima240500SIG;
+//   SAN_SIGNAL        ima530SIG;
+//   SAN_SIGNAL        ima530_21SIG;
+//   SANTRENDSTRENGTH  atrSIG;
+//   SAN_SIGNAL        volSIG;
+//   SAN_SIGNAL        profitSIG;
+//   SAN_SIGNAL        profitPercentageSIG;
+//   SAN_SIGNAL        tradeSIG;
+//   SAN_SIGNAL        tradeVolVarSIG;
+//   SAN_SIGNAL        lossSIG;
+//   SANTREND          acfTrendSIG;
+//   SANTRENDSTRENGTH  acfStrengthSIG;
+//   SANTREND          trendRatioSIG;
+//   SANTREND          trendRatio5SIG;
+//   SANTREND          trendRatio14SIG;
+//   SANTREND          trendRatio30SIG;
+//   SANTREND          trendRatio120SIG;
+//   SANTREND          trendRatio240SIG;
+//   SANTREND          trendRatio500SIG;
+//   SANTREND          trendVolRatioSIG;
+//   SAN_SIGNAL        trendSumSig;
+//   SANTRENDSTRENGTH  trendVolRatioStrengthSIG;
+//   SAN_SIGNAL        slopeVarSIG;
+//   SANTREND          trendSlopeSIG;
+//   SANTREND          trendSlope5SIG;
+//   SANTREND          trendSlope14SIG;
+//   SANTREND          trendSlope30SIG;
+//   SANTREND          cpScatterSIG;
+//   SANTREND          cpScatter21SIG;
+//   SANTREND          trendScatterSIG;
+//   SANTREND          trendScatter5SIG;
+//   SANTREND          trendScatter14SIG;
+//   SANTREND          trendScatter30SIG;
+//   SAN_SIGNAL        fsig5;
+//   SAN_SIGNAL        fsig14;
+//   SAN_SIGNAL        fsig30;
+//   SAN_SIGNAL        fsig120;
+//   SAN_SIGNAL        fsig240;
+//   SAN_SIGNAL        fsig500;
+//   SAN_SIGNAL        sig5;
+//   SAN_SIGNAL        sig14;
+//   SAN_SIGNAL        sig30;
+//   SAN_SIGNAL        sig120;
+//   SAN_SIGNAL        sig240;
+//   SAN_SIGNAL        sig500;
+//   SAN_SIGNAL        candleImaSIG;
+//   SAN_SIGNAL        candleVolSIG;
+//   SAN_SIGNAL        candleVol120SIG;
+//   SAN_SIGNAL        simpleSlope_14_SIG;
+//   SAN_SIGNAL        simpleSlope_30_SIG;
+//   SAN_SIGNAL        simpleSlope_120_SIG;
+//   SAN_SIGNAL        simpleSlope_240_SIG;
+//   SAN_SIGNAL        simpleSlope_500_SIG;
+//   SAN_SIGNAL        c_SIG;
+//   SIGMAVARIABILITY        cpSDSIG;
+//   SIGMAVARIABILITY        ima5SDSIG;
+//   SIGMAVARIABILITY        ima14SDSIG;
+//   SIGMAVARIABILITY        ima30SDSIG;
+//   SIGMAVARIABILITY        ima120SDSIG;
+//   SIGMAVARIABILITY        ima240SDSIG;
+//   SIGMAVARIABILITY        ima500SDSIG;
+//   SAN_SIGNAL        candlePattStarSIG;
+//   DataTransport     clusterData;
+////  DataTransport     imaSlopesData;
+//   DataTransport     imaSlope5Data;
+//   DataTransport     imaSlope14Data;
+//   DataTransport     imaSlope30Data;
+//   DataTransport     imaSlope120Data;
+//   DataTransport     baseSlopeData;
+//   DataTransport     imaSlope500Data;
+//   DataTransport     varDt;
+//   DataTransport     slopeRatioData;
+//   DataTransport     stdCPSlope;
+//   DataTransport     obvCPSlope;
+//   double            hilbertAmp[];
+//   double            hilbertPhase[];
+//   double            dftMag[];
+//   double            dftPhase[];
+//   double            dftPower[];
+//
+//   void              initBase() {
+//      openSIG = SAN_SIGNAL::NOSIG;
+//      closeSIG = SAN_SIGNAL::NOSIG;
+//      priceActionSIG = SAN_SIGNAL::NOSIG;
+//      candlePattStarSIG = SAN_SIGNAL::NOSIG;
+//      adxSIG = SAN_SIGNAL::NOSIG;
+//      mfiSIG = SAN_SIGNAL::NOSIG;
+//      rsiSIG = SAN_SIGNAL::NOSIG;
+//      adxCovDivSIG = SAN_SIGNAL::NOSIG;
+//      fastIma514SIG = SAN_SIGNAL::NOSIG;
+//      fastIma1430SIG = SAN_SIGNAL::NOSIG;
+//      fastIma530SIG = SAN_SIGNAL::NOSIG;
+//      fastIma30120SIG = SAN_SIGNAL::NOSIG;
+//      fastIma120240SIG = SAN_SIGNAL::NOSIG;
+//      fastIma240500SIG = SAN_SIGNAL::NOSIG;
+//      ima514SIG = SAN_SIGNAL::NOSIG;
+//      ima1430SIG = SAN_SIGNAL::NOSIG;
+//      ima530SIG = SAN_SIGNAL::NOSIG;
+//      ima530_21SIG = SAN_SIGNAL::NOSIG;
+//      ima30120SIG = SAN_SIGNAL::NOSIG;
+//      ima30240SIG = SAN_SIGNAL::NOSIG;
+//      ima120240SIG = SAN_SIGNAL::NOSIG;
+//      ima120500SIG = SAN_SIGNAL::NOSIG;
+//      ima240500SIG = SAN_SIGNAL::NOSIG;
+//      atrSIG = SANTRENDSTRENGTH::POOR;
+//      volSIG = SAN_SIGNAL::NOSIG;
+//      profitSIG = SAN_SIGNAL::NOSIG;
+//      profitPercentageSIG = SAN_SIGNAL::NOSIG;
+//      tradeSIG = SAN_SIGNAL::NOSIG;
+//      tradeVolVarSIG = SAN_SIGNAL::NOSIG;
+//      lossSIG = SAN_SIGNAL::NOSIG;
+//      acfTrendSIG = SANTREND::NOTREND;
+//      acfStrengthSIG = SANTRENDSTRENGTH::POOR;
+//      trendRatio5SIG = SANTREND::NOTREND;
+//      trendRatio14SIG = SANTREND::NOTREND;
+//      trendRatio30SIG = SANTREND::NOTREND;
+//      trendRatio120SIG = SANTREND::NOTREND;
+//      trendRatio240SIG = SANTREND::NOTREND;
+//      trendRatio500SIG = SANTREND::NOTREND;
+//      trendRatioSIG = SANTREND::NOTREND;
+//      trendVolRatioSIG =  SANTREND::NOTREND;
+//      trendSumSig = SAN_SIGNAL::NOSIG;
+//      trendVolRatioStrengthSIG = SANTRENDSTRENGTH::POOR;
+//      slopeVarSIG = SAN_SIGNAL::NOSIG;
+//      trendSlopeSIG = SANTREND::NOTREND;
+//      trendSlope5SIG = SANTREND::NOTREND;
+//      trendSlope14SIG = SANTREND::NOTREND;
+//      trendSlope30SIG = SANTREND::NOTREND;
+//      cpScatterSIG = SANTREND::NOTREND;
+//      cpScatter21SIG = SANTREND::NOTREND;
+//      trendScatterSIG = SANTREND::NOTREND;
+//      trendScatter5SIG = SANTREND::NOTREND;
+//      trendScatter14SIG = SANTREND::NOTREND;
+//      trendScatter30SIG = SANTREND::NOTREND;
+//      fsig5 = SAN_SIGNAL::NOSIG;
+//      fsig14 = SAN_SIGNAL::NOSIG;
+//      fsig30 = SAN_SIGNAL::NOSIG;
+//      fsig120 = SAN_SIGNAL::NOSIG;
+//      fsig240 = SAN_SIGNAL::NOSIG;
+//      fsig500 = SAN_SIGNAL::NOSIG;
+//      sig5 = SAN_SIGNAL::NOSIG;
+//      sig14 = SAN_SIGNAL::NOSIG;
+//      sig30 = SAN_SIGNAL::NOSIG;
+//      sig120 = SAN_SIGNAL::NOSIG;
+//      sig240 = SAN_SIGNAL::NOSIG;
+//      sig500 = SAN_SIGNAL::NOSIG;
+//      candleImaSIG = SAN_SIGNAL::NOSIG;
+//      candleVolSIG = SAN_SIGNAL::NOSIG;
+//      candleVol120SIG = SAN_SIGNAL::NOSIG;
+//      simpleSlope_14_SIG=  SAN_SIGNAL::NOSIG;
+//      simpleSlope_30_SIG = SAN_SIGNAL::NOSIG;
+//      simpleSlope_120_SIG = SAN_SIGNAL::NOSIG;
+//      simpleSlope_240_SIG = SAN_SIGNAL::NOSIG;
+//      simpleSlope_500_SIG =  SAN_SIGNAL::NOSIG;
+//      c_SIG =  SAN_SIGNAL::NOSIG;
+//      cpSDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+//      ima5SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+//      ima14SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+//      ima30SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+//      ima120SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+//      ima240SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+//      ima500SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+//      //clusterSIG = EMPTY_VALUE;
+//   }
+//
+//                     SANSIGNALS() {
+//      initBase();
+//   }
+//
+//                    ~SANSIGNALS() {
+//      clusterData.freeData();
+////      imaSlopesData.freeData();
+//      varDt.freeData();
+//      slopeRatioData.freeData();
+//      baseSlopeData.freeData();
+//      imaSlope5Data.freeData();
+//      imaSlope14Data.freeData();
+//      imaSlope30Data.freeData();
+//      imaSlope120Data.freeData();
+//      imaSlope500Data.freeData();
+//      stdCPSlope.freeData();
+//      obvCPSlope.freeData();
+//      ArrayFree(hilbertAmp);
+//      ArrayFree(hilbertPhase);
+//      ArrayFree(dftMag);
+//      ArrayFree(dftPhase);
+//      ArrayFree(dftPower);
+//   }
+//
+//};
+
+
+class SANSIGNALS {
+ public:
    SAN_SIGNAL        openSIG;
    SAN_SIGNAL        closeSIG;
    SAN_SIGNAL        priceActionSIG;
@@ -767,117 +980,130 @@ struct SANSIGNALS {
    double            dftPhase[];
    double            dftPower[];
 
-   void              initBase() {
-      openSIG = SAN_SIGNAL::NOSIG;
-      closeSIG = SAN_SIGNAL::NOSIG;
-      priceActionSIG = SAN_SIGNAL::NOSIG;
-      candlePattStarSIG = SAN_SIGNAL::NOSIG;
-      adxSIG = SAN_SIGNAL::NOSIG;
-      mfiSIG = SAN_SIGNAL::NOSIG;
-      rsiSIG = SAN_SIGNAL::NOSIG;
-      adxCovDivSIG = SAN_SIGNAL::NOSIG;
-      fastIma514SIG = SAN_SIGNAL::NOSIG;
-      fastIma1430SIG = SAN_SIGNAL::NOSIG;
-      fastIma530SIG = SAN_SIGNAL::NOSIG;
-      fastIma30120SIG = SAN_SIGNAL::NOSIG;
-      fastIma120240SIG = SAN_SIGNAL::NOSIG;
-      fastIma240500SIG = SAN_SIGNAL::NOSIG;
-      ima514SIG = SAN_SIGNAL::NOSIG;
-      ima1430SIG = SAN_SIGNAL::NOSIG;
-      ima530SIG = SAN_SIGNAL::NOSIG;
-      ima530_21SIG = SAN_SIGNAL::NOSIG;
-      ima30120SIG = SAN_SIGNAL::NOSIG;
-      ima30240SIG = SAN_SIGNAL::NOSIG;
-      ima120240SIG = SAN_SIGNAL::NOSIG;
-      ima120500SIG = SAN_SIGNAL::NOSIG;
-      ima240500SIG = SAN_SIGNAL::NOSIG;
-      atrSIG = SANTRENDSTRENGTH::POOR;
-      volSIG = SAN_SIGNAL::NOSIG;
-      profitSIG = SAN_SIGNAL::NOSIG;
-      profitPercentageSIG = SAN_SIGNAL::NOSIG;
-      tradeSIG = SAN_SIGNAL::NOSIG;
-      tradeVolVarSIG = SAN_SIGNAL::NOSIG;
-      lossSIG = SAN_SIGNAL::NOSIG;
-      acfTrendSIG = SANTREND::NOTREND;
-      acfStrengthSIG = SANTRENDSTRENGTH::POOR;
-      trendRatio5SIG = SANTREND::NOTREND;
-      trendRatio14SIG = SANTREND::NOTREND;
-      trendRatio30SIG = SANTREND::NOTREND;
-      trendRatio120SIG = SANTREND::NOTREND;
-      trendRatio240SIG = SANTREND::NOTREND;
-      trendRatio500SIG = SANTREND::NOTREND;
-      trendRatioSIG = SANTREND::NOTREND;
-      trendVolRatioSIG =  SANTREND::NOTREND;
-      trendSumSig = SAN_SIGNAL::NOSIG;
-      trendVolRatioStrengthSIG = SANTRENDSTRENGTH::POOR;
-      slopeVarSIG = SAN_SIGNAL::NOSIG;
-      trendSlopeSIG = SANTREND::NOTREND;
-      trendSlope5SIG = SANTREND::NOTREND;
-      trendSlope14SIG = SANTREND::NOTREND;
-      trendSlope30SIG = SANTREND::NOTREND;
-      cpScatterSIG = SANTREND::NOTREND;
-      cpScatter21SIG = SANTREND::NOTREND;
-      trendScatterSIG = SANTREND::NOTREND;
-      trendScatter5SIG = SANTREND::NOTREND;
-      trendScatter14SIG = SANTREND::NOTREND;
-      trendScatter30SIG = SANTREND::NOTREND;
-      fsig5 = SAN_SIGNAL::NOSIG;
-      fsig14 = SAN_SIGNAL::NOSIG;
-      fsig30 = SAN_SIGNAL::NOSIG;
-      fsig120 = SAN_SIGNAL::NOSIG;
-      fsig240 = SAN_SIGNAL::NOSIG;
-      fsig500 = SAN_SIGNAL::NOSIG;
-      sig5 = SAN_SIGNAL::NOSIG;
-      sig14 = SAN_SIGNAL::NOSIG;
-      sig30 = SAN_SIGNAL::NOSIG;
-      sig120 = SAN_SIGNAL::NOSIG;
-      sig240 = SAN_SIGNAL::NOSIG;
-      sig500 = SAN_SIGNAL::NOSIG;
-      candleImaSIG = SAN_SIGNAL::NOSIG;
-      candleVolSIG = SAN_SIGNAL::NOSIG;
-      candleVol120SIG = SAN_SIGNAL::NOSIG;
-      simpleSlope_14_SIG=  SAN_SIGNAL::NOSIG;
-      simpleSlope_30_SIG = SAN_SIGNAL::NOSIG;
-      simpleSlope_120_SIG = SAN_SIGNAL::NOSIG;
-      simpleSlope_240_SIG = SAN_SIGNAL::NOSIG;
-      simpleSlope_500_SIG =  SAN_SIGNAL::NOSIG;
-      c_SIG =  SAN_SIGNAL::NOSIG;
-      cpSDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-      ima5SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-      ima14SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-      ima30SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-      ima120SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-      ima240SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-      ima500SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-      //clusterSIG = EMPTY_VALUE;
-   }
-
-                     SANSIGNALS() {
-      initBase();
-   }
-
-                    ~SANSIGNALS() {
-      clusterData.freeData();
-//      imaSlopesData.freeData();
-      varDt.freeData();
-      slopeRatioData.freeData();
-      baseSlopeData.freeData();
-      imaSlope5Data.freeData();
-      imaSlope14Data.freeData();
-      imaSlope30Data.freeData();
-      imaSlope120Data.freeData();
-      imaSlope500Data.freeData();
-      stdCPSlope.freeData();
-      obvCPSlope.freeData();
-      ArrayFree(hilbertAmp);
-      ArrayFree(hilbertPhase);
-      ArrayFree(dftMag);
-      ArrayFree(dftPhase);
-      ArrayFree(dftPower);
-   }
+   SANSIGNALS();
+   ~SANSIGNALS();
+   void              initBase();
 
 };
 
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SANSIGNALS::SANSIGNALS() {
+   initBase();
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SANSIGNALS::~SANSIGNALS() {
+   clusterData.freeData();
+//      imaSlopesData.freeData();
+   varDt.freeData();
+   slopeRatioData.freeData();
+   baseSlopeData.freeData();
+   imaSlope5Data.freeData();
+   imaSlope14Data.freeData();
+   imaSlope30Data.freeData();
+   imaSlope120Data.freeData();
+   imaSlope500Data.freeData();
+   stdCPSlope.freeData();
+   obvCPSlope.freeData();
+   ArrayFree(hilbertAmp);
+   ArrayFree(hilbertPhase);
+   ArrayFree(dftMag);
+   ArrayFree(dftPhase);
+   ArrayFree(dftPower);
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void  SANSIGNALS::initBase() {
+   openSIG = SAN_SIGNAL::NOSIG;
+   closeSIG = SAN_SIGNAL::NOSIG;
+   priceActionSIG = SAN_SIGNAL::NOSIG;
+   candlePattStarSIG = SAN_SIGNAL::NOSIG;
+   adxSIG = SAN_SIGNAL::NOSIG;
+   mfiSIG = SAN_SIGNAL::NOSIG;
+   rsiSIG = SAN_SIGNAL::NOSIG;
+   adxCovDivSIG = SAN_SIGNAL::NOSIG;
+   fastIma514SIG = SAN_SIGNAL::NOSIG;
+   fastIma1430SIG = SAN_SIGNAL::NOSIG;
+   fastIma530SIG = SAN_SIGNAL::NOSIG;
+   fastIma30120SIG = SAN_SIGNAL::NOSIG;
+   fastIma120240SIG = SAN_SIGNAL::NOSIG;
+   fastIma240500SIG = SAN_SIGNAL::NOSIG;
+   ima514SIG = SAN_SIGNAL::NOSIG;
+   ima1430SIG = SAN_SIGNAL::NOSIG;
+   ima530SIG = SAN_SIGNAL::NOSIG;
+   ima530_21SIG = SAN_SIGNAL::NOSIG;
+   ima30120SIG = SAN_SIGNAL::NOSIG;
+   ima30240SIG = SAN_SIGNAL::NOSIG;
+   ima120240SIG = SAN_SIGNAL::NOSIG;
+   ima120500SIG = SAN_SIGNAL::NOSIG;
+   ima240500SIG = SAN_SIGNAL::NOSIG;
+   atrSIG = SANTRENDSTRENGTH::POOR;
+   volSIG = SAN_SIGNAL::NOSIG;
+   profitSIG = SAN_SIGNAL::NOSIG;
+   profitPercentageSIG = SAN_SIGNAL::NOSIG;
+   tradeSIG = SAN_SIGNAL::NOSIG;
+   tradeVolVarSIG = SAN_SIGNAL::NOSIG;
+   lossSIG = SAN_SIGNAL::NOSIG;
+   acfTrendSIG = SANTREND::NOTREND;
+   acfStrengthSIG = SANTRENDSTRENGTH::POOR;
+   trendRatio5SIG = SANTREND::NOTREND;
+   trendRatio14SIG = SANTREND::NOTREND;
+   trendRatio30SIG = SANTREND::NOTREND;
+   trendRatio120SIG = SANTREND::NOTREND;
+   trendRatio240SIG = SANTREND::NOTREND;
+   trendRatio500SIG = SANTREND::NOTREND;
+   trendRatioSIG = SANTREND::NOTREND;
+   trendVolRatioSIG =  SANTREND::NOTREND;
+   trendSumSig = SAN_SIGNAL::NOSIG;
+   trendVolRatioStrengthSIG = SANTRENDSTRENGTH::POOR;
+   slopeVarSIG = SAN_SIGNAL::NOSIG;
+   trendSlopeSIG = SANTREND::NOTREND;
+   trendSlope5SIG = SANTREND::NOTREND;
+   trendSlope14SIG = SANTREND::NOTREND;
+   trendSlope30SIG = SANTREND::NOTREND;
+   cpScatterSIG = SANTREND::NOTREND;
+   cpScatter21SIG = SANTREND::NOTREND;
+   trendScatterSIG = SANTREND::NOTREND;
+   trendScatter5SIG = SANTREND::NOTREND;
+   trendScatter14SIG = SANTREND::NOTREND;
+   trendScatter30SIG = SANTREND::NOTREND;
+   fsig5 = SAN_SIGNAL::NOSIG;
+   fsig14 = SAN_SIGNAL::NOSIG;
+   fsig30 = SAN_SIGNAL::NOSIG;
+   fsig120 = SAN_SIGNAL::NOSIG;
+   fsig240 = SAN_SIGNAL::NOSIG;
+   fsig500 = SAN_SIGNAL::NOSIG;
+   sig5 = SAN_SIGNAL::NOSIG;
+   sig14 = SAN_SIGNAL::NOSIG;
+   sig30 = SAN_SIGNAL::NOSIG;
+   sig120 = SAN_SIGNAL::NOSIG;
+   sig240 = SAN_SIGNAL::NOSIG;
+   sig500 = SAN_SIGNAL::NOSIG;
+   candleImaSIG = SAN_SIGNAL::NOSIG;
+   candleVolSIG = SAN_SIGNAL::NOSIG;
+   candleVol120SIG = SAN_SIGNAL::NOSIG;
+   simpleSlope_14_SIG=  SAN_SIGNAL::NOSIG;
+   simpleSlope_30_SIG = SAN_SIGNAL::NOSIG;
+   simpleSlope_120_SIG = SAN_SIGNAL::NOSIG;
+   simpleSlope_240_SIG = SAN_SIGNAL::NOSIG;
+   simpleSlope_500_SIG =  SAN_SIGNAL::NOSIG;
+   c_SIG =  SAN_SIGNAL::NOSIG;
+   cpSDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+   ima5SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+   ima14SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+   ima30SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+   ima120SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+   ima240SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+   ima500SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
+//clusterSIG = EMPTY_VALUE;
+}
 
 struct SANSIGBOOL {
    bool              spreadBool;

@@ -193,7 +193,7 @@ void initCalc(const INDDATA &indData) {
 
    if(recordData) {
       if(util.isNewBarTime()) {
-            st1.writeOHLCVJsonData(dataFileName,indData,sig,util,1);
+            st1.writeOHLCVJsonData(dataFileName,indData,util,1);
       }
    }
 }

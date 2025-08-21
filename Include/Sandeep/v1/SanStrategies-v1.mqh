@@ -10,6 +10,7 @@
 
 #include <Sandeep/v1/SanSignals-v1.mqh>
 #include <Sandeep/v1/SanHSIG-v1.mqh>
+#include <Sandeep/v1/SanSignalTypes-v1.mqh>
 
 
 ORDERPARAMS       op1;
@@ -19,158 +20,162 @@ ORDERPARAMS       op1;
 //+------------------------------------------------------------------+
 class SanStrategies {
  private:
-   int               ticket;
+   int  ticket;
 
-   struct SS:public SANSIGNALS {
-
-      SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
-         //initBase();
-         //Print("SS: ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21]);
-         //########################################################################################################
-         //########################################################################################################
-
-//         //    tradeSIG = sig.tradeSignal(indData.std[SHIFT],indData.mfi[SHIFT],indData.atr,indData.adx[SHIFT],indData.adxPlus[SHIFT],indData.adxMinus[SHIFT]);
-//         adxSIG =  sig.adxSIG(indData.adx[SHIFT],indData.adxPlus[SHIFT],indData.adxMinus[SHIFT]);
-//         atrSIG =  sig.atrSIG(indData.atr,21);
+//   struct SS:public SANSIGNALS {
+//      SS() {}
+//      SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
+//         //initBase();
+//         //Print("SS: ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21]);
+//         //########################################################################################################
+//         //########################################################################################################
 //
-//         fastIma514SIG = sig.fastSlowSIG(indData.ima5[SHIFT],indData.ima14[SHIFT],21);
-//         fastIma1430SIG = sig.fastSlowSIG(indData.ima14[SHIFT],indData.ima30[SHIFT],21);
-//         fastIma530SIG = sig.fastSlowSIG(indData.ima5[SHIFT],indData.ima30[SHIFT],21);
-//         fastIma30120SIG = sig.fastSlowSIG(indData.ima30[SHIFT],indData.ima120[SHIFT],21);
-//         fastIma120240SIG = sig.fastSlowSIG(indData.ima120[SHIFT],indData.ima240[SHIFT],21);
-//         fastIma240500SIG = sig.fastSlowSIG(indData.ima240[SHIFT],indData.ima500[SHIFT],21);
-//         ima514SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima14,21,1);
-//         ima1430SIG = sig.fastSlowTrendSIG(indData.ima14,indData.ima30,21,1);
-//         ima30120SIG = sig.fastSlowTrendSIG(indData.ima30,indData.ima120,21,1);
-//         ima30240SIG = sig.fastSlowTrendSIG(indData.ima30,indData.ima240,21,1);
-//         ima120240SIG = sig.fastSlowTrendSIG(indData.ima120,indData.ima240,21,1);
-//         ima120500SIG = sig.fastSlowTrendSIG(indData.ima120,indData.ima500,21,1);
-//         ima240500SIG = sig.fastSlowTrendSIG(indData.ima240,indData.ima500,21,1);
-//         ima530SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima30,21,1);
-//         ima530_21SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima30,21,1);
-//         candleImaSIG = sig.candleImaSIG(indData.open,indData.close,indData.ima5,indData.ima14,indData.ima30,5,SHIFT);
-//         //   sig.pVElastSIG(indData.open,indData.close,indData.tick_volume,21,SHIFT);
-//         candlePattStarSIG = sig.candleStar(indData.open,indData.high,indData.low,indData.close,0.1,0.5,21,1);
-//         //trendRatioSIG = sig.trendRatioSIG(indData.ima30,"IMA30",21);
-//         //slopeVarSIG = sig.slopeVarSIG(indData.ima14,indData.ima30,indData.ima120,21,1);
-//         //slopeVarSIG = sig.slopeVarSIG(indData.ima5,indData.ima14,indData.ima30,21,1);
-//         //slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,21,1);
-//         //imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,21,1);
-//         //mfiSIG = sig.mfiSIG(indData.mfi,trendSlopeSIG,10,1);
-//         mfiSIG = sig.mfiSIG(indData.mfi,trendRatioSIG,21,1);
-//         tradeVolVarSIG = sig.tradeVolVarSignal(volSIG,ima30SDSIG,ima120SDSIG,ima240SDSIG);
-//         trendSlope5SIG = sig.trendSlopeSIG(indData.ima5,"IMA5",21);
-//         trendSlope14SIG = sig.trendSlopeSIG(indData.ima14,"IMA14",21);
-//         trendSlope30SIG = sig.trendSlopeSIG(indData.ima30,"IMA30",21);
-//         trendSlopeSIG = trendSlope5SIG;
-//         //trendRatioSIG = sig.trendRatioSIG(indData.ima30,"IMA30",2,21);
-//         //adxCovDivSIG = sig.adxCovDivSIG(indData.adx,indData.adxPlus,indData.adxMinus);
-         //rsiSIG = sig.rsiSIG(indData.rsi,21,1);
-//         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
-
-
-         priceActionSIG =  sig.priceActionCandleSIG(indData.open,indData.high,indData.low,indData.close);
-         volSIG =  sig.volumeSIG_v2(indData.tick_volume,60,11,SHIFT);
-
-         profitSIG = sig.closeOnProfitSIG(indData.currProfit,indData.closeProfit,0);
-         profitPercentageSIG = sig.closeOnProfitPercentageSIG(indData.currProfit,indData.maxProfit,indData.closeProfit);
-         lossSIG = sig.closeOnLossSIG(indData.stopLoss,0);
-
-         fsig5 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima5[SHIFT],21);
-         fsig14 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima14[SHIFT],21);
-         fsig30 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima30[SHIFT],21);
-         fsig120 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima120[SHIFT],21);
-         fsig240 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima240[SHIFT],21);
-         fsig500 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima500[SHIFT],21);
-         sig5 = sig.fastSlowTrendSIG(indData.close, indData.ima5,21,1);
-         sig14 = sig.fastSlowTrendSIG(indData.close, indData.ima14,21,1);
-         sig30 = sig.fastSlowTrendSIG(indData.close, indData.ima30,21,1);
-         sig120 = sig.fastSlowTrendSIG(indData.close, indData.ima120,21,1);
-         sig240 = sig.fastSlowTrendSIG(indData.close, indData.ima240,21,1);
-         sig500 = sig.fastSlowTrendSIG(indData.close, indData.ima500,21,1);
-
-
-         cpSDSIG = sig.stdDevSIG(indData.close,"CP",21,SHIFT);
-         ima5SDSIG = sig.stdDevSIG(indData.ima5,"IMA5",21,SHIFT);
-         ima14SDSIG = sig.stdDevSIG(indData.ima14,"IMA14",21,SHIFT);
-         ima30SDSIG = sig.stdDevSIG(indData.ima30,"IMA30",21,SHIFT);
-         ima120SDSIG = sig.stdDevSIG(indData.ima120,"IMA120",21,SHIFT);
-         ima240SDSIG = sig.stdDevSIG(indData.ima240,"IMA240",21,SHIFT);
-         ima500SDSIG = sig.stdDevSIG(indData.ima500,"IMA500",21,SHIFT);
-
-         candleVolSIG = sig.candleVolSIG_v1(indData.open,indData.close,indData.tick_volume,60,SHIFT);
-         candleVol120SIG = sig.candleVolSIG_v1(indData.open,indData.close,indData.tick_volume,120,SHIFT);
-
-         slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,5,10,1);
-
-
-         cpScatter21SIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.04,21);
-         cpScatterSIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.04,120);
-
-
-         trendRatio5SIG = sig.trendRatioSIG(indData.ima5,"IMA5",2,21);
-         trendRatio14SIG = sig.trendRatioSIG(indData.ima14,"IMA14",2,21);
-         trendRatio30SIG = sig.trendRatioSIG(indData.ima30,"IMA30",2,21);
-         trendRatio120SIG = sig.trendRatioSIG(indData.ima120,"IMA120",2,21);
-         trendRatio240SIG = sig.trendRatioSIG(indData.ima240,"IMA240",2,21);
-         trendRatio500SIG = sig.trendRatioSIG(indData.ima500,"IMA500",2,21);
-         trendRatioSIG = trendRatio120SIG;
-
-         //############# DataTransport vars used in HSIG mostly ########################################
-
-         imaSlope5Data=sig.slopeSIGData(indData.ima5,5,21,1);
-         imaSlope14Data=sig.slopeSIGData(indData.ima14,5,21,1);
-         imaSlope30Data=sig.slopeSIGData(indData.ima30,5,21,1);
-         imaSlope120Data=sig.slopeSIGData(indData.ima120,5,21,1);
-         baseSlopeData=sig.slopeSIGData(indData.ima240,5,21,1);
-         imaSlope500Data=sig.slopeSIGData(indData.ima500,5,21,1);
-         stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);
-         obvCPSlope = sig.slopeSIGData(indData.obv,5,21,1);
-
-         //simpleSlope_14_SIG = sig.slopeSIG(imaSlope14Data,0);
-         //simpleSlope_30_SIG = sig.slopeSIG(imaSlope30Data,0);
-         //simpleSlope_120_SIG = sig.slopeSIG(imaSlope120Data,1);
-         //simpleSlope_240_SIG = sig.slopeSIG(baseSlopeData,2);
-
-         //clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.im7a240[1]);
-         //slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);
-         clusterData = sig.clusterData(indData.ima5[1],indData.ima14[1],indData.ima30[1]);
-         slopeRatioData = sig.slopeRatioData(imaSlope5Data,imaSlope14Data,imaSlope30Data);
-//         stats.hilbertTransform(indData.close,hilbertAmp,hilbertPhase,21,5);
-//         stats.dftTransform(indData.close,dftMag,dftPhase,dftPower,32);
-
-         //c_SIG = sig.cSIG(indData,util,1);
-
-         //#############################################################################################
-
-//        varDt = sig.varSIG(ima30SDSIG,ima120SDSIG,ima240SDSIG);
-
-      }
-
-      ~SS() {}
-
-      void   printSignalStruct(SanUtils &util) {
-         double currSpread = (int)MarketInfo(_Symbol,MODE_SPREAD);
-         Print("profitPercentageSIG: "+util.getSigString(profitPercentageSIG)+" lossSIG: "+util.getSigString(lossSIG)+" profitSIG: "+util.getSigString(profitSIG)+" cpSDSIG: "+util.getSigString(cpSDSIG)+" ima5SDSIG: "+util.getSigString(ima5SDSIG)+" ima14SDSIG: "+util.getSigString(ima14SDSIG)+" ima30SDSIG: "+util.getSigString(ima30SDSIG)+" ima120SDSIG: "+util.getSigString(ima120SDSIG));
-         Print("ScatterTrend: "+util.getSigString(trendScatterSIG)+" ScatterTrend5: "+util.getSigString(trendScatter5SIG)+" ScatterTrend14: "+util.getSigString(trendScatter14SIG)+" ScatterTrend30: "+util.getSigString(trendScatter30SIG)+" trendVolSIG: "+util.getSigString(trendVolRatioSIG)+" trendVolStrengthSIG: "+util.getSigString(trendVolRatioStrengthSIG)+" trendRatioSIG: "+util.getSigString(trendRatioSIG));
-         Print("Trend slope: "+util.getSigString(trendSlopeSIG)+" Trend5 slope: "+util.getSigString(trendSlope5SIG)+" Trend14 slope: "+util.getSigString(trendSlope14SIG)+" Trend30 slope: "+util.getSigString(trendSlope30SIG)+" slopeVarSIG:"+util.getSigString(slopeVarSIG)+" acfTrendSIG: "+util.getSigString(acfTrendSIG)+" acfStrengthSIG: "+util.getSigString(acfStrengthSIG));
-         Print("priceActionSIG: "+util.getSigString(priceActionSIG)+" volSIG: "+util.getSigString(volSIG)+" candleImaSIG: "+util.getSigString(candleImaSIG)+" candleVolSIG: "+util.getSigString(candleVolSIG)+" candlePattStarSIG: "+util.getSigString(candlePattStarSIG)+" adxSIG: "+util.getSigString(adxSIG)+" atrSIG: "+util.getSigString(atrSIG)+" mfiSIG: "+util.getSigString(mfiSIG));
-         Print("sig5: "+util.getSigString(sig5)+" sig14: "+util.getSigString(sig14)+" sig30: "+util.getSigString(sig30)+" ima514SIG: "+util.getSigString(ima514SIG)+" ima1430SIG: "+util.getSigString(ima1430SIG)+" ima530SIG: "+util.getSigString(ima530SIG)+" ima530_21SIG: "+util.getSigString(ima530_21SIG)+" ima30120SIG: "+util.getSigString(ima30120SIG));
-         Print("fsig5: "+util.getSigString(fsig5)+" fsig14: "+util.getSigString(fsig14)+" fsig30: "+util.getSigString(fsig30)+" fastIma514SIG: "+util.getSigString(fastIma514SIG)+" fastIma1430SIG: "+util.getSigString(fastIma1430SIG)+" fastIma530SIG: "+util.getSigString(fastIma530SIG)+" fastIma30120SIG: "+util.getSigString(fastIma30120SIG));
-         Print("Spread: "+currSpread+" openSIG: "+util.getSigString(openSIG)+" closeSIG: "+util.getSigString(closeSIG));
-      }
-   };
+////         //    tradeSIG = sig.tradeSignal(indData.std[SHIFT],indData.mfi[SHIFT],indData.atr,indData.adx[SHIFT],indData.adxPlus[SHIFT],indData.adxMinus[SHIFT]);
+////         adxSIG =  sig.adxSIG(indData.adx[SHIFT],indData.adxPlus[SHIFT],indData.adxMinus[SHIFT]);
+////         atrSIG =  sig.atrSIG(indData.atr,21);
+////
+////         fastIma514SIG = sig.fastSlowSIG(indData.ima5[SHIFT],indData.ima14[SHIFT],21);
+////         fastIma1430SIG = sig.fastSlowSIG(indData.ima14[SHIFT],indData.ima30[SHIFT],21);
+////         fastIma530SIG = sig.fastSlowSIG(indData.ima5[SHIFT],indData.ima30[SHIFT],21);
+////         fastIma30120SIG = sig.fastSlowSIG(indData.ima30[SHIFT],indData.ima120[SHIFT],21);
+////         fastIma120240SIG = sig.fastSlowSIG(indData.ima120[SHIFT],indData.ima240[SHIFT],21);
+////         fastIma240500SIG = sig.fastSlowSIG(indData.ima240[SHIFT],indData.ima500[SHIFT],21);
+////         ima514SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima14,21,1);
+////         ima1430SIG = sig.fastSlowTrendSIG(indData.ima14,indData.ima30,21,1);
+////         ima30120SIG = sig.fastSlowTrendSIG(indData.ima30,indData.ima120,21,1);
+////         ima30240SIG = sig.fastSlowTrendSIG(indData.ima30,indData.ima240,21,1);
+////         ima120240SIG = sig.fastSlowTrendSIG(indData.ima120,indData.ima240,21,1);
+////         ima120500SIG = sig.fastSlowTrendSIG(indData.ima120,indData.ima500,21,1);
+////         ima240500SIG = sig.fastSlowTrendSIG(indData.ima240,indData.ima500,21,1);
+////         ima530SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima30,21,1);
+////         ima530_21SIG = sig.fastSlowTrendSIG(indData.ima5,indData.ima30,21,1);
+////         candleImaSIG = sig.candleImaSIG(indData.open,indData.close,indData.ima5,indData.ima14,indData.ima30,5,SHIFT);
+////         //   sig.pVElastSIG(indData.open,indData.close,indData.tick_volume,21,SHIFT);
+////         candlePattStarSIG = sig.candleStar(indData.open,indData.high,indData.low,indData.close,0.1,0.5,21,1);
+////         //trendRatioSIG = sig.trendRatioSIG(indData.ima30,"IMA30",21);
+////         //slopeVarSIG = sig.slopeVarSIG(indData.ima14,indData.ima30,indData.ima120,21,1);
+////         //slopeVarSIG = sig.slopeVarSIG(indData.ima5,indData.ima14,indData.ima30,21,1);
+////         //slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,21,1);
+////         //imaSlopesData = sig.slopeVarData(indData.ima30,indData.ima120,indData.ima240,21,1);
+////         //mfiSIG = sig.mfiSIG(indData.mfi,trendSlopeSIG,10,1);
+////         mfiSIG = sig.mfiSIG(indData.mfi,trendRatioSIG,21,1);
+////         tradeVolVarSIG = sig.tradeVolVarSignal(volSIG,ima30SDSIG,ima120SDSIG,ima240SDSIG);
+////         trendSlope5SIG = sig.trendSlopeSIG(indData.ima5,"IMA5",21);
+////         trendSlope14SIG = sig.trendSlopeSIG(indData.ima14,"IMA14",21);
+////         trendSlope30SIG = sig.trendSlopeSIG(indData.ima30,"IMA30",21);
+////         trendSlopeSIG = trendSlope5SIG;
+////         //trendRatioSIG = sig.trendRatioSIG(indData.ima30,"IMA30",2,21);
+////         //adxCovDivSIG = sig.adxCovDivSIG(indData.adx,indData.adxPlus,indData.adxMinus);
+//         //rsiSIG = sig.rsiSIG(indData.rsi,21,1);
+////         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
+//
+//
+//         priceActionSIG =  sig.priceActionCandleSIG(indData.open,indData.high,indData.low,indData.close);
+//         volSIG =  sig.volumeSIG_v2(indData.tick_volume,60,11,SHIFT);
+//
+//         profitSIG = sig.closeOnProfitSIG(indData.currProfit,indData.closeProfit,0);
+//         profitPercentageSIG = sig.closeOnProfitPercentageSIG(indData.currProfit,indData.maxProfit,indData.closeProfit);
+//         lossSIG = sig.closeOnLossSIG(indData.stopLoss,0);
+//
+//         fsig5 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima5[SHIFT],21);
+//         fsig14 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima14[SHIFT],21);
+//         fsig30 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima30[SHIFT],21);
+//         fsig120 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima120[SHIFT],21);
+//         fsig240 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima240[SHIFT],21);
+//         fsig500 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima500[SHIFT],21);
+//         sig5 = sig.fastSlowTrendSIG(indData.close, indData.ima5,21,1);
+//         sig14 = sig.fastSlowTrendSIG(indData.close, indData.ima14,21,1);
+//         sig30 = sig.fastSlowTrendSIG(indData.close, indData.ima30,21,1);
+//         sig120 = sig.fastSlowTrendSIG(indData.close, indData.ima120,21,1);
+//         sig240 = sig.fastSlowTrendSIG(indData.close, indData.ima240,21,1);
+//         sig500 = sig.fastSlowTrendSIG(indData.close, indData.ima500,21,1);
+//
+//
+//         cpSDSIG = sig.stdDevSIG(indData.close,"CP",21,SHIFT);
+//         ima5SDSIG = sig.stdDevSIG(indData.ima5,"IMA5",21,SHIFT);
+//         ima14SDSIG = sig.stdDevSIG(indData.ima14,"IMA14",21,SHIFT);
+//         ima30SDSIG = sig.stdDevSIG(indData.ima30,"IMA30",21,SHIFT);
+//         ima120SDSIG = sig.stdDevSIG(indData.ima120,"IMA120",21,SHIFT);
+//         ima240SDSIG = sig.stdDevSIG(indData.ima240,"IMA240",21,SHIFT);
+//         ima500SDSIG = sig.stdDevSIG(indData.ima500,"IMA500",21,SHIFT);
+//
+//         candleVolSIG = sig.candleVolSIG_v1(indData.open,indData.close,indData.tick_volume,60,SHIFT);
+//         candleVol120SIG = sig.candleVolSIG_v1(indData.open,indData.close,indData.tick_volume,120,SHIFT);
+//
+//         slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,5,10,1);
+//
+//
+//         cpScatter21SIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.04,21);
+//         cpScatterSIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.04,120);
+//
+//
+//         trendRatio5SIG = sig.trendRatioSIG(indData.ima5,"IMA5",2,21);
+//         trendRatio14SIG = sig.trendRatioSIG(indData.ima14,"IMA14",2,21);
+//         trendRatio30SIG = sig.trendRatioSIG(indData.ima30,"IMA30",2,21);
+//         trendRatio120SIG = sig.trendRatioSIG(indData.ima120,"IMA120",2,21);
+//         trendRatio240SIG = sig.trendRatioSIG(indData.ima240,"IMA240",2,21);
+//         trendRatio500SIG = sig.trendRatioSIG(indData.ima500,"IMA500",2,21);
+//         trendRatioSIG = trendRatio120SIG;
+//
+//         //############# DataTransport vars used in HSIG mostly ########################################
+//
+//         imaSlope5Data=sig.slopeSIGData(indData.ima5,5,21,1);
+//         imaSlope14Data=sig.slopeSIGData(indData.ima14,5,21,1);
+//         imaSlope30Data=sig.slopeSIGData(indData.ima30,5,21,1);
+//         imaSlope120Data=sig.slopeSIGData(indData.ima120,5,21,1);
+//         baseSlopeData=sig.slopeSIGData(indData.ima240,5,21,1);
+//         imaSlope500Data=sig.slopeSIGData(indData.ima500,5,21,1);
+//         stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);
+//         obvCPSlope = sig.slopeSIGData(indData.obv,5,21,1);
+//
+//         //simpleSlope_14_SIG = sig.slopeSIG(imaSlope14Data,0);
+//         //simpleSlope_30_SIG = sig.slopeSIG(imaSlope30Data,0);
+//         //simpleSlope_120_SIG = sig.slopeSIG(imaSlope120Data,1);
+//         //simpleSlope_240_SIG = sig.slopeSIG(baseSlopeData,2);
+//
+//         //clusterSIG = sig.clusterSIG(indData.ima30[1],indData.ima120[1],indData.im7a240[1]);
+//         //slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);
+//         clusterData = sig.clusterData(indData.ima5[1],indData.ima14[1],indData.ima30[1]);
+//         slopeRatioData = sig.slopeRatioData(imaSlope5Data,imaSlope14Data,imaSlope30Data);
+//
+//
+//         //c_SIG = sig.cSIG(indData,util,1);
+//
+//         //#############################################################################################
+//
+////        varDt = sig.varSIG(ima30SDSIG,ima120SDSIG,ima240SDSIG);
+//
+//      }
+//
+//      ~SS() {}
+//
+//      void   printSignalStruct(SanUtils &util) {
+//         double currSpread = (int)MarketInfo(_Symbol,MODE_SPREAD);
+//         Print("profitPercentageSIG: "+util.getSigString(profitPercentageSIG)+" lossSIG: "+util.getSigString(lossSIG)+" profitSIG: "+util.getSigString(profitSIG)+" cpSDSIG: "+util.getSigString(cpSDSIG)+" ima5SDSIG: "+util.getSigString(ima5SDSIG)+" ima14SDSIG: "+util.getSigString(ima14SDSIG)+" ima30SDSIG: "+util.getSigString(ima30SDSIG)+" ima120SDSIG: "+util.getSigString(ima120SDSIG));
+//         Print("ScatterTrend: "+util.getSigString(trendScatterSIG)+" ScatterTrend5: "+util.getSigString(trendScatter5SIG)+" ScatterTrend14: "+util.getSigString(trendScatter14SIG)+" ScatterTrend30: "+util.getSigString(trendScatter30SIG)+" trendVolSIG: "+util.getSigString(trendVolRatioSIG)+" trendVolStrengthSIG: "+util.getSigString(trendVolRatioStrengthSIG)+" trendRatioSIG: "+util.getSigString(trendRatioSIG));
+//         Print("Trend slope: "+util.getSigString(trendSlopeSIG)+" Trend5 slope: "+util.getSigString(trendSlope5SIG)+" Trend14 slope: "+util.getSigString(trendSlope14SIG)+" Trend30 slope: "+util.getSigString(trendSlope30SIG)+" slopeVarSIG:"+util.getSigString(slopeVarSIG)+" acfTrendSIG: "+util.getSigString(acfTrendSIG)+" acfStrengthSIG: "+util.getSigString(acfStrengthSIG));
+//         Print("priceActionSIG: "+util.getSigString(priceActionSIG)+" volSIG: "+util.getSigString(volSIG)+" candleImaSIG: "+util.getSigString(candleImaSIG)+" candleVolSIG: "+util.getSigString(candleVolSIG)+" candlePattStarSIG: "+util.getSigString(candlePattStarSIG)+" adxSIG: "+util.getSigString(adxSIG)+" atrSIG: "+util.getSigString(atrSIG)+" mfiSIG: "+util.getSigString(mfiSIG));
+//         Print("sig5: "+util.getSigString(sig5)+" sig14: "+util.getSigString(sig14)+" sig30: "+util.getSigString(sig30)+" ima514SIG: "+util.getSigString(ima514SIG)+" ima1430SIG: "+util.getSigString(ima1430SIG)+" ima530SIG: "+util.getSigString(ima530SIG)+" ima530_21SIG: "+util.getSigString(ima530_21SIG)+" ima30120SIG: "+util.getSigString(ima30120SIG));
+//         Print("fsig5: "+util.getSigString(fsig5)+" fsig14: "+util.getSigString(fsig14)+" fsig30: "+util.getSigString(fsig30)+" fastIma514SIG: "+util.getSigString(fastIma514SIG)+" fastIma1430SIG: "+util.getSigString(fastIma1430SIG)+" fastIma530SIG: "+util.getSigString(fastIma530SIG)+" fastIma30120SIG: "+util.getSigString(fastIma30120SIG));
+//         Print("Spread: "+currSpread+" openSIG: "+util.getSigString(openSIG)+" closeSIG: "+util.getSigString(closeSIG));
+//      }
+//   };
 
 
  public:
    SanStrategies();
+   SanStrategies(SanSignals &sig, const INDDATA &indData, int shift);
    ~SanStrategies();
+
+   SS s;
+   SanSignals si;
+   HSIG h;
+   INDDATA iData;
+
    SIGBUFF           imaSt1(const INDDATA &indData);
-   SIGBUFF           paSt1(const INDDATA &indData);
-   SIGBUFF           paSt2(const INDDATA &indData);
-   SAN_SIGNAL        getSlopeSIG(const DataTransport& signalDt, const int signalType=0);
-   string            getJsonData(const INDDATA &indData,SanSignals &sig, SanUtils& util,int shift=1);
-   bool              writeOHLCVJsonData(string filename, const INDDATA &indData,SanSignals &sig, SanUtils& util,int shift=1);
+   string            getJsonData(const INDDATA &indData,SANSIGNALS &s, HSIG &h,SanUtils& util,int shift=1);
+   bool              writeOHLCVJsonData(string filename, const INDDATA &indData, SanUtils& util,int shift=1);
+
 };
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -178,6 +183,15 @@ class SanStrategies {
 SanStrategies::SanStrategies() {
 
 }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SanStrategies::SanStrategies(SanSignals &sig, const INDDATA &indData, int shift):s(sig,indData,shift),h(s,util) {
+   iData = indData;
+   si = sig;
+}
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -189,7 +203,9 @@ SanStrategies::~SanStrategies() {
 //|                                                                  |
 //+------------------------------------------------------------------+
 SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
+
    SIGBUFF sigBuff;
+   iData = indData;
 // Print("imaSt1: ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21]);
 // Set the trade strategy used by EA to open and close trades
    sigBuff.buff3[0]=(int)STRATEGYTYPE::IMACLOSE;
@@ -235,17 +251,15 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
    int SHIFT = (indData.shift || 1);
 
+   
    SS ss(sig,indData,SHIFT);
+   s = ss;
    SAN_SIGNAL openSIG = SAN_SIGNAL::NOSIG;
    SAN_SIGNAL closeSIG = SAN_SIGNAL::NOSIG;
 
 // ################# Open Signal ###################################################
 
    bool spreadBool = (indData.currSpread < tl.spreadLimit);
-
-//   SANSIGBOOL sb(ss);
-//   sb.spreadBool = spreadBool;
-//   sb.printStruct();
 
 //################################################################
 //################################################################
@@ -287,6 +301,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool slopeVarBool = (ss.slopeVarSIG==SAN_SIGNAL::SELL||ss.slopeVarSIG==SAN_SIGNAL::BUY);
 
    HSIG hSig(ss, util);
+   h = hSig;
    dominantSIG = sig.dominantTrendSIG(ss,hSig);
 
    bool notFlatBool = (varBool && (varPosBool||varNegBool) && (hSig.mktType==MKTTYP::MKTTR));
@@ -296,7 +311,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool basicOpenVolBool = (spreadVolBool && notFlatBool);
    bool basicOpenBool = (spreadBool);
 //##################################################################################
-   
+
 
    bool slopeTrendVarBool = (basicOpenBool && slopeTrendBool);
    bool candleVolVar120Bool = (basicOpenVolBool && candleVol120Bool);
@@ -349,6 +364,10 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool noCloseConditions = (!closeFlatTrade);
 
 //#################################################################################
+
+//   double iSIg[] =  {147.404, 147.393, 147.385, 147.389,0,0,0,0};
+   //stats.hilbertTransform(indData.close,hilbertAmp,ss.hilbertPhase,21,5);
+//   stats.dftTransform(iSIg,ss.dftMag,ss.dftPhase,ss.dftPower,8);
 
    bool shortCycle = false;
    bool longCycle = false;
@@ -437,14 +456,14 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
    Print("[CLOSE]:: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" SimpleClose14_30:: "+util.getSigString(hSig.simpleTrend_14_30_SIG));
 //   Print("[OPEN] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" domSIG: "+util.getSigString(dominantSIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" domTrCP: "+util.getSigString(hSig.dominantTrendCPSIG));//+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" domTrCPSIG: "+util.getSigString(hSig.dominantTrendCPSIG));
-   Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" domTrCP: "+util.getSigString(hSig.dominantTrendCPSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG));
+   Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" domTrCP: "+util.getSigString(hSig.dominantTrendCPSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG));
    Print("[OPEN][MKT] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG));
 
    //Print("[HILBERT] :: Amp1: "+ss.hilbertAmp[0]+" Amp4: "+ss.hilbertAmp[3]+" Amp9: "+ss.hilbertAmp[9]+" Amp21: "+ss.hilbertAmp[20]);
    //Print("[HILBERT] :: Phase1: "+ss.hilbertPhase[0]+" Phase4: "+ss.hilbertPhase[3]+" Phase9: "+ss.hilbertPhase[9]+" Phase21: "+ss.hilbertPhase[20]);
-   //Print("[DFT] :: Mag1: "+ss.dftMag[0]+" Mag4: "+ss.dftMag[3]+" Mag9: "+ss.dftMag[9]+" Mag21: "+ss.dftMag[20]);
-   //Print("[DFT] :: Phase1: "+ss.dftPhase[0]+" Phase4: "+ss.dftPhase[3]+" Phase9: "+ss.dftPhase[9]+" Phase21: "+ss.dftPhase[20]);
-   //Print("[DFT] :: Power1: "+ss.dftPower[0]+" Power4: "+ss.dftPower[3]+" Power9: "+ss.dftPower[9]+" Power21: "+ss.dftPower[20]);
+//   Print("[DFT] :: Mag1: "+ss.dftMag[0]+" Mag4: "+ss.dftMag[3]+" Mag9: "+ss.dftMag[9]+" Mag21: "+ss.dftMag[20]);
+//   Print("[DFT] :: Phase1: "+ss.dftPhase[0]+" Phase4: "+ss.dftPhase[3]+" Phase9: "+ss.dftPhase[9]+" Phase21: "+ss.dftPhase[20]);
+//   Print("[DFT] :: Power1: "+ss.dftPower[0]+" Power4: "+ss.dftPower[3]+" Power9: "+ss.dftPower[9]+" Power21: "+ss.dftPower[20]);
 
 //   Print("[VARBOOLS]: varBool: "+varBool+" varBoolDt: "+ss.varDt.matrixBool[3] +" varPosBool: "+varPosBool+" varPosBoolDt: "+ss.varDt.matrixBool[0]+" varNegBool: "+varNegBool+" varNegBoolDt: "+ss.varDt.matrixBool[1]+" varFlatBool: "+varFlatBool+" varFlatBoolDt: "+ss.varDt.matrixBool[2]);
    //Print("[SLOPES]: FAST: "+ imaSlopesData.matrixD[0]+" : "+(0.15+(1.5*0.1))+" MEDIUM: "+imaSlopesData.matrixD[1]+" : "+(0.15+0.1)+" SLOW: "+imaSlopesData.matrixD[2]+" : 0.15  :SLOWWIDE: "+imaSlopesData.matrixD[3]+" : 0.1");
@@ -464,97 +483,31 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    return sigBuff;
 }
 
-////+------------------------------------------------------------------+
-////|                                                                  |
-////+------------------------------------------------------------------+
-//string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUtils& util, int shift=1) {
-//   string prntStr="";
-//   string prntStrOpen="{ ";
-//   string prntStrClose=" }";
-//   prntStr += prntStrOpen;
-//   DataTransport dt14 = sig.slopeSIGData(indData.ima14,5,21,1);
-//   DataTransport dt30 = sig.slopeSIGData(indData.ima30,5,21,1);
-//   DataTransport dt120 = sig.slopeSIGData(indData.ima120,5,21,1);
-//   DataTransport dt240 = sig.slopeSIGData(indData.ima240,5,21,1);
-//   DataTransport dt500 = sig.slopeSIGData(indData.ima500,5,21,1);
-//   DataTransport stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);//
-//   DataTransport clusterData = sig.clusterData(indData.ima30[1],indData.ima120[1],indData.ima240[1]);
-//   DataTransport slopeRatioData = sig.slopeRatioData(dt30,dt120,dt240);
-//
-//   SAN_SIGNAL c_SIG = sig.cSIG(indData,util,1);
-//   SAN_SIGNAL baseSIG = sig.slopeSIG(dt240,2);
-//   //SAN_SIGNAL tradeSIG = (c_SIG==baseSIG)?c_SIG:SAN_SIGNAL::NOSIG;
-//   SAN_SIGNAL tradeSIG = c_SIG;
-//
-//
-//   SAN_SIGNAL TRADESIG = (indData.currSpread < tl.spreadLimit)?
-////                         sig.slopeSIG(dt30,0)
-//                         tradeSIG
-//                         :
-//                         SAN_SIGNAL::NOTRADE;
-//
-//
-//
-//   prntStr += " \"DateTime\":\""+(TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES))+"\",";
-//   prntStr += " \"CurrencyPair\":\""+util.getSymbolString(Symbol())+"\",";
-//   prntStr += " \"TimeFrame\":\""+util.getSymbolString(Period())+"\",";
-//   prntStr += " \"Spread\":"+(int)MarketInfo(_Symbol,MODE_SPREAD)+",";
-//   prntStr += " \"Open\":"+DoubleToString(Open[1],8)+",";
-//   prntStr += " \"High\":"+DoubleToString(High[1],8)+",";
-//   prntStr += " \"Low\":"+DoubleToString(Low[1],8)+",";
-//   prntStr += " \"Close\":"+DoubleToString(Close[1],8)+",";
-//   prntStr += " \"Volume\":"+DoubleToString(Volume[1],8)+",";
-//   prntStr += " \"StdDevCp\":"+DoubleToString(indData.std[1],8)+",";
-//   prntStr += " \"ATR\":"+DoubleToString(indData.atr[1],8)+",";
-//   prntStr += " \"RSI\":"+DoubleToString(indData.rsi[1],8)+",";
-//
-//   prntStr += " \"SlopeIMA14\":"+DoubleToString(dt14.matrixD[0],8)+",";
-//   prntStr += " \"SlopeIMA30\":"+DoubleToString(dt30.matrixD[0],8)+",";
-//   prntStr += " \"SlopeIMA120\":"+DoubleToString(dt120.matrixD[0],8)+",";
-//   prntStr += " \"SlopeIMA240\":"+DoubleToString(dt240.matrixD[0],8)+",";
-//   prntStr += " \"SlopeIMA500\":"+DoubleToString(dt500.matrixD[0],8)+",";
-//   prntStr += " \"STDSlope\":"+DoubleToString(stdCPSlope.matrixD[0],8)+",";
-//   prntStr += " \"RFM\":"+DoubleToString(clusterData.matrixD[0],8)+",";
-//   prntStr += " \"RMS\":"+DoubleToString(clusterData.matrixD[1],8)+",";
-//   prntStr += " \"RFS\":"+DoubleToString(clusterData.matrixD[2],8)+",";
-//   prntStr += " \"fMSR\":"+DoubleToString(slopeRatioData.matrixD[0],8)+",";
-//   prntStr += " \"fMSWR\":"+DoubleToString(slopeRatioData.matrixD[1],8)+",";
-//
-//   prntStr += " \"MovingAvg5\":"+DoubleToString(indData.ima5[1],8)+",";
-//   prntStr += " \"MovingAvg14\":"+DoubleToString(indData.ima14[1],8)+",";
-//   prntStr += " \"MovingAvg30\":"+DoubleToString(indData.ima30[1],8)+",";
-//   prntStr += " \"MovingAvg60\":"+DoubleToString(indData.ima60[1],8)+",";
-//   prntStr += " \"MovingAvg120\":"+DoubleToString(indData.ima120[1],8)+",";
-//   prntStr += " \"MovingAvg240\":"+DoubleToString(indData.ima240[1],8)+",";
-//   prntStr += " \"MovingAvg500\":"+DoubleToString(indData.ima500[1],8)+",";
-//   prntStr += " \"TRADESIG\":\""+util.getSigString(TRADESIG)+"\"";
-//
-//   prntStr += prntStrClose;
-//   return prntStr;
-//}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUtils& util, int shift=1) {
+string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h, SanUtils& util, int shift=1) {
    string prntStr = "";
    string prntStrOpen = "{ ";
    string prntStrClose = " }";
    prntStr += prntStrOpen;
 
-   DataTransport dt14 = sig.slopeSIGData(indData.ima14, 5, 21, 1);
-   DataTransport dt30 = sig.slopeSIGData(indData.ima30, 5, 21, 1);
-   DataTransport dt120 = sig.slopeSIGData(indData.ima120, 5, 21, 1);
-   DataTransport dt240 = sig.slopeSIGData(indData.ima240, 5, 21, 1);
-   DataTransport dt500 = sig.slopeSIGData(indData.ima500, 5, 21, 1);
-   DataTransport stdCPSlope = sig.slopeSIGData(indData.std, 5, 21, 1);
-   DataTransport obvCPSlope = sig.slopeSIGData(indData.obv, 5, 21, 1);
-   DataTransport clusterData = sig.clusterData(indData.ima30[1], indData.ima120[1], indData.ima240[1]);
-   DataTransport slopeRatioData = sig.slopeRatioData(dt30, dt120, dt240);
+   DataTransport dt14 = s.imaSlope5Data; //sig.slopeSIGData(indData.ima14, 5, 21, 1);
+   DataTransport dt30 = s.imaSlope30Data;//sig.slopeSIGData(indData.ima30, 5, 21, 1);
+   DataTransport dt120 = s.imaSlope120Data;//sig.slopeSIGData(indData.ima120, 5, 21, 1);
+   DataTransport dt240 = s.baseSlopeData;//sig.slopeSIGData(indData.ima240, 5, 21, 1);
+   DataTransport dt500 = s.imaSlope500Data;//sig.slopeSIGData(indData.ima500, 5, 21, 1);
+   DataTransport stdCPSlope = s.stdCPSlope; //sig.slopeSIGData(indData.std, 5, 21, 1);
+   DataTransport obvCPSlope = s.obvCPSlope; //sig.slopeSIGData(indData.obv, 5, 21, 1);
+   DataTransport clusterData = s.clusterData;//sig.clusterData(indData.ima30[1], indData.ima120[1], indData.ima240[1]);
+   DataTransport slopeRatioData = s.slopeRatioData; //sig.slopeRatioData(dt30, dt120, dt240);
 
-   SAN_SIGNAL c_SIG = sig.cSIG(indData, util, 1);
-   SAN_SIGNAL baseSIG = sig.slopeSIG(dt240, 2);
-   SAN_SIGNAL tradeSIG = c_SIG;
+   //SAN_SIGNAL c_SIG = sig.cSIG(indData, util, 1);
+   //SAN_SIGNAL c_SIG = h.cSIG(s, util, 1);
+//   SAN_SIGNAL baseSIG = sig.slopeSIG(dt240, 2);
+
+   SAN_SIGNAL tradeSIG = h.cSIG(s, util, 1);
 
    SAN_SIGNAL TRADESIG = (indData.currSpread < tl.spreadLimit) ? tradeSIG : SAN_SIGNAL::NOTRADE;
 
@@ -568,6 +521,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    double stdDevCp = indData.std[1];
    double atr = indData.atr[1];
    double rsi = indData.rsi[1];
+
    double slopeIMA14 = dt14.matrixD[0];
    double slopeIMA30 = dt30.matrixD[0];
    double slopeIMA120 = dt120.matrixD[0];
@@ -587,6 +541,35 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    double movingAvg120 = indData.ima120[1];
    double movingAvg240 = indData.ima240[1];
    double movingAvg500 = indData.ima500[1];
+
+//   double dftMag0 = s.dftMag[0];
+//   double dftMag1 = s.dftMag[1];
+//   double dftMag2 = s.dftMag[2];
+//   double dftMag3 = s.dftMag[3];
+//   double dftMag4 = s.dftMag[4];
+//   double dftMag5 = s.dftMag[5];
+//   double dftMag6 = s.dftMag[6];
+//   double dftMag7 = s.dftMag[7];
+//
+//   double dftPhase0 = s.dftPhase[0];
+//   double dftPhase1 = s.dftPhase[1];
+//   double dftPhase2 = s.dftPhase[2];
+//   double dftPhase3 = s.dftPhase[3];
+//   double dftPhase4 = s.dftPhase[4];
+//   double dftPhase5 = s.dftPhase[5];
+//   double dftPhase6 = s.dftPhase[6];
+//   double dftPhase7 = s.dftPhase[7];
+//
+//   double dftPower0 = s.dftPower[0];
+//   double dftPower1 = s.dftPower[1];
+//   double dftPower2 = s.dftPower[2];
+//   double dftPower3 = s.dftPower[3];
+//   double dftPower4 = s.dftPower[4];
+//   double dftPower5 = s.dftPower[5];
+//   double dftPower6 = s.dftPower[6];
+//   double dftPower7 = s.dftPower[7];
+
+
 
    // Use MathIsValidNumber to validate
    spread = (spread > 0 && MathIsValidNumber(spread)) ? spread : 0.0;
@@ -617,6 +600,33 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    movingAvg120 = MathIsValidNumber(movingAvg120) ? movingAvg120 : 0.0;
    movingAvg240 = MathIsValidNumber(movingAvg240) ? movingAvg240 : 0.0;
    movingAvg500 = MathIsValidNumber(movingAvg500) ? movingAvg500 : 0.0;
+
+//   dftMag0 = MathIsValidNumber(dftMag0) ? dftMag0 : 0.0;
+//   dftMag1 = MathIsValidNumber(dftMag1) ? dftMag1 : 0.0;
+//   dftMag2 = MathIsValidNumber(dftMag2) ? dftMag2 : 0.0;
+//   dftMag3 = MathIsValidNumber(dftMag3) ? dftMag3 : 0.0;
+//   dftMag4 = MathIsValidNumber(dftMag4) ? dftMag4 : 0.0;
+//   dftMag5 = MathIsValidNumber(dftMag5) ? dftMag5 : 0.0;
+//   dftMag6 = MathIsValidNumber(dftMag6) ? dftMag6 : 0.0;
+//   dftMag7 = MathIsValidNumber(dftMag7) ? dftMag7 : 0.0;
+//
+//   dftPhase0 = MathIsValidNumber(dftPhase0) ? dftPhase0 : 0.0;
+//   dftPhase1 = MathIsValidNumber(dftPhase1) ? dftPhase1 : 0.0;
+//   dftPhase2 = MathIsValidNumber(dftPhase2) ? dftPhase2 : 0.0;
+//   dftPhase3 = MathIsValidNumber(dftPhase3) ? dftPhase3 : 0.0;
+//   dftPhase4 = MathIsValidNumber(dftPhase4) ? dftPhase4 : 0.0;
+//   dftPhase5 = MathIsValidNumber(dftPhase5) ? dftPhase5 : 0.0;
+//   dftPhase6 = MathIsValidNumber(dftPhase6) ? dftPhase6 : 0.0;
+//   dftPhase7 = MathIsValidNumber(dftPhase7) ? dftPhase7 : 0.0;
+//
+//   dftPower0 = MathIsValidNumber(dftPower0) ? dftPower0 : 0.0;
+//   dftPower1 = MathIsValidNumber(dftPower1) ? dftPower1 : 0.0;
+//   dftPower2 = MathIsValidNumber(dftPower2) ? dftPower2 : 0.0;
+//   dftPower3 = MathIsValidNumber(dftPower3) ? dftPower3 : 0.0;
+//   dftPower4 = MathIsValidNumber(dftPower4) ? dftPower4 : 0.0;
+//   dftPower5 = MathIsValidNumber(dftPower5) ? dftPower5 : 0.0;
+//   dftPower6 = MathIsValidNumber(dftPower6) ? dftPower6 : 0.0;
+//   dftPower7 = MathIsValidNumber(dftPower7) ? dftPower7 : 0.0;
 
    // Log invalid values for debugging
    if (!MathIsValidNumber(stdDevCp)) Print("Invalid StdDevCp: ", stdDevCp);
@@ -673,6 +683,32 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
    prntStr += " \"MovingAvg120\":" + DoubleToString(movingAvg120, 8) + ",";
    prntStr += " \"MovingAvg240\":" + DoubleToString(movingAvg240, 8) + ",";
    prntStr += " \"MovingAvg500\":" + DoubleToString(movingAvg500, 8) + ",";
+   
+   //prntStr += " \"dftMag0\":" + DoubleToString(dftMag0, 8) + ",";
+   //prntStr += " \"dftMag1\":" + DoubleToString(dftMag1, 8) + ",";
+   //prntStr += " \"dftMag2\":" + DoubleToString(dftMag2, 8) + ",";
+   //prntStr += " \"dftMag3\":" + DoubleToString(dftMag3, 8) + ",";
+   //prntStr += " \"dftMag4\":" + DoubleToString(dftMag4, 8) + ",";
+   //prntStr += " \"dftMag5\":" + DoubleToString(dftMag5, 8) + ",";
+   //prntStr += " \"dftMag6\":" + DoubleToString(dftMag6, 8) + ",";
+   //prntStr += " \"dftMag7\":" + DoubleToString(dftMag7, 8) + ",";
+   //prntStr += " \"dftPhase0\":" + DoubleToString(dftPhase0, 8) + ",";
+   //prntStr += " \"dftPhase1\":" + DoubleToString(dftPhase1, 8) + ",";
+   //prntStr += " \"dftPhase2\":" + DoubleToString(dftPhase2, 8) + ",";
+   //prntStr += " \"dftPhase3\":" + DoubleToString(dftPhase3, 8) + ",";
+   //prntStr += " \"dftPhase4\":" + DoubleToString(dftPhase4, 8) + ",";
+   //prntStr += " \"dftPhase5\":" + DoubleToString(dftPhase5, 8) + ",";
+   //prntStr += " \"dftPhase6\":" + DoubleToString(dftPhase6, 8) + ",";
+   //prntStr += " \"dftPhase7\":" + DoubleToString(dftPhase7, 8) + ",";
+   //prntStr += " \"dftPower0\":" + DoubleToString(dftPower0, 8) + ",";
+   //prntStr += " \"dftPower1\":" + DoubleToString(dftPower1, 8) + ",";
+   //prntStr += " \"dftPower2\":" + DoubleToString(dftPower2, 8) + ",";
+   //prntStr += " \"dftPower3\":" + DoubleToString(dftPower3, 8) + ",";
+   //prntStr += " \"dftPower4\":" + DoubleToString(dftPower4, 8) + ",";
+   //prntStr += " \"dftPower5\":" + DoubleToString(dftPower5, 8) + ",";
+   //prntStr += " \"dftPower6\":" + DoubleToString(dftPower6, 8) + ",";
+   //prntStr += " \"dftPower7\":" + DoubleToString(dftPower7, 8) + ",";
+
    prntStr += " \"TRADESIG\":\"" + util.getSigString(TRADESIG) + "\"";
    prntStr += prntStrClose;
    return prntStr;
@@ -681,8 +717,12 @@ string SanStrategies::getJsonData(const INDDATA &indData, SanSignals &sig, SanUt
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool SanStrategies::writeOHLCVJsonData(string filename, const INDDATA &indData, SanSignals &sig, SanUtils& util, int shift=1) {
-   string data = getJsonData(indData, sig, util, shift);
+//bool SanStrategies::writeOHLCVJsonData(string filename, const INDDATA &indData, SanSignals &sig, SanUtils& util, int shift=1) {
+bool SanStrategies::writeOHLCVJsonData(string filename, const INDDATA &indData, SanUtils& util, int shift=1) {
+
+//   string data = getJsonData(indData, sig, util, shift);
+   string data = getJsonData(indData,s,h,util, shift);
+
    int fileHandle = FileOpen(filename, FILE_TXT|FILE_WRITE|FILE_READ);
    if(fileHandle == INVALID_HANDLE) {
       Print("Error opening file: ", GetLastError());

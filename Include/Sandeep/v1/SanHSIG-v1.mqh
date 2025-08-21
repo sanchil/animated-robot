@@ -6,7 +6,9 @@
 #property copyright "Copyright 2024, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
 #property strict
-//#include <Sandeep/v1/SanTypes-v1.mqh>
+
+#include <Sandeep/v1/SanTypes-v1.mqh>
+//#include <Sandeep/v1/SanSignalTypes-v1.mqh>
 #include <Sandeep/v1/SanUtils-v1.mqh>
 
 
