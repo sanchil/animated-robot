@@ -251,7 +251,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
    int SHIFT = (indData.shift || 1);
 
-   
+
    SS ss(sig,indData,SHIFT);
    s = ss;
    SAN_SIGNAL openSIG = SAN_SIGNAL::NOSIG;
@@ -365,10 +365,16 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 //#################################################################################
 
-//   double iSIg[] =  {147.404, 147.393, 147.385, 147.389,0,0,0,0};
-   //stats.hilbertTransform(indData.close,hilbertAmp,ss.hilbertPhase,21,5);
-//   stats.dftTransform(iSIg,ss.dftMag,ss.dftPhase,ss.dftPower,8);
+//   stats.hilbertTransform(indData.close,ss.hilbertAmp,ss.hilbertPhase,21,5);
+//   stats.dftTransform(indData.close,ss.dftMag,ss.dftPhase,ss.dftPower,8);
 
+   //stats.hilbertTransform(indData.close,hilbertAmp,ss.hilbertPhase,21,5);
+   double iSIg[] =  {147.404, 147.393, 147.385, 147.389,0,0,0,0};
+
+//   stats.dftTransform(iSIg,ss.dftMag,ss.dftPhase,ss.dftPower,8);
+//   stats.hilbertTransform(iSIg,ss.hilbertAmp,ss.hilbertPhase,8,3);
+   
+   
    bool shortCycle = false;
    bool longCycle = false;
    bool allCycle = false;
@@ -459,11 +465,11 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" domTrCP: "+util.getSigString(hSig.dominantTrendCPSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG));
    Print("[OPEN][MKT] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG));
 
-   //Print("[HILBERT] :: Amp1: "+ss.hilbertAmp[0]+" Amp4: "+ss.hilbertAmp[3]+" Amp9: "+ss.hilbertAmp[9]+" Amp21: "+ss.hilbertAmp[20]);
-   //Print("[HILBERT] :: Phase1: "+ss.hilbertPhase[0]+" Phase4: "+ss.hilbertPhase[3]+" Phase9: "+ss.hilbertPhase[9]+" Phase21: "+ss.hilbertPhase[20]);
-//   Print("[DFT] :: Mag1: "+ss.dftMag[0]+" Mag4: "+ss.dftMag[3]+" Mag9: "+ss.dftMag[9]+" Mag21: "+ss.dftMag[20]);
-//   Print("[DFT] :: Phase1: "+ss.dftPhase[0]+" Phase4: "+ss.dftPhase[3]+" Phase9: "+ss.dftPhase[9]+" Phase21: "+ss.dftPhase[20]);
-//   Print("[DFT] :: Power1: "+ss.dftPower[0]+" Power4: "+ss.dftPower[3]+" Power9: "+ss.dftPower[9]+" Power21: "+ss.dftPower[20]);
+   //Print("[HILBERT] :: Amp0: "+ss.hilbertAmp[0]+" Amp1: "+ss.hilbertAmp[1]+" Amp2: "+ss.hilbertAmp[2]+" Amp3: "+ss.hilbertAmp[3]+" Amp4: "+ss.hilbertAmp[4]+" Amp5: "+ss.hilbertAmp[5]+" Amp6: "+ss.hilbertAmp[6]+" Amp7: "+ss.hilbertAmp[7]);
+   //Print("[HILBERT] :: Phase0: "+ss.hilbertPhase[0]+" Phase1: "+ss.hilbertPhase[1]+" Phase2: "+ss.hilbertPhase[2]+" Phase3: "+ss.hilbertPhase[3]+" Phase4: "+ss.hilbertPhase[4]+" Phase5: "+ss.hilbertPhase[5]+" Phase6: "+ss.hilbertPhase[6]+" Phase7: "+ss.hilbertPhase[7]);
+   //Print("[DFT] :: Mag0: "+ss.dftMag[0]+" Mag1: "+ss.dftMag[1]+" Mag2: "+ss.dftMag[2]+" Mag3: "+ss.dftMag[3]+" Mag4: "+ss.dftMag[4]+" Mag5: "+ss.dftMag[5]+" Mag6: "+ss.dftMag[6]+" Mag7: "+ss.dftMag[7]);
+   //Print("[DFT] :: Phase1: "+ss.dftPhase[0]+" Phase1: "+ss.dftPhase[1]+" Phase2: "+ss.dftPhase[2]+" Phase3: "+ss.dftPhase[3]+" Phase4: "+ss.dftPhase[4]+" Phase5: "+ss.dftPhase[5]+" Phase6: "+ss.dftPhase[7]+" Phase7: "+ss.dftPhase[7]);
+   //Print("[DFT] :: Power1: "+ss.dftPower[0]+" Power1: "+ss.dftPower[1]+" Power2: "+ss.dftPower[2]+" Power3: "+ss.dftPower[3]+" Power4: "+ss.dftPower[4]+" Power5: "+ss.dftPower[5]+" Power6: "+ss.dftPower[7]+" Power7: "+ss.dftPower[7]);
 
 //   Print("[VARBOOLS]: varBool: "+varBool+" varBoolDt: "+ss.varDt.matrixBool[3] +" varPosBool: "+varPosBool+" varPosBoolDt: "+ss.varDt.matrixBool[0]+" varNegBool: "+varNegBool+" varNegBoolDt: "+ss.varDt.matrixBool[1]+" varFlatBool: "+varFlatBool+" varFlatBoolDt: "+ss.varDt.matrixBool[2]);
    //Print("[SLOPES]: FAST: "+ imaSlopesData.matrixD[0]+" : "+(0.15+(1.5*0.1))+" MEDIUM: "+imaSlopesData.matrixD[1]+" : "+(0.15+0.1)+" SLOW: "+imaSlopesData.matrixD[2]+" : 0.15  :SLOWWIDE: "+imaSlopesData.matrixD[3]+" : 0.1");
@@ -683,7 +689,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h
    prntStr += " \"MovingAvg120\":" + DoubleToString(movingAvg120, 8) + ",";
    prntStr += " \"MovingAvg240\":" + DoubleToString(movingAvg240, 8) + ",";
    prntStr += " \"MovingAvg500\":" + DoubleToString(movingAvg500, 8) + ",";
-   
+
    //prntStr += " \"dftMag0\":" + DoubleToString(dftMag0, 8) + ",";
    //prntStr += " \"dftMag1\":" + DoubleToString(dftMag1, 8) + ",";
    //prntStr += " \"dftMag2\":" + DoubleToString(dftMag2, 8) + ",";

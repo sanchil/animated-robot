@@ -31,6 +31,8 @@
 #include <Sandeep/v1/SanSignals-v1.mqh>
 
 class SS:public SANSIGNALS {
+ private:
+   double iSIg[];
  public:
    SS();
    SS(SanSignals &sig, const INDDATA &indData, const int SHIFT);
@@ -166,12 +168,15 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    clusterData = sig.clusterData(indData.ima5[1],indData.ima14[1],indData.ima30[1]);
    slopeRatioData = sig.slopeRatioData(imaSlope5Data,imaSlope14Data,imaSlope30Data);
 
-
 //c_SIG = sig.cSIG(indData,util,1);
 
 //#############################################################################################
 
 //        varDt = sig.varSIG(ima30SDSIG,ima120SDSIG,ima240SDSIG);
+
+
+//   stats.hilbertTransform(indData.close,hilbertAmp,hilbertPhase,21,5);
+//   stats.dftTransform(indData.close,dftMag,dftPhase,dftPower,8);
 
 }
 //+------------------------------------------------------------------+
