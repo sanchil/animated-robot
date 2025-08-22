@@ -383,9 +383,9 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    bool openTradeBool3 = (openTradeBool1&&openTradeBool2);
 
    bool closeTradeBool2 = ((!closeFlatTradeBool&&!closeSigTrReversalBool) && noTradeBool);
-   bool closeOBVStdBool = getMktCloseOnStdCPOBV();
+   //bool closeOBVStdBool = getMktCloseOnStdCPOBV();
+   bool closeOBVStdBool = (noTradeBool&&getMktCloseOnStdCPOBV());
    bool closeTradeBool3 = ((opensig==SAN_SIGNAL::CLOSE) || noTradeBool);
-   //bool closeOBVStdBool = (noTradeBool&&getMktCloseOnStdCPOBV());
 
 
 
