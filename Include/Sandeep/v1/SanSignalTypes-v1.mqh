@@ -32,12 +32,12 @@
 
 class SS:public SANSIGNALS {
  private:
-   double iSIg[];
+   double            iSIg[];
  public:
-   SS();
-   SS(SanSignals &sig, const INDDATA &indData, const int SHIFT);
-   ~SS();
-   void SS::printSignalStruct(SanUtils &util);
+                     SS();
+                     SS(SanSignals &sig, const INDDATA &indData, const int SHIFT);
+                    ~SS();
+   void              SS::printSignalStruct(SanUtils &util);
 
 };
 

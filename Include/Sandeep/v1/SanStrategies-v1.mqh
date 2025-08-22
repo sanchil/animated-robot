@@ -369,7 +369,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //   stats.dftTransform(indData.close,ss.dftMag,ss.dftPhase,ss.dftPower,8);
 
    //stats.hilbertTransform(indData.close,hilbertAmp,ss.hilbertPhase,21,5);
-   double iSIg[] =  {147.404, 147.393, 147.385, 147.389,0,0,0,0};
+//   double iSIg[] =  {147.404, 147.393, 147.385, 147.389,0,0,0,0};
 
 //   stats.dftTransform(iSIg,ss.dftMag,ss.dftPhase,ss.dftPower,8);
 //   stats.hilbertTransform(iSIg,ss.hilbertAmp,ss.hilbertPhase,8,3);
