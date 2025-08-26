@@ -1391,7 +1391,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
                                       )
                                    );
 
-   bool closeTradeBool = (closeSTDCPTradeBool||closeSlopeRatioTradeBool);
+   bool closeTradeBool = (closeSTDCPTradeBool&&closeSlopeRatioTradeBool);
 
    bool noTradeBoo11 = (closeTradeBool);
    bool noTradeBoo12 = (closeTradeBool&&flatBool);
