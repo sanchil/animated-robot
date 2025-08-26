@@ -49,7 +49,7 @@ struct CandleCharacter {
    bool              tailDominates;
    bool              bodyDominates;
 
-                     CandleCharacter() {
+   CandleCharacter() {
       upperTail = -1;
       lowerTail = -1;
       redCandle = -1;
@@ -71,7 +71,7 @@ struct CandleCharacter {
    }
 
 
-                     CandleCharacter(
+   CandleCharacter(
       const double &open[],
       const double &high[],
       const double &low[],
@@ -112,7 +112,7 @@ struct CandleCharacter {
       bodyLowerTailCandle = (tailDominates && (((lowerTail==0)&&(upperTail>0)) || ((upperTail!=0)&&(lowerTail!=0)&&(NormalizeDouble((fabs(lowerTail)/fabs(upperTail)),2)<=limit))));
 
    }
-                    ~CandleCharacter() {
+   ~CandleCharacter() {
 
       redCandle = NULL;
       greenCandle = NULL;
@@ -141,6 +141,24 @@ struct SLOPETYPE {
    double            intercept;
 };
 
+struct TRADEBOOLS {
+   bool openTradeBool;
+   bool closeTradeBool;
+
+   bool noTradeBool;
+   bool tradeBool;
+   bool flatMktBool;
+   bool closeFlatTradeBool;
+   bool closeSigTrReversalBool;
+   bool closeSigTrCloseSigReversalBool;
+   bool closeSlopeVarBool;
+   bool closeSlopeRatios;
+   bool closeOBVStdBool;
+   bool closeClusterStdBool;
+   bool closeSigBool;
+
+};
+
 struct DTYPE {
    double            val1;
    double            val2;
@@ -165,7 +183,7 @@ struct TRADELIMITS {
    double            zScoreUpLimit;
    double            zScoreDownLimit;
    double            candlePipSpeedLimit;
-                     TRADELIMITS() {
+   TRADELIMITS() {
       if(_Period <PERIOD_M15) {
          spreadLimit = 20;
          candlePipSpeedLimit=30;
@@ -196,7 +214,7 @@ struct TRADELIMITS {
       zScoreDownLimit = -1;
 
    };
-                    ~TRADELIMITS() {};
+   ~TRADELIMITS() {};
 };
 
 const TRADELIMITS tl;
@@ -210,7 +228,7 @@ struct DataTransport {
    int               matrixI1[20];
    int               matrixI2[20];
    bool              matrixBool[20];
-                     DataTransport() {
+   DataTransport() {
       ArrayInitialize(matrixD,EMPTY_VALUE);
       ArrayInitialize(matrixD1,EMPTY_VALUE);
       ArrayInitialize(matrixD2,EMPTY_VALUE);
@@ -228,7 +246,7 @@ struct DataTransport {
       ArrayFree(matrixI2);
       ArrayFree(matrixBool);
    }
-                    ~DataTransport() {
+   ~DataTransport() {
       freeData();
    }
 };
@@ -329,7 +347,7 @@ struct ORDERPARAMS {
 
 
 
-                     ORDERPARAMS() {
+   ORDERPARAMS() {
       NEWCANDLE = false;
       //TICKSTART =  GetTickCount();
       TICKCOUNT = 0;
@@ -346,7 +364,7 @@ struct ORDERPARAMS {
       MAXTRADEPROFIT = EMPTY_VALUE;
       //      ADJUSTED_MAXTRADEPROFIT = MAXTRADEPROFIT-((currspread+1)*tPoint);
    };
-                    ~ORDERPARAMS() {
+   ~ORDERPARAMS() {
       NEWCANDLE = EMPTY;
       //TICKSTART = EMPTY;
       TICKCOUNT = EMPTY;
@@ -553,21 +571,21 @@ enum TRADE_STRATEGIES {
 struct TRENDSTRUCT {
    SANTREND          closeTrendSIG;
    SANTRENDSTRENGTH  trendStrengthSIG;
-                     TRENDSTRUCT() {
+   TRENDSTRUCT() {
       closeTrendSIG = SANTREND::NOTREND;
       trendStrengthSIG=SANTRENDSTRENGTH::POOR;
    }
-                    ~TRENDSTRUCT() {}
+   ~TRENDSTRUCT() {}
 };
 
 struct TRADESSWITCH {
    SAN_SIGNAL        trade;
    SAN_SIGNAL        tradeSIG;
-                     TRADESSWITCH() {
+   TRADESSWITCH() {
       trade = SAN_SIGNAL::NOSIG;
       tradeSIG=SAN_SIGNAL::NOSIG;
    }
-                    ~TRADESSWITCH() {}
+   ~TRADESSWITCH() {}
 };
 
 TRADESSWITCH tsw;
@@ -636,8 +654,8 @@ struct INDDATA {
       currSpread = EMPTY;
       tradePosition=EMPTY;
    }
-                     INDDATA() {}
-                    ~INDDATA() {
+   INDDATA() {}
+   ~INDDATA() {
       freeData();
    }
 };
@@ -649,7 +667,7 @@ struct SIGBUFF {
    double            buff4[5];
    double            buff5[5];
    double            buff6[5];
-                     SIGBUFF() {
+   SIGBUFF() {
       ArrayInitialize(buff1,EMPTY_VALUE);
       ArrayInitialize(buff2,EMPTY_VALUE);
       ArrayInitialize(buff3,EMPTY_VALUE);
@@ -657,7 +675,7 @@ struct SIGBUFF {
       ArrayInitialize(buff5,EMPTY_VALUE);
       ArrayInitialize(buff6,EMPTY_VALUE);
    }
-                    ~SIGBUFF() {
+   ~SIGBUFF() {
       ArrayFree(buff1);
       ArrayFree(buff2);
       ArrayFree(buff3);
@@ -1148,7 +1166,7 @@ struct SANSIGBOOL {
    bool              candlePipAlarm;
 
 
-                     SANSIGBOOL() {
+   SANSIGBOOL() {
       spreadBool = false;
       imaWaveBool = false;
       imaWaveBool1 = false;
@@ -1194,7 +1212,7 @@ struct SANSIGBOOL {
       //starBool = false;
       candlePipAlarm = false;
    }
-                     SANSIGBOOL(const SANSIGNALS &ss) {
+   SANSIGBOOL(const SANSIGNALS &ss) {
       //spreadBool = (currspread < tl.spreadLimit);
       //      imaWaveBool = ((ss.ima514SIG==ss.ima1430SIG)||(ss.ima530SIG==ss.ima1430SIG)||(ss.ima530SIG==ss.ima514SIG));
       imaWaveBool = ((ss.ima514SIG==ss.ima1430SIG)&&(ss.ima1430SIG==ss.ima530_21SIG));
@@ -1246,7 +1264,7 @@ struct SANSIGBOOL {
       //      imaSDNoNoTradeBool = (!ima5SDBool && !ima14SDBool && !ima30SDBool);
       starBool = ((ss.candlePattStarSIG==SAN_SIGNAL::BUY)||(ss.candlePattStarSIG==SAN_SIGNAL::SELL));
    }
-                    ~SANSIGBOOL() {}
+   ~SANSIGBOOL() {}
    void              printStruct() {
       //      Print("cpSDBool: "+cpSDBool+" ima5SDBool: "+ ima5SDBool+" ima14SDBool: "+ ima14SDBool+" ima30DBool: "+ ima30SDBool +" imaSDNoTradeBool: "+imaSDNoTradeBool+" closeVolTrendBool: "+closeVolTrendBool+" openVolTrendBool:"+openVolTrendBool);
       Print("closeVolTrendBool: "+closeVolTrendBool+" openVolTrendBool:"+openVolTrendBool);
