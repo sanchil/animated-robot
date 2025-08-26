@@ -173,6 +173,7 @@ class HSIG {
       const SAN_SIGNAL trendSIG
    );
    bool              getMktCloseOnSlopeRatio();
+   bool              getMktCloseOnStdCPCluster();
    bool              getMktCloseOnStdCPOBV();
    bool              getMktCloseOnReversal(const SAN_SIGNAL &sig,SanUtils &util);
    bool              getMktCloseOnFlat(const SAN_SIGNAL &sig, const bool mktTypeFlat);
@@ -389,13 +390,11 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 //  bool closeTradeBool2 = ((!closeFlatTradeBool&&!closeSigTrReversalBool) && noTradeBool);
    //bool closeOBVStdBool = getMktCloseOnStdCPOBV();
    bool closeOBVStdBool = (noTradeBool&&getMktCloseOnStdCPOBV());
+   bool closeClusterStdBool = (getMktCloseOnStdCPCluster());
    bool closeTradeBool3 = ((opensig==SAN_SIGNAL::CLOSE) || noTradeBool);
-
 
    bool openTradeBool = (tradeBool);
    bool closeTradeBool = (closeOBVStdBool);
-
-
 
 // fastSIG
    if(trdStgy == TRADE_STRATEGIES::FASTSIG) {
@@ -542,7 +541,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       //Print("[TRADESTRATEGY]: SLOPESTD_CSIG "+ut.getSigString(openSIG));
    }
 //   Print("[SETSIGBOOLS]: openTradeBool1: "+openTradeBool1+" closeTradeBool3: "+closeTradeBool3+" tradeBool: "+tradeBool); //+" Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ssSIG,ut)+" fsig flat: "+closeFlatTradeBool+" MkRev: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE)+" tradeSIG: ]"+ut.getSigString(tradeSIG));
-   Print("[SETSIGBOOLS]: openTradeBool: "+openTradeBool+" closeTradeBool: "+closeTradeBool+" closeOBVStdBool: "+closeOBVStdBool+" CloseTrRev "+closeSigTrReversalBool+" CloseFlatTrade: "+closeFlatTradeBool );
+   Print("[SETSIGBOOLS]: openTradeBool: "+openTradeBool+" closeTradeBool: "+closeTradeBool+" closeOBVStdBool: "+closeOBVStdBool+" closeClusterStdBool: "+closeClusterStdBool+" CloseTrRev "+closeSigTrReversalBool+" CloseFlatTrade: "+closeFlatTradeBool );
 
 }
 
@@ -622,8 +621,8 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 
 //   simple_14_SIG = simpleSIG(ss.fsig14);
 //   simple_30_SIG = simpleSIG(ss.fsig30);
-//   simple_5_14_SIG = simpleSIG(ss.fsig5, ss.fsig14);
-//   simple_14_30_SIG = simpleSIG(ss.fsig14, ss.fsig30);
+   simple_5_14_SIG = simpleSIG(ss.fsig5, ss.fsig14);
+   simple_14_30_SIG = simpleSIG(ss.fsig14, ss.fsig30);
 //   simple_30_120_SIG = simpleSIG(ss.fsig30, ss.fsig120);
 //   simpleTrend_14_SIG = simpleTrendSIG(ss.trendRatio14SIG);
 //   simpleTrend_30_SIG = simpleTrendSIG(ss.trendRatio30SIG);
@@ -1552,6 +1551,78 @@ bool HSIG::getMktFlatBoolSignal(
 //||(sig30==SAN_SIGNAL::SIDEWAYS)
              )
           );
+}
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool  HSIG::getMktCloseOnStdCPCluster() {
+
+   double pipValue = ut.getPipValue(_Symbol);
+   double stdCPSlope = stdCPSlope.matrixD[0];
+   double rFM =  ssSIG.clusterData.matrixD[0];
+   double rMS =  ssSIG.clusterData.matrixD[1];
+   double rFS =  ssSIG.clusterData.matrixD[2];
+   double obvCPSlope = obvCPSlope.matrixD[0]*pipValue; // Normalize obvCPSlope
+
+   bool closeTrendStdCP = (stdCPSlope<=STDSLOPE);
+
+   bool closeOBVBool =  ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
+   bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
+   bool trendSellOBVBool = (obvCPSlope < (-1*OBVSLOPE));
+
+
+   bool strictFlatClusterBool = ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT));
+
+   bool flatClusterBool = (
+                             ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT))||
+                             ((rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))||
+                             ((rFM==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))
+                          );
+
+   bool rangeFlatClusterBool = (
+                                  ((rFM>0)&&((rFM>=CLUSTERRANGEMINUS)&&(rFM<=CLUSTERRANGEPLUS)))
+                                  &&((rMS>0)&&((rMS>=CLUSTERRANGEMINUS)&&(rMS<=CLUSTERRANGEPLUS)))
+                                  &&((rFS>0)&&((rFS>=CLUSTERRANGEMINUS)&&(rFS<=CLUSTERRANGEPLUS)))
+                               );
+
+   bool closeClusterBool =  (((rFM<0)&&(rMS<0))||((rMS<0)&&(rFS<0))||((rFM<0)&&(rFS<0)));
+
+   bool trendBuyClusterBool = (
+                                 (rFM>CLUSTERRANGEPLUS)&&
+                                 (rMS>CLUSTERRANGEPLUS)&&
+                                 (rFS>CLUSTERRANGEPLUS)&&
+                                 (rFM<rMS)
+                              );
+
+   bool trendSellClusterBool = (
+                                  ((rFM>=0)&&(rFM<CLUSTERRANGEMINUS))&&
+                                  ((rMS>=0)&&(rMS<CLUSTERRANGEMINUS))&&
+                                  ((rFS>=0)&&(rFS<CLUSTERRANGEMINUS))&&
+                                  (rFM>rMS)
+                               );
+
+   bool trendClusterBool = (
+                              trendBuyClusterBool||trendSellClusterBool
+                           );
+
+
+
+   SAN_SIGNAL obvSIG = (trendBuyOBVBool)?SAN_SIGNAL::BUY:((trendSellOBVBool)?SAN_SIGNAL::SELL:SAN_SIGNAL::NOSIG);
+   SAN_SIGNAL tradePosition = util.getCurrTradePosition();
+
+   bool flatBool = (strictFlatClusterBool||rangeFlatClusterBool||flatClusterBool);
+
+
+   return (
+             closeTrendStdCP&&
+             (
+                flatBool||
+                closeClusterBool||
+                (!trendBuyClusterBool&&!trendSellClusterBool)
+             )
+          )?true:false;
 }
 
 //+------------------------------------------------------------------+
