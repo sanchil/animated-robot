@@ -428,8 +428,8 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    tBools.closeSigBool = ((opensig==SAN_SIGNAL::CLOSE) || tBools.noTradeBool);
 
 
-   tBools.openTradeBool = (tBools.tradeBool);
    tBools.closeTradeBool = (tBools.closeOBVStdBool);
+   tBools.openTradeBool = ((!tBools.closeTradeBool)&&(tBools.tradeBool));
 
 
 // fastSIG
