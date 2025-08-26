@@ -365,14 +365,15 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 
 
 
+//################ Open Strategies #########################################
 //bool openTradeBool = ((opensig==baseSlopeSIG)&&(stdCPSlope.matrixD[0]>-0.6));
 //bool openTradeBool = ((opensig==baseSlopeSIG)&&tradeBool);
    bool openTradeBool1 = (tradeBool);
    bool openTradeBool2 = (opensig==baseSlopeSIG);
    bool openTradeBool3 = (openTradeBool1&&openTradeBool2);
 
-   bool openTradeBool = (tradeBool);
 
+//################ Close Strategies #########################################
 
 // getMktCloseOnVariableSlope(ss,util): This is great for close signals when the signals are steep
    bool closeTradeBool1 = getMktCloseOnSlopeVariable(ssSIG,ut);
@@ -390,6 +391,8 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    bool closeOBVStdBool = (noTradeBool&&getMktCloseOnStdCPOBV());
    bool closeTradeBool3 = ((opensig==SAN_SIGNAL::CLOSE) || noTradeBool);
 
+
+   bool openTradeBool = (tradeBool);
    bool closeTradeBool = (closeOBVStdBool);
 
 
@@ -513,15 +516,18 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
          mktType=MKTTYP::MKTCLOSE;
          openSIG = SAN_SIGNAL::NOSIG;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(closeFlatTradeBool) {
-         mktType=MKTTYP::MKTCLOSE;
-         openSIG = SAN_SIGNAL::NOSIG;
-         closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(closeSigTrReversalBool) {
-         mktType=MKTTYP::MKTCLOSE;
-         openSIG = SAN_SIGNAL::NOSIG;
-         closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(
+      }
+      //else if(closeFlatTradeBool) {
+      //   mktType=MKTTYP::MKTCLOSE;
+      //   openSIG = SAN_SIGNAL::NOSIG;
+      //   closeSIG = SAN_SIGNAL::CLOSE;
+      //}
+      //else if(closeSigTrReversalBool) {
+      //   mktType=MKTTYP::MKTCLOSE;
+      //   openSIG = SAN_SIGNAL::NOSIG;
+      //   closeSIG = SAN_SIGNAL::CLOSE;
+      //}
+      else if(
          (opensig==SAN_SIGNAL::SIDEWAYS)
          //||flatMktBool
       ) {
@@ -536,7 +542,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       //Print("[TRADESTRATEGY]: SLOPESTD_CSIG "+ut.getSigString(openSIG));
    }
 //   Print("[SETSIGBOOLS]: openTradeBool1: "+openTradeBool1+" closeTradeBool3: "+closeTradeBool3+" tradeBool: "+tradeBool); //+" Slope Var: "+closeTradeBool+" Slope Rev: "+getMktCloseOnSlopeReversal(ssSIG,ut)+" fsig flat: "+closeFlatTradeBool+" MkRev: "+getMktCloseOnReversal(simple_5_14_SIG, util)+" Slope Ratios: " +closeSlopeRatios+" c_SIG : "+(c_SIG==SAN_SIGNAL::CLOSE)+" tradeSIG: ]"+ut.getSigString(tradeSIG));
-   Print("[SETSIGBOOLS]: openTradeBool1: "+openTradeBool1+" closeTradeBool3: "+closeTradeBool3+" closeOBVStdBool: "+closeOBVStdBool);
+   Print("[SETSIGBOOLS]: openTradeBool: "+openTradeBool+" closeTradeBool: "+closeTradeBool+" closeOBVStdBool: "+closeOBVStdBool+" CloseTrRev "+closeSigTrReversalBool+" CloseFlatTrade: "+closeFlatTradeBool );
 
 }
 
@@ -1447,6 +1453,7 @@ SAN_SIGNAL HSIG::cSIG(
    double obvCPSlope = ss.obvCPSlope.matrixD[0]*pipValue; // Normalize obvCPSlope
 
    bool trendStdCP = (stdCPSlope>STDSLOPE);
+   //bool closeOBVBool =  ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
    bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
    bool trendSellOBVBool = (obvCPSlope < (-1*OBVSLOPE));
 
@@ -1557,6 +1564,7 @@ bool  HSIG::getMktCloseOnStdCPOBV() {
    double obvCPSlope = obvCPSlope.matrixD[0]*pipValue; // Normalize obvCPSlope
 
    bool closeTrendStdCP = (stdCPSlope<=STDSLOPE);
+   bool closeOBVBool =  ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
    bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
    bool trendSellOBVBool = (obvCPSlope < (-1*OBVSLOPE));
 
@@ -1565,7 +1573,10 @@ bool  HSIG::getMktCloseOnStdCPOBV() {
 
    return (
              closeTrendStdCP&&
-             util.oppSignal(obvSIG,tradePosition)
+             (
+                closeOBVBool
+                ||util.oppSignal(obvSIG,tradePosition)
+             )
           )?true:false;
 }
 //+------------------------------------------------------------------+
