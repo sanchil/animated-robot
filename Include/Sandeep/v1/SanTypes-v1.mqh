@@ -924,6 +924,7 @@ class SANSIGNALS {
    SAN_SIGNAL        ima530_21SIG;
    SANTRENDSTRENGTH  atrSIG;
    SAN_SIGNAL        volSIG;
+   SAN_SIGNAL        volSlopeSIG;
    SAN_SIGNAL        profitSIG;
    SAN_SIGNAL        profitPercentageSIG;
    SAN_SIGNAL        tradeSIG;
@@ -1065,6 +1066,7 @@ void  SANSIGNALS::initBase() {
    ima240500SIG = SAN_SIGNAL::NOSIG;
    atrSIG = SANTRENDSTRENGTH::POOR;
    volSIG = SAN_SIGNAL::NOSIG;
+   volSlopeSIG = SAN_SIGNAL::NOSIG;
    profitSIG = SAN_SIGNAL::NOSIG;
    profitPercentageSIG = SAN_SIGNAL::NOSIG;
    tradeSIG = SAN_SIGNAL::NOSIG;

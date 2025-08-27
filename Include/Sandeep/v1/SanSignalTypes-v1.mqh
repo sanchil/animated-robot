@@ -102,6 +102,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 
    priceActionSIG =  sig.priceActionCandleSIG(indData.open,indData.high,indData.low,indData.close);
    volSIG =  sig.volumeSIG_v2(indData.tick_volume,60,11,SHIFT);
+   volSlopeSIG = sig.volScatterSlopeSIG(indData.tick_volume,100,0.1,SHIFT);
 
    profitSIG = sig.closeOnProfitSIG(indData.currProfit,indData.closeProfit,0);
    profitPercentageSIG = sig.closeOnProfitPercentageSIG(indData.currProfit,indData.maxProfit,indData.closeProfit);
