@@ -148,6 +148,7 @@ struct TRADEBOOLS {
    bool noTradeBool;
    bool tradeBool;
    bool flatMktBool;
+   bool flatBool;
    bool closeFlatTradeBool;
    bool closeSigTrReversalBool;
    bool closeSigTrCloseSigReversalBool;
@@ -156,7 +157,7 @@ struct TRADEBOOLS {
    bool closeOBVStdBool;
    bool closeClusterStdBool;
    bool closeSigBool;
-
+   bool volTradeBool;
 };
 
 struct DTYPE {
