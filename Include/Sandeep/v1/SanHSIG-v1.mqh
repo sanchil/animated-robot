@@ -68,6 +68,7 @@ class HSIG {
    DataTransport     stdCPSlope;
    DataTransport     obvCPSlope;
    TRADEBOOLS        tBools;
+   STATE_SIGNAL      stateSig;
 
    bool              slopeTrendBool;
    SAN_SIGNAL        openSIG;
@@ -414,7 +415,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
                             trend_14_30_120_SIG
                          );
    tBools.volTradeBool = (ssSIG.volSIG==SAN_SIGNAL::TRADE);
-   
+
 
    bool openTradeBool1 = (tBools.tradeBool);
    bool openTradeBool2 = (opensig==baseSlopeSIG);
@@ -714,12 +715,21 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 ////######################################################################################
 //
 
+
    if(trdStgy==TRADE_STRATEGIES::NOTRDSTGY) {
       processSignalsWithNoStrategy();
    } else {
       processSignalsWithStrategy(trdStgy);
    }
 
+   stateSig.trdStgy = trdStgy;
+   stateSig.tradeSIG = tradeSIG;
+   stateSig.fastSIG = fastSIG;
+   stateSig.simpleSlope_30_SIG = simpleSlope_30_SIG;
+   stateSig.simpleTrend_5_14_SIG = simpleTrend_5_14_SIG;
+   stateSig.simpleTrend_14_30_SIG = simpleTrend_14_30_SIG;
+   stateSig.cpSlopeCandle120SIG = cpSlopeCandle120SIG;
+   stateSig.c_SIG = c_SIG;
 } //initSIG
 
 

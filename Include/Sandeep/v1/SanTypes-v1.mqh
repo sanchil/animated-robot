@@ -131,6 +131,7 @@ struct CandleCharacter {
 
 };
 
+
 struct RITYPE {
    double            r;
    double            i;
@@ -1273,6 +1274,56 @@ struct SANSIGBOOL {
       Print("closeVolTrendBool: "+closeVolTrendBool+" openVolTrendBool:"+openVolTrendBool);
       Print("adxBool: "+adxBool+" adxIma1430Bool: "+adxIma1430Bool+" atrAdxBool: "+atrAdxBool+" openTradeBool: "+openTradeBool+" healthyTrendBool:"+healthyTrendBool+" healthyTrendStrengthBool: "+healthyTrendStrengthBool+" atrAdxVolOpenBool: "+atrAdxVolOpenBool+" starBool: "+starBool);
       Print("SpreadBool: "+spreadBool+" imaWaveBool: "+imaWaveBool+" signal514Bool: "+signal514Bool+" signal1430Bool: "+signal1430Bool+" signal5Wave14Bool: "+signal5Wave14Bool+" signal14Wave1430Bool: "+signal14Wave1430Bool+" signal5Wave1430Bool: "+signal5Wave1430Bool+" safeSig1Bool:"+safeSig1Bool+" safeSig2Bool: "+safeSig2Bool+" imaSig1Bool: "+imaSig1Bool);
+   }
+};
+//+------------------------------------------------------------------+
+
+
+
+struct STATE_SIGNAL {
+   SAN_SIGNAL dominantSIG;
+   SAN_SIGNAL c_SIG;
+   SAN_SIGNAL tradeSIG;
+   SAN_SIGNAL fastSIG;
+   SAN_SIGNAL simple_5_14_SIG;
+   SAN_SIGNAL simple_14_30_SIG;
+   SAN_SIGNAL simpleTrend_5_14_SIG;
+   SAN_SIGNAL simpleTrend_14_30_SIG;
+   SAN_SIGNAL simpleSlope_30_SIG;
+   SAN_SIGNAL cpSlopeCandle120SIG;
+   SAN_SIGNAL volSIG;
+   SAN_SIGNAL volSlopeSIG;
+   SAN_SIGNAL dominantTrendCPSIG;
+   SAN_SIGNAL dominantTrendSIG;
+   TRADE_STRATEGIES trdStgy;
+
+   void initSIG() {
+      dominantSIG = SAN_SIGNAL::NOSIG;
+      tradeSIG = SAN_SIGNAL::NOSIG;
+      c_SIG = SAN_SIGNAL::NOSIG;
+      fastSIG = SAN_SIGNAL::NOSIG;
+      simple_5_14_SIG = SAN_SIGNAL::NOSIG;
+      simple_14_30_SIG = SAN_SIGNAL::NOSIG;
+      simpleTrend_5_14_SIG = SAN_SIGNAL::NOSIG;
+      simpleTrend_14_30_SIG = SAN_SIGNAL::NOSIG;
+      simpleSlope_30_SIG = SAN_SIGNAL::NOSIG;
+      cpSlopeCandle120SIG = SAN_SIGNAL::NOSIG;
+      volSIG = SAN_SIGNAL::NOSIG;
+      volSlopeSIG = SAN_SIGNAL::NOSIG;
+      dominantTrendCPSIG = SAN_SIGNAL::NOSIG;
+      dominantTrendSIG = SAN_SIGNAL::NOSIG;
+      trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
+   }
+
+   STATE_SIGNAL() {
+      initSIG();
+   }
+
+   ~STATE_SIGNAL() {
+      initSIG();
+   }
+   void printState() {
+      //Print("[STATE] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(c_SIG)+" fastSIG: "+util.getSigString(fastSIG)+" 5_14:"+util.getSigString(simple_5_14_SIG)+" Slope30: "+util.getSigString(simpleSlope_30_SIG)+" cp120: "+util.getSigString(cpSlopeCandle120SIG)+" volSIG:"+ util.getSigString(volSIG)+" volSlopeSIG: "+util.getSigString(volSlopeSIG)+" domTrCP: "+util.getSigString(dominantTrendCPSIG)+" trendSIG:: "+util.getSigString(dominantTrendSIG));
    }
 };
 //+------------------------------------------------------------------+

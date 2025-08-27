@@ -21,7 +21,7 @@ ORDERPARAMS       op1;
 class SanStrategies {
  private:
    int  ticket;
-   
+
  public:
    SanStrategies();
    SanStrategies(SanSignals &sig, const INDDATA &indData, int shift);
@@ -35,6 +35,7 @@ class SanStrategies {
    SIGBUFF           imaSt1(const INDDATA &indData);
    string            getJsonData(const INDDATA &indData,SANSIGNALS &s, HSIG &h,SanUtils& util,int shift=1);
    bool              writeOHLCVJsonData(string filename, const INDDATA &indData, SanUtils& util,int shift=1);
+   string            printArray(const double& arrVal[], string mainLabel, string loopLabel, int BEGIN=0,int END=8);
 
 };
 //+------------------------------------------------------------------+
@@ -223,14 +224,16 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 //#################################################################################
 
-//   stats.hilbertTransform(indData.close,ss.hilbertAmp,ss.hilbertPhase,21,5);
-   //stats.dftTransform(indData.close,ss.dftMag,ss.dftPhase,ss.dftPower,8);
-
+   bool printDft = false;
+   if(printDft) {
+      stats.hilbertTransform(indData.close,ss.hilbertAmp,ss.hilbertPhase,16,5);
+      stats.dftTransform(indData.close,ss.dftMag,ss.dftPhase,ss.dftPower,16);
+   }
 //   double iSIg[] =  {147.404, 147.393, 147.385, 147.389,0,0,0,0};
 //   stats.dftTransform(iSIg,ss.dftMag,ss.dftPhase,ss.dftPower,8);
 //   stats.hilbertTransform(iSIg,ss.hilbertAmp,ss.hilbertPhase,8,3);
-   
-   
+
+
    bool shortCycle = false;
    bool longCycle = false;
    bool allCycle = false;
@@ -292,7 +295,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
    sigBuff.buff1[0]=(int)ss.openSIG;
    sigBuff.buff2[0]=(int)ss.closeSIG;
-//sigBuff.buff4[0] = (int)ss.tradeSIG;
+// sigBuff.buff4[0] = (int)ss.tradeSIG;
    sigBuff.buff4[0] = (int)hSig.mktType;
 
 
@@ -322,14 +325,24 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //   Print("[OPEN][MKT] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG));
    Print("[SETSIGBOOLS]: openTradeBool: "+hSig.tBools.openTradeBool+" closeTradeBool: "+hSig.tBools.closeTradeBool+" closeOBVStdBool: "+hSig.tBools.closeOBVStdBool+" closeClusterStdBool: "+hSig.tBools.closeClusterStdBool+" CloseTrRev "+hSig.tBools.closeSigTrReversalBool+" CloseFlatTrade: "+hSig.tBools.closeFlatTradeBool+" FlatBool: "+hSig.tBools.flatBool );
 
-//   Print("[HILBERT] :: Amp0: "+ss.hilbertAmp[0]+" Amp1: "+ss.hilbertAmp[1]+" Amp2: "+ss.hilbertAmp[2]+" Amp3: "+ss.hilbertAmp[3]+" Amp4: "+ss.hilbertAmp[4]+" Amp5: "+ss.hilbertAmp[5]+" Amp6: "+ss.hilbertAmp[6]+" Amp7: "+ss.hilbertAmp[7]);
-//   Print("[HILBERT] :: Phase0: "+ss.hilbertPhase[0]+" Phase1: "+ss.hilbertPhase[1]+" Phase2: "+ss.hilbertPhase[2]+" Phase3: "+ss.hilbertPhase[3]+" Phase4: "+ss.hilbertPhase[4]+" Phase5: "+ss.hilbertPhase[5]+" Phase6: "+ss.hilbertPhase[6]+" Phase7: "+ss.hilbertPhase[7]);
-   //Print("[DFT] :: Mag0: "+ss.dftMag[0]+" Mag1: "+ss.dftMag[1]+" Mag2: "+ss.dftMag[2]+" Mag3: "+ss.dftMag[3]+" Mag4: "+ss.dftMag[4]+" Mag5: "+ss.dftMag[5]+" Mag6: "+ss.dftMag[6]+" Mag7: "+ss.dftMag[7]);
-   //Print("[DFT] :: Phase1: "+ss.dftPhase[0]+" Phase1: "+ss.dftPhase[1]+" Phase2: "+ss.dftPhase[2]+" Phase3: "+ss.dftPhase[3]+" Phase4: "+ss.dftPhase[4]+" Phase5: "+ss.dftPhase[5]+" Phase6: "+ss.dftPhase[7]+" Phase7: "+ss.dftPhase[7]);
-   //Print("[DFT] :: Power1: "+ss.dftPower[0]+" Power1: "+ss.dftPower[1]+" Power2: "+ss.dftPower[2]+" Power3: "+ss.dftPower[3]+" Power4: "+ss.dftPower[4]+" Power5: "+ss.dftPower[5]+" Power6: "+ss.dftPower[7]+" Power7: "+ss.dftPower[7]);
+   if(printDft) {
+      Print("[TRANSFORM] :: Spread: "+indData.currSpread+" RSI: "+indData.rsi[1]+" StdDevCP: "+(indData.std[1]/0.01));
+      Print(printArray(ss.hilbertAmp,"HILBERT","Amp",0,8));
+      Print(printArray(ss.hilbertAmp,"HILBERT","Amp",8,16));
+      Print(printArray(ss.hilbertPhase,"HILBERT","Phase",0,8));
+      Print(printArray(ss.hilbertPhase,"HILBERT","Phase",8,16));
 
-//   Print("[VARBOOLS]: varBool: "+varBool+" varBoolDt: "+ss.varDt.matrixBool[3] +" varPosBool: "+varPosBool+" varPosBoolDt: "+ss.varDt.matrixBool[0]+" varNegBool: "+varNegBool+" varNegBoolDt: "+ss.varDt.matrixBool[1]+" varFlatBool: "+varFlatBool+" varFlatBoolDt: "+ss.varDt.matrixBool[2]);
-   //Print("[SLOPES]: FAST: "+ imaSlopesData.matrixD[0]+" : "+(0.15+(1.5*0.1))+" MEDIUM: "+imaSlopesData.matrixD[1]+" : "+(0.15+0.1)+" SLOW: "+imaSlopesData.matrixD[2]+" : 0.15  :SLOWWIDE: "+imaSlopesData.matrixD[3]+" : 0.1");
+      Print(printArray(ss.dftMag,"DFT","Mag",0,8));
+      Print(printArray(ss.dftMag,"DFT","Mag",8,16));
+      Print(printArray(ss.dftPhase,"DFT","Phase",0,8));
+      Print(printArray(ss.dftPhase,"DFT","Phase",8,16));
+      Print(printArray(ss.dftPower,"DFT","Power",0,8));
+      Print(printArray(ss.dftPower,"DFT","Power",8,16));
+   }
+
+
+// Print("[VARBOOLS]: varBool: "+varBool+" varBoolDt: "+ss.varDt.matrixBool[3] +" varPosBool: "+varPosBool+" varPosBoolDt: "+ss.varDt.matrixBool[0]+" varNegBool: "+varNegBool+" varNegBoolDt: "+ss.varDt.matrixBool[1]+" varFlatBool: "+varFlatBool+" varFlatBoolDt: "+ss.varDt.matrixBool[2]);
+// Print("[SLOPES]: FAST: "+ imaSlopesData.matrixD[0]+" : "+(0.15+(1.5*0.1))+" MEDIUM: "+imaSlopesData.matrixD[1]+" : "+(0.15+0.1)+" SLOW: "+imaSlopesData.matrixD[2]+" : 0.15  :SLOWWIDE: "+imaSlopesData.matrixD[3]+" : 0.1");
 // Print("[TREND]:: tr5: "+util.getSigString(ss.trendRatio5SIG)+" tr14: "+util.getSigString(ss.trendRatio14SIG)+" tr30: "+util.getSigString(ss.trendRatio30SIG)+" tr120: "+util.getSigString(ss.trendRatio120SIG)+" tr240: "+util.getSigString(ss.trendRatio240SIG)+" tr500: "+util.getSigString(ss.trendRatio500SIG));
 // Print("[VARIANCE]:: cpSDSIG: "+util.getSigString(ss.cpSDSIG)+" ima30SDSIG: "+util.getSigString(ss.ima30SDSIG)+" ima120SDSIG: "+util.getSigString(varSIG)+" ima240SDSIG: "+util.getSigString(ss.ima240SDSIG)+" ima500SDSIG: "+util.getSigString(ss.ima500SDSIG));
 // Print("[TRADEABILITY]:: volSIG: "+util.getSigString(ss.volSIG)+" varBool: "+varBool+" varPosBool: "+varPosBool+" varNegBool: "+varNegBool+" ima120SDSIG: "+util.getSigString(varSIG));
@@ -339,14 +352,28 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 // Print("[SIG][IMA] :: ima514:: "+util.getSigString(ss.ima514SIG)+" ima1430: "+util.getSigString(ss.ima1430SIG)+" ima30120: "+util.getSigString(ss.ima30120SIG)+" ima120240: "+util.getSigString(ss.ima120240SIG)+" ima240500: "+util.getSigString(ss.ima240500SIG));
 // Print("[SIG][FSIG]:: fSig5: "+util.getSigString(ss.fsig5)+" fSig14: "+util.getSigString(ss.fsig14)+" fSig30: "+util.getSigString(ss.fsig30)+" fSig120: "+util.getSigString(ss.fsig120)+" fSig240: "+util.getSigString(ss.fsig240)+" fSig500: "+util.getSigString(ss.fsig500));
 // Print("[SIG][SIG] :: sig5: "+util.getSigString(ss.sig5)+" sig14: "+util.getSigString(ss.sig14)+" sig30: "+util.getSigString(ss.sig30)+" sig120: "+util.getSigString(ss.sig120)+" sig240: "+util.getSigString(ss.sig240)+" sig500: "+util.getSigString(ss.sig500));
-//   Print("[MARKET]: Mkt Type: "+util.getSigString(hSig.mktType)+" Trade strategy: "+util.getSigString(hSig.trdStgy)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" var: "+varBool+" varFlat: "+varFlatBool+" slpTrVar: "+slopeTrendVarBool+" fastSIG: "+util.getSigString(hSig.fastSIG));
-//   Print("[MARKET]: Mkt Type: "+util.getSigString(hSig.mktType)+" Trade strategy: "+util.getSigString(hSig.trdStgy)+" var: "+varBool+" varFlat: "+varFlatBool+" slpTrVar: "+slopeTrendVarBool);
-//   Print("[SIGNAL]: New Candle: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" CurrPos: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" PL:"+util.getSigString(ss.profitPercentageSIG)+" Loss:"+util.getSigString(ss.lossSIG)+" basicOpenBool: "+basicOpenBool);
+// Print("[MARKET]: Mkt Type: "+util.getSigString(hSig.mktType)+" Trade strategy: "+util.getSigString(hSig.trdStgy)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" var: "+varBool+" varFlat: "+varFlatBool+" slpTrVar: "+slopeTrendVarBool+" fastSIG: "+util.getSigString(hSig.fastSIG));
+// Print("[MARKET]: Mkt Type: "+util.getSigString(hSig.mktType)+" Trade strategy: "+util.getSigString(hSig.trdStgy)+" var: "+varBool+" varFlat: "+varFlatBool+" slpTrVar: "+slopeTrendVarBool);
+// Print("[SIGNAL]: New Candle: "+op1.NEWCANDLE+" Spread: "+indData.currSpread+" CurrPos: "+util.getSigString(tradePosition)+" OpenSIG:"+util.getSigString(ss.openSIG)+" CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" PL:"+util.getSigString(ss.profitPercentageSIG)+" Loss:"+util.getSigString(ss.lossSIG)+" basicOpenBool: "+basicOpenBool);
 
    return sigBuff;
 }
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+string SanStrategies::printArray(const double& arrVal[], string mainLabel, string loopLabel, int BEGIN=0,int END=8) {
+   string printStr = "[ "+mainLabel+": ] ";
 
+   int SIZE = ArraySize(arrVal);
+   if(SIZE<END)END=SIZE;
+
+   for(int i=BEGIN; i<END; i++) {
+      printStr+= " "+loopLabel+"["+i+"]: "+arrVal[i]+"";
+   }
+
+   return printStr;
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+

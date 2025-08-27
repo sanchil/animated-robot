@@ -96,7 +96,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 //         trendSlopeSIG = trendSlope5SIG;
 //         //trendRatioSIG = sig.trendRatioSIG(indData.ima30,"IMA30",2,21);
 //         //adxCovDivSIG = sig.adxCovDivSIG(indData.adx,indData.adxPlus,indData.adxMinus);
-//rsiSIG = sig.rsiSIG(indData.rsi,21,1);
+//         rsiSIG = sig.rsiSIG(indData.rsi,21,1);
 //         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
 
 
