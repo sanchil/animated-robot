@@ -431,7 +431,10 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    tBools.closeClusterStdBool = (getMktCloseOnStdCPCluster());
    tBools.closeSigBool = ((opensig==SAN_SIGNAL::CLOSE) || tBools.noTradeBool);
 
+// Set the static bool flatBool here to help 
+// activate and close on secondary close post flat market.
    if(tBools.closeFlatTradeBool)flatBool =true;
+   
 
    tBools.closeTradeBool = (flatBool && tBools.closeOBVStdBool);
    tBools.openTradeBool = ((!tBools.closeTradeBool)&&(tBools.tradeBool));
@@ -1471,7 +1474,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
       sig = SAN_SIGNAL::TRADEBUY;
    } else if(sellTradeBool) {
       sig = SAN_SIGNAL::TRADESELL;
-   } else if(openTradeBool) {
+   } else if(openTradeBool&&(trendClusterBool||(trendBuySlope30||trendSellSlope30)||(trendBuyOBVBool||trendSellOBVBool))) {
       sig = SAN_SIGNAL::TRADE;
    } else {
       sig = SAN_SIGNAL::NOTRADE;
@@ -1618,13 +1621,13 @@ bool  HSIG::getMktCloseOnStdCPCluster() {
    double rFM =  ssSIG.clusterData.matrixD[0];
    double rMS =  ssSIG.clusterData.matrixD[1];
    double rFS =  ssSIG.clusterData.matrixD[2];
-   double obvCPSlope = obvCPSlope.matrixD[0]*pipValue; // Normalize obvCPSlope
-
    bool closeTrendStdCP = (stdCPSlope<=STDSLOPE);
 
-   bool closeOBVBool =  ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
-   bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
-   bool trendSellOBVBool = (obvCPSlope < (-1*OBVSLOPE));
+
+//   double obvCPSlope = obvCPSlope.matrixD[0]*pipValue; // Normalize obvCPSlope
+   //bool closeOBVBool =  ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
+   //bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
+   //bool trendSellOBVBool = (obvCPSlope < (-1*OBVSLOPE));
 
 
    bool strictFlatClusterBool = ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT));
@@ -1663,8 +1666,8 @@ bool  HSIG::getMktCloseOnStdCPCluster() {
 
 
 
-   SAN_SIGNAL obvSIG = (trendBuyOBVBool)?SAN_SIGNAL::BUY:((trendSellOBVBool)?SAN_SIGNAL::SELL:SAN_SIGNAL::NOSIG);
-   SAN_SIGNAL tradePosition = util.getCurrTradePosition();
+   //SAN_SIGNAL obvSIG = (trendBuyOBVBool)?SAN_SIGNAL::BUY:((trendSellOBVBool)?SAN_SIGNAL::SELL:SAN_SIGNAL::NOSIG);
+   //SAN_SIGNAL tradePosition = util.getCurrTradePosition();
 
    bool flatBool = (strictFlatClusterBool||rangeFlatClusterBool||flatClusterBool);
 
