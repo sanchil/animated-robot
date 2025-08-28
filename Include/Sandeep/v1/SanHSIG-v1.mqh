@@ -424,6 +424,11 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 
    tBools.closeSlopeVarBool = getMktCloseOnSlopeVariable(ssSIG,ut);
    tBools.closeFlatTradeBool = getMktCloseOnFlat(opensig,tBools.flatMktBool);
+
+// Set the static bool flatBool here to help
+// activate and close on secondary close post flat market.
+   if(tBools.closeFlatTradeBool)flatBool =true;
+
    tBools.closeSigTrReversalBool =  getMktCloseOnReversal(opensig, ut);
    tBools.closeSigTrCloseSigReversalBool =  getMktCloseOnReversal(closesig, ut);
    tBools.closeSlopeRatios = getMktCloseOnSlopeRatio();
@@ -431,12 +436,10 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    tBools.closeClusterStdBool = (getMktCloseOnStdCPCluster());
    tBools.closeSigBool = ((opensig==SAN_SIGNAL::CLOSE) || tBools.noTradeBool);
 
-// Set the static bool flatBool here to help 
-// activate and close on secondary close post flat market.
-   if(tBools.closeFlatTradeBool)flatBool =true;
-   
+
 
    tBools.closeTradeBool = (flatBool && tBools.closeOBVStdBool);
+//   tBools.closeTradeBool = (tBools.closeClusterStdBool && tBools.closeOBVStdBool);   
    tBools.openTradeBool = ((!tBools.closeTradeBool)&&(tBools.tradeBool));
 
 
@@ -567,15 +570,14 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       //   closeSIG = SAN_SIGNAL::CLOSE;
       //   flatBool = false;
       //}
-      //else if(tBools.closeSigTrReversalBool) {
-      //   mktType=MKTTYP::MKTCLOSE;
-      //   openSIG = SAN_SIGNAL::NOSIG;
-      //   closeSIG = SAN_SIGNAL::CLOSE;
-      //   flatBool = false;
-      //}
-      else if(
+      else if(tBools.closeSigTrReversalBool) {
+         mktType=MKTTYP::MKTCLOSE;
+         openSIG = SAN_SIGNAL::NOSIG;
+         closeSIG = SAN_SIGNAL::CLOSE;
+         flatBool = false;
+      } else if(
          (opensig==SAN_SIGNAL::SIDEWAYS)
-         //||flatMktBool
+         && tBools.flatMktBool
       ) {
          mktType=MKTTYP::MKTFLAT;
          openSIG = SAN_SIGNAL::NOSIG;
@@ -584,6 +586,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
+         flatBool = false;
       }
       //Print("[TRADESTRATEGY]: SLOPESTD_CSIG "+ut.getSigString(openSIG));
    }
