@@ -9,7 +9,7 @@
 #property strict
 #property indicator_chart_window
 #property indicator_plots 0
-#property indicator_buffers 5
+#property indicator_buffers 3
 #include <Sandeep/v1/SanStrategies-v1.mqh>
 
 // This seq of inputs stated here must match the parameters entered for the indicator function used in EA
@@ -36,9 +36,9 @@ const int SHIFT = 1;
 double buff1[];
 double buff2[];
 double buff3[];
-double buff4[];
-double buff5[];
-double buff6[];
+//double buff4[];
+//double buff5[];
+//double buff6[];
 
 
 INDDATA indData;
@@ -50,25 +50,25 @@ int OnInit() {
    ArrayInitialize(buff1,EMPTY);
    ArrayInitialize(buff2,EMPTY);
    ArrayInitialize(buff3,EMPTY);
-   ArrayInitialize(buff4,EMPTY);
-   ArrayInitialize(buff5,EMPTY);
-   ArrayInitialize(buff6,EMPTY);
+   //ArrayInitialize(buff4,EMPTY);
+   //ArrayInitialize(buff5,EMPTY);
+   //ArrayInitialize(buff6,EMPTY);
 
 
 //--- indicator buffers mapping
    ArraySetAsSeries(buff1,true);
    ArraySetAsSeries(buff2,true);
    ArraySetAsSeries(buff3,true);
-   ArraySetAsSeries(buff4,true);
-   ArraySetAsSeries(buff5,true);
-   ArraySetAsSeries(buff6,true);
+   //ArraySetAsSeries(buff4,true);
+   //ArraySetAsSeries(buff5,true);
+   //ArraySetAsSeries(buff6,true);
 
    SetIndexBuffer(0,buff1,INDICATOR_CALCULATIONS);
    SetIndexBuffer(1,buff2,INDICATOR_CALCULATIONS);
    SetIndexBuffer(2,buff3,INDICATOR_CALCULATIONS);
-   SetIndexBuffer(3,buff4,INDICATOR_CALCULATIONS);
-   SetIndexBuffer(4,buff5,INDICATOR_CALCULATIONS);
-   SetIndexBuffer(5,buff6,INDICATOR_CALCULATIONS);
+   //SetIndexBuffer(3,buff4,INDICATOR_CALCULATIONS);
+   //SetIndexBuffer(4,buff5,INDICATOR_CALCULATIONS);
+   //SetIndexBuffer(5,buff6,INDICATOR_CALCULATIONS);
 
 //---
    return(INIT_SUCCEEDED);
@@ -208,12 +208,13 @@ double buySell(const INDDATA &indData) {
    } else {
       buff3[0] = EMPTY_VALUE;
    }
-   if((sbuff.buff4[0]!=EMPTY) && (sbuff.buff4[0]!=EMPTY_VALUE) && (sbuff.buff4[0]!=NULL)) {
-      // Setting Market type. Trending or flat
-      buff4[0] = sbuff.buff4[0];
-   } else {
-      buff4[0] = EMPTY_VALUE;
-   }
+
+   //if((sbuff.buff4[0]!=EMPTY) && (sbuff.buff4[0]!=EMPTY_VALUE) && (sbuff.buff4[0]!=NULL)) {
+   //   // Setting Market type. Trending or flat
+   //   buff4[0] = sbuff.buff4[0];
+   //} else {
+   //   buff4[0] = EMPTY_VALUE;
+   //}
 
    if(((sbuff.buff1[0]==EMPTY) || (sbuff.buff1[0]==EMPTY_VALUE) || (sbuff.buff1[0]==NULL))) {
       //sbuff.buff1[0]=1000.314;
