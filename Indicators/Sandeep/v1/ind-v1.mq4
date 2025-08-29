@@ -105,13 +105,21 @@ int OnCalculate(const int rates_total,
    indData.shift = SHIFT;
    indData.currSpread = (int)MarketInfo(_Symbol,MODE_SPREAD);
 
-//   Print("Spread in indicator: "+(int)MarketInfo(_Symbol,MODE_SPREAD));
+//// Loop:1
+//   int i=rates_total-prev_calculated-1;
+////--- current value should be recalculated
+//   if(i<0)i=0;
+////---
+//   while(i>=0) {}
+//   for(int i = prev_calculated; i < (rates_total-1); i++) {}
+// // Loop:2
 
-//if(rates_total>prev_calculated)
-   for(int i = prev_calculated; i < rates_total; i++) {
-
-
-
+   int i=rates_total-prev_calculated-1;
+//--- current value should be recalculated
+   if(i<0)i=0;
+//---
+   while(i>=0) { 
+   //for(int i = prev_calculated; i < (rates_total-1); i++) {
       for(int i=0; i<31; i++) {
          //indData.open[i] = open[i];
          indData.high[i] = high[i];
@@ -121,12 +129,12 @@ int OnCalculate(const int rates_total,
          //indData.tick_volume[i]=tick_volume[i];
          indData.volume[i] = iVolume(_Symbol,PERIOD_CURRENT,i);
          indData.std[i]= iStdDev(_Symbol,PERIOD_CURRENT,noOfCandles,0,MODE_EMA,PRICE_CLOSE,i);
-         indData.mfi[i]= iMFI(_Symbol,PERIOD_CURRENT, noOfCandles,i);
+ //        indData.mfi[i]= iMFI(_Symbol,PERIOD_CURRENT, noOfCandles,i);
          indData.obv[i]= iOBV(_Symbol,PERIOD_CURRENT, PRICE_CLOSE,i);
          indData.rsi[i]= iRSI(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_WEIGHTED,i);
-         indData.adx[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MAIN,i);
-         indData.adxPlus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_PLUSDI,i);
-         indData.adxMinus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MINUSDI,i);
+//         indData.adx[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MAIN,i);
+//         indData.adxPlus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_PLUSDI,i);
+//         indData.adxMinus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MINUSDI,i);
          indData.ima5[i]= iMA(_Symbol,PERIOD_CURRENT,5,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.ima14[i]= iMA(_Symbol,PERIOD_CURRENT,14,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.ima30[i]= iMA(_Symbol,PERIOD_CURRENT,30,0,MODE_SMMA, PRICE_CLOSE,i);
@@ -171,29 +179,9 @@ int OnCalculate(const int rates_total,
 void initCalc(const INDDATA &indData) {
    buff1[0] = buySell(indData);
 
-
-//   if(_Period<60) {
-//      recordFreq=_Period;
-//      currentRecordTime = TimeMinute(TimeCurrent());
-//   } else if((_Period>=60)&&(_Period<=1440)) {
-//      recordFreq=(int)(_Period/60);
-//      currentRecordTime = TimeHour(TimeCurrent());
-//   } else {
-//      recordFreq=-1;
-//   }
-//
-//   Print("Record Frequency: "+recordFreq);
-//   if(recordData) {
-//      if((recordFreq>0)&&((currentRecordTime%recordFreq)==0)&&(currentRecordTime!=lastRecordTime)) {
-//         lastRecordTime=currentRecordTime;
-//         st1.writeOHLCVJsonData(dataFileName,indData,sig,util,1);
-//         //util.writeJsonData(dataFileName,indData,recordSignal,1);
-//      }
-//   }
-
    if(recordData) {
       if(util.isNewBarTime()) {
-            st1.writeOHLCVJsonData(dataFileName,indData,util,1);
+         st1.writeOHLCVJsonData(dataFileName,indData,util,1);
       }
    }
 }
