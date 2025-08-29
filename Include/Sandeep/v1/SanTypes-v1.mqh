@@ -157,6 +157,7 @@ struct TRADEBOOLS {
    bool closeSlopeRatios;
    bool closeOBVStdBool;
    bool closeClusterStdBool;
+   bool closeRsiBool;
    bool closeSigBool;
    bool volTradeBool;
 };
@@ -975,6 +976,7 @@ class SANSIGNALS {
    SAN_SIGNAL        simpleSlope_240_SIG;
    SAN_SIGNAL        simpleSlope_500_SIG;
    SAN_SIGNAL        c_SIG;
+   SAN_SIGNAL        hilbertDftSIG;
    SIGMAVARIABILITY        cpSDSIG;
    SIGMAVARIABILITY        ima5SDSIG;
    SIGMAVARIABILITY        ima14SDSIG;
@@ -1117,6 +1119,7 @@ void  SANSIGNALS::initBase() {
    simpleSlope_240_SIG = SAN_SIGNAL::NOSIG;
    simpleSlope_500_SIG =  SAN_SIGNAL::NOSIG;
    c_SIG =  SAN_SIGNAL::NOSIG;
+   hilbertDftSIG =  SAN_SIGNAL::NOSIG;
    cpSDSIG = SIGMAVARIABILITY::SIGMA_NULL;
    ima5SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
    ima14SDSIG = SIGMAVARIABILITY::SIGMA_NULL;

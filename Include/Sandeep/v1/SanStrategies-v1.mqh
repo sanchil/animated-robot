@@ -35,7 +35,7 @@ class SanStrategies {
    SIGBUFF           imaSt1(const INDDATA &indData);
    string            getJsonData(const INDDATA &indData,SANSIGNALS &s, HSIG &h,SanUtils& util,int shift=1);
    bool              writeOHLCVJsonData(string filename, const INDDATA &indData, SanUtils& util,int shift=1);
-   string            printArray(const double& arrVal[], string mainLabel, string loopLabel, int BEGIN=0,int END=8);
+//   string            printArray(const double& arrVal[], string mainLabel, string loopLabel, int BEGIN=0,int END=8);
 
 };
 //+------------------------------------------------------------------+
@@ -224,14 +224,25 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 //#################################################################################
 
+   double cutOff = stats.maxVal<double>(indData.currSpread, 0.5*(indData.std[1]/util.getPipValue(_Symbol)));
+//   Print("Max of "+indData.currSpread+" & "+(indData.std[1]/util.getPipValue(_Symbol)) +" = "+cutOff);
+
    bool printDft = false;
+   DTYPE ht;
+   DTYPE dft;
    if(printDft) {
       stats.hilbertTransform(indData.close,ss.hilbertAmp,ss.hilbertPhase,16,5);
       stats.dftTransform(indData.close,ss.dftMag,ss.dftPhase,ss.dftPower,16);
+      ht= stats.extractHilbertAmpNPhase(ss.hilbertAmp,ss.hilbertPhase,2);
+      dft= stats.extractDftPowerNPhase(ss.dftMag,ss.dftPhase,ss.dftPower);
+      Print("[HT] index: "+ht.val1+" Amp: "+ht.val2+" Phase: "+ ht.val3);
+      Print("[DT] k: "+dft.val1+" Mag: "+dft.val2+" Phase: "+ dft.val3+" Power: "+ dft.val4);
    }
+
 //   double iSIg[] =  {147.404, 147.393, 147.385, 147.389,0,0,0,0};
 //   stats.dftTransform(iSIg,ss.dftMag,ss.dftPhase,ss.dftPower,8);
 //   stats.hilbertTransform(iSIg,ss.hilbertAmp,ss.hilbertPhase,8,3);
+
 
 
    bool shortCycle = false;
@@ -321,23 +332,23 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 //   Print("[CLOSE]:: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" SimpleClose14_30:: "+util.getSigString(hSig.simpleTrend_14_30_SIG));
 //   Print("[OPEN] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" domSIG: "+util.getSigString(dominantSIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" domTrCP: "+util.getSigString(hSig.dominantTrendCPSIG));//+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" domTrCPSIG: "+util.getSigString(hSig.dominantTrendCPSIG));
-   Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" volSlopeSIG: "+util.getSigString(ss.volSlopeSIG)+" domTrCP: "+util.getSigString(hSig.dominantTrendCPSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG));
+   Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" rsiSIG: "+util.getSigString(ss.rsiSIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" volSlopeSIG: "+util.getSigString(ss.volSlopeSIG)+" hilbertDftSIG: "+util.getSigString(ss.hilbertDftSIG)+" domTrCP: "+util.getSigString(hSig.dominantTrendCPSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG));
 //   Print("[OPEN][MKT] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG));
    Print("[SETSIGBOOLS]: openTradeBool: "+hSig.tBools.openTradeBool+" closeTradeBool: "+hSig.tBools.closeTradeBool+" closeOBVStdBool: "+hSig.tBools.closeOBVStdBool+" closeClusterStdBool: "+hSig.tBools.closeClusterStdBool+" CloseTrRev "+hSig.tBools.closeSigTrReversalBool+" CloseFlatTrade: "+hSig.tBools.closeFlatTradeBool+" FlatBool: "+hSig.tBools.flatBool );
 
    if(printDft) {
       Print("[TRANSFORM] :: Spread: "+indData.currSpread+" RSI: "+indData.rsi[1]+" StdDevCP: "+(indData.std[1]/0.01));
-      Print(printArray(ss.hilbertAmp,"HILBERT","Amp",0,8));
-      Print(printArray(ss.hilbertAmp,"HILBERT","Amp",8,16));
-      Print(printArray(ss.hilbertPhase,"HILBERT","Phase",0,8));
-      Print(printArray(ss.hilbertPhase,"HILBERT","Phase",8,16));
+      Print(util.printArray(ss.hilbertAmp,"HILBERT","Amp",0,8));
+      Print(util.printArray(ss.hilbertAmp,"HILBERT","Amp",8,16));
+      Print(util.printArray(ss.hilbertPhase,"HILBERT","Phase",0,8));
+      Print(util.printArray(ss.hilbertPhase,"HILBERT","Phase",8,16));
 
-      Print(printArray(ss.dftMag,"DFT","Mag",0,8));
-      Print(printArray(ss.dftMag,"DFT","Mag",8,16));
-      Print(printArray(ss.dftPhase,"DFT","Phase",0,8));
-      Print(printArray(ss.dftPhase,"DFT","Phase",8,16));
-      Print(printArray(ss.dftPower,"DFT","Power",0,8));
-      Print(printArray(ss.dftPower,"DFT","Power",8,16));
+      Print(util.printArray(ss.dftMag,"DFT","Mag",0,8));
+      Print(util.printArray(ss.dftMag,"DFT","Mag",8,16));
+      Print(util.printArray(ss.dftPhase,"DFT","Phase",0,8));
+      Print(util.printArray(ss.dftPhase,"DFT","Phase",8,16));
+      Print(util.printArray(ss.dftPower,"DFT","Power",0,8));
+      Print(util.printArray(ss.dftPower,"DFT","Power",8,16));
    }
 
 
@@ -359,21 +370,21 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    return sigBuff;
 }
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-string SanStrategies::printArray(const double& arrVal[], string mainLabel, string loopLabel, int BEGIN=0,int END=8) {
-   string printStr = "[ "+mainLabel+": ] ";
-
-   int SIZE = ArraySize(arrVal);
-   if(SIZE<END)END=SIZE;
-
-   for(int i=BEGIN; i<END; i++) {
-      printStr+= " "+loopLabel+"["+i+"]: "+arrVal[i]+"";
-   }
-
-   return printStr;
-}
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//string SanStrategies::printArray(const double& arrVal[], string mainLabel, string loopLabel, int BEGIN=0,int END=8) {
+//   string printStr = "[ "+mainLabel+": ] ";
+//
+//   int SIZE = ArraySize(arrVal);
+//   if(SIZE<END)END=SIZE;
+//
+//   for(int i=BEGIN; i<END; i++) {
+//      printStr+= " "+loopLabel+"["+i+"]: "+arrVal[i]+"";
+//   }
+//
+//   return printStr;
+//}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+

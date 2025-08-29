@@ -436,7 +436,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    tBools.closeClusterStdBool = (getMktCloseOnStdCPCluster());
    tBools.closeSigBool = ((opensig==SAN_SIGNAL::CLOSE) || tBools.noTradeBool);
 
-
+   tBools.closeRsiBool = getMktCloseOnReversal(ssSIG.rsiSIG, ut);
 
    tBools.closeTradeBool = (flatBool && tBools.closeOBVStdBool);
 //   tBools.closeTradeBool = (tBools.closeClusterStdBool && tBools.closeOBVStdBool);   

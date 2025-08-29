@@ -34,9 +34,9 @@ class SS:public SANSIGNALS {
  private:
    double            iSIg[];
  public:
-                     SS();
-                     SS(SanSignals &sig, const INDDATA &indData, const int SHIFT);
-                    ~SS();
+   SS();
+   SS(SanSignals &sig, const INDDATA &indData, const int SHIFT);
+   ~SS();
    void              SS::printSignalStruct(SanUtils &util);
 
 };
@@ -100,6 +100,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 //         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
 
 
+   rsiSIG = sig.rsiSIG(indData.rsi[1],40,60);
    priceActionSIG =  sig.priceActionCandleSIG(indData.open,indData.high,indData.low,indData.close);
    volSIG =  sig.volumeSIG_v2(indData.tick_volume,60,11,SHIFT);
    volSlopeSIG = sig.volScatterSlopeSIG(indData.tick_volume,100,0.1,SHIFT);
@@ -178,7 +179,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 
 //   stats.hilbertTransform(indData.close,hilbertAmp,hilbertPhase,21,5);
 //   stats.dftTransform(indData.close,dftMag,dftPhase,dftPower,8);
-
+ //  hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),16,5);
 }
 //+------------------------------------------------------------------+
 
