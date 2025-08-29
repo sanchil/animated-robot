@@ -127,7 +127,7 @@ int OnCalculate(const int rates_total,
          //indData.close[i] = close[i];
          indData.time[i] = time[i];
          //indData.tick_volume[i]=tick_volume[i];
-         indData.volume[i] = iVolume(_Symbol,PERIOD_CURRENT,i);
+         //indData.volume[i] = iVolume(_Symbol,PERIOD_CURRENT,i);
          indData.std[i]= iStdDev(_Symbol,PERIOD_CURRENT,noOfCandles,0,MODE_EMA,PRICE_CLOSE,i);
  //        indData.mfi[i]= iMFI(_Symbol,PERIOD_CURRENT, noOfCandles,i);
          indData.obv[i]= iOBV(_Symbol,PERIOD_CURRENT, PRICE_CLOSE,i);
