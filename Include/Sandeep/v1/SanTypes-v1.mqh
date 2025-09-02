@@ -29,7 +29,8 @@
 
 const double LARGE_VAL=123456.654321;
 
-struct CandleCharacter {
+struct CandleCharacter
+  {
    double            upperTail;
    double            lowerTail;
    bool              redCandle;
@@ -49,7 +50,8 @@ struct CandleCharacter {
    bool              tailDominates;
    bool              bodyDominates;
 
-   CandleCharacter() {
+                     CandleCharacter()
+     {
       upperTail = -1;
       lowerTail = -1;
       redCandle = -1;
@@ -68,29 +70,34 @@ struct CandleCharacter {
       bodyRatio =  -1;
       tailDominates =  -1;
       bodyDominates =  -1 ;
-   }
+     }
 
 
-   CandleCharacter(
+                     CandleCharacter(
       const double &open[],
       const double &high[],
       const double &low[],
       const double &close[],
       const double limit,
-      const int shift=1) {
+      const int shift=1)
+     {
 
       redCandle = (open[shift] > close[shift]);
       greenCandle = (open[shift] < close[shift]);
       noBodyCandle = ((open[shift] == close[shift]) && (low[shift] == high[shift])) ;
       noBodyTailCandle = ((open[shift] == close[shift]) && (low[shift] != high[shift]));
 
-      if(!noBodyCandle && noBodyTailCandle && (fabs(open[shift]-low[shift])>0)) {
+      if(!noBodyCandle && noBodyTailCandle && (fabs(open[shift]-low[shift])>0))
+        {
          noBodyUpperTailCandle = ((fabs(high[shift]-open[shift])/fabs(open[shift]-low[shift]))>(1-limit));
          noBodyLowerTailCandle = ((fabs(high[shift]-open[shift])/fabs(open[shift]-low[shift]))<=limit) ;
-      } else if(!noBodyCandle && noBodyTailCandle && (fabs(open[shift]-low[shift])==0)) {
-         noBodyUpperTailCandle = ((fabs(high[shift]-open[shift]))>(1-limit));
-         noBodyLowerTailCandle = ((fabs(high[shift]-open[shift]))<=limit) ;
-      }
+        }
+      else
+         if(!noBodyCandle && noBodyTailCandle && (fabs(open[shift]-low[shift])==0))
+           {
+            noBodyUpperTailCandle = ((fabs(high[shift]-open[shift]))>(1-limit));
+            noBodyLowerTailCandle = ((fabs(high[shift]-open[shift]))<=limit) ;
+           }
 
       fullBodyRedCandle = (redCandle && (open[shift] == high[shift]) && (close[shift] == low[shift]));
       fullBodyGreenCandle = (greenCandle && (open[shift] == low[shift]) && (close[shift] == high[shift]));
@@ -101,18 +108,23 @@ struct CandleCharacter {
       tailDominates = (noBodyTailCandle || (bodyRatio <= limit));
       bodyDominates = (fullBodyCandle ||(bodyRatio > limit)) ;
 
-      if((redCandle||noBodyTailCandle) && !fullBodyCandle && !noBodyCandle) {
+      if((redCandle||noBodyTailCandle) && !fullBodyCandle && !noBodyCandle)
+        {
          upperTail=(high[shift]-open[shift]);
          lowerTail=(close[shift]-low[shift]);
-      } else if((greenCandle||noBodyTailCandle) && !fullBodyCandle && !noBodyCandle) {
-         upperTail=(high[shift]-close[shift]);
-         lowerTail=(open[shift]-low[shift]);
-      }
+        }
+      else
+         if((greenCandle||noBodyTailCandle) && !fullBodyCandle && !noBodyCandle)
+           {
+            upperTail=(high[shift]-close[shift]);
+            lowerTail=(open[shift]-low[shift]);
+           }
       bodyUpperTailCandle = (tailDominates && (((upperTail==0)&&(lowerTail>0)) || ((upperTail!=0)&&(lowerTail!=0)&&(NormalizeDouble((fabs(upperTail)/fabs(lowerTail)),2)<=limit))));
       bodyLowerTailCandle = (tailDominates && (((lowerTail==0)&&(upperTail>0)) || ((upperTail!=0)&&(lowerTail!=0)&&(NormalizeDouble((fabs(lowerTail)/fabs(upperTail)),2)<=limit))));
 
-   }
-   ~CandleCharacter() {
+     }
+                    ~CandleCharacter()
+     {
 
       redCandle = NULL;
       greenCandle = NULL;
@@ -127,53 +139,58 @@ struct CandleCharacter {
       tailDominates = NULL;
       bodyDominates = NULL ;
 
-   }
+     }
 
-};
+  };
 
 
-struct RITYPE {
+struct RITYPE
+  {
    double            r;
    double            i;
-};
+  };
 
-struct SLOPETYPE {
+struct SLOPETYPE
+  {
    double            slope;
    double            intercept;
-};
+  };
 
-struct TRADEBOOLS {
-   bool openTradeBool;
-   bool closeTradeBool;
+struct TRADEBOOLS
+  {
+   bool              openTradeBool;
+   bool              closeTradeBool;
 
-   bool noTradeBool;
-   bool tradeBool;
-   bool flatMktBool;
-   bool flatBool;
-   bool closeFlatTradeBool;
-   bool closeSigTrReversalBool;
-   bool closeSigTrCloseSigReversalBool;
-   bool closeSlopeVarBool;
-   bool closeSlopeRatios;
-   bool closeOBVStdBool;
-   bool closeClusterStdBool;
-   bool closeRsiBool;
-   bool closeSigBool;
-   bool volTradeBool;
-};
+   bool              noTradeBool;
+   bool              tradeBool;
+   bool              flatMktBool;
+   bool              flatBool;
+   bool              closeFlatTradeBool;
+   bool              closeSigTrReversalBool;
+   bool              closeSigTrCloseSigReversalBool;
+   bool              closeSlopeVarBool;
+   bool              closeSlopeRatios;
+   bool              closeOBVStdBool;
+   bool              closeClusterStdBool;
+   bool              closeRsiBool;
+   bool              closeSigBool;
+   bool              volTradeBool;
+  };
 
-struct DTYPE {
+struct DTYPE
+  {
    double            val1;
    double            val2;
    double            val3;
    double            val4;
    double            val5;
-};
+  };
 
 
 
 
-struct TRADELIMITS {
+struct TRADELIMITS
+  {
    int               spreadLimit;
    double            stdDevLimit;
    int               mfiLowerLimit;
@@ -186,20 +203,31 @@ struct TRADELIMITS {
    double            zScoreUpLimit;
    double            zScoreDownLimit;
    double            candlePipSpeedLimit;
-   TRADELIMITS() {
-      if(_Period <PERIOD_M15) {
+                     TRADELIMITS()
+     {
+      if(_Period <PERIOD_M15)
+        {
          spreadLimit = 20;
          candlePipSpeedLimit=30;
-      } else if(_Period <=PERIOD_M30) {
-         spreadLimit = 40;
-         candlePipSpeedLimit=30;
-      } else if(_Period <=PERIOD_H1) {
-         spreadLimit = 60;
-         candlePipSpeedLimit=30;
-      } else if(_Period <=PERIOD_D1) {
-         spreadLimit = 80;
-         candlePipSpeedLimit=30;
-      }
+        }
+      else
+         if(_Period <=PERIOD_M30)
+           {
+            spreadLimit = 40;
+            candlePipSpeedLimit=30;
+           }
+         else
+            if(_Period <=PERIOD_H1)
+              {
+               spreadLimit = 60;
+               candlePipSpeedLimit=30;
+              }
+            else
+               if(_Period <=PERIOD_D1)
+                 {
+                  spreadLimit = 80;
+                  candlePipSpeedLimit=30;
+                 }
 
       //     spreadLimit = 20;
       //      stdDevLimit = 0.3;
@@ -216,14 +244,15 @@ struct TRADELIMITS {
       zScoreUpLimit = 1;
       zScoreDownLimit = -1;
 
-   };
-   ~TRADELIMITS() {};
-};
+     };
+                    ~TRADELIMITS() {};
+  };
 
 const TRADELIMITS tl;
 
 
-struct DataTransport {
+struct DataTransport
+  {
    double            matrixD[20];
    double            matrixD1[20];
    double            matrixD2[20];
@@ -231,7 +260,8 @@ struct DataTransport {
    int               matrixI1[20];
    int               matrixI2[20];
    bool              matrixBool[20];
-   DataTransport() {
+                     DataTransport()
+     {
       ArrayInitialize(matrixD,EMPTY_VALUE);
       ArrayInitialize(matrixD1,EMPTY_VALUE);
       ArrayInitialize(matrixD2,EMPTY_VALUE);
@@ -239,8 +269,9 @@ struct DataTransport {
       ArrayInitialize(matrixI1,EMPTY);
       ArrayInitialize(matrixI2,EMPTY);
       ArrayInitialize(matrixBool,EMPTY);
-   }
-   void              freeData() {
+     }
+   void              freeData()
+     {
       ArrayFree(matrixD);
       ArrayFree(matrixI);
       ArrayFree(matrixD1);
@@ -248,13 +279,15 @@ struct DataTransport {
       ArrayFree(matrixD2);
       ArrayFree(matrixI2);
       ArrayFree(matrixBool);
-   }
-   ~DataTransport() {
+     }
+                    ~DataTransport()
+     {
       freeData();
-   }
-};
+     }
+  };
 
-enum SAN_SIGNAL {
+enum SAN_SIGNAL
+  {
    BUY=1000,
    SELL=2000,
    HOLD=3000,
@@ -270,7 +303,7 @@ enum SAN_SIGNAL {
    SIDEWAYS=9000,
    NOSIG=-1000314,
 //NOSIG=EMPTY,
-};
+  };
 
 //enum SAN_SIGNAL
 //  {
@@ -289,7 +322,8 @@ enum SAN_SIGNAL {
 
 //SAN_SIGNAL TRADEPOSITION = SAN_SIGNAL::NOSIG;
 
-struct ORDERPARAMS {
+struct ORDERPARAMS
+  {
    bool              NEWCANDLE;
    bool              TRADED;
    bool              OPENTRADE;
@@ -310,19 +344,22 @@ struct ORDERPARAMS {
    double            MAXPIPS;
 
 
-   bool              isNewBar() {
+   bool              isNewBar()
+     {
       static long opBars = Bars(_Symbol,PERIOD_CURRENT);
-      if(opBars == Bars(_Symbol,PERIOD_CURRENT)) {
+      if(opBars == Bars(_Symbol,PERIOD_CURRENT))
+        {
          return false;
-      }
+        }
       opBars = Bars(_Symbol,PERIOD_CURRENT);
       return true;
-   }
+     }
 
    //+------------------------------------------------------------------+
    //|                                                                  |
    //+------------------------------------------------------------------+
-   double              pipsPerTick(const double candleSizePips) {
+   double              pipsPerTick(const double candleSizePips)
+     {
 
       double tPoint = Point();
       double pipsPerTick = 0;
@@ -330,27 +367,33 @@ struct ORDERPARAMS {
       //    Print(" Candle size in Pips: "+candleSizePips);
       //if((NEWCANDLE!=EMPTY) && NEWCANDLE)
       //  Print("Candle pip size: "+candleSizePips+" TICKSTART: "+TICKSTART);
-      if(isNewBar()) {
+      if(isNewBar())
+        {
          TICKSTART = GetTickCount();
          TICKCOUNT=1;
          return 0;
-      } else if((TICKSTART>0)) {
-         TICKCOUNT=(GetTickCount()-TICKSTART);
-         // Print("OLD Candle: TICKSTART: "+TICKSTART+" tickCount: "+TICKCOUNT+" candleSizePips: "+candleSizePips);
-         // if((candleSizePips!=0)&&((TICKCOUNT/TICKSTART)<0.5))
-         if((TICKCOUNT>0)&&((TICKCOUNT/TICKSTART)<0.5)) {
-            pipsPerTick = (candleSizePips/(TICKCOUNT*tPoint));
-            return pipsPerTick;
-         }
+        }
+      else
+         if((TICKSTART>0))
+           {
+            TICKCOUNT=(GetTickCount()-TICKSTART);
+            // Print("OLD Candle: TICKSTART: "+TICKSTART+" tickCount: "+TICKCOUNT+" candleSizePips: "+candleSizePips);
+            // if((candleSizePips!=0)&&((TICKCOUNT/TICKSTART)<0.5))
+            if((TICKCOUNT>0)&&((TICKCOUNT/TICKSTART)<0.5))
+              {
+               pipsPerTick = (candleSizePips/(TICKCOUNT*tPoint));
+               return pipsPerTick;
+              }
 
-      }
+           }
       return pipsPerTick;
-   };
+     };
 
 
 
 
-   ORDERPARAMS() {
+                     ORDERPARAMS()
+     {
       NEWCANDLE = false;
       //TICKSTART =  GetTickCount();
       TICKCOUNT = 0;
@@ -366,8 +409,9 @@ struct ORDERPARAMS {
       TRADEPROFIT = EMPTY_VALUE;
       MAXTRADEPROFIT = EMPTY_VALUE;
       //      ADJUSTED_MAXTRADEPROFIT = MAXTRADEPROFIT-((currspread+1)*tPoint);
-   };
-   ~ORDERPARAMS() {
+     };
+                    ~ORDERPARAMS()
+     {
       NEWCANDLE = EMPTY;
       //TICKSTART = EMPTY;
       TICKCOUNT = EMPTY;
@@ -387,27 +431,31 @@ struct ORDERPARAMS {
       STOPLOSS=0;
       TAKEPROFIT=0;
       //      ADJUSTED_MAXTRADEPROFIT = NULL;
-   };
+     };
 
-   double            getProfit(double defaultTP, int minLot=EMPTY, double tP=EMPTY_VALUE) {
+   double            getProfit(double defaultTP, int minLot=EMPTY, double tP=EMPTY_VALUE)
+     {
       return ((tP!=EMPTY_VALUE)&&(minLot!=EMPTY))?(tP*minLot):(((tP!=EMPTY_VALUE)&&(minLot==EMPTY))?(tP*MICROLOTS):(defaultTP*MICROLOTS));
-   }
+     }
 
-   double            getStopLoss(double tP=EMPTY_VALUE, double sL=EMPTY_VALUE, double slFactor=0.6) {
+   double            getStopLoss(double tP=EMPTY_VALUE, double sL=EMPTY_VALUE, double slFactor=0.6)
+     {
       return ((sL!=EMPTY_VALUE)?sL:((tP!=EMPTY_VALUE)?(tP*slFactor):(TAKEPROFIT*slFactor)));
-   }
+     }
 
    //+------------------------------------------------------------------+
    //|                                                                  |
    //+------------------------------------------------------------------+
-   void              initTrade(int minLot=1, double tP=EMPTY_VALUE,double sL=EMPTY_VALUE) {
+   void              initTrade(int minLot=1, double tP=EMPTY_VALUE,double sL=EMPTY_VALUE)
+     {
 
       TOTALORDERS = OrdersTotal();
 
       //      TAKEPROFIT= ((tP!=EMPTY_VALUE)&&(mL!=EMPTY))?(tP*mL):(((tP!=EMPTY_VALUE)&&(mL==EMPTY))?(tP*MICROLOTS):(0.1*MICROLOTS));
       TAKEPROFIT= getProfit(0.1,minLot,tP);
 
-      if(_Period == PERIOD_M1) {
+      if(_Period == PERIOD_M1)
+        {
          //TAKEPROFIT= 7*MICROLOTS;
          // TAKEPROFIT= 3*MICROLOTS;
          // TAKEPROFIT= 2.5*MICROLOTS;
@@ -416,60 +464,86 @@ struct ORDERPARAMS {
          TAKEPROFIT= getProfit(0.6,minLot,(tP*1));
          // TAKEPROFIT= 0.30*MICROLOTS;
 
-      }
-      if(_Period == PERIOD_M5) {
+        }
+      if(_Period == PERIOD_M5)
+        {
          TAKEPROFIT= getProfit(1,minLot,(tP*5));
-      } else if(_Period == PERIOD_M15) {
-         TAKEPROFIT= getProfit(2,minLot,(tP*10));
-      } else if(_Period == PERIOD_M30) {
-         TAKEPROFIT= getProfit(3,minLot,(tP*20));
-      } else if(_Period == PERIOD_H1) {
-         TAKEPROFIT= getProfit(4,minLot,(tP*30));
-      } else if(_Period == PERIOD_H4) {
-         TAKEPROFIT= getProfit(5,minLot,(tP*60));
-      } else if(_Period == PERIOD_D1) {
-         TAKEPROFIT= getProfit(6,minLot,(tP*250));
-      }
+        }
+      else
+         if(_Period == PERIOD_M15)
+           {
+            TAKEPROFIT= getProfit(2,minLot,(tP*10));
+           }
+         else
+            if(_Period == PERIOD_M30)
+              {
+               TAKEPROFIT= getProfit(3,minLot,(tP*20));
+              }
+            else
+               if(_Period == PERIOD_H1)
+                 {
+                  TAKEPROFIT= getProfit(4,minLot,(tP*30));
+                 }
+               else
+                  if(_Period == PERIOD_H4)
+                    {
+                     TAKEPROFIT= getProfit(5,minLot,(tP*60));
+                    }
+                  else
+                     if(_Period == PERIOD_D1)
+                       {
+                        TAKEPROFIT= getProfit(6,minLot,(tP*250));
+                       }
       STOPLOSS = getStopLoss(tP,sL,2);
 
 
-      if(TOTALORDERS==0) {
+      if(TOTALORDERS==0)
+        {
          TOTALORDERS=0;
          TRADEPOSITION = SAN_SIGNAL::NOSIG;
          TRADEPROFIT = 0;
          MAXTRADEPROFIT = 0;
-      }
+        }
 
-      if(TOTALORDERS>0) {
-         for(int i=0; i<TOTALORDERS; i++) {
-            if(OrderSelect(i,SELECT_BY_POS)) {
+      if(TOTALORDERS>0)
+        {
+         for(int i=0; i<TOTALORDERS; i++)
+           {
+            if(OrderSelect(i,SELECT_BY_POS))
+              {
                TRADEPROFIT = OrderProfit();
 
-               if((!MAXTRADEPROFIT)||(MAXTRADEPROFIT==NULL)||(MAXTRADEPROFIT==0)||(MAXTRADEPROFIT==EMPTY_VALUE)||(MAXTRADEPROFIT==EMPTY)) {
+               if((!MAXTRADEPROFIT)||(MAXTRADEPROFIT==NULL)||(MAXTRADEPROFIT==0)||(MAXTRADEPROFIT==EMPTY_VALUE)||(MAXTRADEPROFIT==EMPTY))
+                 {
                   MAXTRADEPROFIT = TRADEPROFIT;
-               }
-               if(((MAXTRADEPROFIT!=NULL)&&(MAXTRADEPROFIT!=0)&&(MAXTRADEPROFIT!=EMPTY_VALUE)&&(MAXTRADEPROFIT!=EMPTY))&&(TRADEPROFIT>MAXTRADEPROFIT)) {
+                 }
+               if(((MAXTRADEPROFIT!=NULL)&&(MAXTRADEPROFIT!=0)&&(MAXTRADEPROFIT!=EMPTY_VALUE)&&(MAXTRADEPROFIT!=EMPTY))&&(TRADEPROFIT>MAXTRADEPROFIT))
+                 {
                   MAXTRADEPROFIT = TRADEPROFIT;
-               }
+                 }
 
-               if(OrderType()==OP_BUY) {
+               if(OrderType()==OP_BUY)
+                 {
                   TRADEPOSITION=SAN_SIGNAL::BUY;
-               }
-               if(OrderType()==OP_SELL) {
+                 }
+               if(OrderType()==OP_SELL)
+                 {
                   TRADEPOSITION=SAN_SIGNAL::SELL;
-               }
-               if((OrderType()!=OP_SELL)&&(OrderType()!=OP_BUY)&&(OrderType()!=OP_SELLLIMIT)&&(OrderType()!=OP_BUYLIMIT)&&(OrderType()!=OP_SELLSTOP)&&(OrderType()!=OP_BUYSTOP)) {
+                 }
+               if((OrderType()!=OP_SELL)&&(OrderType()!=OP_BUY)&&(OrderType()!=OP_SELLLIMIT)&&(OrderType()!=OP_BUYLIMIT)&&(OrderType()!=OP_SELLSTOP)&&(OrderType()!=OP_BUYSTOP))
+                 {
                   TRADEPOSITION=SAN_SIGNAL::NOSIG;
-               }
-            }
+                 }
+              }
 
-         }
-      }
-   };
-};
+           }
+        }
+     };
+  };
 
 
-enum SANTREND {
+enum SANTREND
+  {
    UP=90,
    DOWN=100,
    FLAT=110,
@@ -484,37 +558,41 @@ enum SANTREND {
    FLATDOWN=200,
    FLATFLAT=210,
    NOTREND=-1000315
-};
+  };
 
-enum SANTRENDSTRENGTH {
+enum SANTRENDSTRENGTH
+  {
    WEAK=220,
    NORMAL=230,
    HIGH=240,
    SUPERHIGH=250,
    POOR=-1000316
-};
+  };
 
 
-enum STRATEGYTYPE {
+enum STRATEGYTYPE
+  {
    STDMFIADX=260,
    PA=270,
    IMACLOSE=280,
    FARMPROFITS=290,
    CLOSEPOSITIONS=300,
    NOSTRATEGY=-1000317
-};
+  };
 
-enum CROSSOVER {
+enum CROSSOVER
+  {
    ABOVE=400,
    BELOW=410,
    BELOWTOABOVE = 420,
    ABOVETOBELOW = 430,
    MULTIPLE = 440,
    NOCROSS = -1000319
-};
+  };
 
 
-enum SIGMAVARIABILITY {
+enum SIGMAVARIABILITY
+  {
 //   SIGMA_MEAN=310,
 //
    SIGMA_HALF=320,
@@ -547,19 +625,21 @@ enum SIGMAVARIABILITY {
    SIGMAPOS_REST=880,
 
    SIGMA_NULL=-1000318
-};
+  };
 
 
-enum MKTTYP {
+enum MKTTYP
+  {
    MKTFLAT=900,
    MKTTR=920,
    MKTUP=930,
    MKTDOWN=940,
    MKTCLOSE=950,
    NOMKT=-1000320
-};
+  };
 
-enum TRADE_STRATEGIES {
+enum TRADE_STRATEGIES
+  {
    FASTSIG=11000,
    SIMPLESIG=11100,
    SLOPESIG=11200,
@@ -567,48 +647,53 @@ enum TRADE_STRATEGIES {
    SLOPESTD_CSIG=11400,
    CPSLOPECANDLE120=11500,
    NOTRDSTGY=-10000340
-};
+  };
 
 
 
-struct TRENDSTRUCT {
+struct TRENDSTRUCT
+  {
    SANTREND          closeTrendSIG;
    SANTRENDSTRENGTH  trendStrengthSIG;
-   TRENDSTRUCT() {
+                     TRENDSTRUCT()
+     {
       closeTrendSIG = SANTREND::NOTREND;
       trendStrengthSIG=SANTRENDSTRENGTH::POOR;
-   }
-   ~TRENDSTRUCT() {}
-};
+     }
+                    ~TRENDSTRUCT() {}
+  };
 
-struct TRADESSWITCH {
+struct TRADESSWITCH
+  {
    SAN_SIGNAL        trade;
    SAN_SIGNAL        tradeSIG;
-   TRADESSWITCH() {
+                     TRADESSWITCH()
+     {
       trade = SAN_SIGNAL::NOSIG;
       tradeSIG=SAN_SIGNAL::NOSIG;
-   }
-   ~TRADESSWITCH() {}
-};
+     }
+                    ~TRADESSWITCH() {}
+  };
 
 TRADESSWITCH tsw;
 
-struct INDDATA {
+struct INDDATA
+  {
    double            open[500];
    double            high[70];
    double            low[70];
    double            close[500];
    datetime          time[70];
    double            tick_volume[500];
-   double            volume[70];
+   //   double            volume[70];
    double            std[70];
-   double            mfi[70];
+   //   double            mfi[70];
    double            obv[70];
    double            rsi[70];
    double            atr[70];
-   double            adx[70];
-   double            adxPlus[70];
-   double            adxMinus[70];
+   //   double            adx[70];
+   //   double            adxPlus[70];
+   //   double            adxMinus[70];
    double            ima5[70];
    double            ima14[70];
    double            ima30[70];
@@ -626,21 +711,22 @@ struct INDDATA {
    int               shift;
 
 
-   void              freeData() {
+   void              freeData()
+     {
       ArrayFree(open);
       ArrayFree(high);
       ArrayFree(low);
       ArrayFree(close);
       ArrayFree(time);
       ArrayFree(tick_volume);
-      ArrayFree(volume);
+      //      ArrayFree(volume);
       ArrayFree(std);
-      ArrayFree(mfi);
+      //     ArrayFree(mfi);
       ArrayFree(obv);
       ArrayFree(atr);
-      ArrayFree(adx);
-      ArrayFree(adxPlus);
-      ArrayFree(adxMinus);
+      //      ArrayFree(adx);
+      //     ArrayFree(adxPlus);
+      //     ArrayFree(adxMinus);
       ArrayFree(ima5);
       ArrayFree(ima14);
       ArrayFree(ima30);
@@ -656,252 +742,48 @@ struct INDDATA {
       shift=NULL;
       currSpread = EMPTY;
       tradePosition=EMPTY;
-   }
-   INDDATA() {}
-   ~INDDATA() {
+     }
+                     INDDATA() {}
+                    ~INDDATA()
+     {
       freeData();
-   }
-};
+     }
+  };
 
-struct SIGBUFF {
+struct SIGBUFF
+  {
    double            buff1[5];
    double            buff2[5];
    double            buff3[5];
    double            buff4[5];
    double            buff5[5];
    double            buff6[5];
-   SIGBUFF() {
+                     SIGBUFF()
+     {
       ArrayInitialize(buff1,EMPTY_VALUE);
       ArrayInitialize(buff2,EMPTY_VALUE);
       ArrayInitialize(buff3,EMPTY_VALUE);
       ArrayInitialize(buff4,EMPTY_VALUE);
       ArrayInitialize(buff5,EMPTY_VALUE);
       ArrayInitialize(buff6,EMPTY_VALUE);
-   }
-   ~SIGBUFF() {
+     }
+                    ~SIGBUFF()
+     {
       ArrayFree(buff1);
       ArrayFree(buff2);
       ArrayFree(buff3);
       ArrayFree(buff4);
       ArrayFree(buff5);
       ArrayFree(buff6);
-   }
-};
+     }
+  };
 
-//struct SANSIGNALS {
-//   SAN_SIGNAL        openSIG;
-//   SAN_SIGNAL        closeSIG;
-//   SAN_SIGNAL        priceActionSIG;
-//   SAN_SIGNAL        adxSIG;
-//   SAN_SIGNAL        mfiSIG;
-//   SAN_SIGNAL        rsiSIG;
-//   SAN_SIGNAL        adxCovDivSIG;
-//   SAN_SIGNAL        fastIma514SIG;
-//   SAN_SIGNAL        fastIma1430SIG;
-//   SAN_SIGNAL        fastIma30120SIG;
-//   SAN_SIGNAL        fastIma120240SIG;
-//   SAN_SIGNAL        fastIma240500SIG;
-//   SAN_SIGNAL        fastIma530SIG;
-//   SAN_SIGNAL        ima514SIG;
-//   SAN_SIGNAL        ima1430SIG;
-//   SAN_SIGNAL        ima30120SIG;
-//   SAN_SIGNAL        ima30240SIG;
-//   SAN_SIGNAL        ima120240SIG;
-//   SAN_SIGNAL        ima120500SIG;
-//   SAN_SIGNAL        ima240500SIG;
-//   SAN_SIGNAL        ima530SIG;
-//   SAN_SIGNAL        ima530_21SIG;
-//   SANTRENDSTRENGTH  atrSIG;
-//   SAN_SIGNAL        volSIG;
-//   SAN_SIGNAL        profitSIG;
-//   SAN_SIGNAL        profitPercentageSIG;
-//   SAN_SIGNAL        tradeSIG;
-//   SAN_SIGNAL        tradeVolVarSIG;
-//   SAN_SIGNAL        lossSIG;
-//   SANTREND          acfTrendSIG;
-//   SANTRENDSTRENGTH  acfStrengthSIG;
-//   SANTREND          trendRatioSIG;
-//   SANTREND          trendRatio5SIG;
-//   SANTREND          trendRatio14SIG;
-//   SANTREND          trendRatio30SIG;
-//   SANTREND          trendRatio120SIG;
-//   SANTREND          trendRatio240SIG;
-//   SANTREND          trendRatio500SIG;
-//   SANTREND          trendVolRatioSIG;
-//   SAN_SIGNAL        trendSumSig;
-//   SANTRENDSTRENGTH  trendVolRatioStrengthSIG;
-//   SAN_SIGNAL        slopeVarSIG;
-//   SANTREND          trendSlopeSIG;
-//   SANTREND          trendSlope5SIG;
-//   SANTREND          trendSlope14SIG;
-//   SANTREND          trendSlope30SIG;
-//   SANTREND          cpScatterSIG;
-//   SANTREND          cpScatter21SIG;
-//   SANTREND          trendScatterSIG;
-//   SANTREND          trendScatter5SIG;
-//   SANTREND          trendScatter14SIG;
-//   SANTREND          trendScatter30SIG;
-//   SAN_SIGNAL        fsig5;
-//   SAN_SIGNAL        fsig14;
-//   SAN_SIGNAL        fsig30;
-//   SAN_SIGNAL        fsig120;
-//   SAN_SIGNAL        fsig240;
-//   SAN_SIGNAL        fsig500;
-//   SAN_SIGNAL        sig5;
-//   SAN_SIGNAL        sig14;
-//   SAN_SIGNAL        sig30;
-//   SAN_SIGNAL        sig120;
-//   SAN_SIGNAL        sig240;
-//   SAN_SIGNAL        sig500;
-//   SAN_SIGNAL        candleImaSIG;
-//   SAN_SIGNAL        candleVolSIG;
-//   SAN_SIGNAL        candleVol120SIG;
-//   SAN_SIGNAL        simpleSlope_14_SIG;
-//   SAN_SIGNAL        simpleSlope_30_SIG;
-//   SAN_SIGNAL        simpleSlope_120_SIG;
-//   SAN_SIGNAL        simpleSlope_240_SIG;
-//   SAN_SIGNAL        simpleSlope_500_SIG;
-//   SAN_SIGNAL        c_SIG;
-//   SIGMAVARIABILITY        cpSDSIG;
-//   SIGMAVARIABILITY        ima5SDSIG;
-//   SIGMAVARIABILITY        ima14SDSIG;
-//   SIGMAVARIABILITY        ima30SDSIG;
-//   SIGMAVARIABILITY        ima120SDSIG;
-//   SIGMAVARIABILITY        ima240SDSIG;
-//   SIGMAVARIABILITY        ima500SDSIG;
-//   SAN_SIGNAL        candlePattStarSIG;
-//   DataTransport     clusterData;
-////  DataTransport     imaSlopesData;
-//   DataTransport     imaSlope5Data;
-//   DataTransport     imaSlope14Data;
-//   DataTransport     imaSlope30Data;
-//   DataTransport     imaSlope120Data;
-//   DataTransport     baseSlopeData;
-//   DataTransport     imaSlope500Data;
-//   DataTransport     varDt;
-//   DataTransport     slopeRatioData;
-//   DataTransport     stdCPSlope;
-//   DataTransport     obvCPSlope;
-//   double            hilbertAmp[];
-//   double            hilbertPhase[];
-//   double            dftMag[];
-//   double            dftPhase[];
-//   double            dftPower[];
-//
-//   void              initBase() {
-//      openSIG = SAN_SIGNAL::NOSIG;
-//      closeSIG = SAN_SIGNAL::NOSIG;
-//      priceActionSIG = SAN_SIGNAL::NOSIG;
-//      candlePattStarSIG = SAN_SIGNAL::NOSIG;
-//      adxSIG = SAN_SIGNAL::NOSIG;
-//      mfiSIG = SAN_SIGNAL::NOSIG;
-//      rsiSIG = SAN_SIGNAL::NOSIG;
-//      adxCovDivSIG = SAN_SIGNAL::NOSIG;
-//      fastIma514SIG = SAN_SIGNAL::NOSIG;
-//      fastIma1430SIG = SAN_SIGNAL::NOSIG;
-//      fastIma530SIG = SAN_SIGNAL::NOSIG;
-//      fastIma30120SIG = SAN_SIGNAL::NOSIG;
-//      fastIma120240SIG = SAN_SIGNAL::NOSIG;
-//      fastIma240500SIG = SAN_SIGNAL::NOSIG;
-//      ima514SIG = SAN_SIGNAL::NOSIG;
-//      ima1430SIG = SAN_SIGNAL::NOSIG;
-//      ima530SIG = SAN_SIGNAL::NOSIG;
-//      ima530_21SIG = SAN_SIGNAL::NOSIG;
-//      ima30120SIG = SAN_SIGNAL::NOSIG;
-//      ima30240SIG = SAN_SIGNAL::NOSIG;
-//      ima120240SIG = SAN_SIGNAL::NOSIG;
-//      ima120500SIG = SAN_SIGNAL::NOSIG;
-//      ima240500SIG = SAN_SIGNAL::NOSIG;
-//      atrSIG = SANTRENDSTRENGTH::POOR;
-//      volSIG = SAN_SIGNAL::NOSIG;
-//      profitSIG = SAN_SIGNAL::NOSIG;
-//      profitPercentageSIG = SAN_SIGNAL::NOSIG;
-//      tradeSIG = SAN_SIGNAL::NOSIG;
-//      tradeVolVarSIG = SAN_SIGNAL::NOSIG;
-//      lossSIG = SAN_SIGNAL::NOSIG;
-//      acfTrendSIG = SANTREND::NOTREND;
-//      acfStrengthSIG = SANTRENDSTRENGTH::POOR;
-//      trendRatio5SIG = SANTREND::NOTREND;
-//      trendRatio14SIG = SANTREND::NOTREND;
-//      trendRatio30SIG = SANTREND::NOTREND;
-//      trendRatio120SIG = SANTREND::NOTREND;
-//      trendRatio240SIG = SANTREND::NOTREND;
-//      trendRatio500SIG = SANTREND::NOTREND;
-//      trendRatioSIG = SANTREND::NOTREND;
-//      trendVolRatioSIG =  SANTREND::NOTREND;
-//      trendSumSig = SAN_SIGNAL::NOSIG;
-//      trendVolRatioStrengthSIG = SANTRENDSTRENGTH::POOR;
-//      slopeVarSIG = SAN_SIGNAL::NOSIG;
-//      trendSlopeSIG = SANTREND::NOTREND;
-//      trendSlope5SIG = SANTREND::NOTREND;
-//      trendSlope14SIG = SANTREND::NOTREND;
-//      trendSlope30SIG = SANTREND::NOTREND;
-//      cpScatterSIG = SANTREND::NOTREND;
-//      cpScatter21SIG = SANTREND::NOTREND;
-//      trendScatterSIG = SANTREND::NOTREND;
-//      trendScatter5SIG = SANTREND::NOTREND;
-//      trendScatter14SIG = SANTREND::NOTREND;
-//      trendScatter30SIG = SANTREND::NOTREND;
-//      fsig5 = SAN_SIGNAL::NOSIG;
-//      fsig14 = SAN_SIGNAL::NOSIG;
-//      fsig30 = SAN_SIGNAL::NOSIG;
-//      fsig120 = SAN_SIGNAL::NOSIG;
-//      fsig240 = SAN_SIGNAL::NOSIG;
-//      fsig500 = SAN_SIGNAL::NOSIG;
-//      sig5 = SAN_SIGNAL::NOSIG;
-//      sig14 = SAN_SIGNAL::NOSIG;
-//      sig30 = SAN_SIGNAL::NOSIG;
-//      sig120 = SAN_SIGNAL::NOSIG;
-//      sig240 = SAN_SIGNAL::NOSIG;
-//      sig500 = SAN_SIGNAL::NOSIG;
-//      candleImaSIG = SAN_SIGNAL::NOSIG;
-//      candleVolSIG = SAN_SIGNAL::NOSIG;
-//      candleVol120SIG = SAN_SIGNAL::NOSIG;
-//      simpleSlope_14_SIG=  SAN_SIGNAL::NOSIG;
-//      simpleSlope_30_SIG = SAN_SIGNAL::NOSIG;
-//      simpleSlope_120_SIG = SAN_SIGNAL::NOSIG;
-//      simpleSlope_240_SIG = SAN_SIGNAL::NOSIG;
-//      simpleSlope_500_SIG =  SAN_SIGNAL::NOSIG;
-//      c_SIG =  SAN_SIGNAL::NOSIG;
-//      cpSDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-//      ima5SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-//      ima14SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-//      ima30SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-//      ima120SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-//      ima240SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-//      ima500SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
-//      //clusterSIG = EMPTY_VALUE;
-//   }
-//
-//                     SANSIGNALS() {
-//      initBase();
-//   }
-//
-//                    ~SANSIGNALS() {
-//      clusterData.freeData();
-////      imaSlopesData.freeData();
-//      varDt.freeData();
-//      slopeRatioData.freeData();
-//      baseSlopeData.freeData();
-//      imaSlope5Data.freeData();
-//      imaSlope14Data.freeData();
-//      imaSlope30Data.freeData();
-//      imaSlope120Data.freeData();
-//      imaSlope500Data.freeData();
-//      stdCPSlope.freeData();
-//      obvCPSlope.freeData();
-//      ArrayFree(hilbertAmp);
-//      ArrayFree(hilbertPhase);
-//      ArrayFree(dftMag);
-//      ArrayFree(dftPhase);
-//      ArrayFree(dftPower);
-//   }
-//
-//};
-
-
-class SANSIGNALS {
- public:
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+class SANSIGNALS
+  {
+public:
    SAN_SIGNAL        openSIG;
    SAN_SIGNAL        closeSIG;
    SAN_SIGNAL        priceActionSIG;
@@ -986,7 +868,7 @@ class SANSIGNALS {
    SIGMAVARIABILITY        ima500SDSIG;
    SAN_SIGNAL        candlePattStarSIG;
    DataTransport     clusterData;
-//  DataTransport     imaSlopesData;
+   //  DataTransport     imaSlopesData;
    DataTransport     imaSlope5Data;
    DataTransport     imaSlope14Data;
    DataTransport     imaSlope30Data;
@@ -1003,24 +885,26 @@ class SANSIGNALS {
    double            dftPhase[];
    double            dftPower[];
 
-   SANSIGNALS();
-   ~SANSIGNALS();
+                     SANSIGNALS();
+                    ~SANSIGNALS();
    void              initBase();
 
-};
+  };
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SANSIGNALS::SANSIGNALS() {
+SANSIGNALS::SANSIGNALS()
+  {
    initBase();
-}
+  }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SANSIGNALS::~SANSIGNALS() {
+SANSIGNALS::~SANSIGNALS()
+  {
    clusterData.freeData();
 //      imaSlopesData.freeData();
    varDt.freeData();
@@ -1038,12 +922,13 @@ SANSIGNALS::~SANSIGNALS() {
    ArrayFree(dftMag);
    ArrayFree(dftPhase);
    ArrayFree(dftPower);
-}
+  }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void  SANSIGNALS::initBase() {
+void  SANSIGNALS::initBase()
+  {
    openSIG = SAN_SIGNAL::NOSIG;
    closeSIG = SAN_SIGNAL::NOSIG;
    priceActionSIG = SAN_SIGNAL::NOSIG;
@@ -1128,9 +1013,10 @@ void  SANSIGNALS::initBase() {
    ima240SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
    ima500SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
 //clusterSIG = EMPTY_VALUE;
-}
+  }
 
-struct SANSIGBOOL {
+struct SANSIGBOOL
+  {
    bool              spreadBool;
    bool              fimaWaveBool;
    bool              imaWaveBool;
@@ -1173,7 +1059,8 @@ struct SANSIGBOOL {
    bool              candlePipAlarm;
 
 
-   SANSIGBOOL() {
+                     SANSIGBOOL()
+     {
       spreadBool = false;
       imaWaveBool = false;
       imaWaveBool1 = false;
@@ -1218,8 +1105,9 @@ struct SANSIGBOOL {
       //imaSDNoNoTradeBool = false;
       //starBool = false;
       candlePipAlarm = false;
-   }
-   SANSIGBOOL(const SANSIGNALS &ss) {
+     }
+                     SANSIGBOOL(const SANSIGNALS &ss)
+     {
       //spreadBool = (currspread < tl.spreadLimit);
       //      imaWaveBool = ((ss.ima514SIG==ss.ima1430SIG)||(ss.ima530SIG==ss.ima1430SIG)||(ss.ima530SIG==ss.ima514SIG));
       imaWaveBool = ((ss.ima514SIG==ss.ima1430SIG)&&(ss.ima1430SIG==ss.ima530_21SIG));
@@ -1270,37 +1158,40 @@ struct SANSIGBOOL {
       //      imaSDTradeTradeBool = (ima5SDBool && ima14SDBool && ima30SDBool);
       //      imaSDNoNoTradeBool = (!ima5SDBool && !ima14SDBool && !ima30SDBool);
       starBool = ((ss.candlePattStarSIG==SAN_SIGNAL::BUY)||(ss.candlePattStarSIG==SAN_SIGNAL::SELL));
-   }
-   ~SANSIGBOOL() {}
-   void              printStruct() {
+     }
+                    ~SANSIGBOOL() {}
+   void              printStruct()
+     {
       //      Print("cpSDBool: "+cpSDBool+" ima5SDBool: "+ ima5SDBool+" ima14SDBool: "+ ima14SDBool+" ima30DBool: "+ ima30SDBool +" imaSDNoTradeBool: "+imaSDNoTradeBool+" closeVolTrendBool: "+closeVolTrendBool+" openVolTrendBool:"+openVolTrendBool);
       Print("closeVolTrendBool: "+closeVolTrendBool+" openVolTrendBool:"+openVolTrendBool);
       Print("adxBool: "+adxBool+" adxIma1430Bool: "+adxIma1430Bool+" atrAdxBool: "+atrAdxBool+" openTradeBool: "+openTradeBool+" healthyTrendBool:"+healthyTrendBool+" healthyTrendStrengthBool: "+healthyTrendStrengthBool+" atrAdxVolOpenBool: "+atrAdxVolOpenBool+" starBool: "+starBool);
       Print("SpreadBool: "+spreadBool+" imaWaveBool: "+imaWaveBool+" signal514Bool: "+signal514Bool+" signal1430Bool: "+signal1430Bool+" signal5Wave14Bool: "+signal5Wave14Bool+" signal14Wave1430Bool: "+signal14Wave1430Bool+" signal5Wave1430Bool: "+signal5Wave1430Bool+" safeSig1Bool:"+safeSig1Bool+" safeSig2Bool: "+safeSig2Bool+" imaSig1Bool: "+imaSig1Bool);
-   }
-};
+     }
+  };
 //+------------------------------------------------------------------+
 
 
 
-struct STATE_SIGNAL {
-   SAN_SIGNAL dominantSIG;
-   SAN_SIGNAL c_SIG;
-   SAN_SIGNAL tradeSIG;
-   SAN_SIGNAL fastSIG;
-   SAN_SIGNAL simple_5_14_SIG;
-   SAN_SIGNAL simple_14_30_SIG;
-   SAN_SIGNAL simpleTrend_5_14_SIG;
-   SAN_SIGNAL simpleTrend_14_30_SIG;
-   SAN_SIGNAL simpleSlope_30_SIG;
-   SAN_SIGNAL cpSlopeCandle120SIG;
-   SAN_SIGNAL volSIG;
-   SAN_SIGNAL volSlopeSIG;
-   SAN_SIGNAL dominantTrendCPSIG;
-   SAN_SIGNAL dominantTrendSIG;
-   TRADE_STRATEGIES trdStgy;
+struct STATE_SIGNAL
+  {
+   SAN_SIGNAL        dominantSIG;
+   SAN_SIGNAL        c_SIG;
+   SAN_SIGNAL        tradeSIG;
+   SAN_SIGNAL        fastSIG;
+   SAN_SIGNAL        simple_5_14_SIG;
+   SAN_SIGNAL        simple_14_30_SIG;
+   SAN_SIGNAL        simpleTrend_5_14_SIG;
+   SAN_SIGNAL        simpleTrend_14_30_SIG;
+   SAN_SIGNAL        simpleSlope_30_SIG;
+   SAN_SIGNAL        cpSlopeCandle120SIG;
+   SAN_SIGNAL        volSIG;
+   SAN_SIGNAL        volSlopeSIG;
+   SAN_SIGNAL        dominantTrendCPSIG;
+   SAN_SIGNAL        dominantTrendSIG;
+   TRADE_STRATEGIES  trdStgy;
 
-   void initSIG() {
+   void              initSIG()
+     {
       dominantSIG = SAN_SIGNAL::NOSIG;
       tradeSIG = SAN_SIGNAL::NOSIG;
       c_SIG = SAN_SIGNAL::NOSIG;
@@ -1316,17 +1207,20 @@ struct STATE_SIGNAL {
       dominantTrendCPSIG = SAN_SIGNAL::NOSIG;
       dominantTrendSIG = SAN_SIGNAL::NOSIG;
       trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
-   }
+     }
 
-   STATE_SIGNAL() {
+                     STATE_SIGNAL()
+     {
       initSIG();
-   }
+     }
 
-   ~STATE_SIGNAL() {
+                    ~STATE_SIGNAL()
+     {
       initSIG();
-   }
-   void printState() {
+     }
+   void              printState()
+     {
       //Print("[STATE] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(c_SIG)+" fastSIG: "+util.getSigString(fastSIG)+" 5_14:"+util.getSigString(simple_5_14_SIG)+" Slope30: "+util.getSigString(simpleSlope_30_SIG)+" cp120: "+util.getSigString(cpSlopeCandle120SIG)+" volSIG:"+ util.getSigString(volSIG)+" volSlopeSIG: "+util.getSigString(volSlopeSIG)+" domTrCP: "+util.getSigString(dominantTrendCPSIG)+" trendSIG:: "+util.getSigString(dominantTrendSIG));
-   }
-};
+     }
+  };
 //+------------------------------------------------------------------+
