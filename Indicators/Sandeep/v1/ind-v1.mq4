@@ -114,12 +114,13 @@ int OnCalculate(const int rates_total,
 //   for(int i = prev_calculated; i < (rates_total-1); i++) {}
 // // Loop:2
 
-   int i=rates_total-prev_calculated-1;
-//--- current value should be recalculated
-   if(i<0)i=0;
-//---
-   while(i>=0) { 
-   //for(int i = prev_calculated; i < (rates_total-1); i++) {
+////   int i=rates_total-prev_calculated-1;
+//   int i=rates_total-prev_calculated;
+////--- current value should be recalculated
+//   if(i<0)i=0;
+//////---
+//   while(i>=0) { 
+   for(int i = prev_calculated; i < rates_total; i++) {
       for(int i=0; i<31; i++) {
          //indData.open[i] = open[i];
          indData.high[i] = high[i];
