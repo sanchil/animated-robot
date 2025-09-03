@@ -45,34 +45,35 @@ INDDATA indData;
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
-int OnInit() {
+int OnInit()
+  {
 
    ArrayInitialize(buff1,EMPTY);
    ArrayInitialize(buff2,EMPTY);
    ArrayInitialize(buff3,EMPTY);
-   //ArrayInitialize(buff4,EMPTY);
-   //ArrayInitialize(buff5,EMPTY);
-   //ArrayInitialize(buff6,EMPTY);
+//ArrayInitialize(buff4,EMPTY);
+//ArrayInitialize(buff5,EMPTY);
+//ArrayInitialize(buff6,EMPTY);
 
 
 //--- indicator buffers mapping
    ArraySetAsSeries(buff1,true);
    ArraySetAsSeries(buff2,true);
    ArraySetAsSeries(buff3,true);
-   //ArraySetAsSeries(buff4,true);
-   //ArraySetAsSeries(buff5,true);
-   //ArraySetAsSeries(buff6,true);
+//ArraySetAsSeries(buff4,true);
+//ArraySetAsSeries(buff5,true);
+//ArraySetAsSeries(buff6,true);
 
    SetIndexBuffer(0,buff1,INDICATOR_CALCULATIONS);
    SetIndexBuffer(1,buff2,INDICATOR_CALCULATIONS);
    SetIndexBuffer(2,buff3,INDICATOR_CALCULATIONS);
-   //SetIndexBuffer(3,buff4,INDICATOR_CALCULATIONS);
-   //SetIndexBuffer(4,buff5,INDICATOR_CALCULATIONS);
-   //SetIndexBuffer(5,buff6,INDICATOR_CALCULATIONS);
+//SetIndexBuffer(3,buff4,INDICATOR_CALCULATIONS);
+//SetIndexBuffer(4,buff5,INDICATOR_CALCULATIONS);
+//SetIndexBuffer(5,buff6,INDICATOR_CALCULATIONS);
 
 //---
    return(INIT_SUCCEEDED);
-}
+  }
 //+------------------------------------------------------------------+
 //| Custom indicator iteration function                              |
 //+------------------------------------------------------------------+
@@ -85,7 +86,9 @@ int OnCalculate(const int rates_total,
                 const double &close[],
                 const long &tick_volume[],
                 const long &volume[],
-                const int &spread[]) {
+                const int &spread[])
+  {
+// Print("On Calculate");
 //---
 
 //ArraySetAsSeries(time,true);
@@ -105,23 +108,38 @@ int OnCalculate(const int rates_total,
    indData.shift = SHIFT;
    indData.currSpread = (int)MarketInfo(_Symbol,MODE_SPREAD);
 
+//###################################################################
 //// Loop:1
+//###################################################################
+
 //   int i=rates_total-prev_calculated-1;
 ////--- current value should be recalculated
 //   if(i<0)i=0;
 ////---
 //   while(i>=0) {}
-//   for(int i = prev_calculated; i < (rates_total-1); i++) {}
-// // Loop:2
 
-////   int i=rates_total-prev_calculated-1;
-//   int i=rates_total-prev_calculated;
-////--- current value should be recalculated
-//   if(i<0)i=0;
-//////---
-//   while(i>=0) { 
-   for(int i = prev_calculated; i < rates_total; i++) {
-      for(int i=0; i<31; i++) {
+//###################################################################
+
+
+//###################################################################
+//// Loop:2
+//###################################################################
+
+//   for(int i = prev_calculated; i < rates_total; i++) {}
+
+//###################################################################
+
+   int i=rates_total-prev_calculated-1;
+   if(i<0)
+      i=0;
+// while(i>=0)
+   if(i>=0)
+      //   for(int i = prev_calculated; i < rates_total; i++)
+     {
+      //Print("rates_total: "+rates_total+"Prev calculated: "+ prev_calculated+" i: "+i);
+      //Print("");
+      for(int i=0; i<31; i++)
+        {
          //indData.open[i] = open[i];
          indData.high[i] = high[i];
          indData.low[i] = low[i];
@@ -130,12 +148,12 @@ int OnCalculate(const int rates_total,
          //indData.tick_volume[i]=tick_volume[i];
          //indData.volume[i] = iVolume(_Symbol,PERIOD_CURRENT,i);
          indData.std[i]= iStdDev(_Symbol,PERIOD_CURRENT,noOfCandles,0,MODE_EMA,PRICE_CLOSE,i);
- //        indData.mfi[i]= iMFI(_Symbol,PERIOD_CURRENT, noOfCandles,i);
+         //        indData.mfi[i]= iMFI(_Symbol,PERIOD_CURRENT, noOfCandles,i);
          indData.obv[i]= iOBV(_Symbol,PERIOD_CURRENT, PRICE_CLOSE,i);
          indData.rsi[i]= iRSI(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_WEIGHTED,i);
-//         indData.adx[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MAIN,i);
-//         indData.adxPlus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_PLUSDI,i);
-//         indData.adxMinus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MINUSDI,i);
+         //         indData.adx[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MAIN,i);
+         //         indData.adxPlus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_PLUSDI,i);
+         //         indData.adxMinus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MINUSDI,i);
          indData.ima5[i]= iMA(_Symbol,PERIOD_CURRENT,5,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.ima14[i]= iMA(_Symbol,PERIOD_CURRENT,14,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.ima30[i]= iMA(_Symbol,PERIOD_CURRENT,30,0,MODE_SMMA, PRICE_CLOSE,i);
@@ -143,33 +161,40 @@ int OnCalculate(const int rates_total,
          //         indData.ima120[i]= iMA(_Symbol,PERIOD_CURRENT,120,0,MODE_SMMA, PRICE_CLOSE,i);
          //         indData.ima240[i]= iMA(_Symbol,PERIOD_CURRENT,240,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.atr[i] = iATR(_Symbol,PERIOD_CURRENT,noOfCandles,i);
-      }
+        }
 
-      for(int i=0; i<201; i++) {
+      for(int i=0; i<201; i++)
+        {
          indData.open[i] = open[i];
          indData.close[i] = close[i];
          indData.tick_volume[i]=tick_volume[i];
          indData.ima120[i]= iMA(_Symbol,PERIOD_CURRENT,120,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.ima240[i]= iMA(_Symbol,PERIOD_CURRENT,240,0,MODE_SMMA, PRICE_CLOSE,i);
          indData.ima500[i]= iMA(_Symbol,PERIOD_CURRENT,500,0,MODE_SMMA, PRICE_CLOSE,i);
-      }
+        }
 
       //Print("ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21] );
       //Print("Indicators: StdDev: "+NormalizeDouble(indData.std[SHIFT],2)+" MFI: "+NormalizeDouble(indData.mfi[SHIFT],2)+" Adx Main: "+NormalizeDouble(indData.adx[SHIFT],2)+" DI+: "+NormalizeDouble(indData.adxPlus[SHIFT],2)+" DI-: "+NormalizeDouble(indData.adxMinus[SHIFT],2)," Atr: "+indData.atr[SHIFT]+" Volume: "+indData.volume[SHIFT]+" tick_volume: "+indData.tick_volume[SHIFT]);
       //initCalc(indData);
 
-      if(GetLastError() == 4001) { // ERR_NOT_ENOUGH_MEMORY
-         Print("Memory error at bar ", i);
+      if(GetLastError() == 4001)   // ERR_NOT_ENOUGH_MEMORY
+        {
+         //Print("Memory error at bar ", i);
+         Print("Memory error at bar ");
          return(0); // Stop calculation
-      }
+        }
 
-   }
+      // Move initCalc outside if for loop is activated.
+      // For loop is an inefficient loop. Use while loop logic.
+      initCalc(indData); //use when while loop runs
+      // --i;
+     } // Loop
 
-   initCalc(indData);
+//   initCalc(indData); //activate when for loop runs.
 
 //--- return value of prev_calculated for next call
    return(rates_total);
-}
+  }
 //+------------------------------------------------------------------+
 
 
@@ -177,63 +202,83 @@ int OnCalculate(const int rates_total,
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void initCalc(const INDDATA &indData) {
+void initCalc(const INDDATA &indData)
+  {
    buff1[0] = buySell(indData);
 
-   if(recordData) {
-      if(util.isNewBarTime()) {
+   if(recordData)
+     {
+      if(util.isNewBarTime())
+        {
          st1.writeOHLCVJsonData(dataFileName,indData,util,1);
-      }
-   }
-}
+        }
+     }
+  }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double buySell(const INDDATA &indData) {
+double buySell(const INDDATA &indData)
+  {
 
    SIGBUFF sbuff = st1.imaSt1(indData);
 
-   if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL)) {
+   if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL))
+     {
       //buff2[0] = sbuff.buff2[0];
-      if(!flipSig) {
+      if(!flipSig)
+        {
          buff2[0] = sbuff.buff2[0];
-      } else if(flipSig) {
-         buff2[0] = util.flipSig((SAN_SIGNAL)sbuff.buff2[0]);
-      }
-   } else {
+        }
+      else
+         if(flipSig)
+           {
+            buff2[0] = util.flipSig((SAN_SIGNAL)sbuff.buff2[0]);
+           }
+     }
+   else
+     {
       buff2[0] = EMPTY_VALUE;
-   }
-   if((sbuff.buff3[0]!=EMPTY) && (sbuff.buff3[0]!=EMPTY_VALUE) && (sbuff.buff3[0]!=NULL)) {
+     }
+   if((sbuff.buff3[0]!=EMPTY) && (sbuff.buff3[0]!=EMPTY_VALUE) && (sbuff.buff3[0]!=NULL))
+     {
       buff3[0] = sbuff.buff3[0];
-   } else {
+     }
+   else
+     {
       buff3[0] = EMPTY_VALUE;
-   }
+     }
 
-   //if((sbuff.buff4[0]!=EMPTY) && (sbuff.buff4[0]!=EMPTY_VALUE) && (sbuff.buff4[0]!=NULL)) {
-   //   // Setting Market type. Trending or flat
-   //   buff4[0] = sbuff.buff4[0];
-   //} else {
-   //   buff4[0] = EMPTY_VALUE;
-   //}
+//if((sbuff.buff4[0]!=EMPTY) && (sbuff.buff4[0]!=EMPTY_VALUE) && (sbuff.buff4[0]!=NULL)) {
+//   // Setting Market type. Trending or flat
+//   buff4[0] = sbuff.buff4[0];
+//} else {
+//   buff4[0] = EMPTY_VALUE;
+//}
 
-   if(((sbuff.buff1[0]==EMPTY) || (sbuff.buff1[0]==EMPTY_VALUE) || (sbuff.buff1[0]==NULL))) {
+   if(((sbuff.buff1[0]==EMPTY) || (sbuff.buff1[0]==EMPTY_VALUE) || (sbuff.buff1[0]==NULL)))
+     {
       //sbuff.buff1[0]=1000.314;
       sbuff.buff1[0]=EMPTY_VALUE;
       return sbuff.buff1[0];
-   }
+     }
 
-   if((sbuff.buff1[0]!=EMPTY) && (sbuff.buff1[0]!=EMPTY_VALUE) && (sbuff.buff1[0]!=NULL)) {
-      if(!flipSig) {
+   if((sbuff.buff1[0]!=EMPTY) && (sbuff.buff1[0]!=EMPTY_VALUE) && (sbuff.buff1[0]!=NULL))
+     {
+      if(!flipSig)
+        {
          return sbuff.buff1[0];
-      } else if(flipSig) {
-         sbuff.buff1[0] = util.flipSig((SAN_SIGNAL)sbuff.buff1[0]);
-         return  sbuff.buff1[0];
-      }
-   }
+        }
+      else
+         if(flipSig)
+           {
+            sbuff.buff1[0] = util.flipSig((SAN_SIGNAL)sbuff.buff1[0]);
+            return  sbuff.buff1[0];
+           }
+     }
 
    return sbuff.buff1[0];
-}
+  }
 
 
 
@@ -241,7 +286,8 @@ double buySell(const INDDATA &indData) {
 //|                                                                  |
 //+------------------------------------------------------------------+
 bool calculateNow(const int rates_total,
-                  const int prev_calculated) {
+                  const int prev_calculated)
+  {
 
    int i=rates_total-prev_calculated-1;
    if(i<0)
@@ -251,5 +297,5 @@ bool calculateNow(const int rates_total,
 
 
    return false;
-}
+  }
 //+------------------------------------------------------------------+
