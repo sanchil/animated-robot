@@ -74,9 +74,141 @@ int OnInit()
 //---
    return(INIT_SUCCEEDED);
   }
+////+------------------------------------------------------------------+
+////| Custom indicator iteration function                              |
+////+------------------------------------------------------------------+
+//int OnCalculate(const int rates_total,
+//                const int prev_calculated,
+//                const datetime &time[],
+//                const double &open[],
+//                const double &high[],
+//                const double &low[],
+//                const double &close[],
+//                const long &tick_volume[],
+//                const long &volume[],
+//                const int &spread[])
+//  {
+//// Print("On Calculate");
+////---
+//
+////ArraySetAsSeries(time,true);
+////ArraySetAsSeries(open,true);
+////ArraySetAsSeries(high,true);
+////ArraySetAsSeries(low,true);
+////ArraySetAsSeries(close,true);
+////ArraySetAsSeries(tick_volume,true);
+////ArraySetAsSeries(volume,true);
+////ArraySetAsSeries(spread,true);
+//   indData.freeData();
+//   indData.magicnumber = magicNumber;
+//   indData.stopLoss = stopLoss;
+//   indData.currProfit = currProfit;
+//   indData.closeProfit = closeProfit;
+//   indData.maxProfit = maxProfit;
+//   indData.shift = SHIFT;
+//   indData.currSpread = (int)MarketInfo(_Symbol,MODE_SPREAD);
+//
+////###################################################################
+////// Loop:1
+////###################################################################
+//
+////   int i=rates_total-prev_calculated-1;
+//////--- current value should be recalculated
+////   if(i<0)i=0;
+//////---
+////   while(i>=0) {}
+//
+////###################################################################
+//
+//
+////###################################################################
+////// Loop:2
+////###################################################################
+//
+////   for(int i = prev_calculated; i < rates_total; i++) {}
+//
+////###################################################################
+//
+//   int i=rates_total-prev_calculated-1;
+//   if(i<0)
+//      i=0;
+//// while(i>=0)
+//   if(i>=0)
+//      //   for(int i = prev_calculated; i < rates_total; i++)
+//     {
+//      //Print("rates_total: "+rates_total+"Prev calculated: "+ prev_calculated+" i: "+i);
+//      //Print("");
+//      for(int i=0; i<31; i++)
+//        {
+//         //indData.open[i] = open[i];
+//         indData.high[i] = high[i];
+//         indData.low[i] = low[i];
+//         //indData.close[i] = close[i];
+//         indData.time[i] = time[i];
+//         //indData.tick_volume[i]=tick_volume[i];
+//         //indData.volume[i] = iVolume(_Symbol,PERIOD_CURRENT,i);
+//         indData.std[i]= iStdDev(_Symbol,PERIOD_CURRENT,noOfCandles,0,MODE_EMA,PRICE_CLOSE,i);
+//         //        indData.mfi[i]= iMFI(_Symbol,PERIOD_CURRENT, noOfCandles,i);
+//         indData.obv[i]= iOBV(_Symbol,PERIOD_CURRENT, PRICE_CLOSE,i);
+//         indData.rsi[i]= iRSI(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_WEIGHTED,i);
+//         //         indData.adx[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MAIN,i);
+//         //         indData.adxPlus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_PLUSDI,i);
+//         //         indData.adxMinus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MINUSDI,i);
+//         indData.ima5[i]= iMA(_Symbol,PERIOD_CURRENT,5,0,MODE_SMMA, PRICE_CLOSE,i);
+//         indData.ima14[i]= iMA(_Symbol,PERIOD_CURRENT,14,0,MODE_SMMA, PRICE_CLOSE,i);
+//         indData.ima30[i]= iMA(_Symbol,PERIOD_CURRENT,30,0,MODE_SMMA, PRICE_CLOSE,i);
+//         indData.ima60[i]= iMA(_Symbol,PERIOD_CURRENT,60,0,MODE_SMMA, PRICE_CLOSE,i);
+//         //         indData.ima120[i]= iMA(_Symbol,PERIOD_CURRENT,120,0,MODE_SMMA, PRICE_CLOSE,i);
+//         //         indData.ima240[i]= iMA(_Symbol,PERIOD_CURRENT,240,0,MODE_SMMA, PRICE_CLOSE,i);
+//         indData.atr[i] = iATR(_Symbol,PERIOD_CURRENT,noOfCandles,i);
+//        }
+//
+//      for(int i=0; i<201; i++)
+//        {
+//         indData.open[i] = open[i];
+//         indData.close[i] = close[i];
+//         indData.tick_volume[i]=tick_volume[i];
+//         indData.ima120[i]= iMA(_Symbol,PERIOD_CURRENT,120,0,MODE_SMMA, PRICE_CLOSE,i);
+//         indData.ima240[i]= iMA(_Symbol,PERIOD_CURRENT,240,0,MODE_SMMA, PRICE_CLOSE,i);
+//         indData.ima500[i]= iMA(_Symbol,PERIOD_CURRENT,500,0,MODE_SMMA, PRICE_CLOSE,i);
+//        }
+//
+//      //Print("ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21] );
+//      //Print("Indicators: StdDev: "+NormalizeDouble(indData.std[SHIFT],2)+" MFI: "+NormalizeDouble(indData.mfi[SHIFT],2)+" Adx Main: "+NormalizeDouble(indData.adx[SHIFT],2)+" DI+: "+NormalizeDouble(indData.adxPlus[SHIFT],2)+" DI-: "+NormalizeDouble(indData.adxMinus[SHIFT],2)," Atr: "+indData.atr[SHIFT]+" Volume: "+indData.volume[SHIFT]+" tick_volume: "+indData.tick_volume[SHIFT]);
+//      //initCalc(indData);
+//
+//      if(GetLastError() == 4001)   // ERR_NOT_ENOUGH_MEMORY
+//        {
+//         //Print("Memory error at bar ", i);
+//         Print("Memory error at bar ");
+//         return(0); // Stop calculation
+//        }
+//
+//      // Move initCalc outside if for loop is activated.
+//      // For loop is an inefficient loop. Use while loop logic.
+//      initCalc(indData); //use when while loop runs
+//      // --i;
+//     } // Loop
+//
+////   initCalc(indData); //activate when for loop runs.
+//
+////--- return value of prev_calculated for next call
+//   return(rates_total);
+//  }
+
+
+
+/**
 //+------------------------------------------------------------------+
-//| Custom indicator iteration function                              |
+//| Custom indicator iteration function. 
+//  Switched to if block. This was suggested by grok over a while loop
+//  that I was trying to implement without modifying the i var based on which
+// the while loop iterated. The code failed to execute because of compiler optimization 
+// leading to a hard to figure out behaviour of code. A simple if block fixed the issue.
+//                               |
 //+------------------------------------------------------------------+
+*/
+
 int OnCalculate(const int rates_total,
                 const int prev_calculated,
                 const datetime &time[],
@@ -88,17 +220,6 @@ int OnCalculate(const int rates_total,
                 const long &volume[],
                 const int &spread[])
   {
-// Print("On Calculate");
-//---
-
-//ArraySetAsSeries(time,true);
-//ArraySetAsSeries(open,true);
-//ArraySetAsSeries(high,true);
-//ArraySetAsSeries(low,true);
-//ArraySetAsSeries(close,true);
-//ArraySetAsSeries(tick_volume,true);
-//ArraySetAsSeries(volume,true);
-//ArraySetAsSeries(spread,true);
    indData.freeData();
    indData.magicnumber = magicNumber;
    indData.stopLoss = stopLoss;
@@ -106,98 +227,52 @@ int OnCalculate(const int rates_total,
    indData.closeProfit = closeProfit;
    indData.maxProfit = maxProfit;
    indData.shift = SHIFT;
-   indData.currSpread = (int)MarketInfo(_Symbol,MODE_SPREAD);
+   indData.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);
 
-//###################################################################
-//// Loop:1
-//###################################################################
-
-//   int i=rates_total-prev_calculated-1;
-////--- current value should be recalculated
-//   if(i<0)i=0;
-////---
-//   while(i>=0) {}
-
-//###################################################################
-
-
-//###################################################################
-//// Loop:2
-//###################################################################
-
-//   for(int i = prev_calculated; i < rates_total; i++) {}
-
-//###################################################################
-
-   int i=rates_total-prev_calculated-1;
-   if(i<0)
-      i=0;
-// while(i>=0)
-   if(i>=0)
-      //   for(int i = prev_calculated; i < rates_total; i++)
+   int i = rates_total - prev_calculated - 1;
+   if(i < 0)
+      i = 0;
+   if(i >= 0)
      {
-      //Print("rates_total: "+rates_total+"Prev calculated: "+ prev_calculated+" i: "+i);
-      //Print("");
-      for(int i=0; i<31; i++)
+      for(int j = 0; j < 31; j++)
         {
-         //indData.open[i] = open[i];
-         indData.high[i] = high[i];
-         indData.low[i] = low[i];
-         //indData.close[i] = close[i];
-         indData.time[i] = time[i];
-         //indData.tick_volume[i]=tick_volume[i];
-         //indData.volume[i] = iVolume(_Symbol,PERIOD_CURRENT,i);
-         indData.std[i]= iStdDev(_Symbol,PERIOD_CURRENT,noOfCandles,0,MODE_EMA,PRICE_CLOSE,i);
-         //        indData.mfi[i]= iMFI(_Symbol,PERIOD_CURRENT, noOfCandles,i);
-         indData.obv[i]= iOBV(_Symbol,PERIOD_CURRENT, PRICE_CLOSE,i);
-         indData.rsi[i]= iRSI(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_WEIGHTED,i);
-         //         indData.adx[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MAIN,i);
-         //         indData.adxPlus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_PLUSDI,i);
-         //         indData.adxMinus[i]=iADX(_Symbol,PERIOD_CURRENT,noOfCandles, ENUM_APPLIED_PRICE::PRICE_CLOSE,MODE_MINUSDI,i);
-         indData.ima5[i]= iMA(_Symbol,PERIOD_CURRENT,5,0,MODE_SMMA, PRICE_CLOSE,i);
-         indData.ima14[i]= iMA(_Symbol,PERIOD_CURRENT,14,0,MODE_SMMA, PRICE_CLOSE,i);
-         indData.ima30[i]= iMA(_Symbol,PERIOD_CURRENT,30,0,MODE_SMMA, PRICE_CLOSE,i);
-         indData.ima60[i]= iMA(_Symbol,PERIOD_CURRENT,60,0,MODE_SMMA, PRICE_CLOSE,i);
-         //         indData.ima120[i]= iMA(_Symbol,PERIOD_CURRENT,120,0,MODE_SMMA, PRICE_CLOSE,i);
-         //         indData.ima240[i]= iMA(_Symbol,PERIOD_CURRENT,240,0,MODE_SMMA, PRICE_CLOSE,i);
-         indData.atr[i] = iATR(_Symbol,PERIOD_CURRENT,noOfCandles,i);
+         indData.high[j] = high[j];
+         indData.low[j] = low[j];
+         indData.time[j] = time[j];
+         indData.std[j] = iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_CLOSE, j);
+         indData.obv[j] = iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, j);
+         indData.rsi[j] = iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, j);
+         indData.ima5[j] = iMA(_Symbol, PERIOD_CURRENT, 5, 0, MODE_SMMA, PRICE_CLOSE, j);
+         indData.ima14[j] = iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, j);
+         indData.ima30[j] = iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, j);
+         indData.ima60[j] = iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, j);
+         indData.atr[j] = iATR(_Symbol, PERIOD_CURRENT, noOfCandles, j);
+         if(GetLastError() != 0)
+           {
+            Print("Error in first loop at j = ", j, ": ", GetLastError());
+            return(0);
+           }
         }
-
-      for(int i=0; i<201; i++)
+      for(int j = 0; j < 201; j++)
         {
-         indData.open[i] = open[i];
-         indData.close[i] = close[i];
-         indData.tick_volume[i]=tick_volume[i];
-         indData.ima120[i]= iMA(_Symbol,PERIOD_CURRENT,120,0,MODE_SMMA, PRICE_CLOSE,i);
-         indData.ima240[i]= iMA(_Symbol,PERIOD_CURRENT,240,0,MODE_SMMA, PRICE_CLOSE,i);
-         indData.ima500[i]= iMA(_Symbol,PERIOD_CURRENT,500,0,MODE_SMMA, PRICE_CLOSE,i);
+         indData.open[j] = open[j];
+         indData.close[j] = close[j];
+         indData.tick_volume[j] = tick_volume[j];
+         indData.ima120[j] = iMA(_Symbol, PERIOD_CURRENT, 120, 0, MODE_SMMA, PRICE_CLOSE, j);
+         indData.ima240[j] = iMA(_Symbol, PERIOD_CURRENT, 240, 0, MODE_SMMA, PRICE_CLOSE, j);
+         indData.ima500[j] = iMA(_Symbol, PERIOD_CURRENT, 500, 0, MODE_SMMA, PRICE_CLOSE, j);
+         if(GetLastError() != 0)
+           {
+            Print("Error in second loop at j = ", j, ": ", GetLastError());
+            return(0);
+           }
         }
+      initCalc(indData);
+      buff1[0] = buff1[0]; // Force buffer update
+     }
 
-      //Print("ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21] );
-      //Print("Indicators: StdDev: "+NormalizeDouble(indData.std[SHIFT],2)+" MFI: "+NormalizeDouble(indData.mfi[SHIFT],2)+" Adx Main: "+NormalizeDouble(indData.adx[SHIFT],2)+" DI+: "+NormalizeDouble(indData.adxPlus[SHIFT],2)+" DI-: "+NormalizeDouble(indData.adxMinus[SHIFT],2)," Atr: "+indData.atr[SHIFT]+" Volume: "+indData.volume[SHIFT]+" tick_volume: "+indData.tick_volume[SHIFT]);
-      //initCalc(indData);
-
-      if(GetLastError() == 4001)   // ERR_NOT_ENOUGH_MEMORY
-        {
-         //Print("Memory error at bar ", i);
-         Print("Memory error at bar ");
-         return(0); // Stop calculation
-        }
-
-      // Move initCalc outside if for loop is activated.
-      // For loop is an inefficient loop. Use while loop logic.
-      initCalc(indData); //use when while loop runs
-      // --i;
-     } // Loop
-
-//   initCalc(indData); //activate when for loop runs.
-
-//--- return value of prev_calculated for next call
    return(rates_total);
   }
-//+------------------------------------------------------------------+
-
-
 
 //+------------------------------------------------------------------+
 //|                                                                  |
