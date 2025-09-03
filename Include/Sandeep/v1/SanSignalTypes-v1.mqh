@@ -30,16 +30,20 @@
 //#include <Sandeep/v1/SanTypes-v1.mqh>
 #include <Sandeep/v1/SanSignals-v1.mqh>
 
-class SS:public SANSIGNALS {
- private:
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+class SS:public SANSIGNALS
+  {
+private:
    double            iSIg[];
- public:
-   SS();
-   SS(SanSignals &sig, const INDDATA &indData, const int SHIFT);
-   ~SS();
+public:
+                     SS();
+                     SS(SanSignals &sig, const INDDATA &indData, const int SHIFT);
+                    ~SS();
    void              SS::printSignalStruct(SanUtils &util);
 
-};
+  };
 
 
 //+------------------------------------------------------------------+
@@ -54,7 +58,8 @@ SS::~SS() {}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
+SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
+  {
 //initBase();
 //Print("SS: ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21]);
 //########################################################################################################
@@ -177,16 +182,19 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 //        varDt = sig.varSIG(ima30SDSIG,ima120SDSIG,ima240SDSIG);
 
 
-//   stats.hilbertTransform(indData.close,hilbertAmp,hilbertPhase,21,5);
+   //stats.hilbertTransform(indData.close,hilbertAmp,hilbertPhase,8,3);
 //   stats.dftTransform(indData.close,dftMag,dftPhase,dftPower,8);
- //  hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),16,5);
-}
+//   hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),16,5);
+//   hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
+
+  }
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void   SS::printSignalStruct(SanUtils &util) {
+void   SS::printSignalStruct(SanUtils &util)
+  {
    double currSpread = (int)MarketInfo(_Symbol,MODE_SPREAD);
    Print("profitPercentageSIG: "+util.getSigString(profitPercentageSIG)+" lossSIG: "+util.getSigString(lossSIG)+" profitSIG: "+util.getSigString(profitSIG)+" cpSDSIG: "+util.getSigString(cpSDSIG)+" ima5SDSIG: "+util.getSigString(ima5SDSIG)+" ima14SDSIG: "+util.getSigString(ima14SDSIG)+" ima30SDSIG: "+util.getSigString(ima30SDSIG)+" ima120SDSIG: "+util.getSigString(ima120SDSIG));
    Print("ScatterTrend: "+util.getSigString(trendScatterSIG)+" ScatterTrend5: "+util.getSigString(trendScatter5SIG)+" ScatterTrend14: "+util.getSigString(trendScatter14SIG)+" ScatterTrend30: "+util.getSigString(trendScatter30SIG)+" trendVolSIG: "+util.getSigString(trendVolRatioSIG)+" trendVolStrengthSIG: "+util.getSigString(trendVolRatioStrengthSIG)+" trendRatioSIG: "+util.getSigString(trendRatioSIG));
@@ -195,5 +203,5 @@ void   SS::printSignalStruct(SanUtils &util) {
    Print("sig5: "+util.getSigString(sig5)+" sig14: "+util.getSigString(sig14)+" sig30: "+util.getSigString(sig30)+" ima514SIG: "+util.getSigString(ima514SIG)+" ima1430SIG: "+util.getSigString(ima1430SIG)+" ima530SIG: "+util.getSigString(ima530SIG)+" ima530_21SIG: "+util.getSigString(ima530_21SIG)+" ima30120SIG: "+util.getSigString(ima30120SIG));
    Print("fsig5: "+util.getSigString(fsig5)+" fsig14: "+util.getSigString(fsig14)+" fsig30: "+util.getSigString(fsig30)+" fastIma514SIG: "+util.getSigString(fastIma514SIG)+" fastIma1430SIG: "+util.getSigString(fastIma1430SIG)+" fastIma530SIG: "+util.getSigString(fastIma530SIG)+" fastIma30120SIG: "+util.getSigString(fastIma30120SIG));
    Print("Spread: "+currSpread+" openSIG: "+util.getSigString(openSIG)+" closeSIG: "+util.getSigString(closeSIG));
-}
+  }
 //+------------------------------------------------------------------+

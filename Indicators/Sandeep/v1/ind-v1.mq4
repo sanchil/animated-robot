@@ -291,7 +291,7 @@ int OnCalculate(const int rates_total,
 //  }
   
 void initCalc(const INDDATA &indData) {
-   Print("initCalc called"); // Debug
+//   Print("initCalc called"); // Debug
    buff1[0] = buySell(indData);
    if (recordData && util.isNewBarTime()) {
       st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
@@ -306,7 +306,7 @@ double buySell(const INDDATA &indData)
   {
 
    SIGBUFF sbuff = st1.imaSt1(indData);
-   Print("buySell: sbuff.buff1[0] = ", sbuff.buff1[0], ", buff2[0] = ", sbuff.buff2[0], ", buff3[0] = ", sbuff.buff3[0]); // Debug
+//   Print("buySell: sbuff.buff1[0] = ", sbuff.buff1[0], ", buff2[0] = ", sbuff.buff2[0], ", buff3[0] = ", sbuff.buff3[0]); // Debug
 
    if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL))
      {
