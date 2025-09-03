@@ -274,21 +274,30 @@ int OnCalculate(const int rates_total,
    return(rates_total);
   }
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void initCalc(const INDDATA &indData)
-  {
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//void initCalc(const INDDATA &indData)
+//  {
+//   buff1[0] = buySell(indData);
+//
+//   if(recordData)
+//     {
+//      if(util.isNewBarTime())
+//        {
+//         st1.writeOHLCVJsonData(dataFileName,indData,util,1);
+//        }
+//     }
+//  }
+  
+void initCalc(const INDDATA &indData) {
+   Print("initCalc called"); // Debug
    buff1[0] = buySell(indData);
-
-   if(recordData)
-     {
-      if(util.isNewBarTime())
-        {
-         st1.writeOHLCVJsonData(dataFileName,indData,util,1);
-        }
-     }
-  }
+   if (recordData && util.isNewBarTime()) {
+      st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
+   }
+   buff1[0] = buff1[0]; // Dummy write to force buffer update
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -297,6 +306,7 @@ double buySell(const INDDATA &indData)
   {
 
    SIGBUFF sbuff = st1.imaSt1(indData);
+   Print("buySell: sbuff.buff1[0] = ", sbuff.buff1[0], ", buff2[0] = ", sbuff.buff2[0], ", buff3[0] = ", sbuff.buff3[0]); // Debug
 
    if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL))
      {
