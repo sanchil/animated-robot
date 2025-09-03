@@ -183,7 +183,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    //stats.hilbertTransform(indData.close,hilbertAmp,hilbertPhase,8,3);
 //   stats.dftTransform(indData.close,dftMag,dftPhase,dftPower,8);
 //   hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),16,5);
-//   hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
+   hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.rsi[1],indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
 
 }
 //+------------------------------------------------------------------+

@@ -170,6 +170,19 @@ struct DTYPE {
    double            val5;
 };
 
+struct D20TYPE {
+   double            val[20];
+
+   void              freeData() {
+      ArrayFree(val);
+   }
+   D20TYPE() {
+      ArrayInitialize(val,EMPTY_VALUE);
+   }
+   ~D20TYPE() {
+      freeData();
+   }
+};
 
 
 
@@ -767,7 +780,7 @@ class SANSIGNALS {
    SAN_SIGNAL        simpleSlope_240_SIG;
    SAN_SIGNAL        simpleSlope_500_SIG;
    SAN_SIGNAL        c_SIG;
-   SAN_SIGNAL        hilbertDftSIG;
+
    SIGMAVARIABILITY        cpSDSIG;
    SIGMAVARIABILITY        ima5SDSIG;
    SIGMAVARIABILITY        ima14SDSIG;
@@ -776,6 +789,7 @@ class SANSIGNALS {
    SIGMAVARIABILITY        ima240SDSIG;
    SIGMAVARIABILITY        ima500SDSIG;
    SAN_SIGNAL        candlePattStarSIG;
+   D20TYPE        hilbertDftSIG;
    DataTransport     clusterData;
    //  DataTransport     imaSlopesData;
    DataTransport     imaSlope5Data;
@@ -812,6 +826,7 @@ SANSIGNALS::SANSIGNALS() {
 //|                                                                  |
 //+------------------------------------------------------------------+
 SANSIGNALS::~SANSIGNALS() {
+   hilbertDftSIG.freeData();
    clusterData.freeData();
 //      imaSlopesData.freeData();
    varDt.freeData();
@@ -910,7 +925,7 @@ void  SANSIGNALS::initBase() {
    simpleSlope_240_SIG = SAN_SIGNAL::NOSIG;
    simpleSlope_500_SIG =  SAN_SIGNAL::NOSIG;
    c_SIG =  SAN_SIGNAL::NOSIG;
-   hilbertDftSIG =  SAN_SIGNAL::NOSIG;
+//   hilbertDftSIG =  SAN_SIGNAL::NOSIG;
    cpSDSIG = SIGMAVARIABILITY::SIGMA_NULL;
    ima5SDSIG = SIGMAVARIABILITY::SIGMA_NULL;
    ima14SDSIG = SIGMAVARIABILITY::SIGMA_NULL;

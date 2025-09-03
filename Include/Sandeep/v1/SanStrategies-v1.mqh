@@ -330,8 +330,11 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 //   Print("[CLOSE]:: CloseSIG:"+util.getSigString(ss.closeSIG)+" closeTrade: "+closeTrade+" CloseFlat: "+closeFlatTrade+" SimpleClose14_30:: "+util.getSigString(hSig.simpleTrend_14_30_SIG));
 //   Print("[OPEN] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" domSIG: "+util.getSigString(dominantSIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" domTrCP: "+util.getSigString(hSig.dominantTrendCPSIG));//+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG)+" domTrCPSIG: "+util.getSigString(hSig.dominantTrendCPSIG));
-   Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" rsiSIG: "+util.getSigString(ss.rsiSIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" volSlopeSIG: "+util.getSigString(ss.volSlopeSIG)+" hilbertDftSIG: "+util.getSigString(ss.hilbertDftSIG));
+   Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" rsiSIG: "+util.getSigString(ss.rsiSIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" volSlopeSIG: "+util.getSigString(ss.volSlopeSIG)+" hilbertDftSIG: "+util.getSigString((SAN_SIGNAL)ss.hilbertDftSIG.val[0]));
    Print("[OTHEROPEN] :: domTrIMA: "+util.getSigString(hSig.domTrIMA)+" cpScatter: "+util.getSigString(ss.cpScatterSIG)+" slopeVarSIG: "+util.getSigString(ss.slopeVarSIG)+" candleVol120SIG: "+util.getSigString(ss.candleVol120SIG));//+" domTrCP: "+util.getSigString(hSig.dominantTrendCPSIG)+" trendSIG:: "+util.getSigString(hSig.dominantTrendSIG));
+   if(ss.hilbertDftSIG.val[1]!=EMPTY_VALUE)Print("[HT] index: " + IntegerToString(ss.hilbertDftSIG.val[1]) + " Amp: " + DoubleToString(ss.hilbertDftSIG.val[2], 6) + " Phase: " + DoubleToString(ss.hilbertDftSIG.val[3], 6)+" cutOff: "+ss.hilbertDftSIG.val[10]);
+   if(ss.hilbertDftSIG.val[4]!=EMPTY_VALUE)Print("[DT] k: " + IntegerToString(ss.hilbertDftSIG.val[4]) + " Mag: " + DoubleToString(ss.hilbertDftSIG.val[5], 6) + " Phase: " + DoubleToString(ss.hilbertDftSIG.val[6], 6) + " Power: " + DoubleToString(ss.hilbertDftSIG.val[7], 6)+" rsi: "+ss.hilbertDftSIG.val[11]+"  rsISIG: "+ util.getSigString(ss.hilbertDftSIG.val[12]));
+
 //
 ////   Print("[OPEN][MKT] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG));
    Print("[SETSIGBOOLS]: openTradeBool: "+hSig.tBools.openTradeBool+" closeTradeBool: "+hSig.tBools.closeTradeBool+" closeOBVStdBool: "+hSig.tBools.closeOBVStdBool+" closeClusterStdBool: "+hSig.tBools.closeClusterStdBool+" CloseTrRev "+hSig.tBools.closeSigTrReversalBool+" CloseFlatTrade: "+hSig.tBools.closeFlatTradeBool+" FlatBool: "+hSig.tBools.flatBool );
@@ -403,6 +406,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h
    DataTransport obvCPSlope = s.obvCPSlope; //sig.slopeSIGData(indData.obv, 5, 21, 1);
    DataTransport clusterData = s.clusterData;//sig.clusterData(indData.ima30[1], indData.ima120[1], indData.ima240[1]);
    DataTransport slopeRatioData = s.slopeRatioData; //sig.slopeRatioData(dt30, dt120, dt240);
+   D20TYPE hilbertDftData = s.hilbertDftSIG;
 
    //SAN_SIGNAL c_SIG = sig.cSIG(indData, util, 1);
    //SAN_SIGNAL c_SIG = h.cSIG(s, util, 1);
@@ -442,35 +446,18 @@ string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h
    double movingAvg120 = indData.ima120[1];
    double movingAvg240 = indData.ima240[1];
    double movingAvg500 = indData.ima500[1];
-
-//   double dftMag0 = s.dftMag[0];
-//   double dftMag1 = s.dftMag[1];
-//   double dftMag2 = s.dftMag[2];
-//   double dftMag3 = s.dftMag[3];
-//   double dftMag4 = s.dftMag[4];
-//   double dftMag5 = s.dftMag[5];
-//   double dftMag6 = s.dftMag[6];
-//   double dftMag7 = s.dftMag[7];
-//
-//   double dftPhase0 = s.dftPhase[0];
-//   double dftPhase1 = s.dftPhase[1];
-//   double dftPhase2 = s.dftPhase[2];
-//   double dftPhase3 = s.dftPhase[3];
-//   double dftPhase4 = s.dftPhase[4];
-//   double dftPhase5 = s.dftPhase[5];
-//   double dftPhase6 = s.dftPhase[6];
-//   double dftPhase7 = s.dftPhase[7];
-//
-//   double dftPower0 = s.dftPower[0];
-//   double dftPower1 = s.dftPower[1];
-//   double dftPower2 = s.dftPower[2];
-//   double dftPower3 = s.dftPower[3];
-//   double dftPower4 = s.dftPower[4];
-//   double dftPower5 = s.dftPower[5];
-//   double dftPower6 = s.dftPower[6];
-//   double dftPower7 = s.dftPower[7];
-
-
+   
+   double hilbertIndex = hilbertDftData.val[1];
+   double hilbertAmp = hilbertDftData.val[2];
+   double hilbertPhase = hilbertDftData.val[3];
+   double dftIndex = hilbertDftData.val[4];
+   double dftMagnitude = hilbertDftData.val[5];
+   double dftPhase = hilbertDftData.val[6];
+   double dftPower = hilbertDftData.val[7];
+   double hilbertSIZE = hilbertDftData.val[15];
+   double hibertFILTER = hilbertDftData.val[16];
+   
+ 
 
    // Use MathIsValidNumber to validate
    spread = (spread > 0 && MathIsValidNumber(spread)) ? spread : 0.0;
@@ -501,33 +488,16 @@ string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h
    movingAvg120 = MathIsValidNumber(movingAvg120) ? movingAvg120 : 0.0;
    movingAvg240 = MathIsValidNumber(movingAvg240) ? movingAvg240 : 0.0;
    movingAvg500 = MathIsValidNumber(movingAvg500) ? movingAvg500 : 0.0;
-
-//   dftMag0 = MathIsValidNumber(dftMag0) ? dftMag0 : 0.0;
-//   dftMag1 = MathIsValidNumber(dftMag1) ? dftMag1 : 0.0;
-//   dftMag2 = MathIsValidNumber(dftMag2) ? dftMag2 : 0.0;
-//   dftMag3 = MathIsValidNumber(dftMag3) ? dftMag3 : 0.0;
-//   dftMag4 = MathIsValidNumber(dftMag4) ? dftMag4 : 0.0;
-//   dftMag5 = MathIsValidNumber(dftMag5) ? dftMag5 : 0.0;
-//   dftMag6 = MathIsValidNumber(dftMag6) ? dftMag6 : 0.0;
-//   dftMag7 = MathIsValidNumber(dftMag7) ? dftMag7 : 0.0;
-//
-//   dftPhase0 = MathIsValidNumber(dftPhase0) ? dftPhase0 : 0.0;
-//   dftPhase1 = MathIsValidNumber(dftPhase1) ? dftPhase1 : 0.0;
-//   dftPhase2 = MathIsValidNumber(dftPhase2) ? dftPhase2 : 0.0;
-//   dftPhase3 = MathIsValidNumber(dftPhase3) ? dftPhase3 : 0.0;
-//   dftPhase4 = MathIsValidNumber(dftPhase4) ? dftPhase4 : 0.0;
-//   dftPhase5 = MathIsValidNumber(dftPhase5) ? dftPhase5 : 0.0;
-//   dftPhase6 = MathIsValidNumber(dftPhase6) ? dftPhase6 : 0.0;
-//   dftPhase7 = MathIsValidNumber(dftPhase7) ? dftPhase7 : 0.0;
-//
-//   dftPower0 = MathIsValidNumber(dftPower0) ? dftPower0 : 0.0;
-//   dftPower1 = MathIsValidNumber(dftPower1) ? dftPower1 : 0.0;
-//   dftPower2 = MathIsValidNumber(dftPower2) ? dftPower2 : 0.0;
-//   dftPower3 = MathIsValidNumber(dftPower3) ? dftPower3 : 0.0;
-//   dftPower4 = MathIsValidNumber(dftPower4) ? dftPower4 : 0.0;
-//   dftPower5 = MathIsValidNumber(dftPower5) ? dftPower5 : 0.0;
-//   dftPower6 = MathIsValidNumber(dftPower6) ? dftPower6 : 0.0;
-//   dftPower7 = MathIsValidNumber(dftPower7) ? dftPower7 : 0.0;
+   
+   hilbertIndex = MathIsValidNumber(hilbertIndex) ? hilbertIndex : 0.0;
+   hilbertAmp = MathIsValidNumber(hilbertAmp) ? hilbertAmp : 0.0;
+   hilbertPhase = MathIsValidNumber(hilbertPhase) ? hilbertPhase : 0.0;
+   dftIndex = MathIsValidNumber(dftIndex) ? dftIndex : 0.0;
+   dftMagnitude = MathIsValidNumber(dftMagnitude) ? dftMagnitude : 0.0;
+   dftPhase = MathIsValidNumber(dftPhase) ? dftPhase : 0.0;
+   dftPower = MathIsValidNumber(dftPower) ? dftPower : 0.0;
+   hilbertSIZE = MathIsValidNumber(hilbertSIZE) ? hilbertSIZE : 0.0;
+   hibertFILTER = MathIsValidNumber(hibertFILTER) ? hibertFILTER : 0.0;
 
    // Log invalid values for debugging
    if (!MathIsValidNumber(stdDevCp)) Print("Invalid StdDevCp: ", stdDevCp);
@@ -585,30 +555,16 @@ string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h
    prntStr += " \"MovingAvg240\":" + DoubleToString(movingAvg240, 8) + ",";
    prntStr += " \"MovingAvg500\":" + DoubleToString(movingAvg500, 8) + ",";
 
-   //prntStr += " \"dftMag0\":" + DoubleToString(dftMag0, 8) + ",";
-   //prntStr += " \"dftMag1\":" + DoubleToString(dftMag1, 8) + ",";
-   //prntStr += " \"dftMag2\":" + DoubleToString(dftMag2, 8) + ",";
-   //prntStr += " \"dftMag3\":" + DoubleToString(dftMag3, 8) + ",";
-   //prntStr += " \"dftMag4\":" + DoubleToString(dftMag4, 8) + ",";
-   //prntStr += " \"dftMag5\":" + DoubleToString(dftMag5, 8) + ",";
-   //prntStr += " \"dftMag6\":" + DoubleToString(dftMag6, 8) + ",";
-   //prntStr += " \"dftMag7\":" + DoubleToString(dftMag7, 8) + ",";
-   //prntStr += " \"dftPhase0\":" + DoubleToString(dftPhase0, 8) + ",";
-   //prntStr += " \"dftPhase1\":" + DoubleToString(dftPhase1, 8) + ",";
-   //prntStr += " \"dftPhase2\":" + DoubleToString(dftPhase2, 8) + ",";
-   //prntStr += " \"dftPhase3\":" + DoubleToString(dftPhase3, 8) + ",";
-   //prntStr += " \"dftPhase4\":" + DoubleToString(dftPhase4, 8) + ",";
-   //prntStr += " \"dftPhase5\":" + DoubleToString(dftPhase5, 8) + ",";
-   //prntStr += " \"dftPhase6\":" + DoubleToString(dftPhase6, 8) + ",";
-   //prntStr += " \"dftPhase7\":" + DoubleToString(dftPhase7, 8) + ",";
-   //prntStr += " \"dftPower0\":" + DoubleToString(dftPower0, 8) + ",";
-   //prntStr += " \"dftPower1\":" + DoubleToString(dftPower1, 8) + ",";
-   //prntStr += " \"dftPower2\":" + DoubleToString(dftPower2, 8) + ",";
-   //prntStr += " \"dftPower3\":" + DoubleToString(dftPower3, 8) + ",";
-   //prntStr += " \"dftPower4\":" + DoubleToString(dftPower4, 8) + ",";
-   //prntStr += " \"dftPower5\":" + DoubleToString(dftPower5, 8) + ",";
-   //prntStr += " \"dftPower6\":" + DoubleToString(dftPower6, 8) + ",";
-   //prntStr += " \"dftPower7\":" + DoubleToString(dftPower7, 8) + ",";
+   //prntStr += " \"hilbertIndex\":" + DoubleToString(hilbertIndex, 8) + ",";
+   //prntStr += " \"hilbertAmp\":" + DoubleToString(hilbertAmp, 8) + ",";
+   //prntStr += " \"hilbertPhase\":" + DoubleToString(hilbertPhase, 8) + ",";
+   //prntStr += " \"dftIndex\":" + DoubleToString(dftIndex, 8) + ",";
+   //prntStr += " \"dftMagnitude\":" + DoubleToString(dftMagnitude, 8) + ",";
+   //prntStr += " \"dftPhase\":" + DoubleToString(dftPhase, 8) + ",";
+   //prntStr += " \"dftPower\":" + DoubleToString(dftPower, 8) + ",";
+   //prntStr += " \"hilbertSIZE\":" + DoubleToString(hilbertSIZE, 8) + ",";
+   //prntStr += " \"hibertFILTER\":" + DoubleToString(hibertFILTER, 8) + ",";
+
 
    prntStr += " \"TRADESIG\":\"" + util.getSigString(TRADESIG) + "\"";
    prntStr += prntStrClose;

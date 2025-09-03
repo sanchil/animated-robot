@@ -1516,7 +1516,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" stdCPSlope: "+stdCPSlope+" obvCPSlope: "+obvCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS);//+" rFS: "+rFS);
+//   Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" stdCPSlope: "+stdCPSlope+" obvCPSlope: "+obvCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS);//+" rFS: "+rFS);
 
 //   Print("[CTRADE-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
 //   Print("[CTRADE-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " trendBuyClusterBool: "+trendBuyClusterBool+" trendSellClusterBool: "+trendSellClusterBool +" OBV BUY: "+trendBuyOBVBool+" OBV Sell: "+trendSellOBVBool);
