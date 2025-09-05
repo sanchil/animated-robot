@@ -168,6 +168,19 @@ struct DTYPE {
    double            val3;
    double            val4;
    double            val5;
+   void initDTYPE() {
+      val1=EMPTY_VALUE;
+      val2=EMPTY_VALUE;
+      val3=EMPTY_VALUE;
+      val4=EMPTY_VALUE;
+      val5=EMPTY_VALUE;
+   }
+   DTYPE() {
+      initDTYPE();
+   }
+   ~DTYPE() {
+      initDTYPE();
+   }
 };
 
 struct D20TYPE {
@@ -789,7 +802,9 @@ class SANSIGNALS {
    SIGMAVARIABILITY        ima240SDSIG;
    SIGMAVARIABILITY        ima500SDSIG;
    SAN_SIGNAL        candlePattStarSIG;
-   D20TYPE        hilbertDftSIG;
+   D20TYPE      hilbertDftSIG;
+   DTYPE        hilbertSIG;
+   DTYPE        dftSIG;
    DataTransport     clusterData;
    //  DataTransport     imaSlopesData;
    DataTransport     imaSlope5Data;
@@ -827,6 +842,8 @@ SANSIGNALS::SANSIGNALS() {
 //+------------------------------------------------------------------+
 SANSIGNALS::~SANSIGNALS() {
    hilbertDftSIG.freeData();
+   dftSIG.initDTYPE();
+   hilbertSIG.initDTYPE();
    clusterData.freeData();
 //      imaSlopesData.freeData();
    varDt.freeData();
