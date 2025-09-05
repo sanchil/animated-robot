@@ -447,8 +447,15 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    bool closeBool3 = (closeBool2 && (ssSIG.candleVol120SIG==SAN_SIGNAL::SIDEWAYS||ssSIG.candleVol120SIG==SAN_SIGNAL::CLOSE));
    bool closeBool4 = (closeBool2 && (ssSIG.slopeVarSIG==SAN_SIGNAL::SIDEWAYS||ssSIG.slopeVarSIG==SAN_SIGNAL::CLOSE));
    bool closeBool5 = (closeBool2 && (ssSIG.volSlopeSIG==SAN_SIGNAL::NOTRADE||ssSIG.volSlopeSIG==SAN_SIGNAL::CLOSE));
+   bool closeBool6 = (
+                        tBools.noTradeBool
+                        && (ssSIG.volSlopeSIG==SAN_SIGNAL::NOTRADE||ssSIG.volSlopeSIG==SAN_SIGNAL::CLOSE)
+                        && (ssSIG.rsiSIG==SAN_SIGNAL::NOSIG)
+                     );
 
-   tBools.closeTradeBool = (closeBool1||closeBool3);
+
+//   tBools.closeTradeBool = (closeBool1||closeBool3||closeBool4||closeBool6);
+   tBools.closeTradeBool = (closeBool1||closeBool3||closeBool4||closeBool6);
    tBools.openTradeBool = ((!tBools.closeTradeBool)&&(tBools.tradeBool));
 
 
