@@ -137,7 +137,8 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    candleVolSIG = sig.candleVolSIG_v1(indData.open,indData.close,indData.tick_volume,60,SHIFT);
    candleVol120SIG = sig.candleVolSIG_v1(indData.open,indData.close,indData.tick_volume,120,SHIFT);
 
-   slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,5,10,1);
+   //slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,5,10,1);
+   slopeVarSIG = sig.slopeVarSIG(indData.ima5,indData.ima14,indData.ima30,5,10,1);
 
 
    cpScatter21SIG = sig.trendScatterPlotSIG(indData.close,"Scatter-CP",0.04,21);
@@ -183,9 +184,10 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    //stats.hilbertTransform(indData.close,hilbertAmp,hilbertPhase,8,3);
 //   stats.dftTransform(indData.close,dftMag,dftPhase,dftPower,8);
 //   hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),16,5);
-   hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.rsi[1],indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
-   hilbertSIG = sig.hilbertSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
-   dftSIG = sig.dftSIG(indData.close,8);
+
+//   hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.rsi[1],indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
+//   hilbertSIG = sig.hilbertSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
+//   dftSIG = sig.dftSIG(indData.close,8);
 }
 //+------------------------------------------------------------------+
 
