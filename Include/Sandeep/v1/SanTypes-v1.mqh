@@ -834,7 +834,8 @@ class SANSIGNALS {
    DataTransport     varDt;
 
    //  DataTransport     imaSlopesData;   
-
+   DTYPE     atrVolData;
+   DTYPE     candleVolData;
    DTYPE     imaSlope5Data;
    DTYPE     imaSlope14Data;
    DTYPE     imaSlope30Data;
@@ -875,7 +876,8 @@ SANSIGNALS::~SANSIGNALS() {
 //      imaSlopesData.freeData();
    varDt.freeData();
    slopeRatioData.freeData();
-   
+   atrVolData.initDTYPE();
+   candleVolData.initDTYPE();
    baseSlopeData.initDTYPE();
    imaSlope5Data.initDTYPE();
    imaSlope14Data.initDTYPE();

@@ -41,6 +41,7 @@ const double _CLUSTERRANGEPLUS = 1+0.03;
 const double _CLUSTERRANGEMINUS = 1-0.03;
 const int _CLUSTERRANGEFLAT = 1;
 const int _SLOPE30LIMIT = 3;
+const int _ATR_VOL_LIMIT = 600;
 
 //########################################################################################################
 
@@ -62,6 +63,7 @@ class HSIG {
    double            CLUSTERRANGEMINUS;
    int               CLUSTERRANGEFLAT;
    double            SLOPE30LIMIT;
+   int               ATR_VOL_LIMIT;
 
  public:
    HSIG();
@@ -283,7 +285,8 @@ HSIG::HSIG()
    CLUSTERRANGEPLUS(_CLUSTERRANGEPLUS),
    CLUSTERRANGEMINUS(_CLUSTERRANGEMINUS),
    CLUSTERRANGEFLAT(_CLUSTERRANGEFLAT),
-   SLOPE30LIMIT(_SLOPE30LIMIT) {
+   SLOPE30LIMIT(_SLOPE30LIMIT),
+   ATR_VOL_LIMIT(_ATR_VOL_LIMIT) {
    baseInit();
 }
 //+------------------------------------------------------------------+
@@ -353,7 +356,8 @@ HSIG::HSIG(const SANSIGNALS &ss, SanUtils &util)
    CLUSTERRANGEPLUS(_CLUSTERRANGEPLUS),
    CLUSTERRANGEMINUS(_CLUSTERRANGEMINUS),
    CLUSTERRANGEFLAT(_CLUSTERRANGEFLAT),
-   SLOPE30LIMIT(_SLOPE30LIMIT) {
+   SLOPE30LIMIT(_SLOPE30LIMIT),
+   ATR_VOL_LIMIT(_ATR_VOL_LIMIT) {
    baseInit();
    ut = util;
    ssSIG = ss;
@@ -1487,6 +1491,9 @@ SAN_SIGNAL HSIG::cTradeSIG(
    SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
 //   SAN_SIGNAL tradePosition = util.getCurrTradePosition();
 
+   double candleVolDP=NormalizeDouble(ss.candleVolData.val1,3);
+   double atrVolDP=NormalizeDouble(ss.atrVolData.val1,3);
+
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
    double stdOPSlope = ss.stdOPSlope.val1;
@@ -1559,8 +1566,15 @@ SAN_SIGNAL HSIG::cTradeSIG(
 
    bool trendSlopeRatioBool  = ((fMSWR>=SLOPERATIO)&&(fMSWR<=SLOPERATIO_UPPERLIMIT));
 
+   bool atrVolTradeBool = (
+                             (_Period==PERIOD_M1)
+                             &&(atrVolDP>=ATR_VOL_LIMIT)
+                          );
 
-
+  bool atrVolNoTradeBool = (
+                             (_Period==PERIOD_M1)
+                             &&(atrVolDP<ATR_VOL_LIMIT)
+                          );
 //   bool closeSTDCPTradeBool = (
 //                                 closeTrendStdCP&&
 //                                 (
@@ -1584,8 +1598,8 @@ SAN_SIGNAL HSIG::cTradeSIG(
 
    //bool closeTradeBool = (closeSTDCPTradeBool&&closeSlopeRatioTradeBool);
 
-   bool openTradeBool = (trendStdCP&&trendSlopeRatioBool);
-   bool closeTradeBool = (closeTrendStdCP&&closeSlopeRatioBool);
+   bool openTradeBool = (trendStdCP&&trendSlopeRatioBool&&atrVolTradeBool);
+   bool closeTradeBool = (closeTrendStdCP&&closeSlopeRatioBool&&atrVolNoTradeBool);
 
    bool noTradeBoo11 = (closeTradeBool);
    bool noTradeBoo12 = (flatBool);
@@ -1621,7 +1635,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+stdOPSlope+" stdCPSlope: "+stdCPSlope+" obvCPSlope: "+obvCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS);//+" rFS: "+rFS);
+   Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+stdOPSlope+" stdCPSlope: "+stdCPSlope+" obvCPSlope: "+obvCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleDP: "+candleVolDP+" atrDP: "+atrVolDP);//+" rFS: "+rFS);
    //Print("[CTRADE-BOOLS:2] openTradeBool: "+openTradeBool+" closeTradeBool: "+closeTradeBool+" noTradeBoo11: "+ noTradeBoo11+" noTradeBoo12: "+noTradeBoo12+" noSigBool: "+noSigBool+" buyTradeBool: "+buyTradeBool+" sellTradeBool: "+sellTradeBool+" tradeBool: "+tradeBool);
    //Print("[CTRADE-BOOLS:1] StdCP: "+trendStdCP+" SlopeRatio: "+trendSlopeRatioBool+" BuyCluster: "+trendBuyClusterBool+" SellCluster: "+trendSellClusterBool+" BuyOBV: "+trendBuyOBVBool+" SellOBV: "+trendSellOBVBool+" BuySlope30: "+trendBuySlope30+" SellSlope30: "+trendSellSlope30 );
 

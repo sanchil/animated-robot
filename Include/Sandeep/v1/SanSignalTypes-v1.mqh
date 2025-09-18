@@ -189,7 +189,9 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 //   hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.rsi[1],indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
 //   hilbertSIG = sig.hilbertSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
 //   dftSIG = sig.dftSIG(indData.close,8);
-   sig.atrVolSIG(indData.atr,indData.tick_volume,10,1,1);
+   atrVolData = sig.atrVolDt(indData.atr,indData.tick_volume,10,1,1);
+   candleVolData = sig.candleVolDt(indData.open,indData.close,indData.tick_volume,10,1,1);
+   
 }
 //+------------------------------------------------------------------+
 
