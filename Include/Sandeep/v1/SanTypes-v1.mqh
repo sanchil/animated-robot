@@ -135,11 +135,31 @@ struct CandleCharacter {
 struct RITYPE {
    double            r;
    double            i;
+   void initRITYPE() {
+      r=EMPTY_VALUE;
+      i=EMPTY_VALUE;
+   }
+   RITYPE() {
+      initRITYPE();
+   }
+   ~RITYPE() {
+      initRITYPE();
+   }
 };
 
 struct SLOPETYPE {
    double            slope;
    double            intercept;
+   void initSLOPETYPE() {
+      slope=EMPTY_VALUE;
+      intercept=EMPTY_VALUE;
+   }
+   SLOPETYPE() {
+      initSLOPETYPE();
+   }
+   ~SLOPETYPE() {
+      initSLOPETYPE();
+   }
 };
 
 struct TRADEBOOLS {
@@ -630,6 +650,7 @@ struct INDDATA {
    double            tick_volume[500];
    //   double            volume[70];
    double            std[70];
+   double            stdOpen[70];
    //   double            mfi[70];
    double            obv[70];
    double            rsi[70];
@@ -663,6 +684,7 @@ struct INDDATA {
       ArrayFree(tick_volume);
       //      ArrayFree(volume);
       ArrayFree(std);
+      ArrayFree(stdOpen);
       //     ArrayFree(mfi);
       ArrayFree(obv);
       ArrayFree(atr);
@@ -725,6 +747,8 @@ class SANSIGNALS {
    SAN_SIGNAL        closeSIG;
    SAN_SIGNAL        priceActionSIG;
    SAN_SIGNAL        adxSIG;
+   SAN_SIGNAL        atrSIG;
+   //   SANTRENDSTRENGTH  atrSIG;
    SAN_SIGNAL        mfiSIG;
    SAN_SIGNAL        rsiSIG;
    SAN_SIGNAL        adxCovDivSIG;
@@ -743,7 +767,6 @@ class SANSIGNALS {
    SAN_SIGNAL        ima240500SIG;
    SAN_SIGNAL        ima530SIG;
    SAN_SIGNAL        ima530_21SIG;
-   SANTRENDSTRENGTH  atrSIG;
    SAN_SIGNAL        volSIG;
    SAN_SIGNAL        volSlopeSIG;
    SAN_SIGNAL        profitSIG;
@@ -795,7 +818,6 @@ class SANSIGNALS {
    SAN_SIGNAL        simpleSlope_240_SIG;
    SAN_SIGNAL        simpleSlope_500_SIG;
    SAN_SIGNAL        c_SIG;
-
    SIGMAVARIABILITY        cpSDSIG;
    SIGMAVARIABILITY        ima5SDSIG;
    SIGMAVARIABILITY        ima14SDSIG;
@@ -808,17 +830,20 @@ class SANSIGNALS {
    DTYPE        hilbertSIG;
    DTYPE        dftSIG;
    DataTransport     clusterData;
-   //  DataTransport     imaSlopesData;
-   DataTransport     imaSlope5Data;
-   DataTransport     imaSlope14Data;
-   DataTransport     imaSlope30Data;
-   DataTransport     imaSlope120Data;
-   DataTransport     baseSlopeData;
-   DataTransport     imaSlope500Data;
-   DataTransport     varDt;
    DataTransport     slopeRatioData;
-   DataTransport     stdCPSlope;
-   DataTransport     obvCPSlope;
+   DataTransport     varDt;
+
+   //  DataTransport     imaSlopesData;   
+
+   DTYPE     imaSlope5Data;
+   DTYPE     imaSlope14Data;
+   DTYPE     imaSlope30Data;
+   DTYPE     imaSlope120Data;
+   DTYPE     baseSlopeData;
+   DTYPE     imaSlope500Data;
+   DTYPE     stdCPSlope;
+   DTYPE     stdOPSlope;
+   DTYPE     obvCPSlope;
    double            hilbertAmp[];
    double            hilbertPhase[];
    double            dftMag[];
@@ -850,14 +875,17 @@ SANSIGNALS::~SANSIGNALS() {
 //      imaSlopesData.freeData();
    varDt.freeData();
    slopeRatioData.freeData();
-   baseSlopeData.freeData();
-   imaSlope5Data.freeData();
-   imaSlope14Data.freeData();
-   imaSlope30Data.freeData();
-   imaSlope120Data.freeData();
-   imaSlope500Data.freeData();
-   stdCPSlope.freeData();
-   obvCPSlope.freeData();
+   
+   baseSlopeData.initDTYPE();
+   imaSlope5Data.initDTYPE();
+   imaSlope14Data.initDTYPE();
+   imaSlope30Data.initDTYPE();
+   imaSlope120Data.initDTYPE();
+   imaSlope500Data.initDTYPE();
+   stdCPSlope.initDTYPE();
+   stdOPSlope.initDTYPE();
+   obvCPSlope.initDTYPE();
+   
    ArrayFree(hilbertAmp);
    ArrayFree(hilbertPhase);
    ArrayFree(dftMag);
@@ -874,6 +902,7 @@ void  SANSIGNALS::initBase() {
    priceActionSIG = SAN_SIGNAL::NOSIG;
    candlePattStarSIG = SAN_SIGNAL::NOSIG;
    adxSIG = SAN_SIGNAL::NOSIG;
+   atrSIG = SAN_SIGNAL::NOSIG;
    mfiSIG = SAN_SIGNAL::NOSIG;
    rsiSIG = SAN_SIGNAL::NOSIG;
    adxCovDivSIG = SAN_SIGNAL::NOSIG;
@@ -892,7 +921,7 @@ void  SANSIGNALS::initBase() {
    ima120240SIG = SAN_SIGNAL::NOSIG;
    ima120500SIG = SAN_SIGNAL::NOSIG;
    ima240500SIG = SAN_SIGNAL::NOSIG;
-   atrSIG = SANTRENDSTRENGTH::POOR;
+//  atrSIG = SANTRENDSTRENGTH::POOR;
    volSIG = SAN_SIGNAL::NOSIG;
    volSlopeSIG = SAN_SIGNAL::NOSIG;
    profitSIG = SAN_SIGNAL::NOSIG;
@@ -1071,7 +1100,7 @@ struct SANSIGBOOL {
       safeSig4Bool = (sigBool && fsigBool && imaWaveBool && fimaWaveBool && (ss.fsig5==ss.fastIma514SIG) && (ss.sig5==ss.ima514SIG)&&(ss.fsig5==ss.sig5)&&(ss.fastIma514SIG==ss.ima514SIG));
       adxBool= ((ss.adxSIG==SAN_SIGNAL::BUY)||(ss.adxSIG==SAN_SIGNAL::SELL));
       adxIma1430Bool = (ss.adxSIG==ss.ima1430SIG);
-      atrAdxBool = (((ss.atrSIG==SANTRENDSTRENGTH::NORMAL)||(ss.atrSIG==SANTRENDSTRENGTH::HIGH)) && adxBool);
+      atrAdxBool = ((ss.atrSIG==SAN_SIGNAL::TRADE) && adxBool);
       atrAdxVolOpenBool = ((ss.volSIG==SAN_SIGNAL::TRADE) && atrAdxBool);
       imaSig1Bool = (spreadBool && safeSig1Bool);
       openTradeBool = (ss.tradeSIG == SAN_SIGNAL::TRADE);

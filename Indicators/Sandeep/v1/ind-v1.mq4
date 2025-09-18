@@ -239,6 +239,8 @@ int OnCalculate(const int rates_total,
          indData.low[j] = low[j];
          indData.time[j] = time[j];
          indData.std[j] = iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_CLOSE, j);
+         indData.stdOpen[j] = iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_OPEN, j);
+
          indData.obv[j] = iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, j);
          indData.rsi[j] = iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, j);
          indData.ima5[j] = iMA(_Symbol, PERIOD_CURRENT, 5, 0, MODE_SMMA, PRICE_CLOSE, j);

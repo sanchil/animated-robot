@@ -76,8 +76,8 @@ class HSIG {
    //   DataTransport     imaSlopesData;
    //   DataTransport     imaSlope30Data;
    DataTransport     slopeRatioData;
-   DataTransport     stdCPSlope;
-   DataTransport     obvCPSlope;
+   DTYPE      stdCPSlope;
+   DTYPE      obvCPSlope;
    TRADEBOOLS        tBools;
    STATE_SIGNAL      stateSig;
 
@@ -166,7 +166,7 @@ class HSIG {
       const SANTREND slowTrend,
       const SANTREND vSlowTrend=SANTREND::NOTREND
    );
-   SAN_SIGNAL        slopeSIG(const DataTransport& signalDt, const int signalType=0);
+   SAN_SIGNAL        slopeSIG(const DTYPE& signalDt, const int signalType=0);
 
    SAN_SIGNAL        cTradeSIG(
       const SANSIGNALS &ss,
@@ -337,8 +337,8 @@ HSIG::~HSIG() {
 //   imaSlopesData.freeData();
 //imaSlope30Data.freeData();
    slopeRatioData.freeData();
-   stdCPSlope.freeData();
-   obvCPSlope.freeData();
+   stdCPSlope.initDTYPE();
+   obvCPSlope.initDTYPE();
 }
 
 //+------------------------------------------------------------------+
@@ -394,7 +394,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 
 
 //################ Open Strategies #########################################
-//bool openTradeBool = ((opensig==baseSlopeSIG)&&(stdCPSlope.matrixD[0]>-0.6));
+//bool openTradeBool = ((opensig==baseSlopeSIG)&&(stdCPSlope.val1>-0.6));
 //bool openTradeBool = ((opensig==baseSlopeSIG)&&tradeBool);
 
 
@@ -477,7 +477,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
                         && (ssSIG.rsiSIG==SAN_SIGNAL::NOSIG)
                      );
 
-   bool closeCSIGBool = (tBools.closeSigBool||closeBool1||closeBool3||closeBool4||closeBool6);
+   bool closeCSIGBool = (tBools.closeSigBool);//||closeBool1||closeBool3||closeBool4||closeBool6);
 
    bool closehTdfTBool = ((opensig==SAN_SIGNAL::CLOSE)||closeBool1||closeBool3||closeBool4||closeBool6);//||closeBool5||closeBool7);
 
@@ -669,7 +669,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       //Print("[TRADESTRATEGY]: SLOPESTD_CSIG "+ut.getSigString(openSIG));
    }
 
-   // hilbertSIG
+   // hilbertDftSIG
    if(trdStgy == TRADE_STRATEGIES::HTDFT) {
       Print("[HTDFT]: STRATEGY:  openTradeBool: "+tBools.openTradeBool+" closeTradeBool: "+tBools.closeTradeBool+" closeSigTrReversalBool: "+tBools.closeSigTrReversalBool+" closeFlatTradeBool: "+tBools.closeFlatTradeBool+" opensig: "+ut.getSigString(opensig));
       if(tBools.closeTradeBool) {
@@ -1424,34 +1424,34 @@ SAN_SIGNAL          HSIG::trendVolVarSIG(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL HSIG::slopeSIG(const DataTransport& signalDt, const int signalType=0) {
+SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType=0) {
 
    if(signalType==0) {
-      if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2))
+      if((signalDt.val1>=-0.2)&&(signalDt.val1<=0.2))
          return SAN_SIGNAL::CLOSE;
-      if((signalDt.matrixD[0]>=-0.3)&&(signalDt.matrixD[0]<=0.3))
+      if((signalDt.val1>=-0.3)&&(signalDt.val1<=0.3))
          return SAN_SIGNAL::SIDEWAYS;
-      if(signalDt.matrixD[0]>0.3)
+      if(signalDt.val1>0.3)
          return SAN_SIGNAL::BUY;
-      if(signalDt.matrixD[0]<-0.3)
+      if(signalDt.val1<-0.3)
          return SAN_SIGNAL::SELL;
    } else if(signalType==1) {
-      if((signalDt.matrixD[0]>=-0.1)&&(signalDt.matrixD[0]<=0.1))
+      if((signalDt.val1>=-0.1)&&(signalDt.val1<=0.1))
          return SAN_SIGNAL::CLOSE;
-      if((signalDt.matrixD[0]>=-0.2)&&(signalDt.matrixD[0]<=0.2))
+      if((signalDt.val1>=-0.2)&&(signalDt.val1<=0.2))
          return SAN_SIGNAL::SIDEWAYS;
-      if(signalDt.matrixD[0]>0.2)
+      if(signalDt.val1>0.2)
          return SAN_SIGNAL::BUY;
-      if(signalDt.matrixD[0]<-0.2)
+      if(signalDt.val1<-0.2)
          return SAN_SIGNAL::SELL;
    } else if(signalType==2) {
-      if((signalDt.matrixD[0]>=-0.05)&&(signalDt.matrixD[0]<=0.05))
+      if((signalDt.val1>=-0.05)&&(signalDt.val1<=0.05))
          return SAN_SIGNAL::CLOSE;
-      if((signalDt.matrixD[0]>=-0.1)&&(signalDt.matrixD[0]<=0.1))
+      if((signalDt.val1>=-0.1)&&(signalDt.val1<=0.1))
          return SAN_SIGNAL::SIDEWAYS;
-      if(signalDt.matrixD[0]>0.1)
+      if(signalDt.val1>0.1)
          return SAN_SIGNAL::BUY;
-      if(signalDt.matrixD[0]<-0.1)
+      if(signalDt.val1<-0.1)
          return SAN_SIGNAL::SELL;
    }
    return SAN_SIGNAL::NOSIG;
@@ -1487,9 +1487,10 @@ SAN_SIGNAL HSIG::cTradeSIG(
    SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
 //   SAN_SIGNAL tradePosition = util.getCurrTradePosition();
 
-   double slopeIMA30 = ss.imaSlope30Data.matrixD[0];
-   double stdCPSlope = ss.stdCPSlope.matrixD[0];
-   double obvCPSlope = ss.obvCPSlope.matrixD[0]*pipValue; // Normalize obvCPSlope
+   double slopeIMA30 = ss.imaSlope30Data.val1;
+   double stdCPSlope = ss.stdCPSlope.val1;
+   double stdOPSlope = ss.stdOPSlope.val1;
+   double obvCPSlope = ss.obvCPSlope.val1*pipValue; // Normalize obvCPSlope
 
    double rFM =  ss.clusterData.matrixD[0];
    double rMS =  ss.clusterData.matrixD[1];
@@ -1620,7 +1621,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" stdCPSlope: "+stdCPSlope+" obvCPSlope: "+obvCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS);//+" rFS: "+rFS);
+   Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+stdOPSlope+" stdCPSlope: "+stdCPSlope+" obvCPSlope: "+obvCPSlope+" Slope30: "+slopeIMA30+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS);//+" rFS: "+rFS);
    //Print("[CTRADE-BOOLS:2] openTradeBool: "+openTradeBool+" closeTradeBool: "+closeTradeBool+" noTradeBoo11: "+ noTradeBoo11+" noTradeBoo12: "+noTradeBoo12+" noSigBool: "+noSigBool+" buyTradeBool: "+buyTradeBool+" sellTradeBool: "+sellTradeBool+" tradeBool: "+tradeBool);
    //Print("[CTRADE-BOOLS:1] StdCP: "+trendStdCP+" SlopeRatio: "+trendSlopeRatioBool+" BuyCluster: "+trendBuyClusterBool+" SellCluster: "+trendSellClusterBool+" BuyOBV: "+trendBuyOBVBool+" SellOBV: "+trendSellOBVBool+" BuySlope30: "+trendBuySlope30+" SellSlope30: "+trendSellSlope30 );
 
@@ -1645,8 +1646,8 @@ SAN_SIGNAL HSIG::cSIG(
 //const double SLOPE30LIMIT = 3;
 //const double OBVSLOPE = 3000;
 
-   double stdCPSlope = ss.stdCPSlope.matrixD[0];
-   double obvCPSlope = ss.obvCPSlope.matrixD[0]*pipValue; // Normalize obvCPSlope
+   double stdCPSlope = ss.stdCPSlope.val1;
+   double obvCPSlope = ss.obvCPSlope.val1*pipValue; // Normalize obvCPSlope
 
    bool trendStdCP = (stdCPSlope>STDSLOPE);
 //bool closeOBVBool =  ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
@@ -1655,7 +1656,7 @@ SAN_SIGNAL HSIG::cSIG(
 
    SAN_SIGNAL slopesig = slopeSIG(ss.imaSlope30Data,0);
 
-   if(trendStdCP && (fabs(ss.imaSlope30Data.matrixD[0])>SLOPE30LIMIT)) {
+   if(trendStdCP && (fabs(ss.imaSlope30Data.val1)>SLOPE30LIMIT)) {
       sig = slopesig;
    } else if((tradeSIG==SAN_SIGNAL::TRADEBUY)&&(slopesig==SAN_SIGNAL::BUY)) {
       sig = slopesig;
@@ -1757,14 +1758,14 @@ bool HSIG::getMktFlatBoolSignal(
 bool  HSIG::getMktCloseOnStdCPCluster() {
 
    double pipValue = ut.getPipValue(_Symbol);
-   double stdCPSlope = stdCPSlope.matrixD[0];
+   double stdCPSlope = stdCPSlope.val1;
    double rFM =  ssSIG.clusterData.matrixD[0];
    double rMS =  ssSIG.clusterData.matrixD[1];
    double rFS =  ssSIG.clusterData.matrixD[2];
    bool closeTrendStdCP = (stdCPSlope<=STDSLOPE);
 
 
-//   double obvCPSlope = obvCPSlope.matrixD[0]*pipValue; // Normalize obvCPSlope
+//   double obvCPSlope = obvCPSlope.val1*pipValue; // Normalize obvCPSlope
 //bool closeOBVBool =  ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
 //bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
 //bool trendSellOBVBool = (obvCPSlope < (-1*OBVSLOPE));
@@ -1828,8 +1829,8 @@ bool  HSIG::getMktCloseOnStdCPCluster() {
 bool  HSIG::getMktCloseOnStdCPOBV() {
 
    double pipValue = ut.getPipValue(_Symbol);
-   double stdCPSlope = stdCPSlope.matrixD[0];
-   double obvCPSlope = obvCPSlope.matrixD[0]*pipValue; // Normalize obvCPSlope
+   double stdCPSlope = stdCPSlope.val1;
+   double obvCPSlope = obvCPSlope.val1*pipValue; // Normalize obvCPSlope
 
    bool closeTrendStdCP = (stdCPSlope<=STDSLOPE);
    bool closeOBVBool = ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
@@ -1956,20 +1957,20 @@ bool              HSIG::getMktCloseOnSlopeVariable(const SANSIGNALS &ss, SanUtil
 
    bool closeBool = false;
    static SAN_SIGNAL CLOSESIGNAL = SAN_SIGNAL::NOSIG;
-//   Print("[SLOPES COMPARE] imaSlopesData: "+ ss.imaSlopesData.matrixD[0] + " slopes30: "+ss.imaSlope30Data.matrixD[0]+" Equal? "+(ss.imaSlope30Data.matrixD[0]==ss.imaSlopesData.matrixD[0]));
-   if(fabs(ss.imaSlope30Data.matrixD[0])> SLOPE_5) {
+//   Print("[SLOPES COMPARE] imaSlopesData: "+ ss.imaSlopesData.val1 + " slopes30: "+ss.imaSlope30Data.val1+" Equal? "+(ss.imaSlope30Data.val1==ss.imaSlopesData.val1));
+   if(fabs(ss.imaSlope30Data.val1)> SLOPE_5) {
       CLOSESIGNAL=ss.fsig5;
       //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig5,tradePosition))");
-   } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_14) {
+   } else if(fabs(ss.imaSlope30Data.val1)>=SLOPE_14) {
       CLOSESIGNAL=ss.fsig14;
       //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig14,tradePosition))");
-   } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_30) {
+   } else if(fabs(ss.imaSlope30Data.val1)>=SLOPE_30) {
       CLOSESIGNAL=ss.fsig30;
       //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig30,tradePosition))");
-   } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_120) {
+   } else if(fabs(ss.imaSlope30Data.val1)>=SLOPE_120) {
       CLOSESIGNAL=ss.fsig120;
       //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig120,tradePosition))");
-   } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_240) {
+   } else if(fabs(ss.imaSlope30Data.val1)>=SLOPE_240) {
       CLOSESIGNAL=ss.fsig240;
       //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig240,tradePosition))");
    }
@@ -2037,35 +2038,35 @@ bool              HSIG::getMktCloseOnSlopeReversal(const SANSIGNALS &ss, SanUtil
 
    bool closeOnSlopeReverseBool = false;
 
-   if(fabs(ss.imaSlope30Data.matrixD[0])> SLOPE_5) {
+   if(fabs(ss.imaSlope30Data.val1)> SLOPE_5) {
       slope2_0=true;
-   } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_14) {
+   } else if(fabs(ss.imaSlope30Data.val1)>=SLOPE_14) {
       slope1_0=true;
-   } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_30) {
+   } else if(fabs(ss.imaSlope30Data.val1)>=SLOPE_30) {
       slope0_5=true;
-   } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_120) {
+   } else if(fabs(ss.imaSlope30Data.val1)>=SLOPE_120) {
       slope0_2=true;
-   } else if(fabs(ss.imaSlope30Data.matrixD[0])>=SLOPE_240) {
+   } else if(fabs(ss.imaSlope30Data.val1)>=SLOPE_240) {
       slope0_08=true;
    }
 
-   if(slope2_0 &&(fabs(ss.imaSlope30Data.matrixD[0])<(SLOPE_5*SLOPE_LEVEL))) {
+   if(slope2_0 &&(fabs(ss.imaSlope30Data.val1)<(SLOPE_5*SLOPE_LEVEL))) {
       closeOnSlopeReverseBool = true;
       slope2_0=false;
       Print("[SIGCLOSE]: Close on slope2_8 reverse");
-   } else if(slope1_0&&(fabs(ss.imaSlope30Data.matrixD[0])<(SLOPE_14*SLOPE_LEVEL))) {
+   } else if(slope1_0&&(fabs(ss.imaSlope30Data.val1)<(SLOPE_14*SLOPE_LEVEL))) {
       closeOnSlopeReverseBool = true;
       slope1_0=false;
       Print("[SIGCLOSE]: Close on slope2_2 reverse");
-   } else if(slope0_5&&(fabs(ss.imaSlope30Data.matrixD[0])<(SLOPE_30*SLOPE_LEVEL))) {
+   } else if(slope0_5&&(fabs(ss.imaSlope30Data.val1)<(SLOPE_30*SLOPE_LEVEL))) {
       closeOnSlopeReverseBool = true;
       slope0_5=false;
       Print("[SIGCLOSE]: Close on slope1_8 reverse");
-   } else if(slope0_2&&(fabs(ss.imaSlope30Data.matrixD[0])<(SLOPE_120*SLOPE_LEVEL))) {
+   } else if(slope0_2&&(fabs(ss.imaSlope30Data.val1)<(SLOPE_120*SLOPE_LEVEL))) {
       closeOnSlopeReverseBool = true;
       slope0_2=false;
       Print("[SIGCLOSE]: Close on slope1_2 reverse");
-   } else if(slope0_08&&(fabs(ss.imaSlope30Data.matrixD[0])<(SLOPE_240*SLOPE_LEVEL))) {
+   } else if(slope0_08&&(fabs(ss.imaSlope30Data.val1)<(SLOPE_240*SLOPE_LEVEL))) {
       closeOnSlopeReverseBool = true;
       slope0_08=false;
       Print("[SIGCLOSE]: Close on slope0_6 reverse");

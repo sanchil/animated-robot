@@ -133,7 +133,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //################################################################
 
 //   bool trendBool = (sb.healthyTrendBool && sb.healthyTrendStrengthBool && !sb.flatTrendBool);
-   bool atrBool = ((ss.atrSIG == SANTRENDSTRENGTH::NORMAL)||(ss.atrSIG == SANTRENDSTRENGTH::HIGH));
+   bool atrBool = (ss.atrSIG == SAN_SIGNAL::TRADE);
    bool sig5TrendBool = ((ss.sig5!=SAN_SIGNAL::NOSIG) && (ss.sig5==ss.priceActionSIG) && (ss.sig5==ss.adxSIG) && atrBool);
 //   bool tradeBool = (ss.tradeSIG==SAN_SIGNAL::TRADE);
    bool mfiSIGBool = ((ss.mfiSIG == SAN_SIGNAL::BUY)||(ss.mfiSIG == SAN_SIGNAL::SELL));
@@ -402,13 +402,13 @@ string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h
    string prntStrClose = " }";
    prntStr += prntStrOpen;
 
-   DataTransport dt14 = s.imaSlope5Data; //sig.slopeSIGData(indData.ima14, 5, 21, 1);
-   DataTransport dt30 = s.imaSlope30Data;//sig.slopeSIGData(indData.ima30, 5, 21, 1);
-   DataTransport dt120 = s.imaSlope120Data;//sig.slopeSIGData(indData.ima120, 5, 21, 1);
-   DataTransport dt240 = s.baseSlopeData;//sig.slopeSIGData(indData.ima240, 5, 21, 1);
-   DataTransport dt500 = s.imaSlope500Data;//sig.slopeSIGData(indData.ima500, 5, 21, 1);
-   DataTransport stdCPSlope = s.stdCPSlope; //sig.slopeSIGData(indData.std, 5, 21, 1);
-   DataTransport obvCPSlope = s.obvCPSlope; //sig.slopeSIGData(indData.obv, 5, 21, 1);
+   DTYPE dt14 = s.imaSlope5Data; //sig.slopeSIGData(indData.ima14, 5, 21, 1);
+   DTYPE dt30 = s.imaSlope30Data;//sig.slopeSIGData(indData.ima30, 5, 21, 1);
+   DTYPE dt120 = s.imaSlope120Data;//sig.slopeSIGData(indData.ima120, 5, 21, 1);
+   DTYPE dt240 = s.baseSlopeData;//sig.slopeSIGData(indData.ima240, 5, 21, 1);
+   DTYPE dt500 = s.imaSlope500Data;//sig.slopeSIGData(indData.ima500, 5, 21, 1);
+   DTYPE stdCPSlope = s.stdCPSlope; //sig.slopeSIGData(indData.std, 5, 21, 1);
+   DTYPE obvCPSlope = s.obvCPSlope; //sig.slopeSIGData(indData.obv, 5, 21, 1);
    DataTransport clusterData = s.clusterData;//sig.clusterData(indData.ima30[1], indData.ima120[1], indData.ima240[1]);
    DataTransport slopeRatioData = s.slopeRatioData; //sig.slopeRatioData(dt30, dt120, dt240);
    D20TYPE hilbertDftData = s.hilbertDftSIG;
@@ -432,13 +432,13 @@ string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h
    double atr = indData.atr[1];
    double rsi = indData.rsi[1];
 
-   double slopeIMA14 = dt14.matrixD[0];
-   double slopeIMA30 = dt30.matrixD[0];
-   double slopeIMA120 = dt120.matrixD[0];
-   double slopeIMA240 = dt240.matrixD[0];
-   double slopeIMA500 = dt500.matrixD[0];
-   double stdSlope = stdCPSlope.matrixD[0];
-   double obvSlope = obvCPSlope.matrixD[0];
+   double slopeIMA14 = dt14.val1;
+   double slopeIMA30 = dt30.val1;
+   double slopeIMA120 = dt120.val1;
+   double slopeIMA240 = dt240.val1;
+   double slopeIMA500 = dt500.val1;
+   double stdSlope = stdCPSlope.val1;
+   double obvSlope = obvCPSlope.val1;
    double rfm = clusterData.matrixD[0];
    double rms = clusterData.matrixD[1];
    double rfs = clusterData.matrixD[2];

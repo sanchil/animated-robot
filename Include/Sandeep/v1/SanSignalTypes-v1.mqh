@@ -65,7 +65,6 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 
 //         //    tradeSIG = sig.tradeSignal(indData.std[SHIFT],indData.mfi[SHIFT],indData.atr,indData.adx[SHIFT],indData.adxPlus[SHIFT],indData.adxMinus[SHIFT]);
 //         adxSIG =  sig.adxSIG(indData.adx[SHIFT],indData.adxPlus[SHIFT],indData.adxMinus[SHIFT]);
-//         atrSIG =  sig.atrSIG(indData.atr,21);
 //
 //         fastIma514SIG = sig.fastSlowSIG(indData.ima5[SHIFT],indData.ima14[SHIFT],21);
 //         fastIma1430SIG = sig.fastSlowSIG(indData.ima14[SHIFT],indData.ima30[SHIFT],21);
@@ -102,7 +101,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 //         rsiSIG = sig.rsiSIG(indData.rsi,21,1);
 //         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
 
-
+   atrSIG =  sig.atrSIG(indData.atr,21);
    rsiSIG = sig.rsiSIG(indData.rsi[1],40,60);
    priceActionSIG =  sig.priceActionCandleSIG(indData.open,indData.high,indData.low,indData.close);
    volSIG =  sig.volumeSIG_v2(indData.tick_volume,60,11,SHIFT);
@@ -162,6 +161,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    baseSlopeData=sig.slopeSIGData(indData.ima240,5,21,1);
    imaSlope500Data=sig.slopeSIGData(indData.ima500,5,21,1);
    stdCPSlope = sig.slopeSIGData(indData.std,5,21,1);
+   stdOPSlope = sig.slopeSIGData(indData.stdOpen,5,21,1);
    obvCPSlope = sig.slopeSIGData(indData.obv,5,21,1);
 
 //simpleSlope_14_SIG = sig.slopeSIG(imaSlope14Data,0);
@@ -173,6 +173,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 //slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);
    clusterData = sig.clusterData(indData.ima5[1],indData.ima14[1],indData.ima30[1]);
    slopeRatioData = sig.slopeRatioData(imaSlope5Data,imaSlope14Data,imaSlope30Data);
+
 
 //c_SIG = sig.cSIG(indData,util,1);
 
@@ -188,6 +189,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 //   hilbertDftSIG = sig.hilbertDftSIG(indData.close,indData.rsi[1],indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
 //   hilbertSIG = sig.hilbertSIG(indData.close,indData.currSpread,(indData.std[1]/util.getPipValue(_Symbol)),8,3);
 //   dftSIG = sig.dftSIG(indData.close,8);
+   sig.atrVolSIG(indData.atr,indData.tick_volume,10,1,1);
 }
 //+------------------------------------------------------------------+
 
