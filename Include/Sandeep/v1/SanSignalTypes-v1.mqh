@@ -191,7 +191,8 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 //   dftSIG = sig.dftSIG(indData.close,8);
    atrVolData = sig.atrVolDt(indData.atr,indData.tick_volume,10,1,1);
    candleVolData = sig.candleVolDt(indData.open,indData.close,indData.tick_volume,10,1,1);
-   
+   //sig.openCloseDt(indData.open,indData.close,10,1,1);
+
 }
 //+------------------------------------------------------------------+
 

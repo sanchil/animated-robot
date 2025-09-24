@@ -227,24 +227,6 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    double cutOff = stats.maxVal<double>(indData.currSpread, 0.5*(indData.std[1]/util.getPipValue(_Symbol)));
 //   Print("Max of "+indData.currSpread+" & "+(indData.std[1]/util.getPipValue(_Symbol)) +" = "+cutOff);
 
-   bool printDft = false;
-   DTYPE ht;
-   DTYPE dft;
-   if(printDft) {
-      stats.hilbertTransform(indData.close,ss.hilbertAmp,ss.hilbertPhase,16,5);
-      stats.dftTransform(indData.close,ss.dftMag,ss.dftPhase,ss.dftPower,16);
-      ht= stats.extractHilbertAmpNPhase(ss.hilbertAmp,ss.hilbertPhase,2);
-      dft= stats.extractDftPowerNPhase(ss.dftMag,ss.dftPhase,ss.dftPower);
-      Print("[HT] index: "+ht.val1+" Amp: "+ht.val2+" Phase: "+ ht.val3);
-      Print("[DT] k: "+dft.val1+" Mag: "+dft.val2+" Phase: "+ dft.val3+" Power: "+ dft.val4);
-   }
-
-//   double iSIg[] =  {147.404, 147.393, 147.385, 147.389,0,0,0,0};
-//   stats.dftTransform(iSIg,ss.dftMag,ss.dftPhase,ss.dftPower,8);
-//   stats.hilbertTransform(iSIg,ss.hilbertAmp,ss.hilbertPhase,8,3);
-
-
-
    bool shortCycle = false;
    bool longCycle = false;
    bool allCycle = false;
@@ -342,23 +324,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 //
 ////   Print("[OPEN][MKT] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG));
-   Print("[SETSIGBOOLS]: openTradeBool: "+hSig.tBools.openTradeBool+" closeTradeBool: "+hSig.tBools.closeTradeBool+" closeOBVStdBool: "+hSig.tBools.closeOBVStdBool+" closeClusterStdBool: "+hSig.tBools.closeClusterStdBool+" CloseTrRev "+hSig.tBools.closeSigTrReversalBool+" CloseFlatTrade: "+hSig.tBools.closeFlatTradeBool+" FlatBool: "+hSig.tBools.flatBool );
-
-   if(printDft) {
-      Print("[TRANSFORM] :: Spread: "+indData.currSpread+" RSI: "+indData.rsi[1]+" StdDevCP: "+(indData.std[1]/0.01));
-      Print(util.printArray(ss.hilbertAmp,"HILBERT","Amp",0,8));
-      Print(util.printArray(ss.hilbertAmp,"HILBERT","Amp",8,16));
-      Print(util.printArray(ss.hilbertPhase,"HILBERT","Phase",0,8));
-      Print(util.printArray(ss.hilbertPhase,"HILBERT","Phase",8,16));
-
-      Print(util.printArray(ss.dftMag,"DFT","Mag",0,8));
-      Print(util.printArray(ss.dftMag,"DFT","Mag",8,16));
-      Print(util.printArray(ss.dftPhase,"DFT","Phase",0,8));
-      Print(util.printArray(ss.dftPhase,"DFT","Phase",8,16));
-      Print(util.printArray(ss.dftPower,"DFT","Power",0,8));
-      Print(util.printArray(ss.dftPower,"DFT","Power",8,16));
-   }
-
+   Print("[SETSIGBOOLS]: openTradeBool: "+hSig.tBools.openTradeBool+" closeTradeBool: "+hSig.tBools.closeTradeBool+" closeOBVStdBool: "+hSig.tBools.closeOBVStdBool+" closeClusterStdBool: "+hSig.tBools.closeClusterStdBool+" CloseTrRev "+hSig.tBools.closeSigTrReversalBool+" CloseFlatTrade: "+hSig.tBools.closeFlatTradeBool);
 
 // Print("[VARBOOLS]: varBool: "+varBool+" varBoolDt: "+ss.varDt.matrixBool[3] +" varPosBool: "+varPosBool+" varPosBoolDt: "+ss.varDt.matrixBool[0]+" varNegBool: "+varNegBool+" varNegBoolDt: "+ss.varDt.matrixBool[1]+" varFlatBool: "+varFlatBool+" varFlatBoolDt: "+ss.varDt.matrixBool[2]);
 // Print("[SLOPES]: FAST: "+ imaSlopesData.matrixD[0]+" : "+(0.15+(1.5*0.1))+" MEDIUM: "+imaSlopesData.matrixD[1]+" : "+(0.15+0.1)+" SLOW: "+imaSlopesData.matrixD[2]+" : 0.15  :SLOWWIDE: "+imaSlopesData.matrixD[3]+" : 0.1");
