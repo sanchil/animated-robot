@@ -8,6 +8,7 @@
 #property strict
 
 #include <Sandeep/v1/SanTypes-v1.mqh>
+#include <Sandeep/v1/SanStats-v1.mqh>
 //#include <Sandeep/v1/SanSignalTypes-v1.mqh>
 #include <Sandeep/v1/SanUtils-v1.mqh>
 
@@ -472,6 +473,11 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    tBools.volTradeBool = (ssSIG.volSIG==SAN_SIGNAL::TRADE);
 
 
+   bool openSigBool = (
+                         (opensig==SAN_SIGNAL::BUY)
+                         ||(opensig==SAN_SIGNAL::SELL)
+                      );
+
    bool openTradeBool1 = (tBools.tradeBool);
    bool openTradeBool2 = (opensig==baseSlopeSIG);
    bool openTradeBool3 = (openTradeBool1&&openTradeBool2);
@@ -511,13 +517,36 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    bool closeCSIGBool = (tBools.closeSigBool);//||closeBool1||closeBool3||closeBool4||closeBool6);
 
    bool closehTdfTBool = ((opensig==SAN_SIGNAL::CLOSE)||closeBool1||closeBool3||closeBool4||closeBool6);//||closeBool5||closeBool7);
-   bool closeFastSlow = ((opensig==SAN_SIGNAL::NOSIG)||(opensig==SAN_SIGNAL::SIDEWAYS));
+   bool closeFastSlow = (
+                           //(opensig==SAN_SIGNAL::CLOSE)
+                           (tBools.closeSigBool)
+                           ||(opensig==SAN_SIGNAL::NOSIG)
+                           ||(opensig==SAN_SIGNAL::SIDEWAYS)
+                        );
+
+   bool closeSigBool2 = (
+                           (opensig==SAN_SIGNAL::CLOSE)
+                           ||(opensig==SAN_SIGNAL::NOSIG)
+                           ||(opensig==SAN_SIGNAL::SIDEWAYS)
+                           ||tBools.noTradeBool
+                        );
 
 //   tBools.closeTradeBool = (closeBool1||closeBool3||closeBool4||closeBool5||closeBool6||closeBool7||closeBool8);
 
 //Works to close for all trade strategies
-   tBools.closeTradeBool = (closeCSIGBool);
-   tBools.openTradeBool = ((!tBools.closeTradeBool)&&(openTradeBool1));
+
+// cSIG
+//   tBools.closeTradeBool = (closeCSIGBool);
+//   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&(openTradeBool1));
+
+//// fastSlow
+//   tBools.closeTradeBool = (closeFastSlow);
+//   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&(openTradeBool2));
+
+// baseSig
+   tBools.closeTradeBool = (closeSigBool2);
+   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&openTradeBool1&&openTradeBool2);
+
 
 //// Works to close for hilbert and dft trade strategies.
 //// Avoid  tBools.noTradeBool and  tBools.closeSigBool until further investigation into its behaviour
@@ -563,18 +592,15 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       if(tBools.closeTradeBool) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(tBools.closeFlatTradeBool) {
-         mktType=MKTTYP::MKTCLOSE;
-         closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(tBools.closeSigTrCloseSigReversalBool) {
-         mktType=MKTTYP::MKTCLOSE;
-         closeSIG = SAN_SIGNAL::CLOSE;
       }
-      //else if(tBools.flatMktBool) {
-      //   mktType=MKTTYP::MKTFLAT;
-      //   closeSIG = SAN_SIGNAL::NOSIG;
+      //else if(tBools.closeFlatTradeBool) {
+      //   mktType=MKTTYP::MKTCLOSE;
+      //   closeSIG = SAN_SIGNAL::CLOSE;
       //}
-      else if(tBools.openTradeBool) {
+      else if(tBools.closeSigTrCloseSigReversalBool) {
+         mktType=MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.openTradeBool) {
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
@@ -583,12 +609,10 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
    }
 
 //simpleSlope_30_SIG
+//baseSlopeSIG
    if(trdStgy == TRADE_STRATEGIES::SLOPESIG) {
 
       if(tBools.closeTradeBool) {
-         mktType=MKTTYP::MKTCLOSE;
-         closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(tBools.closeFlatTradeBool) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
       } else if(tBools.closeSigTrReversalBool) {
@@ -597,30 +621,24 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
       } else if(opensig==SAN_SIGNAL::SIDEWAYS) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-      }
-      //else if(flatMktBool) {
-      //   mktType=MKTTYP::MKTFLAT;
-      //   closeSIG = SAN_SIGNAL::NOSIG;
-      //}
-      else if(tBools.openTradeBool) {
+      } else if(tBools.openTradeBool) {
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
       }
-      //Print("[TRADESTRATEGY]: SLOPESIG "+ut.getSigString(openSIG));
    }
 
 
    //fastSlowSIG
    if(trdStgy == TRADE_STRATEGIES::FASTSLOW) {
 
-      if(closeFastSlow) {
+      if(tBools.closeTradeBool) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
       } else if(tBools.closeSigTrReversalBool) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(openTradeBool2) {
+      } else if(tBools.openTradeBool) {
          mktType=MKTTYP::MKTTR;
          openSIG = opensig;
          closeSIG = SAN_SIGNAL::NOSIG;
@@ -783,7 +801,8 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
 
 //trdStgy = TRADE_STRATEGIES::SLOPESIG;
    if(trdStgy==TRADE_STRATEGIES::SLOPESIG)
-      setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
+      //setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
+      setSIGForStrategy(baseSlopeSIG, trdStgy);
 
 //trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
    if(trdStgy==TRADE_STRATEGIES::SLOPESTD_CSIG)
@@ -885,11 +904,11 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 //   // SET Trade Strategies
 //   //trdStgy = TRADE_STRATEGIES::FASTSIG;
 //   //trdStgy = TRADE_STRATEGIES::SIMPLESIG;
-//   //trdStgy = TRADE_STRATEGIES::SLOPESIG;
+   trdStgy = TRADE_STRATEGIES::SLOPESIG;
 //   //trdStgy = TRADE_STRATEGIES::SLOPERATIOSIG;
    //trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
-   trdStgy = TRADE_STRATEGIES::FASTSLOW;
-   
+   //trdStgy = TRADE_STRATEGIES::FASTSLOW;
+
 //   trdStgy = TRADE_STRATEGIES::HTDFT;
 
 //   //trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
@@ -1728,6 +1747,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
 }
 
 
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -1744,22 +1764,25 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 
    double candleVolDP=NormalizeDouble(ss.candleVolData.val1,3);
    double atrVolDP=NormalizeDouble(ss.atrVolData.val1,3);
+
    double num_candleVolDP=EMPTY_VALUE;
    double denom_atrVolDP=EMPTY_VALUE;
 
-   if((int)ss.candleVolData.val1==(int)ss.atrVolData.val1) {
-      num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
-      denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
-   } else if((int)ss.candleVolData.val1<(int)ss.atrVolData.val1) {
-      num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
-      denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.candleVolData.val1);
-   } else if((int)ss.candleVolData.val1>(int)ss.atrVolData.val1) {
-      num_candleVolDP = (ss.candleVolData.val1 - (int)ss.atrVolData.val1);
-      denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
-   }
+   DTYPE candleAtrVolDPDt = stats.getDecimalVal(ss.candleVolData.val1,ss.atrVolData.val1);
+
+   //if((int)ss.candleVolData.val1==(int)ss.atrVolData.val1) {
+   //   num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
+   //   denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
+   //} else if((int)ss.candleVolData.val1<(int)ss.atrVolData.val1) {
+   //   num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
+   //   denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.candleVolData.val1);
+   //} else if((int)ss.candleVolData.val1>(int)ss.atrVolData.val1) {
+   //   num_candleVolDP = (ss.candleVolData.val1 - (int)ss.atrVolData.val1);
+   //   denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
+   //}
 
 
-   double candleAtrDPRatio =  NormalizeDouble(num_candleVolDP/denom_atrVolDP,3);
+   double candleAtrDPRatio =  NormalizeDouble(candleAtrVolDPDt.val1/candleAtrVolDPDt.val2,3);
 
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
@@ -1778,7 +1801,7 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 
 
    bool closeTrendStdCP = ((stdCPSlope<=STDSLOPE)&&(stdCPSlope<stdOPSlope));
-   bool closeCandleAtrDP = (candleAtrDPRatio<0.1);
+   bool closeCandleAtrDP = (candleAtrDPRatio<0.3);
    bool closeSlopeRatioBool = (fMSWR<SLOPERATIO);
    bool closeSlope30Bool = (slopeSIG(ss.imaSlope30Data,0)==SAN_SIGNAL::CLOSE); //(fabs(slopeIMA30)<=0.3);
    bool closeClusterBool = (((rFM<0)&&(rMS<0))||((rMS<0)&&(rFS<0))||((rFM<0)&&(rFS<0)));
@@ -1810,14 +1833,20 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 
    bool openTradeBool = (trendStdCP&&trendSlopeRatioBool&&trendCandleAtrDP);
    //bool closeTradeBool = (flatBool||(closeTrendStdCP&&closeSlopeRatioBool)||(closeTrendStdCP&&closeCandleAtrDP));
-   bool closeTradeBool = ((closeTrendStdCP&&closeSlopeRatioBool)||(closeTrendStdCP&&closeCandleAtrDP));
 
+   //bool closeTradeBool = (
+   //                         (closeTrendStdCP&&closeSlopeRatioBool)
+   //                         ||(closeTrendStdCP&&closeCandleAtrDP)
+   //                         ||(closeSlopeRatioBool&&closeCandleAtrDP)
+   //                      );
+
+   bool closeTradeBool = (closeTrendStdCP&&closeSlopeRatioBool&&closeCandleAtrDP);
+   
    if(closeTradeBool) {
       sig = SAN_SIGNAL::NOTRADE;
-//   } else if(openTradeBool) {
    } else {
       sig = SAN_SIGNAL::TRADE;
-   } 
+   }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
