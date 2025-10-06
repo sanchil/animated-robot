@@ -531,6 +531,15 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
                            ||tBools.noTradeBool
                         );
 
+   bool closeSigBool3 = (
+                           (
+                              (opensig==SAN_SIGNAL::CLOSE)
+                              ||(opensig==SAN_SIGNAL::NOSIG)
+                              ||(opensig==SAN_SIGNAL::SIDEWAYS)
+                           )
+                           &&tBools.noTradeBool
+                        );
+
 //   tBools.closeTradeBool = (closeBool1||closeBool3||closeBool4||closeBool5||closeBool6||closeBool7||closeBool8);
 
 //Works to close for all trade strategies
@@ -544,7 +553,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 //   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&(openTradeBool2));
 
 // baseSig
-   tBools.closeTradeBool = (closeSigBool2);
+   tBools.closeTradeBool = (closeSigBool3);
    tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&openTradeBool1&&openTradeBool2);
 
 
@@ -1507,36 +1516,68 @@ SAN_SIGNAL          HSIG::trendVolVarSIG(
 //+------------------------------------------------------------------+
 SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType=0) {
 
+   double slopeRange = 0.0;
+
    if(signalType==0) {
-      if((signalDt.val1>=-0.2)&&(signalDt.val1<=0.2))
-         return SAN_SIGNAL::CLOSE;
-      if((signalDt.val1>=-0.3)&&(signalDt.val1<=0.3))
-         return SAN_SIGNAL::SIDEWAYS;
-      if(signalDt.val1>0.3)
-         return SAN_SIGNAL::BUY;
-      if(signalDt.val1<-0.3)
-         return SAN_SIGNAL::SELL;
+      slopeRange = 0.8;
    } else if(signalType==1) {
-      if((signalDt.val1>=-0.1)&&(signalDt.val1<=0.1))
-         return SAN_SIGNAL::CLOSE;
-      if((signalDt.val1>=-0.2)&&(signalDt.val1<=0.2))
-         return SAN_SIGNAL::SIDEWAYS;
-      if(signalDt.val1>0.2)
-         return SAN_SIGNAL::BUY;
-      if(signalDt.val1<-0.2)
-         return SAN_SIGNAL::SELL;
+      slopeRange = 0.5;
    } else if(signalType==2) {
-      if((signalDt.val1>=-0.05)&&(signalDt.val1<=0.05))
-         return SAN_SIGNAL::CLOSE;
-      if((signalDt.val1>=-0.1)&&(signalDt.val1<=0.1))
-         return SAN_SIGNAL::SIDEWAYS;
-      if(signalDt.val1>0.1)
-         return SAN_SIGNAL::BUY;
-      if(signalDt.val1<-0.1)
-         return SAN_SIGNAL::SELL;
+      slopeRange = 0.3;
    }
+
+   if((signalDt.val1>=(-1*slopeRange))&&(signalDt.val1<=slopeRange))
+      return SAN_SIGNAL::CLOSE;
+   if(signalDt.val1>slopeRange)
+      return SAN_SIGNAL::BUY;
+   if(signalDt.val1<(-1*slopeRange))
+      return SAN_SIGNAL::SELL;
+
    return SAN_SIGNAL::NOSIG;
 }
+
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType=0) {
+//
+//   if(signalType==0) {
+//      if((signalDt.val1>=-0.2)&&(signalDt.val1<=0.2))
+//         return SAN_SIGNAL::CLOSE;
+//      if((signalDt.val1>=-0.3)&&(signalDt.val1<=0.3))
+//         return SAN_SIGNAL::SIDEWAYS;
+//      if(signalDt.val1>0.3)
+//         return SAN_SIGNAL::BUY;
+//      if(signalDt.val1<-0.3)
+//         return SAN_SIGNAL::SELL;
+//   } else if(signalType==1) {
+//      if((signalDt.val1>=-0.1)&&(signalDt.val1<=0.1))
+//         return SAN_SIGNAL::CLOSE;
+//      if((signalDt.val1>=-0.2)&&(signalDt.val1<=0.2))
+//         return SAN_SIGNAL::SIDEWAYS;
+//      if(signalDt.val1>0.2)
+//         return SAN_SIGNAL::BUY;
+//      if(signalDt.val1<-0.2)
+//         return SAN_SIGNAL::SELL;
+//   } else if(signalType==2) {
+//      //if((signalDt.val1>=-0.05)&&(signalDt.val1<=0.05))
+//      //   return SAN_SIGNAL::CLOSE;
+//      //if((signalDt.val1>=-0.1)&&(signalDt.val1<=0.1))
+//      //   return SAN_SIGNAL::SIDEWAYS;
+//      //if(signalDt.val1>0.1)
+//      //   return SAN_SIGNAL::BUY;
+//      //if(signalDt.val1<-0.1)
+//      //   return SAN_SIGNAL::SELL;
+//
+//      if((signalDt.val1>=-0.25)&&(signalDt.val1<=0.25))
+//         return SAN_SIGNAL::CLOSE;
+//      if(signalDt.val1>0.25)
+//         return SAN_SIGNAL::BUY;
+//      if(signalDt.val1<-0.25)
+//         return SAN_SIGNAL::SELL;
+//   }
+//   return SAN_SIGNAL::NOSIG;
+//}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1844,15 +1885,21 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 
 //   bool closeTradeBool = (closeTrendStdCP&&closeSlopeRatioBool&&closeCandleAtrDP);
 //   bool closeTradeBool = ((closeTrendStdCP&&closeSlopeRatioBool)||closeCandleAtrDP);
-     //bool closeTradeBool = (
-     //                       (closeTrendStdCP&&closeSlopeRatioBool)
-     //                       ||(closeCandleAtrDP&&closeAtr)
-     //                    );
+   //bool closeTradeBool = (
+   //                       (closeTrendStdCP&&closeSlopeRatioBool)
+   //                       ||(closeCandleAtrDP&&closeAtr)
+   //                    );
 
+//
+//   bool closeTradeBool = (
+//                            (closeTrendStdCP&&closeSlopeRatioBool)
+//                            ||(closeTrendStdCP&&closeCandleAtrDP&&closeAtr)
+//                            //||(closeSlopeRatioBool&&closeCandleAtrDP&&closeAtr)
+//                         );
 
    bool closeTradeBool = (
                             (closeTrendStdCP&&closeSlopeRatioBool)
-                            ||(closeTrendStdCP&&closeCandleAtrDP&&closeAtr)
+                            &&(closeTrendStdCP&&closeCandleAtrDP&&closeAtr)
                             //||(closeSlopeRatioBool&&closeCandleAtrDP&&closeAtr)
                          );
 
