@@ -1844,9 +1844,16 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 
 //   bool closeTradeBool = (closeTrendStdCP&&closeSlopeRatioBool&&closeCandleAtrDP);
 //   bool closeTradeBool = ((closeTrendStdCP&&closeSlopeRatioBool)||closeCandleAtrDP);
+     //bool closeTradeBool = (
+     //                       (closeTrendStdCP&&closeSlopeRatioBool)
+     //                       ||(closeCandleAtrDP&&closeAtr)
+     //                    );
+
+
    bool closeTradeBool = (
                             (closeTrendStdCP&&closeSlopeRatioBool)
-                            ||(closeCandleAtrDP&&closeAtr)
+                            ||(closeTrendStdCP&&closeCandleAtrDP&&closeAtr)
+                            //||(closeSlopeRatioBool&&closeCandleAtrDP&&closeAtr)
                          );
 
    if(closeTradeBool) {
