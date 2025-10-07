@@ -1777,7 +1777,7 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 
 
    double candleAtrDPRatio =  NormalizeDouble(candleAtrVolDPDt.val1/candleAtrVolDPDt.val2,3);
-   
+
    //double baseSlope = ss.baseSlopeData.val1;
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
@@ -1842,13 +1842,23 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
                              &&closeCandleAtrDP
                              &&closeAtr
                           );
+
    bool closeTradeBool2 = (
+                             closeSlope30Bool
+                             &&closeTrendStdCP
+                             &&closeSlopeRatioBool
+                          );
+
+   bool closeTradeBool3 = (
                              closeSlope30Bool
                              &&closeClusterBool
                              &&closeSlopeRatioBool
                           );
+
    bool closeTradeBool = (
                             closeTradeBool1
+                            ||closeTradeBool2
+                            ||closeTradeBool3
                          );
 
    if(closeTradeBool) {
@@ -1862,7 +1872,7 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 //+------------------------------------------------------------------+
 //   Print("[CTRADE2] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio+" FLAT: "+flatBool);
    Print("[CTRADE2] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio+" FLAT: "+flatBool);
-   Print("[CTRADE2] [bool1: "+closeTradeBool1+" bool2: "+closeTradeBool2 +"] closeTrendStdCP: "+ closeTrendStdCP+" closeSlopeRatioBool: "+closeSlopeRatioBool+" closeCandleAtrDP: "+closeCandleAtrDP+" closeAtr: "+closeAtr);
+   Print("[CTRADE2] [bool1: "+closeTradeBool1+" bool2: "+closeTradeBool2 +" bool3: "+closeTradeBool3+"] closeTrendStdCP: "+ closeTrendStdCP+" closeSlopeRatioBool: "+closeSlopeRatioBool+" closeCandleAtrDP: "+closeCandleAtrDP+" closeAtr: "+closeAtr+" slope30: "+closeSlope30Bool+" cluster: "+closeClusterBool);
 
    return sig;
 }

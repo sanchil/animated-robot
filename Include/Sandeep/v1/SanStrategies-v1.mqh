@@ -316,7 +316,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
 //   Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" 5_14:"+util.getSigString(hSig.simple_5_14_SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" rsiSIG: "+util.getSigString(ss.rsiSIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" volSlopeSIG: "+util.getSigString(ss.volSlopeSIG)+" slopeCandle120SIG: "+util.getSigString(hSig.slopeCandle120SIG));//+" hilbertDftSIG: "+util.getSigString((SAN_SIGNAL)ss.hilbertDftSIG.val[0]));
 //   Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" fastSlow:"+util.getSigString(hSig.fastSlowSIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" rsiSIG: "+util.getSigString(ss.rsiSIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" volSlopeSIG: "+util.getSigString(ss.volSlopeSIG)+" slopeCandle120SIG: "+util.getSigString(hSig.slopeCandle120SIG));//+" hilbertDftSIG: "+util.getSigString((SAN_SIGNAL)ss.hilbertDftSIG.val[0]));
-   Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" fastSlow:"+util.getSigString(hSig.fastSlowSIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" slopeCandle120SIG: "+util.getSigString(hSig.slopeCandle120SIG)+" cpScatt: "+util.getSigString(ss.cpScatterSIG)+" sVarSIG: "+util.getSigString(ss.slopeVarSIG)+" cV120SIG: "+util.getSigString(ss.candleVol120SIG));//+" hilbertDftSIG: "+util.getSigString((SAN_SIGNAL)ss.hilbertDftSIG.val[0]));
+   Print("[OPEN] :: domSIG: "+util.getSigString(dominantSIG)+" c_SIG: "+util.getSigString(hSig.c_SIG)+" slopeCandle120SIG: "+util.getSigString(hSig.slopeCandle120SIG)+" Slope30: "+util.getSigString(hSig.simpleSlope_30_SIG)+" cp120: "+util.getSigString(hSig.cpSlopeCandle120SIG)+" fastSIG: "+util.getSigString(hSig.fastSIG)+" fastSlow:"+util.getSigString(hSig.fastSlowSIG)+" cpScatt: "+util.getSigString(ss.cpScatterSIG)+" sVarSIG: "+util.getSigString(ss.slopeVarSIG)+" cV120SIG: "+util.getSigString(ss.candleVol120SIG));//+" hilbertDftSIG: "+util.getSigString((SAN_SIGNAL)ss.hilbertDftSIG.val[0]));
 //   Print("[TRADESIG] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Trend: "+util.getSigString(hSig.baseTrendSIG)+" domTrIMA: "+util.getSigString(hSig.domTrIMA)+" rsiSIG: "+util.getSigString(ss.rsiSIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" volSlopeSIG: "+util.getSigString(ss.volSlopeSIG)+" atr: "+util.getSigString(ss.atrSIG));//+" hilbertSIG: "+util.getSigString((SAN_SIGNAL)ss.hilbertSIG.val4)+" dftSIG: "+ util.getSigString((SAN_SIGNAL)ss.dftSIG.val5));
    Print("[TRADESIG] :: Trade Sig: "+util.getSigString(hSig.tradeSIG)+" Base Slope: "+util.getSigString(hSig.baseSlopeSIG)+" Base Slope: "+ss.baseSlopeData.val1+" rsiSIG: "+util.getSigString(ss.rsiSIG)+" volSIG:"+ util.getSigString(ss.volSIG)+" volSlopeSIG: "+util.getSigString(ss.volSlopeSIG)+" atr: "+util.getSigString(ss.atrSIG));//+" hilbertSIG: "+util.getSigString((SAN_SIGNAL)ss.hilbertSIG.val4)+" dftSIG: "+ util.getSigString((SAN_SIGNAL)ss.dftSIG.val5));
 
@@ -423,7 +423,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h
    double movingAvg120 = indData.ima120[1];
    double movingAvg240 = indData.ima240[1];
    double movingAvg500 = indData.ima500[1];
-   
+
    double hilbertIndex = hilbertDftData.val[1];
    double hilbertAmp = hilbertDftData.val[2];
    double hilbertPhase = hilbertDftData.val[3];
@@ -433,8 +433,8 @@ string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h
    double dftPower = hilbertDftData.val[7];
    double hilbertSIZE = hilbertDftData.val[15];
    double hibertFILTER = hilbertDftData.val[16];
-   
- 
+
+
 
    // Use MathIsValidNumber to validate
    spread = (spread > 0 && MathIsValidNumber(spread)) ? spread : 0.0;
@@ -465,7 +465,7 @@ string SanStrategies::getJsonData(const INDDATA &indData, SANSIGNALS &s, HSIG &h
    movingAvg120 = MathIsValidNumber(movingAvg120) ? movingAvg120 : 0.0;
    movingAvg240 = MathIsValidNumber(movingAvg240) ? movingAvg240 : 0.0;
    movingAvg500 = MathIsValidNumber(movingAvg500) ? movingAvg500 : 0.0;
-   
+
    hilbertIndex = MathIsValidNumber(hilbertIndex) ? hilbertIndex : 0.0;
    hilbertAmp = MathIsValidNumber(hilbertAmp) ? hilbertAmp : 0.0;
    hilbertPhase = MathIsValidNumber(hilbertPhase) ? hilbertPhase : 0.0;
