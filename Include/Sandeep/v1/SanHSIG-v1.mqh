@@ -316,58 +316,6 @@ HSIG::HSIG()
 //+------------------------------------------------------------------+
 HSIG::~HSIG() {
    baseInit();
-//
-//   mktType=MKTTYP::NOMKT;
-//   trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
-//   baseTrendSIG=SAN_SIGNAL::NOSIG;
-//   baseSlopeSIG=SAN_SIGNAL::NOSIG;
-//   openSIG =  SAN_SIGNAL::NOSIG;
-//   closeSIG =  SAN_SIGNAL::NOSIG;
-//   c_SIG =  SAN_SIGNAL::NOSIG;
-//   hilbertSIG =  SAN_SIGNAL::NOSIG;
-//   dftSIG =  SAN_SIGNAL::NOSIG;
-//   hilbertDftSIG = SAN_SIGNAL::NOSIG;
-//   slopeTrendBool=false;
-//   fastSIG =  SAN_SIGNAL::NOSIG;
-//   mainFastSIG = SAN_SIGNAL::NOSIG;
-//   slopeFastSIG = SAN_SIGNAL::NOSIG;
-////rsiFastSIG = SAN_SIGNAL::NOSIG;
-//   cpFastSIG = SAN_SIGNAL::NOSIG;
-//   cpSlopeVarFastSIG = SAN_SIGNAL::NOSIG;
-//   cpSlopeCandle120SIG = SAN_SIGNAL::NOSIG;
-//   slopeCandle120SIG = SAN_SIGNAL::NOSIG;
-//   dominantTrendSIG = SAN_SIGNAL::NOSIG;
-//   dominantTrendCPSIG = SAN_SIGNAL::NOSIG;
-//   dominantTrendIma120SIG = SAN_SIGNAL::NOSIG;
-//   dominantTrendIma240SIG = SAN_SIGNAL::NOSIG;
-//   dominant240SIG = SAN_SIGNAL::NOSIG;
-//   dominant120SIG = SAN_SIGNAL::NOSIG;
-//   dominant30SIG = SAN_SIGNAL::NOSIG;
-//   domTrIMA = SAN_SIGNAL::NOSIG;
-//   domTrIMAFast = SAN_SIGNAL::NOSIG;
-//   domVolVarSIG = SAN_SIGNAL::NOSIG;
-//   tradeSIG = SAN_SIGNAL::NOSIG;
-//   cTSIG= SAN_SIGNAL::NOSIG;
-//   atrCandle_tradeSIG = SAN_SIGNAL::NOSIG;
-//   simple_14_SIG = SAN_SIGNAL::NOSIG;
-//   simple_30_SIG = SAN_SIGNAL::NOSIG;
-//   simple_5_14_SIG = SAN_SIGNAL::NOSIG;
-//   simple_14_30_SIG = SAN_SIGNAL::NOSIG;
-//   simple_30_120_SIG = SAN_SIGNAL::NOSIG;
-//   simpleTrend_14_SIG = SAN_SIGNAL::NOSIG;
-//   simpleTrend_30_SIG = SAN_SIGNAL::NOSIG;
-//   simpleTrend_5_14_SIG = SAN_SIGNAL::NOSIG;
-//   simpleTrend_14_30_SIG = SAN_SIGNAL::NOSIG;
-//   simpleTrend_30_120_SIG = SAN_SIGNAL::NOSIG;
-//   trend_5_120_500_SIG = SAN_SIGNAL::NOSIG;
-//   trend_5_30_120_SIG = SAN_SIGNAL::NOSIG;
-//   trend_5_14_30_SIG = SAN_SIGNAL::NOSIG;
-//   trend_14_30_120_SIG = SAN_SIGNAL::NOSIG;
-//// imaSlopesData.freeData();
-//// imaSlope30Data.freeData();
-//   slopeRatioData.freeData();
-//   stdCPSlope.initDTYPE();
-//   obvCPSlope.initDTYPE();
 }
 
 //+------------------------------------------------------------------+
@@ -537,7 +485,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
                               ||(opensig==SAN_SIGNAL::NOSIG)
                               ||(opensig==SAN_SIGNAL::SIDEWAYS)
                            )
-                           &&tBools.noTradeBool
+                           ||tBools.noTradeBool
                         );
 
 //   tBools.closeTradeBool = (closeBool1||closeBool3||closeBool4||closeBool5||closeBool6||closeBool7||closeBool8);
@@ -554,7 +502,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 
 // baseSig
    tBools.closeTradeBool = (closeSigBool3);
-   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&openTradeBool1&&openTradeBool2);
+   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&openTradeBool3);
 
 
 //// Works to close for hilbert and dft trade strategies.
@@ -850,10 +798,12 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 
    c_SIG = cSIG(ss,util,1);
    cpSlopeCandle120SIG = simpleSIG(ss.slopeVarSIG,ss.candleVol120SIG,util.convTrendToSig(ss.cpScatterSIG));
-   slopeCandle120SIG = ((ss.volSlopeSIG==SAN_SIGNAL::TRADE)||(ss.volSlopeSIG==SAN_SIGNAL::SIDEWAYS))?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG):SAN_SIGNAL::NOSIG;
+   slopeCandle120SIG = (simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG)!=SAN_SIGNAL::NOSIG)?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG):SAN_SIGNAL::CLOSE;
    hilbertSIG =  (SAN_SIGNAL)ss.hilbertSIG.val4;
    dftSIG =  (SAN_SIGNAL)ss.dftSIG.val5;
    hilbertDftSIG = (SAN_SIGNAL)ss.hilbertDftSIG.val[0];
+
+   //slopeCandle120SIG = ((ss.volSlopeSIG==SAN_SIGNAL::TRADE)||(ss.volSlopeSIG==SAN_SIGNAL::SIDEWAYS))?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG):SAN_SIGNAL::NOSIG;
 //   mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
 //   slopeFastSIG = matchSIG(ss.slopeVarSIG, ss.ima1430SIG);
 ////rsiFastSIG = matchSIG(ss.rsiSIG, ss.ima1430SIG);
@@ -900,14 +850,17 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    fastSIG = matchSIG(ss.fsig5,ss.fsig14,ss.fsig30);
    dominantTrendSIG = matchSIG(ss.fsig5,trend_5_120_500_SIG,ss.slopeVarSIG);
    domVolVarSIG = ss.tradeVolVarSIG;
-   dominantTrendCPSIG = matchSIG(
-                           util.convTrendToSig(ss.cpScatterSIG),
-                           util.convTrendToSig(ss.trendRatio120SIG),
-                           imaTrendSIG(ss.ima30120SIG,ss.trendRatio30SIG,ss.trendRatio120SIG));
 
-   domTrIMAFast = imaTrend(ss.ima1430SIG,ss.ima30120SIG,ss.trendRatio14SIG,ss.trendRatio30SIG,ss.trendRatio120SIG);
-//domTrIMA = imaTrend(ss.ima30120SIG,ss.ima120240SIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG,ss.ima240500SIG,ss.trendRatio500SIG);
-   domTrIMA = domTrIMAFast;
+//   dominantTrendCPSIG = matchSIG(
+//                           util.convTrendToSig(ss.cpScatterSIG),
+//                           util.convTrendToSig(ss.trendRatio120SIG),
+//                           imaTrendSIG(ss.ima30120SIG,ss.trendRatio30SIG,ss.trendRatio120SIG));
+//
+//   domTrIMAFast = imaTrend(ss.ima1430SIG,ss.ima30120SIG,ss.trendRatio14SIG,ss.trendRatio30SIG,ss.trendRatio120SIG);
+//
+////domTrIMA = imaTrend(ss.ima30120SIG,ss.ima120240SIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG,ss.ima240500SIG,ss.trendRatio500SIG);
+//   domTrIMA = domTrIMAFast;
+
 
 ////######################################################################################
 //   // SET Trade Strategies
@@ -1824,7 +1777,8 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 
 
    double candleAtrDPRatio =  NormalizeDouble(candleAtrVolDPDt.val1/candleAtrVolDPDt.val2,3);
-
+   
+   //double baseSlope = ss.baseSlopeData.val1;
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
    double stdOPSlope = ss.stdOPSlope.val1;
@@ -1844,7 +1798,6 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
    bool closeTrendStdCP = ((stdCPSlope<=STDSLOPE)&&(stdCPSlope<stdOPSlope));
    bool closeCandleAtrDP = (candleAtrDPRatio<0.3);
    bool closeAtr = ((atrSIG==SAN_SIGNAL::NOTRADE)||(atrSIG==SAN_SIGNAL::NOSIG));
-
    bool closeSlopeRatioBool = (fMSWR<SLOPERATIO);
    bool closeSlope30Bool = (slopeSIG(ss.imaSlope30Data,0)==SAN_SIGNAL::CLOSE); //(fabs(slopeIMA30)<=0.3);
    bool closeClusterBool = (((rFM<0)&&(rMS<0))||((rMS<0)&&(rFS<0))||((rFM<0)&&(rFS<0)));
@@ -1876,31 +1829,26 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 
    bool openTradeBool = (trendStdCP&&trendSlopeRatioBool&&trendCandleAtrDP);
    //bool closeTradeBool = (flatBool||(closeTrendStdCP&&closeSlopeRatioBool)||(closeTrendStdCP&&closeCandleAtrDP));
-
-   //bool closeTradeBool = (
-   //                         (closeTrendStdCP&&closeSlopeRatioBool)
-   //                         ||(closeTrendStdCP&&closeCandleAtrDP)
-   //                         ||(closeSlopeRatioBool&&closeCandleAtrDP)
-   //                      );
-
-//   bool closeTradeBool = (closeTrendStdCP&&closeSlopeRatioBool&&closeCandleAtrDP);
-//   bool closeTradeBool = ((closeTrendStdCP&&closeSlopeRatioBool)||closeCandleAtrDP);
-   //bool closeTradeBool = (
-   //                       (closeTrendStdCP&&closeSlopeRatioBool)
-   //                       ||(closeCandleAtrDP&&closeAtr)
-   //                    );
-
 //
 //   bool closeTradeBool = (
 //                            (closeTrendStdCP&&closeSlopeRatioBool)
-//                            ||(closeTrendStdCP&&closeCandleAtrDP&&closeAtr)
+//                            &&(closeTrendStdCP&&closeCandleAtrDP&&closeAtr)
 //                            //||(closeSlopeRatioBool&&closeCandleAtrDP&&closeAtr)
 //                         );
 
+   bool closeTradeBool1 = (
+                             closeTrendStdCP
+                             &&closeSlopeRatioBool
+                             &&closeCandleAtrDP
+                             &&closeAtr
+                          );
+   bool closeTradeBool2 = (
+                             closeSlope30Bool
+                             &&closeClusterBool
+                             &&closeSlopeRatioBool
+                          );
    bool closeTradeBool = (
-                            (closeTrendStdCP&&closeSlopeRatioBool)
-                            &&(closeTrendStdCP&&closeCandleAtrDP&&closeAtr)
-                            //||(closeSlopeRatioBool&&closeCandleAtrDP&&closeAtr)
+                            closeTradeBool1
                          );
 
    if(closeTradeBool) {
@@ -1912,8 +1860,9 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+//   Print("[CTRADE2] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio+" FLAT: "+flatBool);
    Print("[CTRADE2] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio+" FLAT: "+flatBool);
-   Print("[CTRADE2] closeTrendStdCP: "+ closeTrendStdCP+" closeSlopeRatioBool: "+closeSlopeRatioBool+" closeCandleAtrDP: "+closeCandleAtrDP);
+   Print("[CTRADE2] [bool1: "+closeTradeBool1+" bool2: "+closeTradeBool2 +"] closeTrendStdCP: "+ closeTrendStdCP+" closeSlopeRatioBool: "+closeSlopeRatioBool+" closeCandleAtrDP: "+closeCandleAtrDP+" closeAtr: "+closeAtr);
 
    return sig;
 }
