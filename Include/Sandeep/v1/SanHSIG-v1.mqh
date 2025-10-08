@@ -148,7 +148,8 @@ class HSIG {
    void              initSIG(const SANSIGNALS &ss, SanUtils &util);
    SAN_SIGNAL        matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2=EMPTY, bool slowStrategy=false);
    //   SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2=EMPTY);
-   SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2=EMPTY, const SAN_SIGNAL sig3=EMPTY, const SAN_SIGNAL sig4=EMPTY, const SAN_SIGNAL sig5=EMPTY);
+   SAN_SIGNAL        simpleSIG_Agressive(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2=EMPTY, const SAN_SIGNAL sig3=EMPTY, const SAN_SIGNAL sig4=EMPTY, const SAN_SIGNAL sig5=EMPTY);
+   SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1,const SAN_SIGNAL sig2=EMPTY,const SAN_SIGNAL sig3=EMPTY);
    SAN_SIGNAL        simpleTrendSIG(SANTREND tr1, SANTREND tr2=EMPTY);
    SAN_SIGNAL        trendSIG(SANTREND tr1, SANTREND tr2, SANTREND tr3, SANTREND tr4=EMPTY, SANTREND tr5=EMPTY, SANTREND tr6=EMPTY);
    SAN_SIGNAL        sigTrSIG(const SAN_SIGNAL sig,const SANTREND tr);
@@ -472,14 +473,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
                            ||(opensig==SAN_SIGNAL::SIDEWAYS)
                         );
 
-   bool closeSigBool2 = (
-                           (opensig==SAN_SIGNAL::CLOSE)
-                           ||(opensig==SAN_SIGNAL::NOSIG)
-                           ||(opensig==SAN_SIGNAL::SIDEWAYS)
-                           ||tBools.noTradeBool
-                        );
-
-   bool closeSigBool3 = (
+   bool closeSigBool1 = (
                            (
                               (opensig==SAN_SIGNAL::CLOSE)
                               ||(opensig==SAN_SIGNAL::NOSIG)
@@ -501,8 +495,8 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 //   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&(openTradeBool2));
 
 // baseSig
-   tBools.closeTradeBool = (closeSigBool3);
-   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&openTradeBool3);
+   tBools.closeTradeBool = (closeSigBool1);
+   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&openTradeBool1);
 
 
 //// Works to close for hilbert and dft trade strategies.
@@ -567,8 +561,9 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 
 //simpleSlope_30_SIG
 //baseSlopeSIG
-   if(trdStgy == TRADE_STRATEGIES::SLOPESIG) {
+//slopeCandle120SIG
 
+   if(trdStgy == TRADE_STRATEGIES::SLOPESIG) {
       if(tBools.closeTradeBool) {
          mktType=MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
@@ -759,7 +754,8 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
 //trdStgy = TRADE_STRATEGIES::SLOPESIG;
    if(trdStgy==TRADE_STRATEGIES::SLOPESIG)
       //setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
-      setSIGForStrategy(baseSlopeSIG, trdStgy);
+      //setSIGForStrategy(baseSlopeSIG, trdStgy);
+      setSIGForStrategy(slopeCandle120SIG, trdStgy);
 
 //trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
    if(trdStgy==TRADE_STRATEGIES::SLOPESTD_CSIG)
@@ -1017,9 +1013,138 @@ SAN_SIGNAL  HSIG::matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG
 
 
 //+------------------------------------------------------------------+
-//|                                                                  |
+//| This version of simpleSIG is a gentle non aggressive version of simpleSIG.
+// It does not close trades on the slightest hints leading to more stable signals 
+// preventing whiplash trades causes by the aggresive version of simple sig below                                                                 |
 //+------------------------------------------------------------------+
-SAN_SIGNAL        HSIG::simpleSIG(
+SAN_SIGNAL HSIG::simpleSIG(
+   const SAN_SIGNAL sig1,
+   const SAN_SIGNAL sig2=EMPTY,
+   const SAN_SIGNAL sig3=EMPTY
+) {
+
+   if((sig2!=EMPTY)&&(sig3!=EMPTY)) {
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)
+      )
+         return SAN_SIGNAL::NOSIG;
+
+
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig2!=sig3)
+      ) return SAN_SIGNAL::NOSIG;
+
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig2==sig3)
+      ) return sig2;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig1!=sig3)
+      ) return SAN_SIGNAL::NOSIG;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig1==sig3)
+      )
+         return sig1;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)&&
+         (sig1!=sig2)
+      ) return SAN_SIGNAL::NOSIG;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)&&
+         (sig1==sig2)
+      )
+         return sig1;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)
+      )
+         return sig1;
+
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)
+      )
+         return sig2;
+
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)
+      )
+         return sig3;
+
+   }
+
+   if(sig2!=EMPTY) {
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)
+      )
+         return SAN_SIGNAL::NOSIG;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig1!=sig2)
+      )
+         return SAN_SIGNAL::NOSIG;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig1==sig2)
+      )
+         return sig1;
+
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)
+      )
+         return sig1;
+
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)
+      )
+         return sig2;
+
+   }
+
+   return sig1;
+}
+
+//+------------------------------------------------------------------+
+//| This is an aggressive form of simpleSIG that closes at teh slightest 
+// hint of a negative trade. This causes a lot of whiplash trades.
+// In contrast a non aggressive form used as above allows for more 
+// gentle trade in and trade outs leading to better overall trades.                                                                 |
+//+------------------------------------------------------------------+
+SAN_SIGNAL        HSIG::simpleSIG_Agressive(
    const SAN_SIGNAL sig1,
    const SAN_SIGNAL sig2=EMPTY,
    const SAN_SIGNAL sig3=EMPTY,
@@ -1778,7 +1903,7 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 
    double candleAtrDPRatio =  NormalizeDouble(candleAtrVolDPDt.val1/candleAtrVolDPDt.val2,3);
 
-   //double baseSlope = ss.baseSlopeData.val1;
+   // double baseSlope = ss.baseSlopeData.val1;
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
    double stdOPSlope = ss.stdOPSlope.val1;
@@ -1800,6 +1925,7 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
    bool closeAtr = ((atrSIG==SAN_SIGNAL::NOTRADE)||(atrSIG==SAN_SIGNAL::NOSIG));
    bool closeSlopeRatioBool = (fMSWR<SLOPERATIO);
    bool closeSlope30Bool = (slopeSIG(ss.imaSlope30Data,0)==SAN_SIGNAL::CLOSE); //(fabs(slopeIMA30)<=0.3);
+   bool closeBaseSlopeBool = (slopeSIG(ss.baseSlopeData,2)==SAN_SIGNAL::CLOSE);
    bool closeClusterBool = (((rFM<0)&&(rMS<0))||((rMS<0)&&(rFS<0))||((rFM<0)&&(rFS<0)));
    bool closeOBVCPBool = (fabs(obvCPSlope)<=OBVSLOPE);
 
@@ -1855,10 +1981,14 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
                              &&closeSlopeRatioBool
                           );
 
+
+   bool closeTradeBool4 = (closeBaseSlopeBool);
+
    bool closeTradeBool = (
                             closeTradeBool1
                             ||closeTradeBool2
                             ||closeTradeBool3
+                            ||closeTradeBool4
                          );
 
    if(closeTradeBool) {
@@ -1872,7 +2002,7 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
 //+------------------------------------------------------------------+
 //   Print("[CTRADE2] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio+" FLAT: "+flatBool);
    Print("[CTRADE2] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio+" FLAT: "+flatBool);
-   Print("[CTRADE2] [bool1: "+closeTradeBool1+" bool2: "+closeTradeBool2 +" bool3: "+closeTradeBool3+"] closeTrendStdCP: "+ closeTrendStdCP+" closeSlopeRatioBool: "+closeSlopeRatioBool+" closeCandleAtrDP: "+closeCandleAtrDP+" closeAtr: "+closeAtr+" slope30: "+closeSlope30Bool+" cluster: "+closeClusterBool);
+   Print("[CTRADE2] [bool1: "+closeTradeBool1+" bool2: "+closeTradeBool2 +" bool3: "+closeTradeBool3+" bool4: "+closeTradeBool4+"] closeTrendStdCP: "+ closeTrendStdCP+" closeSlopeRatioBool: "+closeSlopeRatioBool+" closeCandleAtrDP: "+closeCandleAtrDP+" closeAtr: "+closeAtr+" slope30: "+closeSlope30Bool+" cluster: "+closeClusterBool);
 
    return sig;
 }
