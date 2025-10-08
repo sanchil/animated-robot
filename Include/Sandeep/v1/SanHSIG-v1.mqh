@@ -1014,7 +1014,7 @@ SAN_SIGNAL  HSIG::matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG
 
 //+------------------------------------------------------------------+
 //| This version of simpleSIG is a gentle non aggressive version of simpleSIG.
-// It does not close trades on the slightest hints leading to more stable signals 
+// It does not close trades on the slightest hints leading to more stable signals
 // preventing whiplash trades causes by the aggresive version of simple sig below                                                                 |
 //+------------------------------------------------------------------+
 SAN_SIGNAL HSIG::simpleSIG(
@@ -1030,7 +1030,6 @@ SAN_SIGNAL HSIG::simpleSIG(
          (sig3==SAN_SIGNAL::NOSIG)
       )
          return SAN_SIGNAL::NOSIG;
-
 
       if(
          (sig1==SAN_SIGNAL::NOSIG)&&
@@ -1097,6 +1096,12 @@ SAN_SIGNAL HSIG::simpleSIG(
       )
          return sig3;
 
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)
+         &&(sig1==sig2)
+         &&(sig2==sig3)
+      ) return sig1;
+
    }
 
    if(sig2!=EMPTY) {
@@ -1132,16 +1137,21 @@ SAN_SIGNAL HSIG::simpleSIG(
          (sig2!=SAN_SIGNAL::NOSIG)
       )
          return sig2;
-
+      
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)
+         &&(sig1==sig2)         
+      ) return sig1;
+      
    }
 
    return sig1;
 }
 
 //+------------------------------------------------------------------+
-//| This is an aggressive form of simpleSIG that closes at teh slightest 
+//| This is an aggressive form of simpleSIG that closes at teh slightest
 // hint of a negative trade. This causes a lot of whiplash trades.
-// In contrast a non aggressive form used as above allows for more 
+// In contrast a non aggressive form used as above allows for more
 // gentle trade in and trade outs leading to better overall trades.                                                                 |
 //+------------------------------------------------------------------+
 SAN_SIGNAL        HSIG::simpleSIG_Agressive(
