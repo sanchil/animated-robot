@@ -1474,9 +1474,9 @@ SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType=0) {
    if(signalType==0) {
       slopeRange = 0.8;
    } else if(signalType==1) {
-      slopeRange = 0.5;
+      slopeRange = 0.6;
    } else if(signalType==2) {
-      slopeRange = 0.3;
+      slopeRange = 0.4;
    }
 
    if((signalDt.val1>=(-1*slopeRange))&&(signalDt.val1<=slopeRange))
