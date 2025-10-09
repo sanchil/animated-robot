@@ -149,7 +149,7 @@ class HSIG {
    SAN_SIGNAL        matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2=EMPTY, bool slowStrategy=false);
    //   SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2=EMPTY);
    SAN_SIGNAL        simpleSIG_Agressive(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2=EMPTY, const SAN_SIGNAL sig3=EMPTY, const SAN_SIGNAL sig4=EMPTY, const SAN_SIGNAL sig5=EMPTY);
-   SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1,const SAN_SIGNAL sig2=EMPTY,const SAN_SIGNAL sig3=EMPTY);
+   SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1,const SAN_SIGNAL sig2=EMPTY,const SAN_SIGNAL sig3=EMPTY,const SAN_SIGNAL sig4=EMPTY);
    SAN_SIGNAL        simpleTrendSIG(SANTREND tr1, SANTREND tr2=EMPTY);
    SAN_SIGNAL        trendSIG(SANTREND tr1, SANTREND tr2, SANTREND tr3, SANTREND tr4=EMPTY, SANTREND tr5=EMPTY, SANTREND tr6=EMPTY);
    SAN_SIGNAL        sigTrSIG(const SAN_SIGNAL sig,const SANTREND tr);
@@ -1020,9 +1020,138 @@ SAN_SIGNAL  HSIG::matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG
 SAN_SIGNAL HSIG::simpleSIG(
    const SAN_SIGNAL sig1,
    const SAN_SIGNAL sig2=EMPTY,
-   const SAN_SIGNAL sig3=EMPTY
+   const SAN_SIGNAL sig3=EMPTY,
+   const SAN_SIGNAL sig4=EMPTY
 ) {
 
+
+   if((sig2!=EMPTY)&&(sig3!=EMPTY)&&(sig4!=EMPTY)) {
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)&&
+         (sig4==SAN_SIGNAL::NOSIG)
+      )
+         return SAN_SIGNAL::NOSIG;
+
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig4!=SAN_SIGNAL::NOSIG)&&
+         (sig2!=sig3)&&
+         (sig2!=sig4)
+      ) return SAN_SIGNAL::NOSIG;
+
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig4!=SAN_SIGNAL::NOSIG)&&
+         (sig2==sig3)&&
+         (sig2==sig4)
+      ) return sig2;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig4!=SAN_SIGNAL::NOSIG)&&
+         (sig1!=sig3)&&
+         (sig1!=sig4)
+      ) return SAN_SIGNAL::NOSIG;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig4!=SAN_SIGNAL::NOSIG)&&
+         (sig1==sig3)&&
+         (sig1==sig4)
+      )
+         return sig1;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)&&
+         (sig4!=SAN_SIGNAL::NOSIG)&&
+         (sig1!=sig2)&&
+         (sig1!=sig4)
+      ) return SAN_SIGNAL::NOSIG;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)&&
+         (sig4!=SAN_SIGNAL::NOSIG)&&
+         (sig1==sig2)&&
+         (sig1==sig4)
+      )
+         return sig1;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig4==SAN_SIGNAL::NOSIG)&&
+         (sig1!=sig2)&&
+         (sig1!=sig3)
+      )
+         return SAN_SIGNAL::NOSIG;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig4==SAN_SIGNAL::NOSIG)&&
+         (sig1==sig2)&&
+         (sig1==sig3)
+      )
+         return sig1;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)&&
+         (sig4==SAN_SIGNAL::NOSIG)
+      )
+         return sig1;
+
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2!=SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)&&
+         (sig4==SAN_SIGNAL::NOSIG)
+      )
+         return sig2;
+
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3!=SAN_SIGNAL::NOSIG)&&
+         (sig4==SAN_SIGNAL::NOSIG)
+      )
+         return sig3;
+
+      if(
+         (sig1==SAN_SIGNAL::NOSIG)&&
+         (sig2==SAN_SIGNAL::NOSIG)&&
+         (sig3==SAN_SIGNAL::NOSIG)&&
+         (sig4!=SAN_SIGNAL::NOSIG)
+      )
+         return sig4;
+
+      if(
+         (sig1!=SAN_SIGNAL::NOSIG)&&
+         (sig1==sig2)&&
+         (sig2==sig3)&&
+         (sig3==sig4)
+      ) return sig1;
+      
+
+   }
+//#################################################
    if((sig2!=EMPTY)&&(sig3!=EMPTY)) {
       if(
          (sig1==SAN_SIGNAL::NOSIG)&&
@@ -1104,6 +1233,7 @@ SAN_SIGNAL HSIG::simpleSIG(
 
    }
 
+//#################################################
    if(sig2!=EMPTY) {
       if(
          (sig1==SAN_SIGNAL::NOSIG)&&
@@ -1137,12 +1267,17 @@ SAN_SIGNAL HSIG::simpleSIG(
          (sig2!=SAN_SIGNAL::NOSIG)
       )
          return sig2;
-      
+
       if(
          (sig1!=SAN_SIGNAL::NOSIG)
-         &&(sig1==sig2)         
+         &&(sig1==sig2)
       ) return sig1;
-      
+
+   }
+
+//#################################################
+   if((sig1!=SAN_SIGNAL::NOSIG)&&(sig1!=SAN_SIGNAL::SIDEWAYS)) {
+      return sig1;
    }
 
    return sig1;
