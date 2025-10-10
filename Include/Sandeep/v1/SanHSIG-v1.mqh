@@ -2035,18 +2035,6 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
 
    DTYPE candleAtrVolDPDt = stats.getDecimalVal(ss.candleVolData.val1,ss.atrVolData.val1);
 
-   //if((int)ss.candleVolData.val1==(int)ss.atrVolData.val1) {
-   //   num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
-   //   denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
-   //} else if((int)ss.candleVolData.val1<(int)ss.atrVolData.val1) {
-   //   num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
-   //   denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.candleVolData.val1);
-   //} else if((int)ss.candleVolData.val1>(int)ss.atrVolData.val1) {
-   //   num_candleVolDP = (ss.candleVolData.val1 - (int)ss.atrVolData.val1);
-   //   denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
-   //}
-
-
    double candleAtrDPRatio =  NormalizeDouble(candleAtrVolDPDt.val1/candleAtrVolDPDt.val2,3);
 
    // double baseSlope = ss.baseSlopeData.val1;
@@ -2105,13 +2093,6 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
 
 
    bool openTradeBool = (trendStdCP&&trendSlopeRatioBool&&trendCandleAtrDP);
-   //bool closeTradeBool = (flatBool||(closeTrendStdCP&&closeSlopeRatioBool)||(closeTrendStdCP&&closeCandleAtrDP));
-//
-//   bool closeTradeBool = (
-//                            (closeTrendStdCP&&closeSlopeRatioBool)
-//                            &&(closeTrendStdCP&&closeCandleAtrDP&&closeAtr)
-//                            //||(closeSlopeRatioBool&&closeCandleAtrDP&&closeAtr)
-//                         );
 
    bool closeTradeBool1 = (
                              closeTrendStdCP
