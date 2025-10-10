@@ -185,8 +185,8 @@ class HSIG {
       SanUtils& util,
       const uint SHIFT=1
    );
-
-   SAN_SIGNAL cStdAtrCandleDP_TradeSIG(
+   
+   SAN_SIGNAL cTradeSIG_v2(
       const SANSIGNALS &ss,
       SanUtils& util,
       const uint SHIFT=1
@@ -788,7 +788,7 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    baseSlopeSIG = slopeSIG(ss.baseSlopeData,2);
 
    cTSIG = cTradeSIG(ss,util,1);
-   atrCandle_tradeSIG = cStdAtrCandleDP_TradeSIG(ss,util,1);
+   atrCandle_tradeSIG = cTradeSIG_v2(ss,util,1);
 
    tradeSIG = atrCandle_tradeSIG;
 
@@ -2015,7 +2015,8 @@ SAN_SIGNAL HSIG::cTradeSIG(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
+//SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
+SAN_SIGNAL HSIG::cTradeSIG_v2(
    const SANSIGNALS &ss,
    SanUtils& util,
    const uint SHIFT=1
@@ -2065,7 +2066,12 @@ SAN_SIGNAL HSIG::cStdAtrCandleDP_TradeSIG(
    SAN_SIGNAL atrSIG = ss.atrSIG;
 
 
-   bool closeTrendStdCP = ((stdCPSlope<=STDSLOPE)&&(stdCPSlope<stdOPSlope));
+   bool closeTrendStdCP1 = ((stdCPSlope<=STDSLOPE)&&(stdCPSlope<stdOPSlope));
+   bool closeTrendStdCP2 = ((stdCPSlope>0)&&(stdOPSlope>0)&&(stdCPSlope<(0.6*(stdOPSlope+_Point))));
+   bool closeTrendStdCP3 = ((stdCPSlope<0)&&(stdOPSlope<0)&&(fabs(stdCPSlope)<(0.8*fabs(stdOPSlope+_Point))));
+
+   bool closeTrendStdCP = (closeTrendStdCP1||closeTrendStdCP2||closeTrendStdCP3);
+   
    bool closeCandleAtrDP = (candleAtrDPRatio<0.3);
    bool closeAtr = ((atrSIG==SAN_SIGNAL::NOTRADE)||(atrSIG==SAN_SIGNAL::NOSIG));
    bool closeSlopeRatioBool = (fMSWR<SLOPERATIO);
