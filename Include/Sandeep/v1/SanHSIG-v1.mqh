@@ -2056,7 +2056,7 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
 
    bool closeTrendStdCP1 = ((stdCPSlope<=STDSLOPE)&&(stdCPSlope<stdOPSlope)); 
    bool closeTrendStdCP2 = ((stdCPSlope>0)&&(stdOPSlope>0)&&(stdCPSlope<(0.6 *(stdOPSlope+_Point)))); 
-   bool closeTrendStdCP3 = ((stdCPSlope<0)&&(stdOPSlope<0)&&(fabs(stdCPSlope)<(0.8*fabs(stdOPSlope+_Point))));
+   bool closeTrendStdCP3 = ((stdCPSlope<0)&&(stdOPSlope<0)&&(stdCPSlope<(0.8*(stdOPSlope+_Point))));
 
    bool closeTrendStdCP = (closeTrendStdCP1||closeTrendStdCP2||closeTrendStdCP3);
    
