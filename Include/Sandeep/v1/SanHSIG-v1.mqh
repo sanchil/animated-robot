@@ -109,7 +109,7 @@ class HSIG {
    SAN_SIGNAL        cpSlopeVarFastSIG;
    SAN_SIGNAL        cpSlopeCandle120SIG;
    SAN_SIGNAL        slopeCandle120SIG;
-   SAN_SIGNAL        dominantTrendSIG;
+//   SAN_SIGNAL        dominantTrendSIG;
    SAN_SIGNAL        dominantTrendCPSIG;
    SAN_SIGNAL        dominantTrendIma240SIG;
    SAN_SIGNAL        dominantTrendIma120SIG;
@@ -264,7 +264,7 @@ void HSIG::baseInit() {
    cpSlopeVarFastSIG = SAN_SIGNAL::NOSIG;
    cpSlopeCandle120SIG = SAN_SIGNAL::NOSIG;
    slopeCandle120SIG = SAN_SIGNAL::NOSIG;
-   dominantTrendSIG = SAN_SIGNAL::NOSIG;
+ //  dominantTrendSIG = SAN_SIGNAL::NOSIG;
    dominantTrendCPSIG = SAN_SIGNAL::NOSIG;
    domVolVarSIG = SAN_SIGNAL::NOSIG;
    dominantTrendIma120SIG = SAN_SIGNAL::NOSIG;
@@ -799,11 +799,10 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    tradeSIG = atrCandle_tradeSIG;
 
    c_SIG = cSIG(ss,util,1);
-   cpSlopeCandle120SIG = (simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG,util.convTrendToSig(ss.cpScatterSIG))!=SAN_SIGNAL::NOSIG)?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG,util.convTrendToSig(ss.cpScatterSIG)):SAN_SIGNAL::CLOSE;
-   slopeCandle120SIG = (simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG)!=SAN_SIGNAL::NOSIG)?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG):SAN_SIGNAL::CLOSE;
-   hilbertSIG =  (SAN_SIGNAL)ss.hilbertSIG.val4;
-   dftSIG =  (SAN_SIGNAL)ss.dftSIG.val5;
-   hilbertDftSIG = (SAN_SIGNAL)ss.hilbertDftSIG.val[0];
+
+   //hilbertSIG =  (SAN_SIGNAL)ss.hilbertSIG.val4;
+   //dftSIG =  (SAN_SIGNAL)ss.dftSIG.val5;
+   //hilbertDftSIG = (SAN_SIGNAL)ss.hilbertDftSIG.val[0];
 
 //slopeCandle120SIG = ((ss.volSlopeSIG==SAN_SIGNAL::TRADE)||(ss.volSlopeSIG==SAN_SIGNAL::SIDEWAYS))?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG):SAN_SIGNAL::NOSIG;
 //   mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
@@ -850,11 +849,15 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 //  Print("[SIMSLOPES]: simple14: "+ut.getSigString(simpleSlope_14_SIG)+" simple30:"+ ut.getSigString(simpleSlope_30_SIG)+" simple120:"+ut.getSigString(simpleSlope_120_SIG)+" simple240:"+ut.getSigString(simpleSlope_240_SIG));
 
    fastSIG = matchSIG(ss.fsig5,ss.fsig14,ss.fsig30);
-   dominantTrendSIG = matchSIG(ss.fsig5,trend_5_120_500_SIG,ss.slopeVarSIG);
-   domVolVarSIG = ss.tradeVolVarSIG;
+   //dominantTrendSIG = matchSIG(ss.fsig5,trend_5_120_500_SIG,ss.slopeVarSIG);
+   //domVolVarSIG = ss.tradeVolVarSIG;
 
+// ########### BEGIN::Composite close signals
+
+   cpSlopeCandle120SIG = (simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG,util.convTrendToSig(ss.cpScatterSIG))!=SAN_SIGNAL::NOSIG)?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG,util.convTrendToSig(ss.cpScatterSIG)):SAN_SIGNAL::CLOSE;
+   slopeCandle120SIG = (simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG)!=SAN_SIGNAL::NOSIG)?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG):SAN_SIGNAL::CLOSE;
    composite_CloseSIG_1 = (simpleSIG(c_SIG,simpleSlope_30_SIG,fastSIG)!=SAN_SIGNAL::NOSIG)?simpleSIG(c_SIG,simpleSlope_30_SIG,fastSIG):SAN_SIGNAL::CLOSE;
-
+// ########### END::Composite close signals
 
 
 //   dominantTrendCPSIG = matchSIG(
