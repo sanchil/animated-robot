@@ -1165,7 +1165,7 @@ SAN_SIGNAL HSIG::simpleSIG(
 
    }
 //#################################################
-   if((sig2!=EMPTY)&&(sig3!=EMPTY)) {
+   if((sig2!=EMPTY)&&(sig3!=EMPTY)&&(sig4==EMPTY)) {
       if(
          (sig1==SAN_SIGNAL::NOSIG)&&
          (sig2==SAN_SIGNAL::NOSIG)&&
@@ -1247,7 +1247,7 @@ SAN_SIGNAL HSIG::simpleSIG(
    }
 
 //#################################################
-   if(sig2!=EMPTY) {
+   if((sig2!=EMPTY)&&(sig3==EMPTY)&&(sig4==EMPTY)) {
       if(
          (sig1==SAN_SIGNAL::NOSIG)&&
          (sig2==SAN_SIGNAL::NOSIG)
