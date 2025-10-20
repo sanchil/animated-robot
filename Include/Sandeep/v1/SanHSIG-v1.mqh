@@ -1774,7 +1774,7 @@ SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType=0) {
    } else if(signalType==2) {
       slopeRange = (BASESLOPE_SLOW!=NULL)?BASESLOPE_SLOW:0.4;
    }
-
+// comment
    if((signalDt.val1>=(-1*slopeRange))&&(signalDt.val1<=slopeRange))
       return SAN_SIGNAL::CLOSE;
    if(signalDt.val1>slopeRange)
