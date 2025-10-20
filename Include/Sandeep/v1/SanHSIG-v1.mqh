@@ -34,6 +34,10 @@
 // #import
 //+------------------------------------------------------------------+
 
+const double _BASESLOPE_FAST = 0.6;
+const double _BASESLOPE_MEDIUM = 0.4;
+const double _BASESLOPE_SLOW = 0.2;
+
 const double _STDSLOPE = -0.6;
 const int _OBVSLOPE = 100;
 const double _SLOPERATIO = 0.5;
@@ -59,6 +63,9 @@ class HSIG {
    SANSIGNALS        ssSIG;
 
 
+   double BASESLOPE_FAST;
+   double BASESLOPE_MEDIUM;
+   double BASESLOPE_SLOW;
    double            STDSLOPE;
    double            OBVSLOPE;
    double            SLOPERATIO;
@@ -264,7 +271,7 @@ void HSIG::baseInit() {
    cpSlopeVarFastSIG = SAN_SIGNAL::NOSIG;
    cpSlopeCandle120SIG = SAN_SIGNAL::NOSIG;
    slopeCandle120SIG = SAN_SIGNAL::NOSIG;
- //  dominantTrendSIG = SAN_SIGNAL::NOSIG;
+//  dominantTrendSIG = SAN_SIGNAL::NOSIG;
    dominantTrendCPSIG = SAN_SIGNAL::NOSIG;
    domVolVarSIG = SAN_SIGNAL::NOSIG;
    dominantTrendIma120SIG = SAN_SIGNAL::NOSIG;
@@ -306,6 +313,9 @@ void HSIG::baseInit() {
 //+------------------------------------------------------------------+
 HSIG::HSIG()
    :
+   BASESLOPE_FAST(_BASESLOPE_FAST),
+   BASESLOPE_MEDIUM(_BASESLOPE_MEDIUM),
+   BASESLOPE_SLOW(_BASESLOPE_SLOW),
    STDSLOPE(_STDSLOPE),
    OBVSLOPE(_OBVSLOPE),
    SLOPERATIO(_SLOPERATIO),
@@ -330,6 +340,9 @@ HSIG::~HSIG() {
 //+------------------------------------------------------------------+
 HSIG::HSIG(const SANSIGNALS &ss, SanUtils &util)
    :
+   BASESLOPE_FAST(_BASESLOPE_FAST),
+   BASESLOPE_MEDIUM(_BASESLOPE_MEDIUM),
+   BASESLOPE_SLOW(_BASESLOPE_SLOW),
    STDSLOPE(_STDSLOPE),
    OBVSLOPE(_OBVSLOPE),
    SLOPERATIO(_SLOPERATIO),
@@ -1755,11 +1768,11 @@ SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType=0) {
    double slopeRange = 0.0;
 
    if(signalType==0) {
-      slopeRange = 0.8;
+      slopeRange = (BASESLOPE_FAST!=NULL)?BASESLOPE_FAST:0.8;
    } else if(signalType==1) {
-      slopeRange = 0.6;
+      slopeRange = (BASESLOPE_MEDIUM!=NULL)?BASESLOPE_MEDIUM:0.6;
    } else if(signalType==2) {
-      slopeRange = 0.4;
+      slopeRange = (BASESLOPE_SLOW!=NULL)?BASESLOPE_SLOW:0.4;
    }
 
    if((signalDt.val1>=(-1*slopeRange))&&(signalDt.val1<=slopeRange))
