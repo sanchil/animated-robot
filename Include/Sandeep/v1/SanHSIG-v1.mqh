@@ -937,7 +937,6 @@ SAN_SIGNAL  HSIG::matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG
    return SAN_SIGNAL::NOSIG;
 }
 
-
 //+------------------------------------------------------------------+
 //| This version of simpleSIG is a gentle non aggressive version of simpleSIG.
 // It does not close trades on the slightest hints leading to more stable signals
@@ -950,237 +949,427 @@ SAN_SIGNAL HSIG::simpleSIG(
    const SAN_SIGNAL sig4 = EMPTY
 ) {
    if((sig2 != EMPTY) && (sig3 != EMPTY) && (sig4 != EMPTY)) {
+
       if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG) &&
-         (sig4 == SAN_SIGNAL::NOSIG)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
-         (sig4 != SAN_SIGNAL::NOSIG) &&
-         (sig2 != sig3) &&
-         (sig2 != sig4)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
-         (sig4 != SAN_SIGNAL::NOSIG) &&
-         (sig2 == sig3) &&
-         (sig2 == sig4)
-      )
-         return sig2;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
-         (sig4 != SAN_SIGNAL::NOSIG) &&
-         (sig1 != sig3) &&
-         (sig1 != sig4)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
-         (sig4 != SAN_SIGNAL::NOSIG) &&
+         ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
+         (sig1 == sig2) &&
          (sig1 == sig3) &&
          (sig1 == sig4)
       )
          return sig1;
+
       if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG) &&
-         (sig4 != SAN_SIGNAL::NOSIG) &&
-         (sig1 != sig2) &&
-         (sig1 != sig4)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG) &&
-         (sig4 != SAN_SIGNAL::NOSIG) &&
-         (sig1 == sig2) &&
-         (sig1 == sig4)
+         ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
+         (
+            (sig1 == sig2) ||
+            (sig1 == sig3) ||
+            (sig1 == sig4)
+         )
       )
          return sig1;
+
       if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
-         (sig4 == SAN_SIGNAL::NOSIG) &&
-         (sig1 != sig2) &&
-         (sig1 != sig3)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
-         (sig4 == SAN_SIGNAL::NOSIG) &&
-         (sig1 == sig2) &&
-         (sig1 == sig3)
-      )
-         return sig1;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG) &&
-         (sig4 == SAN_SIGNAL::NOSIG)
-      )
-         return sig1;
-      if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG) &&
-         (sig4 == SAN_SIGNAL::NOSIG)
+         ((sig2 == SAN_SIGNAL::BUY) || (sig2 == SAN_SIGNAL::SELL)) &&
+         (
+            (sig2 == sig1) ||
+            (sig2 == sig3) ||
+            (sig2 == sig4)
+         )
       )
          return sig2;
+
       if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
-         (sig4 == SAN_SIGNAL::NOSIG)
+         ((sig3 == SAN_SIGNAL::BUY) || (sig3 == SAN_SIGNAL::SELL)) &&
+
+         (
+            (sig3 == sig1) ||
+            (sig3 == sig2) ||
+            (sig3 == sig4)
+         )
       )
          return sig3;
+
       if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG) &&
-         (sig4 != SAN_SIGNAL::NOSIG)
+         ((sig4 == SAN_SIGNAL::BUY) || (sig4 == SAN_SIGNAL::SELL)) &&
+         (
+            (sig4 == sig1) ||
+            (sig4 == sig2) ||
+            (sig4 == sig3)
+         )
       )
          return sig4;
+
       if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig1 == sig2) &&
-         (sig2 == sig3) &&
-         (sig3 == sig4)
+         ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
+         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig3 == SAN_SIGNAL::NOSIG) || (sig3 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig4 == SAN_SIGNAL::NOSIG) || (sig4 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig1;
+
+      if(
+         ((sig2 == SAN_SIGNAL::BUY) || (sig2 == SAN_SIGNAL::SELL)) &&
+         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig3 == SAN_SIGNAL::NOSIG) || (sig3 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig4 == SAN_SIGNAL::NOSIG) || (sig4 == SAN_SIGNAL::SIDEWAYS))
+      )
+         return sig2;
+
+      if(
+         ((sig3 == SAN_SIGNAL::BUY) || (sig3 == SAN_SIGNAL::SELL)) &&
+         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig4 == SAN_SIGNAL::NOSIG) || (sig4 == SAN_SIGNAL::SIDEWAYS))
+      )
+         return sig3;
+
+      if(
+         ((sig4 == SAN_SIGNAL::BUY) || (sig4 == SAN_SIGNAL::SELL)) &&
+         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig3 == SAN_SIGNAL::NOSIG) || (sig3 == SAN_SIGNAL::SIDEWAYS))
+      )
+         return sig4;
+
+      return SAN_SIGNAL::NOSIG;
+
    }
 //#################################################
    if((sig2 != EMPTY) && (sig3 != EMPTY) && (sig4 == EMPTY)) {
+
       if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
-         (sig2 != sig3)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
-         (sig2 == sig3)
-      )
-         return sig2;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
-         (sig1 != sig3)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG) &&
+         ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
+         (sig1 == sig2) &&
          (sig1 == sig3)
       )
          return sig1;
+
       if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG) &&
-         (sig1 != sig2)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG) &&
-         (sig1 == sig2)
+         ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
+         (
+            (sig1 == sig2) ||
+            (sig1 == sig3)
+         )
       )
          return sig1;
+
       if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG)
-      )
-         return sig1;
-      if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig3 == SAN_SIGNAL::NOSIG)
+         ((sig2 == SAN_SIGNAL::BUY) || (sig2 == SAN_SIGNAL::SELL)) &&
+         (
+            (sig2 == sig1) ||
+            (sig2 == sig3)
+
+         )
       )
          return sig2;
+
       if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG) &&
-         (sig3 != SAN_SIGNAL::NOSIG)
+         ((sig3 == SAN_SIGNAL::BUY) || (sig3 == SAN_SIGNAL::SELL)) &&
+         (
+            (sig3 == sig1) ||
+            (sig3 == sig2)
+         )
       )
          return sig3;
+
       if(
-         (sig1 != SAN_SIGNAL::NOSIG)
-         && (sig1 == sig2)
-         && (sig2 == sig3)
+         ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
+         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig3 == SAN_SIGNAL::NOSIG) || (sig3 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig1;
+
+      if(
+         ((sig2 == SAN_SIGNAL::BUY) || (sig2 == SAN_SIGNAL::SELL)) &&
+         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig3 == SAN_SIGNAL::NOSIG) || (sig3 == SAN_SIGNAL::SIDEWAYS))
+      )
+         return sig2;
+
+      if(
+         ((sig3 == SAN_SIGNAL::BUY) || (sig3 == SAN_SIGNAL::SELL)) &&
+         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS))
+      )
+         return sig3;
+
+      return SAN_SIGNAL::NOSIG;
    }
 //#################################################
    if((sig2 != EMPTY) && (sig3 == EMPTY) && (sig4 == EMPTY)) {
+
       if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
-         (sig1 != sig2)
-      )
-         return SAN_SIGNAL::NOSIG;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG) &&
+         ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
          (sig1 == sig2)
       )
          return sig1;
       if(
-         (sig1 != SAN_SIGNAL::NOSIG) &&
-         (sig2 == SAN_SIGNAL::NOSIG)
+         ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
+         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig1;
       if(
-         (sig1 == SAN_SIGNAL::NOSIG) &&
-         (sig2 != SAN_SIGNAL::NOSIG)
+         ((sig2 == SAN_SIGNAL::BUY) || (sig2 == SAN_SIGNAL::SELL)) &&
+         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig2;
-      if(
-         (sig1 != SAN_SIGNAL::NOSIG)
-         && (sig1 == sig2)
-      )
-         return sig1;
+
+      return SAN_SIGNAL::NOSIG;
+
    }
 //#################################################
-   if((sig1 != SAN_SIGNAL::NOSIG) && (sig1 != SAN_SIGNAL::SIDEWAYS)) {
+   if((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) {
       return sig1;
    }
-   return sig1;
+   return SAN_SIGNAL::NOSIG;
 }
+
+////+------------------------------------------------------------------+
+////| This version of simpleSIG is a gentle non aggressive version of simpleSIG.
+//// It does not close trades on the slightest hints leading to more stable signals
+//// preventing whiplash trades causes by the aggresive version of simple sig below                                                                 |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL HSIG::simpleSIG(
+//   const SAN_SIGNAL sig1,
+//   const SAN_SIGNAL sig2 = EMPTY,
+//   const SAN_SIGNAL sig3 = EMPTY,
+//   const SAN_SIGNAL sig4 = EMPTY
+//) {
+//   if((sig2 != EMPTY) && (sig3 != EMPTY) && (sig4 != EMPTY)) {
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG) &&
+//         (sig4 == SAN_SIGNAL::NOSIG)
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig4 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 != sig3) &&
+//         (sig2 != sig4)
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig4 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 == sig3) &&
+//         (sig2 == sig4)
+//      )
+//         return sig2;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig4 != SAN_SIGNAL::NOSIG) &&
+//         (sig1 != sig3) &&
+//         (sig1 != sig4)
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig4 != SAN_SIGNAL::NOSIG) &&
+//         (sig1 == sig3) &&
+//         (sig1 == sig4)
+//      )
+//         return sig1;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG) &&
+//         (sig4 != SAN_SIGNAL::NOSIG) &&
+//         (sig1 != sig2) &&
+//         (sig1 != sig4)
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG) &&
+//         (sig4 != SAN_SIGNAL::NOSIG) &&
+//         (sig1 == sig2) &&
+//         (sig1 == sig4)
+//      )
+//         return sig1;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig4 == SAN_SIGNAL::NOSIG) &&
+//         (sig1 != sig2) &&
+//         (sig1 != sig3)
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig4 == SAN_SIGNAL::NOSIG) &&
+//         (sig1 == sig2) &&
+//         (sig1 == sig3)
+//      )
+//         return sig1;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG) &&
+//         (sig4 == SAN_SIGNAL::NOSIG)
+//      )
+//         return sig1;
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG) &&
+//         (sig4 == SAN_SIGNAL::NOSIG)
+//      )
+//         return sig2;
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig4 == SAN_SIGNAL::NOSIG)
+//      )
+//         return sig3;
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG) &&
+//         (sig4 != SAN_SIGNAL::NOSIG)
+//      )
+//         return sig4;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig1 == sig2) &&
+//         (sig2 == sig3) &&
+//         (sig3 == sig4)
+//      )
+//         return sig1;
+//   }
+////#################################################
+//   if((sig2 != EMPTY) && (sig3 != EMPTY) && (sig4 == EMPTY)) {
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG)
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 != sig3)
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 == sig3)
+//      )
+//         return sig2;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig1 != sig3)
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG) &&
+//         (sig1 == sig3)
+//      )
+//         return sig1;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG) &&
+//         (sig1 != sig2)
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG) &&
+//         (sig1 == sig2)
+//      )
+//         return sig1;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG)
+//      )
+//         return sig1;
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) &&
+//         (sig3 == SAN_SIGNAL::NOSIG)
+//      )
+//         return sig2;
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) &&
+//         (sig3 != SAN_SIGNAL::NOSIG)
+//      )
+//         return sig3;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG)
+//         && (sig1 == sig2)
+//         && (sig2 == sig3)
+//      )
+//         return sig1;
+//   }
+////#################################################
+//   if((sig2 != EMPTY) && (sig3 == EMPTY) && (sig4 == EMPTY)) {
+//      if(
+//         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+//         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS))
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) && (sig1 != SAN_SIGNAL::SIDEWAYS) &&
+//         (sig2 != SAN_SIGNAL::NOSIG)  && (sig2 != SAN_SIGNAL::SIDEWAYS) &&
+//         (sig1 != sig2)
+//      )
+//         return SAN_SIGNAL::NOSIG;
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG)  && (sig1 != SAN_SIGNAL::SIDEWAYS) &&
+//         (sig2 != SAN_SIGNAL::NOSIG)  && (sig2 != SAN_SIGNAL::SIDEWAYS) &&
+//         (sig1 == sig2)
+//      )
+//         return sig1;
+//
+//      if(
+//         (sig1 != SAN_SIGNAL::NOSIG) && (sig1 != SAN_SIGNAL::SIDEWAYS) &&
+//         (sig2 == SAN_SIGNAL::NOSIG) || (sig2 != SAN_SIGNAL::NOSIG)
+//      )
+//         return sig1;
+//
+//      if(
+//         (sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS) &&
+//         (sig2 != SAN_SIGNAL::NOSIG) && (sig2 != SAN_SIGNAL::SIDEWAYS)
+//      )
+//         return sig2;
+//
+//      if(
+//         ((sig1 == SAN_SIGNAL::BUY)||(sig1 == SAN_SIGNAL::SELL))
+//         && (sig1 == sig2)
+//      )
+//         return sig1;
+//   }
+////#################################################
+//   if((sig1 != SAN_SIGNAL::NOSIG) && (sig1 != SAN_SIGNAL::SIDEWAYS)) {
+//      return sig1;
+//   }
+//   return sig1;
+//}
 
 //+------------------------------------------------------------------+
 //| This is an aggressive form of simpleSIG that closes at teh slightest
