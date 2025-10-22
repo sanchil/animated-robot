@@ -41,9 +41,9 @@ const double _BASESLOPE_SLOW = 0.2;
 const double _STDSLOPE = -0.6;
 const int _OBVSLOPE = 100;
 const double _SLOPERATIO = 0.5;
-const int _SLOPERATIO_UPPERLIMIT =20;
-const double _CLUSTERRANGEPLUS = 1+0.03;
-const double _CLUSTERRANGEMINUS = 1-0.03;
+const int _SLOPERATIO_UPPERLIMIT = 20;
+const double _CLUSTERRANGEPLUS = 1 + 0.03;
+const double _CLUSTERRANGEMINUS = 1 - 0.03;
 const int _CLUSTERRANGEFLAT = 1;
 const int _SLOPE30LIMIT = 3;
 const int _ATR_VOL_LOWER_LIMIT = 600;
@@ -56,10 +56,9 @@ const int _ATR_VOL_UPPER_LIMIT = 3000;
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-class HSIG
-  {
+class HSIG {
 
-private:
+ private:
    SanUtils          ut;
    SANSIGNALS        ssSIG;
 
@@ -79,11 +78,11 @@ private:
    int               ATR_VOL_UPPER_LIMIT;
 
 
-public:
-                     HSIG();
-                    ~HSIG();
+ public:
+   HSIG();
+   ~HSIG();
 
-                     HSIG(const SANSIGNALS &ss, SanUtils &util);
+   HSIG(const SANSIGNALS &ss, SanUtils &util);
 
    TRADE_STRATEGIES  trdStgy;
    MKTTYP            mktType;
@@ -153,19 +152,19 @@ public:
 
    void              baseInit();
    void              setTradeStrategy(const TRADE_STRATEGIES& st);
-   void              setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& st, SAN_SIGNAL closesig=SAN_SIGNAL::NOSIG);
+   void              setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& st, SAN_SIGNAL closesig = SAN_SIGNAL::NOSIG);
    void              processSignalsWithNoStrategy();
    void              processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy);
    void              initSIG(const SANSIGNALS &ss, SanUtils &util);
-   SAN_SIGNAL        matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2=EMPTY, bool slowStrategy=false);
+   SAN_SIGNAL        matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2 = EMPTY, bool slowStrategy = false);
    //   SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2=EMPTY);
-   SAN_SIGNAL        simpleSIG_Agressive(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2=EMPTY, const SAN_SIGNAL sig3=EMPTY, const SAN_SIGNAL sig4=EMPTY, const SAN_SIGNAL sig5=EMPTY);
-   SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1,const SAN_SIGNAL sig2=EMPTY,const SAN_SIGNAL sig3=EMPTY,const SAN_SIGNAL sig4=EMPTY);
-   SAN_SIGNAL        simpleTrendSIG(SANTREND tr1, SANTREND tr2=EMPTY);
-   SAN_SIGNAL        trendSIG(SANTREND tr1, SANTREND tr2, SANTREND tr3, SANTREND tr4=EMPTY, SANTREND tr5=EMPTY, SANTREND tr6=EMPTY);
-   SAN_SIGNAL        sigTrSIG(const SAN_SIGNAL sig,const SANTREND tr);
-   SAN_SIGNAL        imaTrendSIG(const SAN_SIGNAL baseMASig,const SANTREND fastTrend,const SANTREND slowTrend);
-   SAN_SIGNAL        imaTrend(SAN_SIGNAL imaSIG1, SAN_SIGNAL imaSIG2, SANTREND tr1, SANTREND tr2, SANTREND tr3, SAN_SIGNAL imaSIG3=EMPTY, SANTREND tr4=EMPTY, SAN_SIGNAL imaSIG4=EMPTY, SANTREND tr5=EMPTY);
+   SAN_SIGNAL        simpleSIG_Agressive(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2 = EMPTY, const SAN_SIGNAL sig3 = EMPTY, const SAN_SIGNAL sig4 = EMPTY, const SAN_SIGNAL sig5 = EMPTY);
+   SAN_SIGNAL        simpleSIG(const SAN_SIGNAL sig1, const SAN_SIGNAL sig2 = EMPTY, const SAN_SIGNAL sig3 = EMPTY, const SAN_SIGNAL sig4 = EMPTY);
+   SAN_SIGNAL        simpleTrendSIG(SANTREND tr1, SANTREND tr2 = EMPTY);
+   SAN_SIGNAL        trendSIG(SANTREND tr1, SANTREND tr2, SANTREND tr3, SANTREND tr4 = EMPTY, SANTREND tr5 = EMPTY, SANTREND tr6 = EMPTY);
+   SAN_SIGNAL        sigTrSIG(const SAN_SIGNAL sig, const SANTREND tr);
+   SAN_SIGNAL        imaTrendSIG(const SAN_SIGNAL baseMASig, const SANTREND fastTrend, const SANTREND slowTrend);
+   SAN_SIGNAL        imaTrend(SAN_SIGNAL imaSIG1, SAN_SIGNAL imaSIG2, SANTREND tr1, SANTREND tr2, SANTREND tr3, SAN_SIGNAL imaSIG3 = EMPTY, SANTREND tr4 = EMPTY, SAN_SIGNAL imaSIG4 = EMPTY, SANTREND tr5 = EMPTY);
    SAN_SIGNAL        fSigSlowTrendSIG(const SAN_SIGNAL baseSig, const SANTREND baseTrend);
 
    SAN_SIGNAL        dualFastSigSlowTrendSIG(
@@ -180,33 +179,33 @@ public:
       const SANTREND closeTrend,
       const SANTREND fastTrend,
       const SANTREND slowTrend,
-      const SANTREND vSlowTrend=SANTREND::NOTREND
+      const SANTREND vSlowTrend = SANTREND::NOTREND
    );
    SAN_SIGNAL        trendVolVarSIG(
       const SAN_SIGNAL tradeVolVarSIG,
       const SANTREND fastTrend,
       const SANTREND mediumTrend,
       const SANTREND slowTrend,
-      const SANTREND vSlowTrend=SANTREND::NOTREND
+      const SANTREND vSlowTrend = SANTREND::NOTREND
    );
-   SAN_SIGNAL        slopeSIG(const DTYPE& signalDt, const int signalType=0);
+   SAN_SIGNAL        slopeSIG(const DTYPE& signalDt, const int signalType = 0);
 
    SAN_SIGNAL        cTradeSIG(
       const SANSIGNALS &ss,
       SanUtils& util,
-      const uint SHIFT=1
+      const uint SHIFT = 1
    );
 
    SAN_SIGNAL        cTradeSIG_v2(
       const SANSIGNALS &ss,
       SanUtils& util,
-      const uint SHIFT=1
+      const uint SHIFT = 1
    ) ;
 
    SAN_SIGNAL        cSIG(
       const SANSIGNALS &ss,
       SanUtils& util,
-      const uint SHIFT=1
+      const uint SHIFT = 1
    );
    //DataTransport     getSlopeRatioData(
    //   const DataTransport &fast,
@@ -223,10 +222,10 @@ public:
    bool              getMktCloseOnSlopeRatio();
    bool              getMktCloseOnStdCPCluster();
    bool              getMktCloseOnStdCPOBV();
-   bool              getMktCloseOnReversal(const SAN_SIGNAL &sig,SanUtils &util);
+   bool              getMktCloseOnReversal(const SAN_SIGNAL &sig, SanUtils &util);
    bool              getMktCloseOnFlat(const SAN_SIGNAL &sig, const bool mktTypeFlat);
    bool              getMktCloseOnSlopeVariable(const SANSIGNALS &ss, SanUtils &util);
-   bool              getMktCloseOnSlopeReversal(const SANSIGNALS &ss, SanUtils &util, const double SLOPE_REDUCTION_LEVEL=0.3);
+   bool              getMktCloseOnSlopeReversal(const SANSIGNALS &ss, SanUtils &util, const double SLOPE_REDUCTION_LEVEL = 0.3);
    bool              getMktClose(
       const SAN_SIGNAL candleVol120SIG,
       const SAN_SIGNAL slopeVarSIG,
@@ -240,7 +239,7 @@ public:
       const SANTREND trendRatioSIG,
       const SAN_SIGNAL trendSIG
    );
-  };
+};
 
 //###########################################################################################################
 //+------------------------------------------------------------------+
@@ -248,12 +247,11 @@ public:
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void HSIG::baseInit()
-  {
-   mktType= MKTTYP::NOMKT;
+void HSIG::baseInit() {
+   mktType = MKTTYP::NOMKT;
    trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
-   baseTrendSIG=SAN_SIGNAL::NOSIG;
-   baseSlopeSIG=SAN_SIGNAL::NOSIG;
+   baseTrendSIG = SAN_SIGNAL::NOSIG;
+   baseSlopeSIG = SAN_SIGNAL::NOSIG;
    openSIG =  SAN_SIGNAL::NOSIG;
    closeSIG =  SAN_SIGNAL::NOSIG;
    composite_CloseSIG_1 =  SAN_SIGNAL::NOSIG;
@@ -263,7 +261,7 @@ void HSIG::baseInit()
    hilbertSIG =  SAN_SIGNAL::NOSIG;
    dftSIG =  SAN_SIGNAL::NOSIG;
    hilbertDftSIG = SAN_SIGNAL::NOSIG;
-   slopeTrendBool=false;
+   slopeTrendBool = false;
    fastSIG =  SAN_SIGNAL::NOSIG;
    fastSlowSIG =  SAN_SIGNAL::NOSIG;
    mainFastSIG = SAN_SIGNAL::NOSIG;
@@ -308,7 +306,7 @@ void HSIG::baseInit()
    slopeRatioData.freeData();
    stdCPSlope.initDTYPE();
    obvCPSlope.initDTYPE();
-  };
+};
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -327,17 +325,15 @@ HSIG::HSIG()
    CLUSTERRANGEFLAT(_CLUSTERRANGEFLAT),
    SLOPE30LIMIT(_SLOPE30LIMIT),
    ATR_VOL_LOWER_LIMIT(_ATR_VOL_LOWER_LIMIT),
-   ATR_VOL_UPPER_LIMIT(_ATR_VOL_UPPER_LIMIT)
-  {
+   ATR_VOL_UPPER_LIMIT(_ATR_VOL_UPPER_LIMIT) {
    baseInit();
-  }
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-HSIG::~HSIG()
-  {
+HSIG::~HSIG() {
    baseInit();
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -356,32 +352,27 @@ HSIG::HSIG(const SANSIGNALS &ss, SanUtils &util)
    CLUSTERRANGEFLAT(_CLUSTERRANGEFLAT),
    SLOPE30LIMIT(_SLOPE30LIMIT),
    ATR_VOL_LOWER_LIMIT(_ATR_VOL_LOWER_LIMIT),
-   ATR_VOL_UPPER_LIMIT(_ATR_VOL_UPPER_LIMIT)
-  {
+   ATR_VOL_UPPER_LIMIT(_ATR_VOL_UPPER_LIMIT) {
    baseInit();
    ut = util;
    ssSIG = ss;
-   initSIG(ss,util);
-  }
+   initSIG(ss, util);
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void HSIG::setTradeStrategy(const TRADE_STRATEGIES& st)
-  {
+void HSIG::setTradeStrategy(const TRADE_STRATEGIES& st) {
    trdStgy = st;
-  };
+};
 
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& st, SAN_SIGNAL closesig=SAN_SIGNAL::NOSIG)
-  {
-
-
+void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& st, SAN_SIGNAL closesig = SAN_SIGNAL::NOSIG) {
 //   bool noTradeBool = ((tradeSIG==SAN_SIGNAL::NOTRADE)||(tradeSIG==SAN_SIGNAL::NOSIG));
 //   bool tradeBool = (
 //                       ((tradeSIG==SAN_SIGNAL::TRADEBUY)&&(opensig==SAN_SIGNAL::BUY))||
@@ -396,16 +387,9 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 //                          ssSIG.trendRatioSIG,
 //                          trend_14_30_120_SIG
 //                       );
-
-
-
 //################ Open Strategies #########################################
 //bool openTradeBool = ((opensig==baseSlopeSIG)&&(stdCPSlope.val1>-0.6));
 //bool openTradeBool = ((opensig==baseSlopeSIG)&&tradeBool);
-
-
-
-
 ////################ Close Strategies #########################################
 //
 //// getMktCloseOnVariableSlope(ss,util): This is great for close signals when the signals are steep
@@ -427,17 +411,13 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
 //
 //   bool openTradeBool = (tradeBool);
 //   bool closeTradeBool = (closeOBVStdBool);
-
 //  static bool flatBool = false;
-
-
-   tBools.noTradeBool = ((tradeSIG==SAN_SIGNAL::NOTRADE)||(tradeSIG==SAN_SIGNAL::NOSIG));
+   tBools.noTradeBool = ((tradeSIG == SAN_SIGNAL::NOTRADE) || (tradeSIG == SAN_SIGNAL::NOSIG));
    tBools.tradeBool = (
-                         ((tradeSIG==SAN_SIGNAL::TRADEBUY)&&(opensig==SAN_SIGNAL::BUY))||
-                         ((tradeSIG==SAN_SIGNAL::TRADESELL)&&(opensig==SAN_SIGNAL::SELL))||
-                         (tradeSIG==SAN_SIGNAL::TRADE)
+                         ((tradeSIG == SAN_SIGNAL::TRADEBUY) && (opensig == SAN_SIGNAL::BUY)) ||
+                         ((tradeSIG == SAN_SIGNAL::TRADESELL) && (opensig == SAN_SIGNAL::SELL)) ||
+                         (tradeSIG == SAN_SIGNAL::TRADE)
                       );
-
    tBools.flatMktBool =  getMktFlatBoolSignal(
                             ssSIG.candleVol120SIG,
                             ssSIG.slopeVarSIG,
@@ -445,494 +425,334 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig,const TRADE_STRATEGIES& s
                             ssSIG.trendRatioSIG,
                             trend_14_30_120_SIG
                          );
-   tBools.volTradeBool = (ssSIG.volSIG==SAN_SIGNAL::TRADE);
-
-
+   tBools.volTradeBool = (ssSIG.volSIG == SAN_SIGNAL::TRADE);
    bool openSigBool = (
-                         (opensig==SAN_SIGNAL::BUY)
-                         ||(opensig==SAN_SIGNAL::SELL)
+                         (opensig == SAN_SIGNAL::BUY)
+                         || (opensig == SAN_SIGNAL::SELL)
                       );
-
    bool openTradeBool1 = (tBools.tradeBool);
-   bool openTradeBool2 = (opensig==baseSlopeSIG);
-   bool openTradeBool3 = (openTradeBool1&&openTradeBool2);
-   bool openTradeBool4 = (opensig==simpleSlope_30_SIG);
-
-
-   tBools.closeSlopeVarBool = getMktCloseOnSlopeVariable(ssSIG,ut);
-   tBools.closeFlatTradeBool = getMktCloseOnFlat(opensig,tBools.flatMktBool);
-
+   bool openTradeBool2 = (opensig == baseSlopeSIG);
+   bool openTradeBool3 = (openTradeBool1 && openTradeBool2);
+   bool openTradeBool4 = (opensig == simpleSlope_30_SIG);
+   tBools.closeSlopeVarBool = getMktCloseOnSlopeVariable(ssSIG, ut);
+   tBools.closeFlatTradeBool = getMktCloseOnFlat(opensig, tBools.flatMktBool);
 // Set the static bool flatBool here to help
 // activate and close on secondary close post flat market.
 //if(tBools.closeFlatTradeBool)
 //   flatBool =true;
-
    tBools.closeSigTrReversalBool =  getMktCloseOnReversal(opensig, ut);
    tBools.closeSigTrCloseSigReversalBool =  getMktCloseOnReversal(closesig, ut);
    tBools.closeSlopeRatios = getMktCloseOnSlopeRatio();
-   tBools.closeOBVStdBool = (tBools.noTradeBool&&getMktCloseOnStdCPOBV());
+   tBools.closeOBVStdBool = (tBools.noTradeBool && getMktCloseOnStdCPOBV());
    tBools.closeClusterStdBool = (getMktCloseOnStdCPCluster());
-   tBools.closeSigBool = ((opensig==SAN_SIGNAL::CLOSE) || tBools.noTradeBool);
-
+   tBools.closeSigBool = ((opensig == SAN_SIGNAL::CLOSE) || tBools.noTradeBool);
    tBools.closeRsiBool = getMktCloseOnReversal(ssSIG.rsiSIG, ut);
-
    bool closeBool1 = (tBools.closeFlatTradeBool && tBools.closeOBVStdBool);
    bool closeBool2 = (tBools.closeClusterStdBool && tBools.closeOBVStdBool);
-   bool closeBool3 = (closeBool2 && (ssSIG.candleVol120SIG==SAN_SIGNAL::SIDEWAYS||ssSIG.candleVol120SIG==SAN_SIGNAL::CLOSE));
-   bool closeBool4 = (closeBool2 && (ssSIG.slopeVarSIG==SAN_SIGNAL::SIDEWAYS||ssSIG.slopeVarSIG==SAN_SIGNAL::CLOSE));
-   bool closeBool5 = (closeBool2 && (ssSIG.volSlopeSIG==SAN_SIGNAL::NOTRADE||ssSIG.volSlopeSIG==SAN_SIGNAL::CLOSE));
-   bool closeBool6 = (closeBool2 && (ssSIG.volSIG==SAN_SIGNAL::CLOSE||ssSIG.volSIG==SAN_SIGNAL::NOTRADE||ssSIG.volSIG==SAN_SIGNAL::REVERSETRADE));
-
+   bool closeBool3 = (closeBool2 && (ssSIG.candleVol120SIG == SAN_SIGNAL::SIDEWAYS || ssSIG.candleVol120SIG == SAN_SIGNAL::CLOSE));
+   bool closeBool4 = (closeBool2 && (ssSIG.slopeVarSIG == SAN_SIGNAL::SIDEWAYS || ssSIG.slopeVarSIG == SAN_SIGNAL::CLOSE));
+   bool closeBool5 = (closeBool2 && (ssSIG.volSlopeSIG == SAN_SIGNAL::NOTRADE || ssSIG.volSlopeSIG == SAN_SIGNAL::CLOSE));
+   bool closeBool6 = (closeBool2 && (ssSIG.volSIG == SAN_SIGNAL::CLOSE || ssSIG.volSIG == SAN_SIGNAL::NOTRADE || ssSIG.volSIG == SAN_SIGNAL::REVERSETRADE));
    bool closeBool7 = (
-                        (ssSIG.volSIG==SAN_SIGNAL::CLOSE||ssSIG.volSIG==SAN_SIGNAL::NOTRADE||ssSIG.volSIG==SAN_SIGNAL::REVERSETRADE)
-                        &&(ssSIG.volSlopeSIG==SAN_SIGNAL::NOTRADE||ssSIG.volSlopeSIG==SAN_SIGNAL::CLOSE)
-                        && (ssSIG.rsiSIG==SAN_SIGNAL::NOSIG)
+                        (ssSIG.volSIG == SAN_SIGNAL::CLOSE || ssSIG.volSIG == SAN_SIGNAL::NOTRADE || ssSIG.volSIG == SAN_SIGNAL::REVERSETRADE)
+                        && (ssSIG.volSlopeSIG == SAN_SIGNAL::NOTRADE || ssSIG.volSlopeSIG == SAN_SIGNAL::CLOSE)
+                        && (ssSIG.rsiSIG == SAN_SIGNAL::NOSIG)
                      );
-
    bool closeCSIGBool = (tBools.closeSigBool);//||closeBool1||closeBool3||closeBool4||closeBool6);
-
-   bool closehTdfTBool = ((opensig==SAN_SIGNAL::CLOSE)||closeBool1||closeBool3||closeBool4||closeBool6);//||closeBool5||closeBool7);
+   bool closehTdfTBool = ((opensig == SAN_SIGNAL::CLOSE) || closeBool1 || closeBool3 || closeBool4 || closeBool6); //||closeBool5||closeBool7);
    bool closeFastSlow = (
 //(opensig==SAN_SIGNAL::CLOSE)
                            (tBools.closeSigBool)
-                           ||(opensig==SAN_SIGNAL::NOSIG)
-                           ||(opensig==SAN_SIGNAL::SIDEWAYS)
+                           || (opensig == SAN_SIGNAL::NOSIG)
+                           || (opensig == SAN_SIGNAL::SIDEWAYS)
                         );
-
    bool closeSigBool1 = (
                            (
-                              (opensig==SAN_SIGNAL::CLOSE)
-                              ||(opensig==SAN_SIGNAL::NOSIG)
-                              ||(opensig==SAN_SIGNAL::SIDEWAYS)
+                              (opensig == SAN_SIGNAL::CLOSE)
+                              || (opensig == SAN_SIGNAL::NOSIG)
+                              || (opensig == SAN_SIGNAL::SIDEWAYS)
                            )
-                         //  ||tBools.noTradeBool
+//  ||tBools.noTradeBool
                         );
-
 //   tBools.closeTradeBool = (closeBool1||closeBool3||closeBool4||closeBool5||closeBool6||closeBool7||closeBool8);
-
 //Works to close for all trade strategies
-
 // cSIG
 //   tBools.closeTradeBool = (closeCSIGBool);
 //   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&(openTradeBool1));
-
 //// fastSlow
 //   tBools.closeTradeBool = (closeFastSlow);
 //   tBools.openTradeBool = ((!tBools.closeTradeBool)&&openSigBool&&(openTradeBool2));
-
 // baseSig
    tBools.closeTradeBool = (closeSigBool1);
    tBools.openTradeBool = (
                              (!tBools.closeTradeBool)
-                             &&openSigBool
-                           //  &&openTradeBool1
+                             && openSigBool
+//  &&openTradeBool1
                           );
-
-
 //// Works to close for hilbert and dft trade strategies.
 //// Avoid  tBools.noTradeBool and  tBools.closeSigBool until further investigation into its behaviour
 //tBools.closeTradeBool = (closehTdfTBool);
 //tBools.openTradeBool = ((!tBools.closeTradeBool)&&((opensig==SAN_SIGNAL::SELL)||(opensig==SAN_SIGNAL::BUY)));
-
-
 // fastSIG
-   if(trdStgy == TRADE_STRATEGIES::FASTSIG)
-     {
-
-      if(tBools.closeSlopeVarBool)
-        {
-         mktType=MKTTYP::MKTCLOSE;
+   if(trdStgy == TRADE_STRATEGIES::FASTSIG) {
+      if(tBools.closeSlopeVarBool) {
+         mktType = MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-        }
-      else
-         if(tBools.closeTradeBool)
-           {
-            mktType=MKTTYP::MKTCLOSE;
-            closeSIG = SAN_SIGNAL::CLOSE;
-           }
-         else
-            if(tBools.closeFlatTradeBool)
-              {
-               mktType=MKTTYP::MKTCLOSE;
-               closeSIG = SAN_SIGNAL::CLOSE;
-              }
-            else
-               if(tBools.closeSigTrReversalBool)
-                 {
-                  mktType=MKTTYP::MKTCLOSE;
-                  closeSIG = SAN_SIGNAL::CLOSE;
-                 }
-               else
-                  if(tBools.closeSlopeRatios)
-                    {
-                     mktType=MKTTYP::MKTCLOSE;
-                     closeSIG = SAN_SIGNAL::CLOSE;
-                    }
-                  //else if(tBools.flatMktBool) {
-                  //   mktType=MKTTYP::MKTFLAT;
-                  //   closeSIG = SAN_SIGNAL::NOSIG;
-                  //}
-                  else
-                     if(tBools.openTradeBool)
-                       {
-                        mktType=MKTTYP::MKTTR;
-                        openSIG = opensig;
-                        closeSIG = SAN_SIGNAL::NOSIG;
-                       }
+      } else if(tBools.closeTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.closeFlatTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.closeSigTrReversalBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.closeSlopeRatios) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      }
+      //else if(tBools.flatMktBool) {
+      //   mktType=MKTTYP::MKTFLAT;
+      //   closeSIG = SAN_SIGNAL::NOSIG;
+      //}
+      else if(tBools.openTradeBool) {
+         mktType = MKTTYP::MKTTR;
+         openSIG = opensig;
+         closeSIG = SAN_SIGNAL::NOSIG;
+      }
       //  Print("[TRADESTRATEGY]: FASTSIG "+ut.getSigString(openSIG));
-     }
-
+   }
 // open: simpleTrend_5_14_SIG
 // close: simpleTrend_14_30_SIG
-   if(trdStgy == TRADE_STRATEGIES::SIMPLESIG)
-     {
-
-      if(tBools.closeTradeBool)
-        {
-         mktType=MKTTYP::MKTCLOSE;
+   if(trdStgy == TRADE_STRATEGIES::SIMPLESIG) {
+      if(tBools.closeTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-        }
+      }
       //else if(tBools.closeFlatTradeBool) {
       //   mktType=MKTTYP::MKTCLOSE;
       //   closeSIG = SAN_SIGNAL::CLOSE;
       //}
-      else
-         if(tBools.closeSigTrCloseSigReversalBool)
-           {
-            mktType=MKTTYP::MKTCLOSE;
-            closeSIG = SAN_SIGNAL::CLOSE;
-           }
-         else
-            if(tBools.openTradeBool)
-              {
-               mktType=MKTTYP::MKTTR;
-               openSIG = opensig;
-               closeSIG = SAN_SIGNAL::NOSIG;
-              }
+      else if(tBools.closeSigTrCloseSigReversalBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.openTradeBool) {
+         mktType = MKTTYP::MKTTR;
+         openSIG = opensig;
+         closeSIG = SAN_SIGNAL::NOSIG;
+      }
       //Print("[TRADESTRATEGY]: SIMPLESIG "+ut.getSigString(openSIG));
-     }
-
+   }
 //simpleSlope_30_SIG
 //baseSlopeSIG
 //slopeCandle120SIG
-
-   if(trdStgy == TRADE_STRATEGIES::SLOPESIG)
-     {
-      if(tBools.closeTradeBool)
-        {
-         mktType=MKTTYP::MKTCLOSE;
+   if(trdStgy == TRADE_STRATEGIES::SLOPESIG) {
+      if(tBools.closeTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-        }
-      else
-         if(tBools.closeSigTrReversalBool)
-           {
-            mktType=MKTTYP::MKTCLOSE;
-            closeSIG = SAN_SIGNAL::CLOSE;
-           }
-         else
-            if(opensig==SAN_SIGNAL::SIDEWAYS)
-              {
-               mktType=MKTTYP::MKTCLOSE;
-               closeSIG = SAN_SIGNAL::CLOSE;
-              }
-            else
-               if(tBools.openTradeBool)
-                 {
-                  mktType=MKTTYP::MKTTR;
-                  openSIG = opensig;
-                  closeSIG = SAN_SIGNAL::NOSIG;
-                 }
-     }
-
-
+      } else if(tBools.closeSigTrReversalBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(opensig == SAN_SIGNAL::SIDEWAYS) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.openTradeBool) {
+         mktType = MKTTYP::MKTTR;
+         openSIG = opensig;
+         closeSIG = SAN_SIGNAL::NOSIG;
+      }
+   }
 //fastSlowSIG
-   if(trdStgy == TRADE_STRATEGIES::FASTSLOW)
-     {
-
-      if(tBools.closeTradeBool)
-        {
-         mktType=MKTTYP::MKTCLOSE;
+   if(trdStgy == TRADE_STRATEGIES::FASTSLOW) {
+      if(tBools.closeTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-        }
-      else
-         if(tBools.closeSigTrReversalBool)
-           {
-            mktType=MKTTYP::MKTCLOSE;
-            closeSIG = SAN_SIGNAL::CLOSE;
-           }
-         else
-            if(tBools.openTradeBool)
-              {
-               mktType=MKTTYP::MKTTR;
-               openSIG = opensig;
-               closeSIG = SAN_SIGNAL::NOSIG;
-              }
-     }
-
+      } else if(tBools.closeSigTrReversalBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.openTradeBool) {
+         mktType = MKTTYP::MKTTR;
+         openSIG = opensig;
+         closeSIG = SAN_SIGNAL::NOSIG;
+      }
+   }
 //cpSlopeCandle120SIG
-   if(trdStgy == TRADE_STRATEGIES::CPSLOPECANDLE120)
-     {
-
-      if(tBools.closeTradeBool)
-        {
-         mktType=MKTTYP::MKTCLOSE;
+   if(trdStgy == TRADE_STRATEGIES::CPSLOPECANDLE120) {
+      if(tBools.closeTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-        }
-      else
-         if(tBools.closeFlatTradeBool)
-           {
-            mktType=MKTTYP::MKTCLOSE;
-            closeSIG = SAN_SIGNAL::CLOSE;
-           }
-         else
-            if(tBools.closeSigTrReversalBool)
-              {
-               mktType=MKTTYP::MKTCLOSE;
-               closeSIG = SAN_SIGNAL::CLOSE;
-              }
-            else
-               if(opensig==SAN_SIGNAL::SIDEWAYS)
-                 {
-                  mktType=MKTTYP::MKTCLOSE;
-                  closeSIG = SAN_SIGNAL::CLOSE;
-                 }
-               //else if(flatMktBool) {
-               //   mktType=MKTTYP::MKTCLOSE;
-               //   closeSIG = SAN_SIGNAL::CLOSE;
-               //}
-               else
-                  if(tBools.openTradeBool)
-                    {
-                     mktType=MKTTYP::MKTTR;
-                     openSIG = opensig;
-                     closeSIG = SAN_SIGNAL::NOSIG;
-                    }
+      } else if(tBools.closeFlatTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.closeSigTrReversalBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(opensig == SAN_SIGNAL::SIDEWAYS) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      }
+      //else if(flatMktBool) {
+      //   mktType=MKTTYP::MKTCLOSE;
+      //   closeSIG = SAN_SIGNAL::CLOSE;
+      //}
+      else if(tBools.openTradeBool) {
+         mktType = MKTTYP::MKTTR;
+         openSIG = opensig;
+         closeSIG = SAN_SIGNAL::NOSIG;
+      }
       //Print("[TRADESTRATEGY]: SLOPESIG "+ut.getSigString(openSIG));
-     }
-
+   }
 //slopeCandle120SIG
-   if(trdStgy == TRADE_STRATEGIES::SLOPECANDLE120)
-     {
-
-      if(tBools.closeTradeBool)
-        {
-         mktType=MKTTYP::MKTCLOSE;
+   if(trdStgy == TRADE_STRATEGIES::SLOPECANDLE120) {
+      if(tBools.closeTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-        }
-      else
-         if(tBools.closeFlatTradeBool)
-           {
-            mktType=MKTTYP::MKTCLOSE;
-            closeSIG = SAN_SIGNAL::CLOSE;
-           }
-         else
-            if(tBools.closeSigTrReversalBool)
-              {
-               mktType=MKTTYP::MKTCLOSE;
-               closeSIG = SAN_SIGNAL::CLOSE;
-              }
-            else
-               if(opensig==SAN_SIGNAL::SIDEWAYS)
-                 {
-                  mktType=MKTTYP::MKTCLOSE;
-                  closeSIG = SAN_SIGNAL::CLOSE;
-                 }
-               //else if(flatMktBool) {
-               //   mktType=MKTTYP::MKTFLAT;
-               //   closeSIG = SAN_SIGNAL::NOSIG;
-               //}
-               else
-                  if(tBools.openTradeBool)
-                    {
-                     mktType=MKTTYP::MKTTR;
-                     openSIG = opensig;
-                     closeSIG = SAN_SIGNAL::NOSIG;
-                    }
+      } else if(tBools.closeFlatTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.closeSigTrReversalBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(opensig == SAN_SIGNAL::SIDEWAYS) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      }
+      //else if(flatMktBool) {
+      //   mktType=MKTTYP::MKTFLAT;
+      //   closeSIG = SAN_SIGNAL::NOSIG;
+      //}
+      else if(tBools.openTradeBool) {
+         mktType = MKTTYP::MKTTR;
+         openSIG = opensig;
+         closeSIG = SAN_SIGNAL::NOSIG;
+      }
       //Print("[TRADESTRATEGY]: SLOPESIG "+ut.getSigString(openSIG));
-     }
+   }
 // sig: c_SIG
-   if((trdStgy == TRADE_STRATEGIES::SLOPESTD_CSIG)||(trdStgy == TRADE_STRATEGIES::NOTRDSTGY))
-     {
-
-      if(tBools.closeTradeBool)
-        {
-         mktType=MKTTYP::MKTCLOSE;
+   if((trdStgy == TRADE_STRATEGIES::SLOPESTD_CSIG) || (trdStgy == TRADE_STRATEGIES::NOTRDSTGY)) {
+      if(tBools.closeTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
          openSIG = SAN_SIGNAL::NOSIG;
          closeSIG = SAN_SIGNAL::CLOSE;
          //   flatBool = false;
-        }
+      }
       //else if(tBools.closeFlatTradeBool) {
       //   mktType=MKTTYP::MKTCLOSE;
       //   openSIG = SAN_SIGNAL::NOSIG;
       //   closeSIG = SAN_SIGNAL::CLOSE;
       //   flatBool = false;
       //}
-      else
-         if(tBools.closeSigTrReversalBool)
-           {
-            mktType=MKTTYP::MKTCLOSE;
-            openSIG = SAN_SIGNAL::NOSIG;
-            closeSIG = SAN_SIGNAL::CLOSE;
-            // flatBool = false;
-           }
-         else
-            if(
-               (opensig==SAN_SIGNAL::SIDEWAYS)
-               && tBools.flatMktBool
-            )
-              {
-               mktType=MKTTYP::MKTFLAT;
-               openSIG = SAN_SIGNAL::NOSIG;
-               closeSIG = SAN_SIGNAL::NOSIG;
-              }
-            else
-               if((opensig==SAN_SIGNAL::BUY)||(opensig==SAN_SIGNAL::SELL))
-                 {
-                  mktType=MKTTYP::MKTTR;
-                  openSIG = opensig;
-                  closeSIG = SAN_SIGNAL::NOSIG;
-                  //flatBool = false;
-                 }
-      //Print("[TRADESTRATEGY]: SLOPESTD_CSIG "+ut.getSigString(openSIG));
-     }
-
-// hilbertDftSIG
-   if(trdStgy == TRADE_STRATEGIES::HTDFT)
-     {
-      Print("[HTDFT]: STRATEGY:  openTradeBool: "+tBools.openTradeBool+" closeTradeBool: "+tBools.closeTradeBool+" closeSigTrReversalBool: "+tBools.closeSigTrReversalBool+" closeFlatTradeBool: "+tBools.closeFlatTradeBool+" opensig: "+ut.getSigString(opensig));
-      if(tBools.closeTradeBool)
-        {
-         mktType=MKTTYP::MKTCLOSE;
+      else if(tBools.closeSigTrReversalBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         openSIG = SAN_SIGNAL::NOSIG;
          closeSIG = SAN_SIGNAL::CLOSE;
-        }
-      else
-         if(tBools.closeFlatTradeBool)
-           {
-            mktType=MKTTYP::MKTCLOSE;
-            closeSIG = SAN_SIGNAL::CLOSE;
-           }
-         else
-            if(tBools.closeSigTrReversalBool)
-              {
-               mktType=MKTTYP::MKTCLOSE;
-               closeSIG = SAN_SIGNAL::CLOSE;
-              }
-            else
-               if(tBools.openTradeBool)
-                 {
-                  mktType=MKTTYP::MKTTR;
-                  openSIG = opensig;
-                  closeSIG = SAN_SIGNAL::NOSIG;
-                 }
-     }
-
+         // flatBool = false;
+      } else if(
+         (opensig == SAN_SIGNAL::SIDEWAYS)
+         && tBools.flatMktBool
+      ) {
+         mktType = MKTTYP::MKTFLAT;
+         openSIG = SAN_SIGNAL::NOSIG;
+         closeSIG = SAN_SIGNAL::NOSIG;
+      } else if((opensig == SAN_SIGNAL::BUY) || (opensig == SAN_SIGNAL::SELL)) {
+         mktType = MKTTYP::MKTTR;
+         openSIG = opensig;
+         closeSIG = SAN_SIGNAL::NOSIG;
+         //flatBool = false;
+      }
+      //Print("[TRADESTRATEGY]: SLOPESTD_CSIG "+ut.getSigString(openSIG));
+   }
+// hilbertDftSIG
+   if(trdStgy == TRADE_STRATEGIES::HTDFT) {
+      Print("[HTDFT]: STRATEGY:  openTradeBool: " + tBools.openTradeBool + " closeTradeBool: " + tBools.closeTradeBool + " closeSigTrReversalBool: " + tBools.closeSigTrReversalBool + " closeFlatTradeBool: " + tBools.closeFlatTradeBool + " opensig: " + ut.getSigString(opensig));
+      if(tBools.closeTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.closeFlatTradeBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.closeSigTrReversalBool) {
+         mktType = MKTTYP::MKTCLOSE;
+         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.openTradeBool) {
+         mktType = MKTTYP::MKTTR;
+         openSIG = opensig;
+         closeSIG = SAN_SIGNAL::NOSIG;
+      }
+   }
 //   tBools.flatBool = flatBool;
-
 //Print("[SETSIGBOOLS::INNER]: openTradeBool: "+openTradeBool+" closeTradeBool: "+closeTradeBool+" closeOBVStdBool: "+closeOBVStdBool+" closeClusterStdBool: "+closeClusterStdBool+" CloseTrRev "+closeSigTrReversalBool+" CloseFlatTrade: "+closeFlatTradeBool );
-
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void   HSIG::processSignalsWithNoStrategy()
-  {
-
-   if(c_SIG!=SAN_SIGNAL::NOSIG)
-     {
+void   HSIG::processSignalsWithNoStrategy() {
+   if(c_SIG != SAN_SIGNAL::NOSIG) {
       trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
       setSIGForStrategy(c_SIG, trdStgy);
-     }
-   else
-      if(fastSIG!=SAN_SIGNAL::NOSIG)
-        {
-         trdStgy = TRADE_STRATEGIES::FASTSIG;
-         setSIGForStrategy(fastSIG, trdStgy);
-        }
-      else
-         if(simpleSlope_30_SIG!=SAN_SIGNAL::NOSIG)
-           {
-            trdStgy = TRADE_STRATEGIES::SLOPESIG;
-            setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
-           }
-         else
-            if(simpleTrend_5_14_SIG!=SAN_SIGNAL::NOSIG)
-              {
-               trdStgy = TRADE_STRATEGIES::SIMPLESIG;
-               setSIGForStrategy(simpleTrend_5_14_SIG, trdStgy, simpleTrend_14_30_SIG);
-              }
-            else
-               if(cpSlopeCandle120SIG!=SAN_SIGNAL::NOSIG)
-                 {
-                  trdStgy = TRADE_STRATEGIES::CPSLOPECANDLE120;
-                  setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
-                 }
-  }
+   } else if(fastSIG != SAN_SIGNAL::NOSIG) {
+      trdStgy = TRADE_STRATEGIES::FASTSIG;
+      setSIGForStrategy(fastSIG, trdStgy);
+   } else if(simpleSlope_30_SIG != SAN_SIGNAL::NOSIG) {
+      trdStgy = TRADE_STRATEGIES::SLOPESIG;
+      setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
+   } else if(simpleTrend_5_14_SIG != SAN_SIGNAL::NOSIG) {
+      trdStgy = TRADE_STRATEGIES::SIMPLESIG;
+      setSIGForStrategy(simpleTrend_5_14_SIG, trdStgy, simpleTrend_14_30_SIG);
+   } else if(cpSlopeCandle120SIG != SAN_SIGNAL::NOSIG) {
+      trdStgy = TRADE_STRATEGIES::CPSLOPECANDLE120;
+      setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
+   }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy)
-  {
-
+void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
 //   Print("[SIG]: cpSlopeCandle120SIG: "+ut.getSigString(cpSlopeCandle120SIG));
-
 //trdStgy = TRADE_STRATEGIES::FASTSIG;
-   if(trdStgy==TRADE_STRATEGIES::FASTSIG)
+   if(trdStgy == TRADE_STRATEGIES::FASTSIG)
       setSIGForStrategy(fastSIG, trdStgy);
-
 //trdStgy = TRADE_STRATEGIES::SIMPLESIG;
-   if(trdStgy==TRADE_STRATEGIES::SIMPLESIG)
+   if(trdStgy == TRADE_STRATEGIES::SIMPLESIG)
       setSIGForStrategy(simpleTrend_5_14_SIG, trdStgy, simpleTrend_14_30_SIG);
-
 //trdStgy = TRADE_STRATEGIES::SLOPESIG;
-   if(trdStgy==TRADE_STRATEGIES::SLOPESIG)
+   if(trdStgy == TRADE_STRATEGIES::SLOPESIG)
       //setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
       //setSIGForStrategy(baseSlopeSIG, trdStgy);
       setSIGForStrategy(slopeCandle120SIG, trdStgy);
-
 //trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
-   if(trdStgy==TRADE_STRATEGIES::SLOPESTD_CSIG)
+   if(trdStgy == TRADE_STRATEGIES::SLOPESTD_CSIG)
       setSIGForStrategy(c_SIG, trdStgy);
-
 //trdStgy = TRADE_STRATEGIES::CPSLOPECANDLE120;
-   if(trdStgy==TRADE_STRATEGIES::CPSLOPECANDLE120)
+   if(trdStgy == TRADE_STRATEGIES::CPSLOPECANDLE120)
       setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
-
 //trdStgy = TRADE_STRATEGIES::SLOPECANDLE120;
-   if(trdStgy==TRADE_STRATEGIES::SLOPECANDLE120)
+   if(trdStgy == TRADE_STRATEGIES::SLOPECANDLE120)
       setSIGForStrategy(slopeCandle120SIG, trdStgy);
-
 //trdStgy = TRADE_STRATEGIES::HTDFT;
-   if(trdStgy==TRADE_STRATEGIES::HTDFT)
+   if(trdStgy == TRADE_STRATEGIES::HTDFT)
       setSIGForStrategy(hilbertDftSIG, trdStgy);
-
 //trdStgy = TRADE_STRATEGIES::FASTSLOW;
-   if(trdStgy==TRADE_STRATEGIES::FASTSLOW)
+   if(trdStgy == TRADE_STRATEGIES::FASTSLOW)
       setSIGForStrategy(fastSlowSIG, trdStgy);
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util)
-  {
-
-   baseTrendSIG = imaTrendSIG(ss.ima120240SIG,ss.trendRatio120SIG,ss.trendRatio240SIG);
-   baseSlopeSIG = slopeSIG(ss.baseSlopeData,2);
-
-   cTSIG = cTradeSIG(ss,util,1);
-   atrCandle_tradeSIG = cTradeSIG_v2(ss,util,1);
-
+void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
+   baseTrendSIG = imaTrendSIG(ss.ima120240SIG, ss.trendRatio120SIG, ss.trendRatio240SIG);
+   baseSlopeSIG = slopeSIG(ss.baseSlopeData, 2);
+   cTSIG = cTradeSIG(ss, util, 1);
+   atrCandle_tradeSIG = cTradeSIG_v2(ss, util, 1);
    tradeSIG = atrCandle_tradeSIG;
-
-   c_SIG = cSIG(ss,util,1);
-
+   c_SIG = cSIG(ss, util, 1);
 //hilbertSIG =  (SAN_SIGNAL)ss.hilbertSIG.val4;
 //dftSIG =  (SAN_SIGNAL)ss.dftSIG.val5;
 //hilbertDftSIG = (SAN_SIGNAL)ss.hilbertDftSIG.val[0];
-
 //slopeCandle120SIG = ((ss.volSlopeSIG==SAN_SIGNAL::TRADE)||(ss.volSlopeSIG==SAN_SIGNAL::SIDEWAYS))?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG):SAN_SIGNAL::NOSIG;
 //   mainFastSIG = matchSIG(ss.candleVol120SIG, ss.ima1430SIG);
 //   slopeFastSIG = matchSIG(ss.slopeVarSIG, ss.ima1430SIG);
@@ -944,10 +764,6 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util)
 //   dominant240SIG = imaTrendSIG(ss.sig120,ss.cpScatterSIG,ss.trendRatio240SIG);
 //   dominant120SIG = imaTrendSIG(ss.sig30,ss.trendRatio30SIG,ss.trendRatio120SIG);
 //   dominant30SIG = imaTrendSIG(ss.ima1430SIG,ss.trendRatio14SIG,ss.trendRatio30SIG);
-
-
-
-
 //   simple_14_SIG = simpleSIG(ss.fsig14);
 //   simple_30_SIG = simpleSIG(ss.fsig30);
    simple_5_14_SIG = simpleSIG(ss.fsig5, ss.fsig14);
@@ -956,39 +772,29 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util)
 //   simple_30_120_SIG = simpleSIG(ss.fsig30, ss.fsig120);
 //   simpleTrend_14_SIG = simpleTrendSIG(ss.trendRatio14SIG);
 //   simpleTrend_30_SIG = simpleTrendSIG(ss.trendRatio30SIG);
-   simpleTrend_5_14_SIG =  simpleTrendSIG(ss.trendRatio5SIG,ss.trendRatio14SIG);
-   simpleTrend_14_30_SIG =  simpleTrendSIG(ss.trendRatio14SIG,ss.trendRatio30SIG);
-   simpleTrend_30_120_SIG =  simpleTrendSIG(ss.trendRatio30SIG,ss.trendRatio120SIG);
-
-   trend_5_120_500_SIG = trendSIG(ss.trendRatio5SIG,ss.trendRatio120SIG,ss.trendRatio500SIG);
-   trend_5_30_120_SIG = trendSIG(ss.trendRatio5SIG,ss.trendRatio30SIG,ss.trendRatio120SIG);
-   trend_5_14_30_SIG = trendSIG(ss.trendRatio5SIG,ss.trendRatio14SIG,ss.trendRatio30SIG);
-   trend_14_30_120_SIG = trendSIG(ss.trendRatio14SIG,ss.trendRatio30SIG,ss.trendRatio120SIG);
-
+   simpleTrend_5_14_SIG =  simpleTrendSIG(ss.trendRatio5SIG, ss.trendRatio14SIG);
+   simpleTrend_14_30_SIG =  simpleTrendSIG(ss.trendRatio14SIG, ss.trendRatio30SIG);
+   simpleTrend_30_120_SIG =  simpleTrendSIG(ss.trendRatio30SIG, ss.trendRatio120SIG);
+   trend_5_120_500_SIG = trendSIG(ss.trendRatio5SIG, ss.trendRatio120SIG, ss.trendRatio500SIG);
+   trend_5_30_120_SIG = trendSIG(ss.trendRatio5SIG, ss.trendRatio30SIG, ss.trendRatio120SIG);
+   trend_5_14_30_SIG = trendSIG(ss.trendRatio5SIG, ss.trendRatio14SIG, ss.trendRatio30SIG);
+   trend_14_30_120_SIG = trendSIG(ss.trendRatio14SIG, ss.trendRatio30SIG, ss.trendRatio120SIG);
    slopeRatioData = ss.slopeRatioData;
-
    stdCPSlope = ss.stdCPSlope;
    obvCPSlope = ss.obvCPSlope;
-
-   simpleSlope_14_SIG = slopeSIG(ss.imaSlope14Data,0);
-   simpleSlope_30_SIG = slopeSIG(ss.imaSlope30Data,0);
-   simpleSlope_120_SIG = slopeSIG(ss.imaSlope120Data,1);
+   simpleSlope_14_SIG = slopeSIG(ss.imaSlope14Data, 0);
+   simpleSlope_30_SIG = slopeSIG(ss.imaSlope30Data, 0);
+   simpleSlope_120_SIG = slopeSIG(ss.imaSlope120Data, 1);
    simpleSlope_240_SIG = baseSlopeSIG;
-
 //  Print("[SIMSLOPES]: simple14: "+ut.getSigString(simpleSlope_14_SIG)+" simple30:"+ ut.getSigString(simpleSlope_30_SIG)+" simple120:"+ut.getSigString(simpleSlope_120_SIG)+" simple240:"+ut.getSigString(simpleSlope_240_SIG));
-
-   fastSIG = matchSIG(ss.fsig5,ss.fsig14,ss.fsig30);
+   fastSIG = matchSIG(ss.fsig5, ss.fsig14, ss.fsig30);
 //dominantTrendSIG = matchSIG(ss.fsig5,trend_5_120_500_SIG,ss.slopeVarSIG);
 //domVolVarSIG = ss.tradeVolVarSIG;
-
 // ########### BEGIN::Composite close signals
-
-   cpSlopeCandle120SIG = (simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG,util.convTrendToSig(ss.cpScatterSIG))!=SAN_SIGNAL::NOSIG)?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG,util.convTrendToSig(ss.cpScatterSIG)):SAN_SIGNAL::CLOSE;
-   slopeCandle120SIG = (simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG)!=SAN_SIGNAL::NOSIG)?simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG):SAN_SIGNAL::CLOSE;
-   composite_CloseSIG_1 = (simpleSIG(c_SIG,simpleSlope_30_SIG,fastSIG)!=SAN_SIGNAL::NOSIG)?simpleSIG(c_SIG,simpleSlope_30_SIG,fastSIG):SAN_SIGNAL::CLOSE;
+   cpSlopeCandle120SIG = (simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG, util.convTrendToSig(ss.cpScatterSIG)) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG, util.convTrendToSig(ss.cpScatterSIG)) : SAN_SIGNAL::CLOSE;
+   slopeCandle120SIG = (simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG) : SAN_SIGNAL::CLOSE;
+   composite_CloseSIG_1 = (simpleSIG(c_SIG, simpleSlope_30_SIG, fastSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(c_SIG, simpleSlope_30_SIG, fastSIG) : SAN_SIGNAL::CLOSE;
 // ########### END::Composite close signals
-
-
 //   dominantTrendCPSIG = matchSIG(
 //                           util.convTrendToSig(ss.cpScatterSIG),
 //                           util.convTrendToSig(ss.trendRatio120SIG),
@@ -998,8 +804,6 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util)
 //
 ////domTrIMA = imaTrend(ss.ima30120SIG,ss.ima120240SIG,ss.trendRatio30SIG,ss.trendRatio120SIG,ss.trendRatio240SIG,ss.ima240500SIG,ss.trendRatio500SIG);
 //   domTrIMA = domTrIMAFast;
-
-
 ////######################################################################################
 //   // SET Trade Strategies
 //   //trdStgy = TRADE_STRATEGIES::FASTSIG;
@@ -1008,23 +812,15 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util)
 //   //trdStgy = TRADE_STRATEGIES::SLOPERATIOSIG;
 //trdStgy = TRADE_STRATEGIES::SLOPESTD_CSIG;
 //trdStgy = TRADE_STRATEGIES::FASTSLOW;
-
 //   trdStgy = TRADE_STRATEGIES::HTDFT;
-
 //   //trdStgy = TRADE_STRATEGIES::NOTRDSTGY;
 ////######################################################################################
 //
-
-
-   if(trdStgy==TRADE_STRATEGIES::NOTRDSTGY)
-     {
+   if(trdStgy == TRADE_STRATEGIES::NOTRDSTGY) {
       processSignalsWithNoStrategy();
-     }
-   else
-     {
+   } else {
       processSignalsWithStrategy(trdStgy);
-     }
-
+   }
    stateSig.trdStgy = trdStgy;
    stateSig.tradeSIG = tradeSIG;
    stateSig.fastSIG = fastSIG;
@@ -1033,146 +829,111 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util)
    stateSig.simpleTrend_14_30_SIG = simpleTrend_14_30_SIG;
    stateSig.cpSlopeCandle120SIG = cpSlopeCandle120SIG;
    stateSig.c_SIG = c_SIG;
-  } //initSIG
+} //initSIG
 
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL  HSIG::matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2=EMPTY, bool slowStrategy=false)
-  {
-
+SAN_SIGNAL  HSIG::matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG1, SAN_SIGNAL baseSIG2 = EMPTY, bool slowStrategy = false) {
 // ###################################################################
-
-   if(baseSIG2==EMPTY)
-     {
-      if(util.oppSignal(compareSIG,baseSIG1))
-        {
+   if(baseSIG2 == EMPTY) {
+      if(util.oppSignal(compareSIG, baseSIG1)) {
          return SAN_SIGNAL::CLOSE;
-        }
-
-      if(!slowStrategy)
-        {
+      }
+      if(!slowStrategy) {
          if(
             //(compareSIG==SAN_SIGNAL::SIDEWAYS)||
-            (baseSIG1==SAN_SIGNAL::SIDEWAYS))
-           {
+            (baseSIG1 == SAN_SIGNAL::SIDEWAYS)) {
             return SAN_SIGNAL::SIDEWAYS;
-           }
-
+         }
          if(
             //(compareSIG==SAN_SIGNAL::CLOSE)||
-            (baseSIG1==SAN_SIGNAL::CLOSE))
-           {
+            (baseSIG1 == SAN_SIGNAL::CLOSE)) {
             return SAN_SIGNAL::CLOSE;
-           }
-        }
-
-      if(slowStrategy)
-        {
-         if((compareSIG==SAN_SIGNAL::SIDEWAYS)&&(baseSIG1==SAN_SIGNAL::SIDEWAYS))
-           {
+         }
+      }
+      if(slowStrategy) {
+         if((compareSIG == SAN_SIGNAL::SIDEWAYS) && (baseSIG1 == SAN_SIGNAL::SIDEWAYS)) {
             return SAN_SIGNAL::SIDEWAYS;
-           }
-
-         if((compareSIG==SAN_SIGNAL::CLOSE)&&(baseSIG1==SAN_SIGNAL::CLOSE))
-           {
+         }
+         if((compareSIG == SAN_SIGNAL::CLOSE) && (baseSIG1 == SAN_SIGNAL::CLOSE)) {
             return SAN_SIGNAL::CLOSE;
-           }
-        }
-
-      if(((compareSIG!=SAN_SIGNAL::NOSIG)&&(compareSIG!=SAN_SIGNAL::SIDEWAYS))
-         &&((baseSIG1!=SAN_SIGNAL::NOSIG)&&(baseSIG1!=SAN_SIGNAL::SIDEWAYS))
+         }
+      }
+      if(((compareSIG != SAN_SIGNAL::NOSIG) && (compareSIG != SAN_SIGNAL::SIDEWAYS))
+            && ((baseSIG1 != SAN_SIGNAL::NOSIG) && (baseSIG1 != SAN_SIGNAL::SIDEWAYS))
         )
          return (
-                   ((compareSIG==baseSIG1))?
+                   ((compareSIG == baseSIG1)) ?
                    compareSIG
                    :
                    SAN_SIGNAL::CLOSE
                 );
-     }
-
+   }
 // ###################################################################
 // ###################################################################
-   if(baseSIG2!=EMPTY)
-     {
-
-      if(!slowStrategy)
-        {
+   if(baseSIG2 != EMPTY) {
+      if(!slowStrategy) {
          if(
             //(compareSIG==SAN_SIGNAL::SIDEWAYS)||
-            (baseSIG1==SAN_SIGNAL::SIDEWAYS)||(baseSIG2==SAN_SIGNAL::SIDEWAYS))
-           {
+            (baseSIG1 == SAN_SIGNAL::SIDEWAYS) || (baseSIG2 == SAN_SIGNAL::SIDEWAYS)) {
             return SAN_SIGNAL::SIDEWAYS;
-           }
-
+         }
          if(
             //(util.oppSignal(compareSIG,baseSIG1))||(util.oppSignal(compareSIG,baseSIG2))||
-            (util.oppSignal(baseSIG1,baseSIG2))
-         )
-           {
+            (util.oppSignal(baseSIG1, baseSIG2))
+         ) {
             return SAN_SIGNAL::CLOSE;
-           }
-
+         }
          if(
             //(compareSIG==SAN_SIGNAL::CLOSE)||
-            (baseSIG1==SAN_SIGNAL::CLOSE)||(baseSIG2==SAN_SIGNAL::CLOSE))
-           {
+            (baseSIG1 == SAN_SIGNAL::CLOSE) || (baseSIG2 == SAN_SIGNAL::CLOSE)) {
             return SAN_SIGNAL::CLOSE;
-           }
-        }
-
-      if(slowStrategy)
-        {
+         }
+      }
+      if(slowStrategy) {
          if(
-            ((compareSIG==SAN_SIGNAL::SIDEWAYS)&&(baseSIG1==SAN_SIGNAL::SIDEWAYS))
-            ||((compareSIG==SAN_SIGNAL::SIDEWAYS)&&(baseSIG2==SAN_SIGNAL::SIDEWAYS))
-            ||((baseSIG1==SAN_SIGNAL::SIDEWAYS)&&(baseSIG2==SAN_SIGNAL::SIDEWAYS))
-         )
-           {
+            ((compareSIG == SAN_SIGNAL::SIDEWAYS) && (baseSIG1 == SAN_SIGNAL::SIDEWAYS))
+            || ((compareSIG == SAN_SIGNAL::SIDEWAYS) && (baseSIG2 == SAN_SIGNAL::SIDEWAYS))
+            || ((baseSIG1 == SAN_SIGNAL::SIDEWAYS) && (baseSIG2 == SAN_SIGNAL::SIDEWAYS))
+         ) {
             return SAN_SIGNAL::SIDEWAYS;
-           }
-
+         }
          if(
-            (util.oppSignal(compareSIG,baseSIG2))
-            &&(util.oppSignal(baseSIG1,baseSIG2))
-         )
-           {
+            (util.oppSignal(compareSIG, baseSIG2))
+            && (util.oppSignal(baseSIG1, baseSIG2))
+         ) {
             return SAN_SIGNAL::CLOSE;
-           }
-
+         }
          if(
-            ((compareSIG==SAN_SIGNAL::CLOSE)&&(baseSIG1==SAN_SIGNAL::CLOSE))
-            ||((compareSIG==SAN_SIGNAL::CLOSE)&&(baseSIG2==SAN_SIGNAL::CLOSE))
-            ||((baseSIG1==SAN_SIGNAL::CLOSE)&&(baseSIG2==SAN_SIGNAL::CLOSE))
-         )
-
-           {
+            ((compareSIG == SAN_SIGNAL::CLOSE) && (baseSIG1 == SAN_SIGNAL::CLOSE))
+            || ((compareSIG == SAN_SIGNAL::CLOSE) && (baseSIG2 == SAN_SIGNAL::CLOSE))
+            || ((baseSIG1 == SAN_SIGNAL::CLOSE) && (baseSIG2 == SAN_SIGNAL::CLOSE))
+         ) {
             return SAN_SIGNAL::CLOSE;
-           }
-        }
-
+         }
+      }
       //Print("[XXCV]: compareSIG: "+ util.getSigString(compareSIG)+" baseSIG1: "+util.getSigString(baseSIG1)+" baseSIG2: "+util.getSigString(baseSIG2));
-      if(((compareSIG!=SAN_SIGNAL::NOSIG)&&(compareSIG!=SAN_SIGNAL::SIDEWAYS))
-         &&((baseSIG1!=SAN_SIGNAL::NOSIG)&&(baseSIG1!=SAN_SIGNAL::SIDEWAYS))
-         &&((baseSIG2!=SAN_SIGNAL::NOSIG)&&(baseSIG2!=SAN_SIGNAL::SIDEWAYS))
-        )
-        {
+      if(((compareSIG != SAN_SIGNAL::NOSIG) && (compareSIG != SAN_SIGNAL::SIDEWAYS))
+            && ((baseSIG1 != SAN_SIGNAL::NOSIG) && (baseSIG1 != SAN_SIGNAL::SIDEWAYS))
+            && ((baseSIG2 != SAN_SIGNAL::NOSIG) && (baseSIG2 != SAN_SIGNAL::SIDEWAYS))
+        ) {
          return (
-                   ((compareSIG==baseSIG1)
-                    &&(compareSIG==baseSIG2)
-                    &&(baseSIG1==baseSIG2))
+                   ((compareSIG == baseSIG1)
+                    && (compareSIG == baseSIG2)
+                    && (baseSIG1 == baseSIG2))
                    ?
                    compareSIG
                    :
                    SAN_SIGNAL::CLOSE
                 );
-        }
-     }
+      }
+   }
 // ###################################################################
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -1182,285 +943,242 @@ SAN_SIGNAL  HSIG::matchSIG(const SAN_SIGNAL compareSIG, const SAN_SIGNAL baseSIG
 //+------------------------------------------------------------------+
 SAN_SIGNAL HSIG::simpleSIG(
    const SAN_SIGNAL sig1,
-   const SAN_SIGNAL sig2=EMPTY,
-   const SAN_SIGNAL sig3=EMPTY,
-   const SAN_SIGNAL sig4=EMPTY
-)
-  {
-
-
-   if((sig2!=EMPTY)&&(sig3!=EMPTY)&&(sig4!=EMPTY))
-     {
+   const SAN_SIGNAL sig2 = EMPTY,
+   const SAN_SIGNAL sig3 = EMPTY,
+   const SAN_SIGNAL sig4 = EMPTY
+) {
+   if((sig2 != EMPTY) && (sig3 != EMPTY) && (sig4 != EMPTY)) {
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)&&
-         (sig4==SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG) &&
+         (sig4 == SAN_SIGNAL::NOSIG)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig4!=SAN_SIGNAL::NOSIG)&&
-         (sig2!=sig3)&&
-         (sig2!=sig4)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig4 != SAN_SIGNAL::NOSIG) &&
+         (sig2 != sig3) &&
+         (sig2 != sig4)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig4!=SAN_SIGNAL::NOSIG)&&
-         (sig2==sig3)&&
-         (sig2==sig4)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig4 != SAN_SIGNAL::NOSIG) &&
+         (sig2 == sig3) &&
+         (sig2 == sig4)
       )
          return sig2;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig4!=SAN_SIGNAL::NOSIG)&&
-         (sig1!=sig3)&&
-         (sig1!=sig4)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig4 != SAN_SIGNAL::NOSIG) &&
+         (sig1 != sig3) &&
+         (sig1 != sig4)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig4!=SAN_SIGNAL::NOSIG)&&
-         (sig1==sig3)&&
-         (sig1==sig4)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig4 != SAN_SIGNAL::NOSIG) &&
+         (sig1 == sig3) &&
+         (sig1 == sig4)
       )
          return sig1;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)&&
-         (sig4!=SAN_SIGNAL::NOSIG)&&
-         (sig1!=sig2)&&
-         (sig1!=sig4)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG) &&
+         (sig4 != SAN_SIGNAL::NOSIG) &&
+         (sig1 != sig2) &&
+         (sig1 != sig4)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)&&
-         (sig4!=SAN_SIGNAL::NOSIG)&&
-         (sig1==sig2)&&
-         (sig1==sig4)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG) &&
+         (sig4 != SAN_SIGNAL::NOSIG) &&
+         (sig1 == sig2) &&
+         (sig1 == sig4)
       )
          return sig1;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig4==SAN_SIGNAL::NOSIG)&&
-         (sig1!=sig2)&&
-         (sig1!=sig3)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig4 == SAN_SIGNAL::NOSIG) &&
+         (sig1 != sig2) &&
+         (sig1 != sig3)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig4==SAN_SIGNAL::NOSIG)&&
-         (sig1==sig2)&&
-         (sig1==sig3)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig4 == SAN_SIGNAL::NOSIG) &&
+         (sig1 == sig2) &&
+         (sig1 == sig3)
       )
          return sig1;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)&&
-         (sig4==SAN_SIGNAL::NOSIG)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG) &&
+         (sig4 == SAN_SIGNAL::NOSIG)
       )
          return sig1;
-
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)&&
-         (sig4==SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG) &&
+         (sig4 == SAN_SIGNAL::NOSIG)
       )
          return sig2;
-
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig4==SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig4 == SAN_SIGNAL::NOSIG)
       )
          return sig3;
-
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)&&
-         (sig4!=SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG) &&
+         (sig4 != SAN_SIGNAL::NOSIG)
       )
          return sig4;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig1==sig2)&&
-         (sig2==sig3)&&
-         (sig3==sig4)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig1 == sig2) &&
+         (sig2 == sig3) &&
+         (sig3 == sig4)
       )
          return sig1;
-
-
-     }
+   }
 //#################################################
-   if((sig2!=EMPTY)&&(sig3!=EMPTY)&&(sig4==EMPTY))
-     {
+   if((sig2 != EMPTY) && (sig3 != EMPTY) && (sig4 == EMPTY)) {
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig2!=sig3)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig2 != sig3)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig2==sig3)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig2 == sig3)
       )
          return sig2;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig1!=sig3)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig1 != sig3)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)&&
-         (sig1==sig3)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG) &&
+         (sig1 == sig3)
       )
          return sig1;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)&&
-         (sig1!=sig2)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG) &&
+         (sig1 != sig2)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)&&
-         (sig1==sig2)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG) &&
+         (sig1 == sig2)
       )
          return sig1;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG)
       )
          return sig1;
-
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig3==SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig3 == SAN_SIGNAL::NOSIG)
       )
          return sig2;
-
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)&&
-         (sig3!=SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG) &&
+         (sig3 != SAN_SIGNAL::NOSIG)
       )
          return sig3;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)
-         &&(sig1==sig2)
-         &&(sig2==sig3)
+         (sig1 != SAN_SIGNAL::NOSIG)
+         && (sig1 == sig2)
+         && (sig2 == sig3)
       )
          return sig1;
-
-     }
-
+   }
 //#################################################
-   if((sig2!=EMPTY)&&(sig3==EMPTY)&&(sig4==EMPTY))
-     {
+   if((sig2 != EMPTY) && (sig3 == EMPTY) && (sig4 == EMPTY)) {
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig1!=sig2)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig1 != sig2)
       )
          return SAN_SIGNAL::NOSIG;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)&&
-         (sig1==sig2)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG) &&
+         (sig1 == sig2)
       )
          return sig1;
-
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)&&
-         (sig2==SAN_SIGNAL::NOSIG)
+         (sig1 != SAN_SIGNAL::NOSIG) &&
+         (sig2 == SAN_SIGNAL::NOSIG)
       )
          return sig1;
-
       if(
-         (sig1==SAN_SIGNAL::NOSIG)&&
-         (sig2!=SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) &&
+         (sig2 != SAN_SIGNAL::NOSIG)
       )
          return sig2;
-
       if(
-         (sig1!=SAN_SIGNAL::NOSIG)
-         &&(sig1==sig2)
+         (sig1 != SAN_SIGNAL::NOSIG)
+         && (sig1 == sig2)
       )
          return sig1;
-
-     }
-
+   }
 //#################################################
-   if((sig1!=SAN_SIGNAL::NOSIG)&&(sig1!=SAN_SIGNAL::SIDEWAYS))
-     {
+   if((sig1 != SAN_SIGNAL::NOSIG) && (sig1 != SAN_SIGNAL::SIDEWAYS)) {
       return sig1;
-     }
-
+   }
    return sig1;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| This is an aggressive form of simpleSIG that closes at teh slightest
@@ -1470,213 +1188,166 @@ SAN_SIGNAL HSIG::simpleSIG(
 //+------------------------------------------------------------------+
 SAN_SIGNAL        HSIG::simpleSIG_Agressive(
    const SAN_SIGNAL sig1,
-   const SAN_SIGNAL sig2=EMPTY,
-   const SAN_SIGNAL sig3=EMPTY,
-   const SAN_SIGNAL sig4=EMPTY,
-   const SAN_SIGNAL sig5=EMPTY
-)
-  {
-
-   if((sig2!=EMPTY)&&(sig3!=EMPTY)&&(sig4!=EMPTY)&&(sig5!=EMPTY))
-     {
+   const SAN_SIGNAL sig2 = EMPTY,
+   const SAN_SIGNAL sig3 = EMPTY,
+   const SAN_SIGNAL sig4 = EMPTY,
+   const SAN_SIGNAL sig5 = EMPTY
+) {
+   if((sig2 != EMPTY) && (sig3 != EMPTY) && (sig4 != EMPTY) && (sig5 != EMPTY)) {
       if(
-         (sig1==SAN_SIGNAL::NOSIG)||
-         (sig2==SAN_SIGNAL::NOSIG)||
-         (sig3==SAN_SIGNAL::NOSIG)||
-         (sig4==SAN_SIGNAL::NOSIG)||
-         (sig5==SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) ||
+         (sig2 == SAN_SIGNAL::NOSIG) ||
+         (sig3 == SAN_SIGNAL::NOSIG) ||
+         (sig4 == SAN_SIGNAL::NOSIG) ||
+         (sig5 == SAN_SIGNAL::NOSIG)
       )
          return SAN_SIGNAL::NOSIG;
-
-      if((sig1!=sig2)||(sig2!=sig3)||(sig3!=sig4)||(sig4!=sig5))
+      if((sig1 != sig2) || (sig2 != sig3) || (sig3 != sig4) || (sig4 != sig5))
          return SAN_SIGNAL::NOSIG;
-
-      if((sig1==sig2)&&(sig2==sig3)&&(sig3==sig4)&&(sig4==sig5))
+      if((sig1 == sig2) && (sig2 == sig3) && (sig3 == sig4) && (sig4 == sig5))
          return sig1;
-     }
-
-   if((sig2!=EMPTY)&&(sig3!=EMPTY)&&(sig4!=EMPTY))
-     {
+   }
+   if((sig2 != EMPTY) && (sig3 != EMPTY) && (sig4 != EMPTY)) {
       if(
-         (sig1==SAN_SIGNAL::NOSIG)||
-         (sig2==SAN_SIGNAL::NOSIG)||
-         (sig3==SAN_SIGNAL::NOSIG)||
-         (sig4==SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) ||
+         (sig2 == SAN_SIGNAL::NOSIG) ||
+         (sig3 == SAN_SIGNAL::NOSIG) ||
+         (sig4 == SAN_SIGNAL::NOSIG)
       )
          return SAN_SIGNAL::NOSIG;
-
-      if((sig1!=sig2)||(sig2!=sig3)||(sig3!=sig4))
+      if((sig1 != sig2) || (sig2 != sig3) || (sig3 != sig4))
          return SAN_SIGNAL::NOSIG;
-
-      if((sig1==sig2)&&(sig2==sig3)&&(sig3==sig4))
+      if((sig1 == sig2) && (sig2 == sig3) && (sig3 == sig4))
          return sig1;
-     }
-
-   if((sig2!=EMPTY)&&(sig3!=EMPTY))
-     {
+   }
+   if((sig2 != EMPTY) && (sig3 != EMPTY)) {
       if(
-         (sig1==SAN_SIGNAL::NOSIG)||
-         (sig2==SAN_SIGNAL::NOSIG)||
-         (sig3==SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) ||
+         (sig2 == SAN_SIGNAL::NOSIG) ||
+         (sig3 == SAN_SIGNAL::NOSIG)
       )
          return SAN_SIGNAL::NOSIG;
-
-      if((sig1!=sig2)||(sig2!=sig3))
+      if((sig1 != sig2) || (sig2 != sig3))
          return SAN_SIGNAL::NOSIG;
-
-      if((sig1==sig2)&&(sig2==sig3))
+      if((sig1 == sig2) && (sig2 == sig3))
          return sig1;
-
-     }
-
-   if(sig2!=EMPTY)
-     {
+   }
+   if(sig2 != EMPTY) {
       if(
-         (sig1==SAN_SIGNAL::NOSIG)||
-         (sig2==SAN_SIGNAL::NOSIG)
+         (sig1 == SAN_SIGNAL::NOSIG) ||
+         (sig2 == SAN_SIGNAL::NOSIG)
       )
          return SAN_SIGNAL::NOSIG;
-
-      if(sig1!=sig2)
+      if(sig1 != sig2)
          return SAN_SIGNAL::NOSIG;
-
-      if(sig1==sig2)
+      if(sig1 == sig2)
          return sig1;
-     }
-
-   if(sig1==SAN_SIGNAL::NOSIG)
+   }
+   if(sig1 == SAN_SIGNAL::NOSIG)
       return SAN_SIGNAL::NOSIG;
    return sig1;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL        HSIG::simpleTrendSIG(SANTREND tr1, SANTREND tr2=EMPTY)
-  {
-
-   if(tr2!=EMPTY)
-     {
-      if((tr1==SANTREND::NOTREND)
-         ||(tr2==SANTREND::NOTREND)
+SAN_SIGNAL        HSIG::simpleTrendSIG(SANTREND tr1, SANTREND tr2 = EMPTY) {
+   if(tr2 != EMPTY) {
+      if((tr1 == SANTREND::NOTREND)
+            || (tr2 == SANTREND::NOTREND)
         )
          return SAN_SIGNAL::NOSIG;
-
-      if(tr1==tr2)
+      if(tr1 == tr2)
          return util.convTrendToSig(tr1);
-      if(tr1!=tr2)
+      if(tr1 != tr2)
          return SAN_SIGNAL::NOSIG;
-     }
-
-   if(tr1==SANTREND::NOTREND)
+   }
+   if(tr1 == SANTREND::NOTREND)
       return SAN_SIGNAL::NOSIG;
    return util.convTrendToSig(tr1);
-
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL        HSIG::trendSIG(SANTREND tr1, SANTREND tr2, SANTREND tr3, SANTREND tr4=EMPTY, SANTREND tr5=EMPTY, SANTREND tr6=EMPTY)
-  {
+SAN_SIGNAL        HSIG::trendSIG(SANTREND tr1, SANTREND tr2, SANTREND tr3, SANTREND tr4 = EMPTY, SANTREND tr5 = EMPTY, SANTREND tr6 = EMPTY) {
 //Print("[TRSIGIN] tr1: "+util.getSigString(tr1)+" tr2: "+util.getSigString(tr2)+" tr3: "+util.getSigString(tr3)+" tr4: "+util.getSigString(tr4)+" tr5: "+util.getSigString(tr5)+" tr6: "+util.getSigString(tr6));
-
-   if((tr1==SANTREND::NOTREND)
-      ||(tr2==SANTREND::NOTREND)
-      ||(tr3==SANTREND::NOTREND)
-      ||(tr4==SANTREND::NOTREND)
-      ||(tr5==SANTREND::NOTREND)
-      ||(tr6==SANTREND::NOTREND)
-     )
-     {
+   if((tr1 == SANTREND::NOTREND)
+         || (tr2 == SANTREND::NOTREND)
+         || (tr3 == SANTREND::NOTREND)
+         || (tr4 == SANTREND::NOTREND)
+         || (tr5 == SANTREND::NOTREND)
+         || (tr6 == SANTREND::NOTREND)
+     ) {
       return SAN_SIGNAL::NOSIG;
-     }
-
+   }
    if(
       (
-         ((tr1==SANTREND::FLAT)||(tr1==SANTREND::FLATUP)||(tr1==SANTREND::FLATDOWN))
-         &&((tr2==SANTREND::FLAT)||(tr2==SANTREND::FLATUP)||(tr2==SANTREND::FLATDOWN))
+         ((tr1 == SANTREND::FLAT) || (tr1 == SANTREND::FLATUP) || (tr1 == SANTREND::FLATDOWN))
+         && ((tr2 == SANTREND::FLAT) || (tr2 == SANTREND::FLATUP) || (tr2 == SANTREND::FLATDOWN))
       )
-      ||((tr3==SANTREND::FLAT)||(tr3==SANTREND::FLATUP)||(tr3==SANTREND::FLATDOWN))
-      ||((tr4==SANTREND::FLAT)||(tr4==SANTREND::FLATUP)||(tr4==SANTREND::FLATDOWN))
-      ||((tr5==SANTREND::FLAT)||(tr5==SANTREND::FLATUP)||(tr5==SANTREND::FLATDOWN))
-      ||((tr6==SANTREND::FLAT)||(tr6==SANTREND::FLATUP)||(tr6==SANTREND::FLATDOWN))
-   )
-     {
+      || ((tr3 == SANTREND::FLAT) || (tr3 == SANTREND::FLATUP) || (tr3 == SANTREND::FLATDOWN))
+      || ((tr4 == SANTREND::FLAT) || (tr4 == SANTREND::FLATUP) || (tr4 == SANTREND::FLATDOWN))
+      || ((tr5 == SANTREND::FLAT) || (tr5 == SANTREND::FLATUP) || (tr5 == SANTREND::FLATDOWN))
+      || ((tr6 == SANTREND::FLAT) || (tr6 == SANTREND::FLATUP) || (tr6 == SANTREND::FLATDOWN))
+   ) {
       return SAN_SIGNAL::SIDEWAYS;
-     }
-
+   }
    if(
-      ((tr6!=EMPTY)&&(tr6!=SANTREND::NOTREND)&&(tr1!=SANTREND::NOTREND)&&(tr2!=SANTREND::NOTREND))
-      &&(
-         (util.oppSignal(util.convTrendToSig(tr1),util.convTrendToSig(tr6)))
-         ||(util.oppSignal(util.convTrendToSig(tr2),util.convTrendToSig(tr6)))
+      ((tr6 != EMPTY) && (tr6 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
+      && (
+         (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr6)))
+         || (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr6)))
       )
-   )
-     {
+   ) {
       return SAN_SIGNAL::CLOSE;
-     }
-   else
-      if(
-         ((tr5!=EMPTY)&&(tr5!=SANTREND::NOTREND)&&(tr1!=SANTREND::NOTREND)&&(tr2!=SANTREND::NOTREND))
-         &&(
-            (util.oppSignal(util.convTrendToSig(tr1),util.convTrendToSig(tr5)))
-            ||(util.oppSignal(util.convTrendToSig(tr2),util.convTrendToSig(tr5)))
-         )
+   } else if(
+      ((tr5 != EMPTY) && (tr5 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
+      && (
+         (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr5)))
+         || (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr5)))
       )
-        {
-         return SAN_SIGNAL::CLOSE;
-        }
-      else
-         if(
-            ((tr4!=EMPTY)&&(tr4!=SANTREND::NOTREND)&&(tr1!=SANTREND::NOTREND)&&(tr2!=SANTREND::NOTREND))
-            &&(
-               (util.oppSignal(util.convTrendToSig(tr1),util.convTrendToSig(tr4)))
-               ||(util.oppSignal(util.convTrendToSig(tr2),util.convTrendToSig(tr4)))
-            )
-         )
-           {
-            return SAN_SIGNAL::CLOSE;
-           }
-         else
-            if(
-               ((tr3!=SANTREND::NOTREND)&&(tr1!=SANTREND::NOTREND)&&(tr2!=SANTREND::NOTREND))
-               &&(
-                  (util.oppSignal(util.convTrendToSig(tr1),util.convTrendToSig(tr3)))
-                  &&(util.oppSignal(util.convTrendToSig(tr2),util.convTrendToSig(tr3)))
-               )
-            )
-              {
-               return SAN_SIGNAL::CLOSE;
-              }
-            else
-               if(
-                  ((tr1!=SANTREND::NOTREND)&&(tr2!=SANTREND::NOTREND))
-                  &&(util.oppSignal(util.convTrendToSig(tr1),util.convTrendToSig(tr2)))
-               )
-                 {
-                  return SAN_SIGNAL::CLOSE;
-                 }
-
-   if((tr1!=SANTREND::NOTREND)
-      &&(
-         ((tr6!=EMPTY)&&(tr5!=EMPTY)&&(tr4!=EMPTY)&&(tr1==tr2)&&(tr2==tr3)&&(tr3==tr4)&&(tr4==tr5)&&(tr5==tr6))
-         ||((tr6==EMPTY)&&(tr5!=EMPTY)&&(tr4!=EMPTY)&&(tr1==tr2)&&(tr2==tr3)&&(tr3==tr4)&&(tr4==tr5))
-         ||((tr5==EMPTY)&&(tr4!=EMPTY)&&(tr1==tr2)&&(tr2==tr3)&&(tr3==tr4))
-         ||((tr5==EMPTY)&&(tr4==EMPTY)&&(tr1==tr2)&&(tr2==tr3))
+   ) {
+      return SAN_SIGNAL::CLOSE;
+   } else if(
+      ((tr4 != EMPTY) && (tr4 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
+      && (
+         (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr4)))
+         || (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr4)))
       )
-     )
-     {
+   ) {
+      return SAN_SIGNAL::CLOSE;
+   } else if(
+      ((tr3 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
+      && (
+         (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr3)))
+         && (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr3)))
+      )
+   ) {
+      return SAN_SIGNAL::CLOSE;
+   } else if(
+      ((tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
+      && (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr2)))
+   ) {
+      return SAN_SIGNAL::CLOSE;
+   }
+   if((tr1 != SANTREND::NOTREND)
+         && (
+            ((tr6 != EMPTY) && (tr5 != EMPTY) && (tr4 != EMPTY) && (tr1 == tr2) && (tr2 == tr3) && (tr3 == tr4) && (tr4 == tr5) && (tr5 == tr6))
+            || ((tr6 == EMPTY) && (tr5 != EMPTY) && (tr4 != EMPTY) && (tr1 == tr2) && (tr2 == tr3) && (tr3 == tr4) && (tr4 == tr5))
+            || ((tr5 == EMPTY) && (tr4 != EMPTY) && (tr1 == tr2) && (tr2 == tr3) && (tr3 == tr4))
+            || ((tr5 == EMPTY) && (tr4 == EMPTY) && (tr1 == tr2) && (tr2 == tr3))
+         )
+     ) {
       return util.convTrendToSig(tr1);
-     }
+   }
 //else
 //  {
 //   return SAN_SIGNAL::CLOSE;
 //  }
-
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| When the signal  and its trend match.
@@ -1686,35 +1357,26 @@ SAN_SIGNAL        HSIG::trendSIG(SANTREND tr1, SANTREND tr2, SANTREND tr3, SANTR
 SAN_SIGNAL        HSIG::sigTrSIG(
    const SAN_SIGNAL sig,
    const SANTREND tr
-)
-  {
-   bool notSidewaySigBool = ((sig!=SAN_SIGNAL::NOSIG)&&(sig!=SAN_SIGNAL::SIDEWAYS));
-
-   bool notFlatTrendBool = ((tr!=SANTREND::NOTREND)
-                            &&(tr!=SANTREND::FLAT)
-                            &&(tr!=SANTREND::FLATUP)
-                            &&(tr!=SANTREND::FLATDOWN)
-                            &&(util.convTrendToSig(tr)!=SAN_SIGNAL::SIDEWAYS)
+) {
+   bool notSidewaySigBool = ((sig != SAN_SIGNAL::NOSIG) && (sig != SAN_SIGNAL::SIDEWAYS));
+   bool notFlatTrendBool = ((tr != SANTREND::NOTREND)
+                            && (tr != SANTREND::FLAT)
+                            && (tr != SANTREND::FLATUP)
+                            && (tr != SANTREND::FLATDOWN)
+                            && (util.convTrendToSig(tr) != SAN_SIGNAL::SIDEWAYS)
                            );
-   bool notCloseTrendBool = (!util.oppSigTrend(sig,tr));
-
-   if((tr==SANTREND::FLAT)||(tr==SANTREND::FLATUP)||(tr==SANTREND::FLATDOWN)||(sig==SAN_SIGNAL::SIDEWAYS))
-     {
+   bool notCloseTrendBool = (!util.oppSigTrend(sig, tr));
+   if((tr == SANTREND::FLAT) || (tr == SANTREND::FLATUP) || (tr == SANTREND::FLATDOWN) || (sig == SAN_SIGNAL::SIDEWAYS)) {
       return SAN_SIGNAL::SIDEWAYS;
-     }
-
-   if(util.oppSigTrend(sig,tr))
-     {
+   }
+   if(util.oppSigTrend(sig, tr)) {
       return SAN_SIGNAL::CLOSE;
-     }
-
-   if(notSidewaySigBool && notFlatTrendBool && notCloseTrendBool && (sig==util.convTrendToSig(tr)))
-     {
+   }
+   if(notSidewaySigBool && notFlatTrendBool && notCloseTrendBool && (sig == util.convTrendToSig(tr))) {
       return sig;
-     }
-
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1723,100 +1385,78 @@ SAN_SIGNAL        HSIG::imaTrendSIG(
    const SAN_SIGNAL baseMASig,
    const SANTREND fastTrend,
    const SANTREND slowTrend
-)
-  {
-
-   bool baseSigBool = ((baseMASig!=SAN_SIGNAL::NOSIG)&&(baseMASig!=SAN_SIGNAL::SIDEWAYS));
-
-   bool baseTrendBool = ((fastTrend!=SANTREND::NOTREND)
-                         &&(fastTrend!=SANTREND::FLAT)
-                         &&(fastTrend!=SANTREND::FLATUP)
-                         &&(fastTrend!=SANTREND::FLATDOWN)
-                         &&(util.convTrendToSig(fastTrend)!=SAN_SIGNAL::SIDEWAYS)
+) {
+   bool baseSigBool = ((baseMASig != SAN_SIGNAL::NOSIG) && (baseMASig != SAN_SIGNAL::SIDEWAYS));
+   bool baseTrendBool = ((fastTrend != SANTREND::NOTREND)
+                         && (fastTrend != SANTREND::FLAT)
+                         && (fastTrend != SANTREND::FLATUP)
+                         && (fastTrend != SANTREND::FLATDOWN)
+                         && (util.convTrendToSig(fastTrend) != SAN_SIGNAL::SIDEWAYS)
                         );
-   bool notCloseTrendBool = ((slowTrend!=SANTREND::NOTREND)
-                             &&(slowTrend!=SANTREND::FLAT)
-                             &&(slowTrend!=SANTREND::FLATUP)
-                             &&(slowTrend!=SANTREND::FLATDOWN)
-                             &&(util.convTrendToSig(slowTrend)!=SAN_SIGNAL::SIDEWAYS)
+   bool notCloseTrendBool = ((slowTrend != SANTREND::NOTREND)
+                             && (slowTrend != SANTREND::FLAT)
+                             && (slowTrend != SANTREND::FLATUP)
+                             && (slowTrend != SANTREND::FLATDOWN)
+                             && (util.convTrendToSig(slowTrend) != SAN_SIGNAL::SIDEWAYS)
                             );
-
-
-   if((fastTrend==SANTREND::FLAT)||(fastTrend==SANTREND::FLATUP)||(fastTrend==SANTREND::FLATDOWN)||(baseMASig==SAN_SIGNAL::SIDEWAYS))
-     {
+   if((fastTrend == SANTREND::FLAT) || (fastTrend == SANTREND::FLATUP) || (fastTrend == SANTREND::FLATDOWN) || (baseMASig == SAN_SIGNAL::SIDEWAYS)) {
       return SAN_SIGNAL::SIDEWAYS;
-     }
-
-   if(util.oppSignal(baseMASig,util.convTrendToSig(fastTrend)))
-     {
+   }
+   if(util.oppSignal(baseMASig, util.convTrendToSig(fastTrend))) {
       return SAN_SIGNAL::CLOSE;
-     }
-
+   }
    if(baseSigBool
-      &&  baseTrendBool
-      &&  notCloseTrendBool
-      && (baseMASig==util.convTrendToSig(fastTrend))
-      && (baseMASig==util.convTrendToSig(slowTrend))
-     )
-     {
+         &&  baseTrendBool
+         &&  notCloseTrendBool
+         && (baseMASig == util.convTrendToSig(fastTrend))
+         && (baseMASig == util.convTrendToSig(slowTrend))
+     ) {
       return baseMASig;
-     }
-
+   }
    if(!baseSigBool
-      ||!baseTrendBool
-      ||!notCloseTrendBool
-     )
-     {
+         || !baseTrendBool
+         || !notCloseTrendBool
+     ) {
       return SAN_SIGNAL::NOSIG;
-     }
-
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 SAN_SIGNAL        HSIG::imaTrend(SAN_SIGNAL imaSIG1, SAN_SIGNAL imaSIG2,
                                  SANTREND tr1, SANTREND tr2, SANTREND tr3,
-                                 SAN_SIGNAL imaSIG3=EMPTY, SANTREND tr4=EMPTY,
-                                 SAN_SIGNAL imaSIG4=EMPTY, SANTREND tr5=EMPTY)
-  {
-   SAN_SIGNAL sig1 = imaTrendSIG(imaSIG1,tr1,tr2);
-   SAN_SIGNAL sig2 = imaTrendSIG(imaSIG2,tr2,tr3);
-   SAN_SIGNAL sig3 = ((imaSIG3!=EMPTY)&&(tr4!=EMPTY))?imaTrendSIG(imaSIG3,tr3,tr4):SAN_SIGNAL::NOSIG;
-   SAN_SIGNAL sig4 = ((imaSIG4!=EMPTY)&&(tr5!=EMPTY))?imaTrendSIG(imaSIG4,tr4,tr5):SAN_SIGNAL::NOSIG;
-
-   SAN_SIGNAL sigTrend = ((tr4!=EMPTY)&&(tr5!=EMPTY))?trendSIG(tr1,tr2,tr3,tr4,tr5)
-                         :(((tr4!=EMPTY)&&(tr5==EMPTY))?trendSIG(tr1,tr2,tr3,tr4):(((tr4==EMPTY)&&(tr5==EMPTY))?trendSIG(tr1,tr2,tr3):SAN_SIGNAL::NOSIG));
-
+                                 SAN_SIGNAL imaSIG3 = EMPTY, SANTREND tr4 = EMPTY,
+                                 SAN_SIGNAL imaSIG4 = EMPTY, SANTREND tr5 = EMPTY) {
+   SAN_SIGNAL sig1 = imaTrendSIG(imaSIG1, tr1, tr2);
+   SAN_SIGNAL sig2 = imaTrendSIG(imaSIG2, tr2, tr3);
+   SAN_SIGNAL sig3 = ((imaSIG3 != EMPTY) && (tr4 != EMPTY)) ? imaTrendSIG(imaSIG3, tr3, tr4) : SAN_SIGNAL::NOSIG;
+   SAN_SIGNAL sig4 = ((imaSIG4 != EMPTY) && (tr5 != EMPTY)) ? imaTrendSIG(imaSIG4, tr4, tr5) : SAN_SIGNAL::NOSIG;
+   SAN_SIGNAL sigTrend = ((tr4 != EMPTY) && (tr5 != EMPTY)) ? trendSIG(tr1, tr2, tr3, tr4, tr5)
+                         : (((tr4 != EMPTY) && (tr5 == EMPTY)) ? trendSIG(tr1, tr2, tr3, tr4) : (((tr4 == EMPTY) && (tr5 == EMPTY)) ? trendSIG(tr1, tr2, tr3) : SAN_SIGNAL::NOSIG));
 //      Print("[SIGIN] sig1: "+util.getSigString(sig1)+" sig2: "+util.getSigString(sig2)+" sig3: "+util.getSigString(sig3)+" sig4: "+util.getSigString(sig4)+" sigTrend: "+util.getSigString(sigTrend));
-
-   if(util.oppSignal(sig1,sig2)
-      ||util.oppSignal(sig1,sigTrend)
-      ||util.oppSignal(sig2,sigTrend)
-      ||(sig2==SAN_SIGNAL::CLOSE)
-     )
-     {
+   if(util.oppSignal(sig1, sig2)
+         || util.oppSignal(sig1, sigTrend)
+         || util.oppSignal(sig2, sigTrend)
+         || (sig2 == SAN_SIGNAL::CLOSE)
+     ) {
       return SAN_SIGNAL::CLOSE;
-     }
-
-   if((sigTrend==SAN_SIGNAL::SIDEWAYS)
-      ||(sig1==SAN_SIGNAL::SIDEWAYS)
-     )
-     {
+   }
+   if((sigTrend == SAN_SIGNAL::SIDEWAYS)
+         || (sig1 == SAN_SIGNAL::SIDEWAYS)
+     ) {
       return SAN_SIGNAL::SIDEWAYS;
-     }
+   }
    if(
-      ((imaSIG3!=EMPTY)&&(imaSIG4!=EMPTY)&&(sig1!=SAN_SIGNAL::NOSIG)&&(sig1==sigTrend)&&(sig1==sig2)&&(sig2==sig3)&&(sig3==sig4))
-      ||((imaSIG4==EMPTY)&&(imaSIG3!=EMPTY)&&(sig1!=SAN_SIGNAL::NOSIG)&&(sig1==sigTrend)&&(sig1==sig2)&&(sig2==sig3))
-      ||((imaSIG4==EMPTY)&&(imaSIG3==EMPTY)&&(sig1!=SAN_SIGNAL::NOSIG)&&(sig1==sigTrend)&&(sig1==sig2))
-   )
-     {
+      ((imaSIG3 != EMPTY) && (imaSIG4 != EMPTY) && (sig1 != SAN_SIGNAL::NOSIG) && (sig1 == sigTrend) && (sig1 == sig2) && (sig2 == sig3) && (sig3 == sig4))
+      || ((imaSIG4 == EMPTY) && (imaSIG3 != EMPTY) && (sig1 != SAN_SIGNAL::NOSIG) && (sig1 == sigTrend) && (sig1 == sig2) && (sig2 == sig3))
+      || ((imaSIG4 == EMPTY) && (imaSIG3 == EMPTY) && (sig1 != SAN_SIGNAL::NOSIG) && (sig1 == sigTrend) && (sig1 == sig2))
+   ) {
       return sig1;
-     }
-
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -1825,33 +1465,26 @@ SAN_SIGNAL        HSIG::imaTrend(SAN_SIGNAL imaSIG1, SAN_SIGNAL imaSIG2,
 SAN_SIGNAL        HSIG::fSigSlowTrendSIG(
    const SAN_SIGNAL baseSig,
    const SANTREND baseTrend
-)
-  {
-   bool baseSigBool = ((baseSig!=SAN_SIGNAL::NOSIG)&&(baseSig!=SAN_SIGNAL::SIDEWAYS));
-   bool baseTrendBool = ((baseTrend!=SANTREND::NOTREND)
-                         &&(baseTrend!=SANTREND::FLAT)
-                         &&(baseTrend!=SANTREND::FLATUP)
-                         &&(baseTrend!=SANTREND::FLATDOWN)
-                         &&(util.convTrendToSig(baseTrend)!=SAN_SIGNAL::SIDEWAYS)
+) {
+   bool baseSigBool = ((baseSig != SAN_SIGNAL::NOSIG) && (baseSig != SAN_SIGNAL::SIDEWAYS));
+   bool baseTrendBool = ((baseTrend != SANTREND::NOTREND)
+                         && (baseTrend != SANTREND::FLAT)
+                         && (baseTrend != SANTREND::FLATUP)
+                         && (baseTrend != SANTREND::FLATDOWN)
+                         && (util.convTrendToSig(baseTrend) != SAN_SIGNAL::SIDEWAYS)
                         );
-   if(baseSigBool && baseTrendBool)
-     {
-      if(baseSig==util.convTrendToSig(baseTrend))
-        {
+   if(baseSigBool && baseTrendBool) {
+      if(baseSig == util.convTrendToSig(baseTrend)) {
          return baseSig;
-        }
-      else
-         if(
-            ((baseTrend==SANTREND::FLAT)||(baseTrend==SANTREND::FLATUP)||(baseTrend==SANTREND::FLATDOWN))
-            ||(util.oppSigTrend(baseSig,baseTrend))
-         )
-           {
-            return SAN_SIGNAL::CLOSE;
-           }
-
-     }
+      } else if(
+         ((baseTrend == SANTREND::FLAT) || (baseTrend == SANTREND::FLATUP) || (baseTrend == SANTREND::FLATDOWN))
+         || (util.oppSigTrend(baseSig, baseTrend))
+      ) {
+         return SAN_SIGNAL::CLOSE;
+      }
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -1862,31 +1495,24 @@ SAN_SIGNAL        HSIG::dualFastSigSlowTrendSIG(
    const SANTREND baseTrend,
    const SAN_SIGNAL fastSig,
    const SANTREND fastTrend
-)
-  {
-   SAN_SIGNAL mainSIG = fSigSlowTrendSIG(baseSig,baseTrend);
-   SAN_SIGNAL closeSIG = fSigSlowTrendSIG(fastSig,fastTrend);
-
+) {
+   SAN_SIGNAL mainSIG = fSigSlowTrendSIG(baseSig, baseTrend);
+   SAN_SIGNAL closeSIG = fSigSlowTrendSIG(fastSig, fastTrend);
    if(
-      (mainSIG!=SAN_SIGNAL::NOSIG)
-      &&(mainSIG!=SAN_SIGNAL::SIDEWAYS)
-      &&(mainSIG==closeSIG)
-   )
-     {
+      (mainSIG != SAN_SIGNAL::NOSIG)
+      && (mainSIG != SAN_SIGNAL::SIDEWAYS)
+      && (mainSIG == closeSIG)
+   ) {
       return mainSIG;
-     }
-   else
-      if(
-         (mainSIG!=SAN_SIGNAL::NOSIG)
-         &&(mainSIG!=SAN_SIGNAL::SIDEWAYS)
-         &&util.oppSignal(mainSIG,closeSIG)
-      )
-        {
-         return SAN_SIGNAL::CLOSE;
-        }
-
+   } else if(
+      (mainSIG != SAN_SIGNAL::NOSIG)
+      && (mainSIG != SAN_SIGNAL::SIDEWAYS)
+      && util.oppSignal(mainSIG, closeSIG)
+   ) {
+      return SAN_SIGNAL::CLOSE;
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -1895,28 +1521,19 @@ SAN_SIGNAL           HSIG::fastImaSlowTrendSIG(
    const SANTREND closeTrend,
    const SANTREND fastTrend,
    const SANTREND slowTrend,
-   const SANTREND vSlowTrend=SANTREND::NOTREND
-)
-  {
-   if((imaSig!=SAN_SIGNAL::NOSIG)&&(imaSig!=SAN_SIGNAL::SIDEWAYS))
-     {
-      if((util.oppSignal(imaSig,util.convTrendToSig(closeTrend)))||(util.oppSignal(imaSig,util.convTrendToSig(fastTrend))))
-        {
+   const SANTREND vSlowTrend = SANTREND::NOTREND
+) {
+   if((imaSig != SAN_SIGNAL::NOSIG) && (imaSig != SAN_SIGNAL::SIDEWAYS)) {
+      if((util.oppSignal(imaSig, util.convTrendToSig(closeTrend))) || (util.oppSignal(imaSig, util.convTrendToSig(fastTrend)))) {
          return SAN_SIGNAL::CLOSE;
-        }
-      else
-         if((vSlowTrend!=SANTREND::NOTREND)&&(imaSig==util.convTrendToSig(fastTrend))&&(imaSig==util.convTrendToSig(slowTrend))&&(imaSig==util.convTrendToSig(vSlowTrend)))
-           {
-            return imaSig;
-           }
-         else
-            if((vSlowTrend==SANTREND::NOTREND)&&(imaSig==util.convTrendToSig(fastTrend))&&(imaSig==util.convTrendToSig(slowTrend)))
-              {
-               return imaSig;
-              }
-     }
+      } else if((vSlowTrend != SANTREND::NOTREND) && (imaSig == util.convTrendToSig(fastTrend)) && (imaSig == util.convTrendToSig(slowTrend)) && (imaSig == util.convTrendToSig(vSlowTrend))) {
+         return imaSig;
+      } else if((vSlowTrend == SANTREND::NOTREND) && (imaSig == util.convTrendToSig(fastTrend)) && (imaSig == util.convTrendToSig(slowTrend))) {
+         return imaSig;
+      }
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1926,9 +1543,8 @@ SAN_SIGNAL          HSIG::trendVolVarSIG(
    const SANTREND fastTrend,
    const SANTREND mediumTrend,
    const SANTREND slowTrend,
-   const SANTREND vSlowTrend=SANTREND::NOTREND
-)
-  {
+   const SANTREND vSlowTrend = SANTREND::NOTREND
+) {
    const SAN_SIGNAL  BUY = SAN_SIGNAL::BUY;
    const SAN_SIGNAL SELL = SAN_SIGNAL::SELL;
    const SANTREND UP = SANTREND::UP;
@@ -1936,88 +1552,60 @@ SAN_SIGNAL          HSIG::trendVolVarSIG(
    const SANTREND FLAT = SANTREND::FLAT;
    const SANTREND FLATUP = SANTREND::FLATUP;
    const SANTREND FLATDOWN = SANTREND::FLATDOWN;
-
-   bool validSlowTrendBool = (tradeVolVarSIG!=SAN_SIGNAL::NOSIG)&&(fastTrend!=SANTREND::NOTREND)&&(mediumTrend!=SANTREND::NOTREND)&&(slowTrend!=SANTREND::NOTREND)&&(vSlowTrend!=SANTREND::NOTREND);
-   bool validTrendBool = (tradeVolVarSIG!=SAN_SIGNAL::NOSIG)&&(fastTrend!=SANTREND::NOTREND)&&(mediumTrend!=SANTREND::NOTREND)&&(slowTrend!=SANTREND::NOTREND);
-
-
-   if((tradeVolVarSIG==SAN_SIGNAL::NOTRADE)||(tradeVolVarSIG==SAN_SIGNAL::SIDEWAYS))
-     {
+   bool validSlowTrendBool = (tradeVolVarSIG != SAN_SIGNAL::NOSIG) && (fastTrend != SANTREND::NOTREND) && (mediumTrend != SANTREND::NOTREND) && (slowTrend != SANTREND::NOTREND) && (vSlowTrend != SANTREND::NOTREND);
+   bool validTrendBool = (tradeVolVarSIG != SAN_SIGNAL::NOSIG) && (fastTrend != SANTREND::NOTREND) && (mediumTrend != SANTREND::NOTREND) && (slowTrend != SANTREND::NOTREND);
+   if((tradeVolVarSIG == SAN_SIGNAL::NOTRADE) || (tradeVolVarSIG == SAN_SIGNAL::SIDEWAYS)) {
       return SAN_SIGNAL::CLOSE;
-     }
-   else
-      if(validSlowTrendBool)
-        {
-         if((tradeVolVarSIG==BUY)&&(fastTrend==UP)&&(mediumTrend==UP)&&(slowTrend==UP)&&(vSlowTrend==UP))
-           {
-            return tradeVolVarSIG;
-           }
-         if((tradeVolVarSIG==SELL)&&(fastTrend==DOWN)&&(mediumTrend==DOWN)&&(slowTrend==DOWN)&&(vSlowTrend==DOWN))
-           {
-            return tradeVolVarSIG;
-           }
-         if(
-            ((slowTrend==FLAT)||(slowTrend==FLATUP)||(slowTrend==FLATDOWN))
-            ||((vSlowTrend==FLAT)||(vSlowTrend==FLATUP)||(vSlowTrend==FLATDOWN))
-         )
-           {
-            return SAN_SIGNAL::CLOSE;
-           }
-        }
-      else
-         if(validTrendBool)
-           {
-            if((tradeVolVarSIG==BUY)&&(fastTrend==UP)&&(mediumTrend==UP)&&(slowTrend==UP))
-              {
-               return tradeVolVarSIG;
-              }
-            if((tradeVolVarSIG==SELL)&&(fastTrend==DOWN)&&(mediumTrend==DOWN)&&(slowTrend==DOWN))
-              {
-               return tradeVolVarSIG;
-              }
-            if((slowTrend==FLAT)||(slowTrend==FLATUP)||(slowTrend==FLATDOWN))
-              {
-               return SAN_SIGNAL::CLOSE;
-              }
-           }
+   } else if(validSlowTrendBool) {
+      if((tradeVolVarSIG == BUY) && (fastTrend == UP) && (mediumTrend == UP) && (slowTrend == UP) && (vSlowTrend == UP)) {
+         return tradeVolVarSIG;
+      }
+      if((tradeVolVarSIG == SELL) && (fastTrend == DOWN) && (mediumTrend == DOWN) && (slowTrend == DOWN) && (vSlowTrend == DOWN)) {
+         return tradeVolVarSIG;
+      }
+      if(
+         ((slowTrend == FLAT) || (slowTrend == FLATUP) || (slowTrend == FLATDOWN))
+         || ((vSlowTrend == FLAT) || (vSlowTrend == FLATUP) || (vSlowTrend == FLATDOWN))
+      ) {
+         return SAN_SIGNAL::CLOSE;
+      }
+   } else if(validTrendBool) {
+      if((tradeVolVarSIG == BUY) && (fastTrend == UP) && (mediumTrend == UP) && (slowTrend == UP)) {
+         return tradeVolVarSIG;
+      }
+      if((tradeVolVarSIG == SELL) && (fastTrend == DOWN) && (mediumTrend == DOWN) && (slowTrend == DOWN)) {
+         return tradeVolVarSIG;
+      }
+      if((slowTrend == FLAT) || (slowTrend == FLATUP) || (slowTrend == FLATDOWN)) {
+         return SAN_SIGNAL::CLOSE;
+      }
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType=0)
-  {
-
+SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType = 0) {
    double slopeRange = 0.0;
-
-   if(signalType==0)
-     {
-      slopeRange = (BASESLOPE_FAST!=NULL)?BASESLOPE_FAST:0.6;
-     }
-   else
-      if(signalType==1)
-        {
-         slopeRange = (BASESLOPE_MEDIUM!=NULL)?BASESLOPE_MEDIUM:0.4;
-        }
-      else
-         if(signalType==2)
-           {
-            slopeRange = (BASESLOPE_SLOW!=NULL)?BASESLOPE_SLOW:0.2;
-           }
-
+   if(signalType == 0) {
+      slopeRange = (BASESLOPE_FAST != NULL) ? BASESLOPE_FAST : 0.6;
+   } else if(signalType == 1) {
+      slopeRange = (BASESLOPE_MEDIUM != NULL) ? BASESLOPE_MEDIUM : 0.4;
+   } else if(signalType == 2) {
+      slopeRange = (BASESLOPE_SLOW != NULL) ? BASESLOPE_SLOW : 0.15;
+   }
 //if(signalType==2)Print("SAlope rane: "+slopeRange+" Slope vale: "+signalDt.val1);
 // comment
-   if((signalDt.val1>=(-1*slopeRange))&&(signalDt.val1<=slopeRange))
+   if((signalDt.val1 >= (-1 * slopeRange)) && (signalDt.val1 <= slopeRange))
       return SAN_SIGNAL::CLOSE;
-   if(signalDt.val1>slopeRange)
+   if(signalDt.val1 > slopeRange)
       return SAN_SIGNAL::BUY;
-   if(signalDt.val1<(-1*slopeRange))
+   if(signalDt.val1 < (-1 * slopeRange))
       return SAN_SIGNAL::SELL;
-
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 ////+------------------------------------------------------------------+
 ////|                                                                  |
@@ -2068,10 +1656,8 @@ SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType=0)
 SAN_SIGNAL HSIG::cTradeSIG(
    const SANSIGNALS &ss,
    SanUtils& util,
-   const uint SHIFT=1
-)
-  {
-
+   const uint SHIFT = 1
+) {
 // Use three parameters for evaluating the trade signal.
 // CP StdDev slope.
 // obvCP slope. Currently not used and under observation and consideration
@@ -2080,7 +1666,6 @@ SAN_SIGNAL HSIG::cTradeSIG(
 // Note: Slope30 is calculated but not used. Ideally it is best left to
 // to be paired separately with another base signal and then compared to trade signal
 // cSIG makes use of slope30 signal
-
 //const double STDSLOPE = -0.6;
 //const double OBVSLOPE = 3000;
 //const double SLOPERATIO = 0.5;
@@ -2088,121 +1673,88 @@ SAN_SIGNAL HSIG::cTradeSIG(
 //const double CLUSTERRANGEPLUS = (1+0.03);
 //const double CLUSTERRANGEMINUS = (1-0.03);
 //const int CLUSTERRANGEFLAT = 1;
-
    double pipValue = ut.getPipValue(_Symbol);
    SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
-
 //   SAN_SIGNAL tradePosition = util.getCurrTradePosition();
-
-   double candleVolDP=NormalizeDouble(ss.candleVolData.val1,3);
-   double atrVolDP=NormalizeDouble(ss.atrVolData.val1,3);
-   double num_candleVolDP=EMPTY_VALUE;
-   double denom_atrVolDP=EMPTY_VALUE;
-
-   if((int)ss.candleVolData.val1==(int)ss.atrVolData.val1)
-     {
+   double candleVolDP = NormalizeDouble(ss.candleVolData.val1, 3);
+   double atrVolDP = NormalizeDouble(ss.atrVolData.val1, 3);
+   double num_candleVolDP = EMPTY_VALUE;
+   double denom_atrVolDP = EMPTY_VALUE;
+   if((int)ss.candleVolData.val1 == (int)ss.atrVolData.val1) {
       num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
       denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
-     }
-   else
-      if((int)ss.candleVolData.val1<(int)ss.atrVolData.val1)
-        {
-         num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
-         denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.candleVolData.val1);
-        }
-      else
-         if((int)ss.candleVolData.val1>(int)ss.atrVolData.val1)
-           {
-            num_candleVolDP = (ss.candleVolData.val1 - (int)ss.atrVolData.val1);
-            denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
-           }
-
-   double candleAtrDPRatio =  NormalizeDouble(num_candleVolDP/denom_atrVolDP,3);
-
+   } else if((int)ss.candleVolData.val1 < (int)ss.atrVolData.val1) {
+      num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
+      denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.candleVolData.val1);
+   } else if((int)ss.candleVolData.val1 > (int)ss.atrVolData.val1) {
+      num_candleVolDP = (ss.candleVolData.val1 - (int)ss.atrVolData.val1);
+      denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
+   }
+   double candleAtrDPRatio =  NormalizeDouble(num_candleVolDP / denom_atrVolDP, 3);
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
    double stdOPSlope = ss.stdOPSlope.val1;
-   double obvCPSlope = ss.obvCPSlope.val1*pipValue; // Normalize obvCPSlope
-
+   double obvCPSlope = ss.obvCPSlope.val1 * pipValue; // Normalize obvCPSlope
    double rFM =  ss.clusterData.matrixD[0];
    double rMS =  ss.clusterData.matrixD[1];
    double rFS =  ss.clusterData.matrixD[2];
    double fMSR = ss.slopeRatioData.matrixD[0];
-   double fMSWR= ss.slopeRatioData.matrixD[1];
+   double fMSWR = ss.slopeRatioData.matrixD[1];
    double fMR = ss.slopeRatioData.matrixD[2];
    double mSR = ss.slopeRatioData.matrixD[3];
    double mSWR = ss.slopeRatioData.matrixD[4];
    SAN_SIGNAL atrSIG = ss.atrSIG;
-
-
-   bool strictFlatClusterBool = ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT));
-
+   bool strictFlatClusterBool = ((rFM == CLUSTERRANGEFLAT) && (rMS == CLUSTERRANGEFLAT) && (rFS == CLUSTERRANGEFLAT));
    bool flatClusterBool = (
-                             ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT))||
-                             ((rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))||
-                             ((rFM==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))
+                             ((rFM == CLUSTERRANGEFLAT) && (rMS == CLUSTERRANGEFLAT)) ||
+                             ((rMS == CLUSTERRANGEFLAT) && (rFS == CLUSTERRANGEFLAT)) ||
+                             ((rFM == CLUSTERRANGEFLAT) && (rFS == CLUSTERRANGEFLAT))
                           );
-
    bool rangeFlatClusterBool = (
-                                  ((rFM>0)&&((rFM>=CLUSTERRANGEMINUS)&&(rFM<=CLUSTERRANGEPLUS)))
-                                  &&((rMS>0)&&((rMS>=CLUSTERRANGEMINUS)&&(rMS<=CLUSTERRANGEPLUS)))
-                                  &&((rFS>0)&&((rFS>=CLUSTERRANGEMINUS)&&(rFS<=CLUSTERRANGEPLUS)))
+                                  ((rFM > 0) && ((rFM >= CLUSTERRANGEMINUS) && (rFM <= CLUSTERRANGEPLUS)))
+                                  && ((rMS > 0) && ((rMS >= CLUSTERRANGEMINUS) && (rMS <= CLUSTERRANGEPLUS)))
+                                  && ((rFS > 0) && ((rFS >= CLUSTERRANGEMINUS) && (rFS <= CLUSTERRANGEPLUS)))
                                );
-
-   bool flatSlope30Bool = (slopeSIG(ss.imaSlope30Data,0)==SAN_SIGNAL::SIDEWAYS); //(fabs(slopeIMA30)<=0.4);
-
-
-
-   bool closeSlopeRatioBool = (fMSWR<SLOPERATIO);
+   bool flatSlope30Bool = (slopeSIG(ss.imaSlope30Data, 0) == SAN_SIGNAL::SIDEWAYS); //(fabs(slopeIMA30)<=0.4);
+   bool closeSlopeRatioBool = (fMSWR < SLOPERATIO);
 //   bool closeSlopeRatioBool =  getMktCloseOnSlopeRatio();
-   bool closeClusterBool = (((rFM<0)&&(rMS<0))||((rMS<0)&&(rFS<0))||((rFM<0)&&(rFS<0)));
-   bool closeTrendStdCP = (stdCPSlope<=STDSLOPE);
-   bool closeSlope30Bool = (slopeSIG(ss.imaSlope30Data,0)==SAN_SIGNAL::CLOSE); //(fabs(slopeIMA30)<=0.3);
-   bool closeOBVCPBool = (fabs(obvCPSlope)<=OBVSLOPE);
-
-
-   bool flatBool = (strictFlatClusterBool||rangeFlatClusterBool||flatClusterBool||flatSlope30Bool);
-
+   bool closeClusterBool = (((rFM < 0) && (rMS < 0)) || ((rMS < 0) && (rFS < 0)) || ((rFM < 0) && (rFS < 0)));
+   bool closeTrendStdCP = (stdCPSlope <= STDSLOPE);
+   bool closeSlope30Bool = (slopeSIG(ss.imaSlope30Data, 0) == SAN_SIGNAL::CLOSE); //(fabs(slopeIMA30)<=0.3);
+   bool closeOBVCPBool = (fabs(obvCPSlope) <= OBVSLOPE);
+   bool flatBool = (strictFlatClusterBool || rangeFlatClusterBool || flatClusterBool || flatSlope30Bool);
 //   bool trendStdCP = ((stdCPSlope>STDSLOPE));
-   bool trendStdCP = ((stdCPSlope>STDSLOPE)&&(stdCPSlope>=stdOPSlope));
-
-   bool trendBuySlope30 = (slopeSIG(ss.imaSlope30Data,0)==SAN_SIGNAL::BUY); //(slopeIMA30>0.4); // slope30 is not used for Trade Signal
-   bool trendSellSlope30 = (slopeSIG(ss.imaSlope30Data,0)==SAN_SIGNAL::SELL);//(slopeIMA30<-0.4);
-
+   bool trendStdCP = ((stdCPSlope > STDSLOPE) && (stdCPSlope >= stdOPSlope));
+   bool trendBuySlope30 = (slopeSIG(ss.imaSlope30Data, 0) == SAN_SIGNAL::BUY); //(slopeIMA30>0.4); // slope30 is not used for Trade Signal
+   bool trendSellSlope30 = (slopeSIG(ss.imaSlope30Data, 0) == SAN_SIGNAL::SELL); //(slopeIMA30<-0.4);
    bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
-   bool trendSellOBVBool = (obvCPSlope < (-1*OBVSLOPE));
-
+   bool trendSellOBVBool = (obvCPSlope < (-1 * OBVSLOPE));
    bool trendBuyClusterBool = (
-                                 (rFM>CLUSTERRANGEPLUS)&&
-                                 (rMS>CLUSTERRANGEPLUS)&&
-                                 (rFS>CLUSTERRANGEPLUS)&&
-                                 (rFM<rMS)
+                                 (rFM > CLUSTERRANGEPLUS) &&
+                                 (rMS > CLUSTERRANGEPLUS) &&
+                                 (rFS > CLUSTERRANGEPLUS) &&
+                                 (rFM < rMS)
                               );
-
    bool trendSellClusterBool = (
-                                  ((rFM>=0)&&(rFM<CLUSTERRANGEMINUS))&&
-                                  ((rMS>=0)&&(rMS<CLUSTERRANGEMINUS))&&
-                                  ((rFS>=0)&&(rFS<CLUSTERRANGEMINUS))&&
-                                  (rFM>rMS)
+                                  ((rFM >= 0) && (rFM < CLUSTERRANGEMINUS)) &&
+                                  ((rMS >= 0) && (rMS < CLUSTERRANGEMINUS)) &&
+                                  ((rFS >= 0) && (rFS < CLUSTERRANGEMINUS)) &&
+                                  (rFM > rMS)
                                );
-
    bool trendClusterBool = (
-                              trendBuyClusterBool||trendSellClusterBool
+                              trendBuyClusterBool || trendSellClusterBool
                            );
-
-   bool trendSlopeRatioBool  = ((fMSWR>=SLOPERATIO)&&(fMSWR<=SLOPERATIO_UPPERLIMIT));
-
+   bool trendSlopeRatioBool  = ((fMSWR >= SLOPERATIO) && (fMSWR <= SLOPERATIO_UPPERLIMIT));
    bool atrVolTradeBool = (
-                             (_Period==PERIOD_M1)
-                             &&(atrVolDP>=ATR_VOL_LOWER_LIMIT)
-                             &&(atrVolDP<=ATR_VOL_UPPER_LIMIT)
+                             (_Period == PERIOD_M1)
+                             && (atrVolDP >= ATR_VOL_LOWER_LIMIT)
+                             && (atrVolDP <= ATR_VOL_UPPER_LIMIT)
                           );
-
    bool atrVolNoTradeBool = (
-                               (_Period==PERIOD_M1)
-                               &&(
-                                  (atrVolDP<ATR_VOL_LOWER_LIMIT)
-                                  ||(atrVolDP>ATR_VOL_UPPER_LIMIT)
+                               (_Period == PERIOD_M1)
+                               && (
+                                  (atrVolDP < ATR_VOL_LOWER_LIMIT)
+                                  || (atrVolDP > ATR_VOL_UPPER_LIMIT)
                                )
                             );
 //   bool closeSTDCPTradeBool = (
@@ -2225,73 +1777,48 @@ SAN_SIGNAL HSIG::cTradeSIG(
 //                                         closeSlope30Bool
 //                                      )
 //                                   );
-
 //bool closeTradeBool = (closeSTDCPTradeBool&&closeSlopeRatioTradeBool);
-   bool openTradeBool = (trendStdCP&&trendSlopeRatioBool);
-   bool closeTradeBool = (closeTrendStdCP&&closeSlopeRatioBool);
-
+   bool openTradeBool = (trendStdCP && trendSlopeRatioBool);
+   bool closeTradeBool = (closeTrendStdCP && closeSlopeRatioBool);
 //bool openTradeBool = (trendStdCP&&trendSlopeRatioBool&&atrVolTradeBool);
 //bool closeTradeBool = (closeTrendStdCP&&closeSlopeRatioBool&&atrVolNoTradeBool);
-
    bool noTradeBoo11 = (closeTradeBool);
    bool noTradeBoo12 = (flatBool);
-
-
    bool noSigBool = (
-                       (closeTradeBool&&openTradeBool)||
+                       (closeTradeBool && openTradeBool) ||
 //(closeTrendStdCP&&trendSlopeRatioBool)||
 //(closeTrendStdCP&&trendClusterBool)||
-                       (closeTradeBool&&trendClusterBool)||
-                       (closeTradeBool&&(trendBuyOBVBool||trendSellOBVBool))||
-                       (closeTradeBool&&(trendBuySlope30||trendSellSlope30))
+                       (closeTradeBool && trendClusterBool) ||
+                       (closeTradeBool && (trendBuyOBVBool || trendSellOBVBool)) ||
+                       (closeTradeBool && (trendBuySlope30 || trendSellSlope30))
                     );
-
-   bool buyTradeBool = (openTradeBool&&trendBuyOBVBool&&(trendBuyClusterBool||trendBuySlope30));
-   bool sellTradeBool = (openTradeBool&&trendSellOBVBool&&(trendSellClusterBool||trendSellSlope30));
-   bool tradeBool = (openTradeBool&&(trendBuyOBVBool||trendSellOBVBool)&&(trendClusterBool||(trendBuySlope30||trendSellSlope30)));
-
-   if(noTradeBoo11||noTradeBoo12)
-     {
+   bool buyTradeBool = (openTradeBool && trendBuyOBVBool && (trendBuyClusterBool || trendBuySlope30));
+   bool sellTradeBool = (openTradeBool && trendSellOBVBool && (trendSellClusterBool || trendSellSlope30));
+   bool tradeBool = (openTradeBool && (trendBuyOBVBool || trendSellOBVBool) && (trendClusterBool || (trendBuySlope30 || trendSellSlope30)));
+   if(noTradeBoo11 || noTradeBoo12) {
       sig = SAN_SIGNAL::NOTRADE;
-     }
-   else
-      if(noSigBool)
-        {
-         sig = sig = SAN_SIGNAL::NOSIG;
-        }
-      else
-         if(buyTradeBool)
-           {
-            sig = SAN_SIGNAL::TRADEBUY;
-           }
-         else
-            if(sellTradeBool)
-              {
-               sig = SAN_SIGNAL::TRADESELL;
-              }
-            else
-               if(tradeBool)
-                 {
-                  sig = SAN_SIGNAL::TRADE;
-                 }
-               else
-                 {
-                  sig = SAN_SIGNAL::NOTRADE;
-                 }
-
+   } else if(noSigBool) {
+      sig = sig = SAN_SIGNAL::NOSIG;
+   } else if(buyTradeBool) {
+      sig = SAN_SIGNAL::TRADEBUY;
+   } else if(sellTradeBool) {
+      sig = SAN_SIGNAL::TRADESELL;
+   } else if(tradeBool) {
+      sig = SAN_SIGNAL::TRADE;
+   } else {
+      sig = SAN_SIGNAL::NOTRADE;
+   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 //Print("[CTRADE] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio+" FLAT: "+flatBool);//+" candleDP: "+candleVolDP+" atrDP: "+atrVolDP);//+" rFS: "+rFS);
 //Print("[CTRADE-BOOLS:2] openTradeBool: "+openTradeBool+" closeTradeBool: "+closeTradeBool+" noTradeBoo11: "+ noTradeBoo11+" noTradeBoo12: "+noTradeBoo12+" noSigBool: "+noSigBool+" buyTradeBool: "+buyTradeBool+" sellTradeBool: "+sellTradeBool+" tradeBool: "+tradeBool);
 //Print("[CTRADE-BOOLS:1] StdCP: "+trendStdCP+" SlopeRatio: "+trendSlopeRatioBool+" BuyCluster: "+trendBuyClusterBool+" SellCluster: "+trendSellClusterBool+" BuyOBV: "+trendBuyOBVBool+" SellOBV: "+trendSellOBVBool+" BuySlope30: "+trendBuySlope30+" SellSlope30: "+trendSellSlope30 );
-
 //   Print("[CTRADE-CLOSE] closeTrendStdCP: "+closeTrendStdCP+" closeSlopeRatioBool:"+closeSlopeRatioBool+" closeClusterBool: "+closeClusterBool+" flatBool "+flatBool+" strictFlatClusterBool "+strictFlatClusterBool+" flatClusterBool "+flatClusterBool+" rangeFlatClusterBool "+rangeFlatClusterBool);
 //   Print("[CTRADE-OPEN] trendStdCP:"+trendStdCP+" trendSlopeRatioBool: "+trendSlopeRatioBool + " trendBuyClusterBool: "+trendBuyClusterBool+" trendSellClusterBool: "+trendSellClusterBool +" OBV BUY: "+trendBuyOBVBool+" OBV Sell: "+trendSellOBVBool);
 //   Print("[CTRADE_1] noTradeBoo11: "+noTradeBoo11+" noTradeBoo12: "+noTradeBoo12+" noSigBool: "+noSigBool+" buyTradeBool: "+buyTradeBool+" sellTradeBool: "+sellTradeBool+" tradeBool: "+tradeBool );
-
    return sig;
-  }
+}
 
 
 
@@ -2302,129 +1829,96 @@ SAN_SIGNAL HSIG::cTradeSIG(
 SAN_SIGNAL HSIG::cTradeSIG_v2(
    const SANSIGNALS &ss,
    SanUtils& util,
-   const uint SHIFT=1
-)
-  {
-
+   const uint SHIFT = 1
+) {
    double pipValue = ut.getPipValue(_Symbol);
    SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
-
 //   SAN_SIGNAL tradePosition = util.getCurrTradePosition();
-
-   double candleVolDP=NormalizeDouble(ss.candleVolData.val1,3);
-   double atrVolDP=NormalizeDouble(ss.atrVolData.val1,3);
-
-   double num_candleVolDP=EMPTY_VALUE;
-   double denom_atrVolDP=EMPTY_VALUE;
-
-   DTYPE candleAtrVolDPDt = stats.getDecimalVal(ss.candleVolData.val1,ss.atrVolData.val1);
-
-   double candleAtrDPRatio =  NormalizeDouble(candleAtrVolDPDt.val1/candleAtrVolDPDt.val2,3);
-
+   double candleVolDP = NormalizeDouble(ss.candleVolData.val1, 3);
+   double atrVolDP = NormalizeDouble(ss.atrVolData.val1, 3);
+   double num_candleVolDP = EMPTY_VALUE;
+   double denom_atrVolDP = EMPTY_VALUE;
+   DTYPE candleAtrVolDPDt = stats.getDecimalVal(ss.candleVolData.val1, ss.atrVolData.val1);
+   double candleAtrDPRatio =  NormalizeDouble(candleAtrVolDPDt.val1 / candleAtrVolDPDt.val2, 3);
 // double baseSlope = ss.baseSlopeData.val1;
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
    double stdOPSlope = ss.stdOPSlope.val1;
-   double obvCPSlope = ss.obvCPSlope.val1*pipValue; // Normalize obvCPSlope
-
+   double obvCPSlope = ss.obvCPSlope.val1 * pipValue; // Normalize obvCPSlope
    double rFM =  ss.clusterData.matrixD[0];
    double rMS =  ss.clusterData.matrixD[1];
    double rFS =  ss.clusterData.matrixD[2];
    double fMSR = ss.slopeRatioData.matrixD[0];
-   double fMSWR= ss.slopeRatioData.matrixD[1];
+   double fMSWR = ss.slopeRatioData.matrixD[1];
    double fMR = ss.slopeRatioData.matrixD[2];
    double mSR = ss.slopeRatioData.matrixD[3];
    double mSWR = ss.slopeRatioData.matrixD[4];
    SAN_SIGNAL atrSIG = ss.atrSIG;
-
-
-   bool closeTrendStdCP1 = ((stdCPSlope<=STDSLOPE)&&(stdCPSlope<stdOPSlope));
-   bool closeTrendStdCP2 = ((stdCPSlope>0)&&(stdOPSlope>0)&&(stdCPSlope<(0.6 *(stdOPSlope+_Point))));
-   bool closeTrendStdCP3 = ((stdCPSlope<0)&&(stdOPSlope<0)&&(stdCPSlope<(0.8*(stdOPSlope+_Point))));
-
-   bool closeTrendStdCP = (closeTrendStdCP1||closeTrendStdCP2||closeTrendStdCP3);
-
-   bool closeCandleAtrDP = (candleAtrDPRatio<0.3);
-   bool closeAtr = ((atrSIG==SAN_SIGNAL::NOTRADE)||(atrSIG==SAN_SIGNAL::NOSIG));
-   bool closeSlopeRatioBool = (fMSWR<SLOPERATIO);
-   bool closeSlope30Bool = (slopeSIG(ss.imaSlope30Data,0)==SAN_SIGNAL::CLOSE); //(fabs(slopeIMA30)<=0.3);
-   bool closeBaseSlopeBool = (slopeSIG(ss.baseSlopeData,2)==SAN_SIGNAL::CLOSE);
-   bool closeClusterBool = (((rFM<0)&&(rMS<0))||((rMS<0)&&(rFS<0))||((rFM<0)&&(rFS<0)));
-   bool closeOBVCPBool = (fabs(obvCPSlope)<=OBVSLOPE);
-
-   bool strictFlatClusterBool = ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT));
-
+   bool closeTrendStdCP1 = ((stdCPSlope <= STDSLOPE) && (stdCPSlope < stdOPSlope));
+   bool closeTrendStdCP2 = ((stdCPSlope > 0) && (stdOPSlope > 0) && (stdCPSlope < (0.6 * (stdOPSlope + _Point))));
+   bool closeTrendStdCP3 = ((stdCPSlope < 0) && (stdOPSlope < 0) && (stdCPSlope < (0.8 * (stdOPSlope + _Point))));
+   bool closeTrendStdCP = (closeTrendStdCP1 || closeTrendStdCP2 || closeTrendStdCP3);
+   bool closeCandleAtrDP = (candleAtrDPRatio < 0.3);
+   bool closeAtr = ((atrSIG == SAN_SIGNAL::NOTRADE) || (atrSIG == SAN_SIGNAL::NOSIG));
+   bool closeSlopeRatioBool = (fMSWR < SLOPERATIO);
+   bool closeSlope30Bool = (slopeSIG(ss.imaSlope30Data, 0) == SAN_SIGNAL::CLOSE); //(fabs(slopeIMA30)<=0.3);
+   bool closeBaseSlopeBool = (slopeSIG(ss.baseSlopeData, 2) == SAN_SIGNAL::CLOSE);
+   bool closeClusterBool = (((rFM < 0) && (rMS < 0)) || ((rMS < 0) && (rFS < 0)) || ((rFM < 0) && (rFS < 0)));
+   bool closeOBVCPBool = (fabs(obvCPSlope) <= OBVSLOPE);
+   bool strictFlatClusterBool = ((rFM == CLUSTERRANGEFLAT) && (rMS == CLUSTERRANGEFLAT) && (rFS == CLUSTERRANGEFLAT));
    bool flatClusterBool = (
-                             ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT))||
-                             ((rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))||
-                             ((rFM==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))
+                             ((rFM == CLUSTERRANGEFLAT) && (rMS == CLUSTERRANGEFLAT)) ||
+                             ((rMS == CLUSTERRANGEFLAT) && (rFS == CLUSTERRANGEFLAT)) ||
+                             ((rFM == CLUSTERRANGEFLAT) && (rFS == CLUSTERRANGEFLAT))
                           );
-
    bool rangeFlatClusterBool = (
-                                  ((rFM>0)&&((rFM>=CLUSTERRANGEMINUS)&&(rFM<=CLUSTERRANGEPLUS)))
-                                  &&((rMS>0)&&((rMS>=CLUSTERRANGEMINUS)&&(rMS<=CLUSTERRANGEPLUS)))
-                                  &&((rFS>0)&&((rFS>=CLUSTERRANGEMINUS)&&(rFS<=CLUSTERRANGEPLUS)))
+                                  ((rFM > 0) && ((rFM >= CLUSTERRANGEMINUS) && (rFM <= CLUSTERRANGEPLUS)))
+                                  && ((rMS > 0) && ((rMS >= CLUSTERRANGEMINUS) && (rMS <= CLUSTERRANGEPLUS)))
+                                  && ((rFS > 0) && ((rFS >= CLUSTERRANGEMINUS) && (rFS <= CLUSTERRANGEPLUS)))
                                );
-
-   bool flatSlope30Bool = (slopeSIG(ss.imaSlope30Data,0)==SAN_SIGNAL::SIDEWAYS); //(fabs(slopeIMA30)<=0.4);
-
-
-   bool flatBool = (strictFlatClusterBool||rangeFlatClusterBool||flatClusterBool||flatSlope30Bool);
-
-   bool trendStdCP = ((stdCPSlope>STDSLOPE)&&(stdCPSlope>=stdOPSlope));
-   bool trendSlopeRatioBool  = ((fMSWR>=SLOPERATIO)&&(fMSWR<=SLOPERATIO_UPPERLIMIT));
-   bool trendCandleAtrDP  = ((candleAtrDPRatio>=0.1));
-
-
-   bool openTradeBool = (trendStdCP&&trendSlopeRatioBool&&trendCandleAtrDP);
-
+   bool flatSlope30Bool = (slopeSIG(ss.imaSlope30Data, 0) == SAN_SIGNAL::SIDEWAYS); //(fabs(slopeIMA30)<=0.4);
+   bool flatBool = (strictFlatClusterBool || rangeFlatClusterBool || flatClusterBool || flatSlope30Bool);
+   bool trendStdCP = ((stdCPSlope > STDSLOPE) && (stdCPSlope >= stdOPSlope));
+   bool trendSlopeRatioBool  = ((fMSWR >= SLOPERATIO) && (fMSWR <= SLOPERATIO_UPPERLIMIT));
+   bool trendCandleAtrDP  = ((candleAtrDPRatio >= 0.1));
+   bool openTradeBool = (trendStdCP && trendSlopeRatioBool && trendCandleAtrDP);
    bool closeTradeBool1 = (
                              closeTrendStdCP
-                             &&closeSlopeRatioBool
-                             &&closeCandleAtrDP
-                             &&closeAtr
+                             && closeSlopeRatioBool
+                             && closeCandleAtrDP
+                             && closeAtr
                           );
-
    bool closeTradeBool2 = (
                              closeSlope30Bool
-                             &&closeTrendStdCP
-                             &&closeSlopeRatioBool
+                             && closeTrendStdCP
+                             && closeSlopeRatioBool
                           );
-
    bool closeTradeBool3 = (
                              closeSlope30Bool
-                             &&closeClusterBool
-                             &&closeSlopeRatioBool
+                             && closeClusterBool
+                             && closeSlopeRatioBool
                           );
-
-
    bool closeTradeBool4 = (closeBaseSlopeBool);
-
    bool closeTradeBool = (
                             closeTradeBool1
-                            ||closeTradeBool2
-                            ||closeTradeBool3
-                            ||closeTradeBool4
+                            || closeTradeBool2
+                            || closeTradeBool3
+                            || closeTradeBool4
                          );
-
-   if(closeTradeBool)
-     {
+   if(closeTradeBool) {
       sig = SAN_SIGNAL::NOTRADE;
-     }
-   else
-     {
+   } else {
       sig = SAN_SIGNAL::TRADE;
-     }
-
+   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 //   Print("[CTRADE2] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio+" FLAT: "+flatBool);
-   Print("[CTRADE2] stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio);
-   Print("[CTRADE2] [bool1: "+closeTradeBool1+" bool2: "+closeTradeBool2 +" bool3: "+closeTradeBool3+" bool4: "+closeTradeBool4+"] closeTrendStdCP: "+ closeTrendStdCP+" closeSlopeRatioBool: "+closeSlopeRatioBool+" closeCandleAtrDP: "+closeCandleAtrDP+" closeAtr: "+closeAtr+" slope30: "+closeSlope30Bool+" cluster: "+closeClusterBool);
-   Print("[CTRADE2] [ closeTrendStdCP: "+closeTrendStdCP+" closeTrendStdCP1: "+closeTrendStdCP1+" closeTrendStdCP2: "+closeTrendStdCP2 +" closeTrendStdCP3: "+closeTrendStdCP3+" OP 60% "+NormalizeDouble((0.6*(stdOPSlope+_Point)),2)+" OP 80%: "+NormalizeDouble((0.8*(stdOPSlope+_Point)),2));
+   Print("[CTRADE2] stdOPSlope: " + NormalizeDouble(stdOPSlope, 2) + " stdCPSlope: " + NormalizeDouble(stdCPSlope, 2) + " obvCPSlope: " + NormalizeDouble(obvCPSlope, 2) + " Slope30: " + NormalizeDouble(slopeIMA30, 2) + " fMSWR: " + fMSWR + " rFM: " + rFM + " rMS: " + rMS + " candleAtrDP: " + candleAtrDPRatio);
+   Print("[CTRADE2] [bool1: " + closeTradeBool1 + " bool2: " + closeTradeBool2 + " bool3: " + closeTradeBool3 + " bool4: " + closeTradeBool4 + "] closeTrendStdCP: " + closeTrendStdCP + " closeSlopeRatioBool: " + closeSlopeRatioBool + " closeCandleAtrDP: " + closeCandleAtrDP + " closeAtr: " + closeAtr + " slope30: " + closeSlope30Bool + " cluster: " + closeClusterBool);
+   Print("[CTRADE2] [ closeTrendStdCP: " + closeTrendStdCP + " closeTrendStdCP1: " + closeTrendStdCP1 + " closeTrendStdCP2: " + closeTrendStdCP2 + " closeTrendStdCP3: " + closeTrendStdCP3 + " OP 60% " + NormalizeDouble((0.6 * (stdOPSlope + _Point)), 2) + " OP 80%: " + NormalizeDouble((0.8 * (stdOPSlope + _Point)), 2));
    return sig;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -2432,57 +1926,35 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
 SAN_SIGNAL HSIG::cSIG(
    const SANSIGNALS &ss,
    SanUtils& util,
-   const uint SHIFT=1
-)
-  {
-
+   const uint SHIFT = 1
+) {
    SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
    double pipValue = ut.getPipValue(_Symbol);
 //const double STDSLOPE = -0.6;
 //const double SLOPE30LIMIT = 3;
 //const double OBVSLOPE = 3000;
-
    double stdCPSlope = ss.stdCPSlope.val1;
-   double obvCPSlope = ss.obvCPSlope.val1*pipValue; // Normalize obvCPSlope
-
-   bool trendStdCP = (stdCPSlope>STDSLOPE);
+   double obvCPSlope = ss.obvCPSlope.val1 * pipValue; // Normalize obvCPSlope
+   bool trendStdCP = (stdCPSlope > STDSLOPE);
 //bool closeOBVBool =  ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
    bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
-   bool trendSellOBVBool = (obvCPSlope < (-1*OBVSLOPE));
-
-   SAN_SIGNAL slopesig = slopeSIG(ss.imaSlope30Data,0);
-
-   if(trendStdCP && (fabs(ss.imaSlope30Data.val1)>SLOPE30LIMIT))
-     {
+   bool trendSellOBVBool = (obvCPSlope < (-1 * OBVSLOPE));
+   SAN_SIGNAL slopesig = slopeSIG(ss.imaSlope30Data, 0);
+   if(trendStdCP && (fabs(ss.imaSlope30Data.val1) > SLOPE30LIMIT)) {
       sig = slopesig;
-     }
-   else
-      if((tradeSIG==SAN_SIGNAL::TRADEBUY)&&(slopesig==SAN_SIGNAL::BUY))
-        {
-         sig = slopesig;
-        }
-      else
-         if((tradeSIG==SAN_SIGNAL::TRADESELL)&&(slopesig==SAN_SIGNAL::SELL))
-           {
-            sig = slopesig;
-           }
-         else
-            if(trendStdCP && ((trendBuyOBVBool&&(slopesig==SAN_SIGNAL::BUY))||(trendSellOBVBool&&(slopesig==SAN_SIGNAL::SELL))))
-              {
-               sig = slopesig;
-              }
-            else
-               if((tradeSIG==SAN_SIGNAL::TRADE))
-                 {
-                  sig = slopesig;
-                 }
-               else
-                  if(((tradeSIG==SAN_SIGNAL::NOTRADE)||(tradeSIG==SAN_SIGNAL::NOSIG))&&(slopesig==SAN_SIGNAL::CLOSE))
-                    {
-                     sig = slopesig;
-                    }
+   } else if((tradeSIG == SAN_SIGNAL::TRADEBUY) && (slopesig == SAN_SIGNAL::BUY)) {
+      sig = slopesig;
+   } else if((tradeSIG == SAN_SIGNAL::TRADESELL) && (slopesig == SAN_SIGNAL::SELL)) {
+      sig = slopesig;
+   } else if(trendStdCP && ((trendBuyOBVBool && (slopesig == SAN_SIGNAL::BUY)) || (trendSellOBVBool && (slopesig == SAN_SIGNAL::SELL)))) {
+      sig = slopesig;
+   } else if((tradeSIG == SAN_SIGNAL::TRADE)) {
+      sig = slopesig;
+   } else if(((tradeSIG == SAN_SIGNAL::NOTRADE) || (tradeSIG == SAN_SIGNAL::NOSIG)) && (slopesig == SAN_SIGNAL::CLOSE)) {
+      sig = slopesig;
+   }
    return sig;
-  }
+}
 
 ////+------------------------------------------------------------------+
 ////|                                                                  |
@@ -2543,126 +2015,100 @@ bool HSIG::getMktFlatBoolSignal(
    const SANTREND cpScatterSIG,
    const SANTREND trendRatioSIG,
    const SAN_SIGNAL trendSIG
-)
-  {
-
+) {
 //   Print("[FLATS]: candleVol120SIG: "+ ut.getSigString(candleVol120SIG)+" slopeVarSIG: "+ ut.getSigString(slopeVarSIG)+" cpScatterSIG: "+ut.getSigString(cpScatterSIG)+" trendRatioSIG: "+ut.getSigString(trendRatioSIG));
-
    return (
              (
-                (candleVol120SIG==SAN_SIGNAL::SIDEWAYS)
-                ||(slopeVarSIG==SAN_SIGNAL::SIDEWAYS)
-                ||(cpScatterSIG==SANTREND::FLAT)
-                ||(cpScatterSIG==SANTREND::FLATUP)
-                ||(cpScatterSIG==SANTREND::FLATDOWN)
-                ||(trendRatioSIG==SANTREND::FLAT)
-                ||(trendRatioSIG==SANTREND::FLATUP)
-                ||(trendRatioSIG==SANTREND::FLATDOWN)
-                ||(trendSIG==SAN_SIGNAL::SIDEWAYS)
+                (candleVol120SIG == SAN_SIGNAL::SIDEWAYS)
+                || (slopeVarSIG == SAN_SIGNAL::SIDEWAYS)
+                || (cpScatterSIG == SANTREND::FLAT)
+                || (cpScatterSIG == SANTREND::FLATUP)
+                || (cpScatterSIG == SANTREND::FLATDOWN)
+                || (trendRatioSIG == SANTREND::FLAT)
+                || (trendRatioSIG == SANTREND::FLATUP)
+                || (trendRatioSIG == SANTREND::FLATDOWN)
+                || (trendSIG == SAN_SIGNAL::SIDEWAYS)
 //||(sig30==SAN_SIGNAL::SIDEWAYS)
              )
           );
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool  HSIG::getMktCloseOnStdCPCluster()
-  {
-
+bool  HSIG::getMktCloseOnStdCPCluster() {
    double pipValue = ut.getPipValue(_Symbol);
    double stdCPSlope = stdCPSlope.val1;
    double rFM =  ssSIG.clusterData.matrixD[0];
    double rMS =  ssSIG.clusterData.matrixD[1];
    double rFS =  ssSIG.clusterData.matrixD[2];
-   bool closeTrendStdCP = (stdCPSlope<=STDSLOPE);
-
-
+   bool closeTrendStdCP = (stdCPSlope <= STDSLOPE);
 //   double obvCPSlope = obvCPSlope.val1*pipValue; // Normalize obvCPSlope
 //bool closeOBVBool =  ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
 //bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
 //bool trendSellOBVBool = (obvCPSlope < (-1*OBVSLOPE));
-
-
-   bool strictFlatClusterBool = ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT));
-
+   bool strictFlatClusterBool = ((rFM == CLUSTERRANGEFLAT) && (rMS == CLUSTERRANGEFLAT) && (rFS == CLUSTERRANGEFLAT));
    bool flatClusterBool = (
-                             ((rFM==CLUSTERRANGEFLAT)&&(rMS==CLUSTERRANGEFLAT))||
-                             ((rMS==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))||
-                             ((rFM==CLUSTERRANGEFLAT)&&(rFS==CLUSTERRANGEFLAT))
+                             ((rFM == CLUSTERRANGEFLAT) && (rMS == CLUSTERRANGEFLAT)) ||
+                             ((rMS == CLUSTERRANGEFLAT) && (rFS == CLUSTERRANGEFLAT)) ||
+                             ((rFM == CLUSTERRANGEFLAT) && (rFS == CLUSTERRANGEFLAT))
                           );
-
    bool rangeFlatClusterBool = (
-                                  ((rFM>0)&&((rFM>=CLUSTERRANGEMINUS)&&(rFM<=CLUSTERRANGEPLUS)))
-                                  &&((rMS>0)&&((rMS>=CLUSTERRANGEMINUS)&&(rMS<=CLUSTERRANGEPLUS)))
-                                  &&((rFS>0)&&((rFS>=CLUSTERRANGEMINUS)&&(rFS<=CLUSTERRANGEPLUS)))
+                                  ((rFM > 0) && ((rFM >= CLUSTERRANGEMINUS) && (rFM <= CLUSTERRANGEPLUS)))
+                                  && ((rMS > 0) && ((rMS >= CLUSTERRANGEMINUS) && (rMS <= CLUSTERRANGEPLUS)))
+                                  && ((rFS > 0) && ((rFS >= CLUSTERRANGEMINUS) && (rFS <= CLUSTERRANGEPLUS)))
                                );
-
-   bool closeClusterBool = (((rFM<0)&&(rMS<0))||((rMS<0)&&(rFS<0))||((rFM<0)&&(rFS<0)));
-
+   bool closeClusterBool = (((rFM < 0) && (rMS < 0)) || ((rMS < 0) && (rFS < 0)) || ((rFM < 0) && (rFS < 0)));
    bool trendBuyClusterBool = (
-                                 (rFM>CLUSTERRANGEPLUS)&&
-                                 (rMS>CLUSTERRANGEPLUS)&&
-                                 (rFS>CLUSTERRANGEPLUS)&&
-                                 (rFM<rMS)
+                                 (rFM > CLUSTERRANGEPLUS) &&
+                                 (rMS > CLUSTERRANGEPLUS) &&
+                                 (rFS > CLUSTERRANGEPLUS) &&
+                                 (rFM < rMS)
                               );
-
    bool trendSellClusterBool = (
-                                  ((rFM>=0)&&(rFM<CLUSTERRANGEMINUS))&&
-                                  ((rMS>=0)&&(rMS<CLUSTERRANGEMINUS))&&
-                                  ((rFS>=0)&&(rFS<CLUSTERRANGEMINUS))&&
-                                  (rFM>rMS)
+                                  ((rFM >= 0) && (rFM < CLUSTERRANGEMINUS)) &&
+                                  ((rMS >= 0) && (rMS < CLUSTERRANGEMINUS)) &&
+                                  ((rFS >= 0) && (rFS < CLUSTERRANGEMINUS)) &&
+                                  (rFM > rMS)
                                );
-
    bool trendClusterBool = (
-                              trendBuyClusterBool||trendSellClusterBool
+                              trendBuyClusterBool || trendSellClusterBool
                            );
-
-
-
 //SAN_SIGNAL obvSIG = (trendBuyOBVBool)?SAN_SIGNAL::BUY:((trendSellOBVBool)?SAN_SIGNAL::SELL:SAN_SIGNAL::NOSIG);
 //SAN_SIGNAL tradePosition = util.getCurrTradePosition();
-
-   bool flatBool = (strictFlatClusterBool||rangeFlatClusterBool||flatClusterBool);
-
-
+   bool flatBool = (strictFlatClusterBool || rangeFlatClusterBool || flatClusterBool);
    return (
-             closeTrendStdCP&&
+             closeTrendStdCP &&
              (
-                flatBool||
-                closeClusterBool||
-                (!trendBuyClusterBool&&!trendSellClusterBool)
+                flatBool ||
+                closeClusterBool ||
+                (!trendBuyClusterBool && !trendSellClusterBool)
              )
-          )?true:false;
-  }
+          ) ? true : false;
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool  HSIG::getMktCloseOnStdCPOBV()
-  {
-
+bool  HSIG::getMktCloseOnStdCPOBV() {
    double pipValue = ut.getPipValue(_Symbol);
    double stdCPSlope = stdCPSlope.val1;
-   double obvCPSlope = obvCPSlope.val1*pipValue; // Normalize obvCPSlope
-
-   bool closeTrendStdCP = (stdCPSlope<=STDSLOPE);
-   bool closeOBVBool = ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
+   double obvCPSlope = obvCPSlope.val1 * pipValue; // Normalize obvCPSlope
+   bool closeTrendStdCP = (stdCPSlope <= STDSLOPE);
+   bool closeOBVBool = ((obvCPSlope > (-1 * OBVSLOPE)) && (obvCPSlope < OBVSLOPE));
    bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
-   bool trendSellOBVBool = (obvCPSlope < (-1*OBVSLOPE));
-
-   SAN_SIGNAL obvSIG = (trendBuyOBVBool)?SAN_SIGNAL::BUY:((trendSellOBVBool)?SAN_SIGNAL::SELL:SAN_SIGNAL::NOSIG);
+   bool trendSellOBVBool = (obvCPSlope < (-1 * OBVSLOPE));
+   SAN_SIGNAL obvSIG = (trendBuyOBVBool) ? SAN_SIGNAL::BUY : ((trendSellOBVBool) ? SAN_SIGNAL::SELL : SAN_SIGNAL::NOSIG);
    SAN_SIGNAL tradePosition = util.getCurrTradePosition();
-
    return (
-             closeTrendStdCP&&
+             closeTrendStdCP &&
              (
                 closeOBVBool
-                ||util.oppSignal(obvSIG,tradePosition)
+                || util.oppSignal(obvSIG, tradePosition)
              )
-          )?true:false;
-  }
+          ) ? true : false;
+}
 //+------------------------------------------------------------------+
 //|  Close Signal: 1: Close on Slope ratios                                                                 |
 //+------------------------------------------------------------------+
@@ -2670,22 +2116,17 @@ bool  HSIG::getMktCloseOnStdCPOBV()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool  HSIG::getMktCloseOnSlopeRatio()
-  {
-
+bool  HSIG::getMktCloseOnSlopeRatio() {
 //double slopeR = ss.slopeRatioData.matrixD[0];
 //double slopeWideR = ss.slopeRatioData.matrixD[1];
-
    double slopeR = slopeRatioData.matrixD[0];
    double slopeWideR = slopeRatioData.matrixD[1];
 //Print("Slopes Ratio: slopeR: "+slopeR+" slopeWideR: "+slopeWideR);
    bool closeOnSlopeRatioBool = false;
-
-   if((slopeWideR<SLOPERATIO)&&(slopeWideR!=EMPTY_VALUE))
-      closeOnSlopeRatioBool=true;
+   if((slopeWideR < SLOPERATIO) && (slopeWideR != EMPTY_VALUE))
+      closeOnSlopeRatioBool = true;
    return closeOnSlopeRatioBool;
-
-  }
+}
 
 
 //bool  getMktCloseOnSimpleTrendReversal(const SAN_SIGNAL &sig,SanUtils &util) {
@@ -2705,11 +2146,10 @@ bool  HSIG::getMktCloseOnSlopeRatio()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool              HSIG::getMktCloseOnReversal(const SAN_SIGNAL &sig,SanUtils &util)
-  {
+bool              HSIG::getMktCloseOnReversal(const SAN_SIGNAL &sig, SanUtils &util) {
    SAN_SIGNAL tradePosition = util.getCurrTradePosition();
-   return (util.oppSignal(sig,tradePosition))?true:false;
-  }
+   return (util.oppSignal(sig, tradePosition)) ? true : false;
+}
 
 
 //+------------------------------------------------------------------+
@@ -2723,10 +2163,9 @@ bool              HSIG::getMktCloseOnReversal(const SAN_SIGNAL &sig,SanUtils &ut
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool  HSIG::getMktCloseOnFlat(const SAN_SIGNAL &sig, const bool mktTypeFlat)
-  {
-   return ((sig==SAN_SIGNAL::CLOSE)&&(mktTypeFlat))?true:false;
-  }
+bool  HSIG::getMktCloseOnFlat(const SAN_SIGNAL &sig, const bool mktTypeFlat) {
+   return ((sig == SAN_SIGNAL::CLOSE) && (mktTypeFlat)) ? true : false;
+}
 
 
 
@@ -2745,11 +2184,9 @@ bool  HSIG::getMktCloseOnFlat(const SAN_SIGNAL &sig, const bool mktTypeFlat)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool              HSIG::getMktCloseOnSlopeVariable(const SANSIGNALS &ss, SanUtils &util)
-  {
+bool              HSIG::getMktCloseOnSlopeVariable(const SANSIGNALS &ss, SanUtils &util) {
 // slopes of 30,120,240 ma curves
    SAN_SIGNAL tradePosition = util.getCurrTradePosition();
-
 // Ver-1: [5->5.0, 14->4.0,30->1.8,120->1.2,240=0.6]
 // Ver-2: [5->2.0, 14->1.0,30->0.5,120->0.2,240=0.08]
 // Ver-3: [5->4.0, 14->3.0,30->1.8,120->1.6,240=1.0]
@@ -2759,60 +2196,41 @@ bool              HSIG::getMktCloseOnSlopeVariable(const SANSIGNALS &ss, SanUtil
 // Ver-7: [5->2.5, 14->1.5,30->0.8,120->0.2,240=0.08]
 // Ver-8: [5->4.0, 14->1.5,30->0.8,120->0.2,240=0.08]
 // Ver-9: [fsig5->4.0, fsig14->2.0,fsig30->0.8,fsig120->0.2,fsig240=0.08]
-
-
 // Slopes for signals fsig5 and fsig14 are effectively outliers and not being captured.
 // The main signal is based only on fsig30, fsig120 and fsig240. ideally the close on fsig5 and fsgi14 should not be activated.
 // However they may be activated for very high slopes effectively disabling in that sense.
 // Caution: a low slope values for fsig5 and fsig14 creates runaway trades leading to signnificant losses within a very short amount of time
 // on account of false trade open and close signals.
-   const double SLOPEGRADS[5] = {4.0,2.0,0.8,0.2,0.08}; // eventually an external param from function
-
-   const double SLOPE_5=SLOPEGRADS[0];  //4.0;
-   const double SLOPE_14= SLOPEGRADS[1]; //2.0;
-   const double SLOPE_30=SLOPEGRADS[2]; //0.8;
-   const double SLOPE_120=SLOPEGRADS[3]; //0.2;
-   const double SLOPE_240=SLOPEGRADS[4]; //0.08;
-
+   const double SLOPEGRADS[5] = {4.0, 2.0, 0.8, 0.2, 0.08}; // eventually an external param from function
+   const double SLOPE_5 = SLOPEGRADS[0]; //4.0;
+   const double SLOPE_14 = SLOPEGRADS[1]; //2.0;
+   const double SLOPE_30 = SLOPEGRADS[2]; //0.8;
+   const double SLOPE_120 = SLOPEGRADS[3]; //0.2;
+   const double SLOPE_240 = SLOPEGRADS[4]; //0.08;
    bool closeBool = false;
    static SAN_SIGNAL CLOSESIGNAL = SAN_SIGNAL::NOSIG;
 //   Print("[SLOPES COMPARE] imaSlopesData: "+ ss.imaSlopesData.val1 + " slopes30: "+ss.imaSlope30Data.val1+" Equal? "+(ss.imaSlope30Data.val1==ss.imaSlopesData.val1));
-   if(fabs(ss.imaSlope30Data.val1)> SLOPE_5)
-     {
-      CLOSESIGNAL=ss.fsig5;
+   if(fabs(ss.imaSlope30Data.val1) > SLOPE_5) {
+      CLOSESIGNAL = ss.fsig5;
       //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig5,tradePosition))");
-     }
-   else
-      if(fabs(ss.imaSlope30Data.val1)>=SLOPE_14)
-        {
-         CLOSESIGNAL=ss.fsig14;
-         //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig14,tradePosition))");
-        }
-      else
-         if(fabs(ss.imaSlope30Data.val1)>=SLOPE_30)
-           {
-            CLOSESIGNAL=ss.fsig30;
-            //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig30,tradePosition))");
-           }
-         else
-            if(fabs(ss.imaSlope30Data.val1)>=SLOPE_120)
-              {
-               CLOSESIGNAL=ss.fsig120;
-               //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig120,tradePosition))");
-              }
-            else
-               if(fabs(ss.imaSlope30Data.val1)>=SLOPE_240)
-                 {
-                  CLOSESIGNAL=ss.fsig240;
-                  //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig240,tradePosition))");
-                 }
-
-   closeBool= (CLOSESIGNAL!=SAN_SIGNAL::NOSIG)?(util.oppSignal(CLOSESIGNAL,tradePosition)):false;
+   } else if(fabs(ss.imaSlope30Data.val1) >= SLOPE_14) {
+      CLOSESIGNAL = ss.fsig14;
+      //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig14,tradePosition))");
+   } else if(fabs(ss.imaSlope30Data.val1) >= SLOPE_30) {
+      CLOSESIGNAL = ss.fsig30;
+      //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig30,tradePosition))");
+   } else if(fabs(ss.imaSlope30Data.val1) >= SLOPE_120) {
+      CLOSESIGNAL = ss.fsig120;
+      //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig120,tradePosition))");
+   } else if(fabs(ss.imaSlope30Data.val1) >= SLOPE_240) {
+      CLOSESIGNAL = ss.fsig240;
+      //      Print("[SIGCLOSE]: Close on (util.oppSignal(ss.fsig240,tradePosition))");
+   }
+   closeBool = (CLOSESIGNAL != SAN_SIGNAL::NOSIG) ? (util.oppSignal(CLOSESIGNAL, tradePosition)) : false;
    if(closeBool)
-      CLOSESIGNAL=SAN_SIGNAL::NOSIG;
-
+      CLOSESIGNAL = SAN_SIGNAL::NOSIG;
    return closeBool;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -2827,14 +2245,10 @@ bool              HSIG::getMktCloseOnSlopeVariable(const SANSIGNALS &ss, SanUtil
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool              HSIG::getMktCloseOnSlopeReversal(const SANSIGNALS &ss, SanUtils &util, const double SLOPE_REDUCTION_LEVEL=0.3)
-  {
-
+bool              HSIG::getMktCloseOnSlopeReversal(const SANSIGNALS &ss, SanUtils &util, const double SLOPE_REDUCTION_LEVEL = 0.3) {
 // slopes of 30,120,240 ma curves
-
 //const double SLOPE_REDUCTION_LEVEL=0.3;
-   double SLOPE_LEVEL=(1-SLOPE_REDUCTION_LEVEL);
-
+   double SLOPE_LEVEL = (1 - SLOPE_REDUCTION_LEVEL);
 // Ver-1: [5->5.0, 14->4.0,30->1.8,120->1.2,240=0.6]
 // Ver-2: [5->2.0, 14->1.0,30->0.5,120->0.2,240=0.08]
 // Ver-3: [5->4.0, 14->3.0,30->1.8,120->1.6,240=1.0]
@@ -2844,94 +2258,58 @@ bool              HSIG::getMktCloseOnSlopeReversal(const SANSIGNALS &ss, SanUtil
 // Ver-7: [5->2.5, 14->1.5,30->0.8,120->0.2,240=0.08]
 // Ver-8: [5->4.0, 14->1.5,30->0.8,120->0.2,240=0.08]
 // Ver-9: [fsig5->4.0, fsig14->2.0,fsig30->0.8,fsig120->0.2,fsig240=0.08]
-
-
 // Slopes for signals fsig5 and fsig14 are effectively outliers and not being captured.
 // The main signal is based only on fsig30, fsig120 and fsig240. ideally the close on fsig5 and fsgi14 should not be activated.
 // However they may be activated for very high slopes effectively disabling in that sense.
 // Caution: a low slope values for fsig5 and fsig14 creates runaway trades leading to signnificant losses within a very short amount of time
 // on account of false trade open and close signals.
-   const double SLOPEGRADS[5] = {4.0,2.0,0.8,0.2,0.08}; // eventually an external param from function
-
-   const double SLOPE_5=SLOPEGRADS[0];  //4.0;
-   const double SLOPE_14= SLOPEGRADS[1]; //2.0;
-   const double SLOPE_30=SLOPEGRADS[2]; //0.8;
-   const double SLOPE_120=SLOPEGRADS[3]; //0.2;
-   const double SLOPE_240=SLOPEGRADS[4]; //0.08;
-
-
-   static bool slope2_0=false;
-   static bool slope1_0=false;
-   static bool slope0_5=false;
-   static bool slope0_2=false;
-   static bool slope0_08=false;
-
-
+   const double SLOPEGRADS[5] = {4.0, 2.0, 0.8, 0.2, 0.08}; // eventually an external param from function
+   const double SLOPE_5 = SLOPEGRADS[0]; //4.0;
+   const double SLOPE_14 = SLOPEGRADS[1]; //2.0;
+   const double SLOPE_30 = SLOPEGRADS[2]; //0.8;
+   const double SLOPE_120 = SLOPEGRADS[3]; //0.2;
+   const double SLOPE_240 = SLOPEGRADS[4]; //0.08;
+   static bool slope2_0 = false;
+   static bool slope1_0 = false;
+   static bool slope0_5 = false;
+   static bool slope0_2 = false;
+   static bool slope0_08 = false;
 //bool slopeRBool = getMktCloseOnSlopeRatio();
-
    bool closeOnSlopeReverseBool = false;
-
-   if(fabs(ss.imaSlope30Data.val1)> SLOPE_5)
-     {
-      slope2_0=true;
-     }
-   else
-      if(fabs(ss.imaSlope30Data.val1)>=SLOPE_14)
-        {
-         slope1_0=true;
-        }
-      else
-         if(fabs(ss.imaSlope30Data.val1)>=SLOPE_30)
-           {
-            slope0_5=true;
-           }
-         else
-            if(fabs(ss.imaSlope30Data.val1)>=SLOPE_120)
-              {
-               slope0_2=true;
-              }
-            else
-               if(fabs(ss.imaSlope30Data.val1)>=SLOPE_240)
-                 {
-                  slope0_08=true;
-                 }
-
-   if(slope2_0 &&(fabs(ss.imaSlope30Data.val1)<(SLOPE_5*SLOPE_LEVEL)))
-     {
+   if(fabs(ss.imaSlope30Data.val1) > SLOPE_5) {
+      slope2_0 = true;
+   } else if(fabs(ss.imaSlope30Data.val1) >= SLOPE_14) {
+      slope1_0 = true;
+   } else if(fabs(ss.imaSlope30Data.val1) >= SLOPE_30) {
+      slope0_5 = true;
+   } else if(fabs(ss.imaSlope30Data.val1) >= SLOPE_120) {
+      slope0_2 = true;
+   } else if(fabs(ss.imaSlope30Data.val1) >= SLOPE_240) {
+      slope0_08 = true;
+   }
+   if(slope2_0 && (fabs(ss.imaSlope30Data.val1) < (SLOPE_5 * SLOPE_LEVEL))) {
       closeOnSlopeReverseBool = true;
-      slope2_0=false;
+      slope2_0 = false;
       Print("[SIGCLOSE]: Close on slope2_8 reverse");
-     }
-   else
-      if(slope1_0&&(fabs(ss.imaSlope30Data.val1)<(SLOPE_14*SLOPE_LEVEL)))
-        {
-         closeOnSlopeReverseBool = true;
-         slope1_0=false;
-         Print("[SIGCLOSE]: Close on slope2_2 reverse");
-        }
-      else
-         if(slope0_5&&(fabs(ss.imaSlope30Data.val1)<(SLOPE_30*SLOPE_LEVEL)))
-           {
-            closeOnSlopeReverseBool = true;
-            slope0_5=false;
-            Print("[SIGCLOSE]: Close on slope1_8 reverse");
-           }
-         else
-            if(slope0_2&&(fabs(ss.imaSlope30Data.val1)<(SLOPE_120*SLOPE_LEVEL)))
-              {
-               closeOnSlopeReverseBool = true;
-               slope0_2=false;
-               Print("[SIGCLOSE]: Close on slope1_2 reverse");
-              }
-            else
-               if(slope0_08&&(fabs(ss.imaSlope30Data.val1)<(SLOPE_240*SLOPE_LEVEL)))
-                 {
-                  closeOnSlopeReverseBool = true;
-                  slope0_08=false;
-                  Print("[SIGCLOSE]: Close on slope0_6 reverse");
-                 }
+   } else if(slope1_0 && (fabs(ss.imaSlope30Data.val1) < (SLOPE_14 * SLOPE_LEVEL))) {
+      closeOnSlopeReverseBool = true;
+      slope1_0 = false;
+      Print("[SIGCLOSE]: Close on slope2_2 reverse");
+   } else if(slope0_5 && (fabs(ss.imaSlope30Data.val1) < (SLOPE_30 * SLOPE_LEVEL))) {
+      closeOnSlopeReverseBool = true;
+      slope0_5 = false;
+      Print("[SIGCLOSE]: Close on slope1_8 reverse");
+   } else if(slope0_2 && (fabs(ss.imaSlope30Data.val1) < (SLOPE_120 * SLOPE_LEVEL))) {
+      closeOnSlopeReverseBool = true;
+      slope0_2 = false;
+      Print("[SIGCLOSE]: Close on slope1_2 reverse");
+   } else if(slope0_08 && (fabs(ss.imaSlope30Data.val1) < (SLOPE_240 * SLOPE_LEVEL))) {
+      closeOnSlopeReverseBool = true;
+      slope0_08 = false;
+      Print("[SIGCLOSE]: Close on slope0_6 reverse");
+   }
    return (closeOnSlopeReverseBool);
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -2942,17 +2320,14 @@ bool              HSIG::getMktClose(
    const SAN_SIGNAL slopeVarSIG,
    const SAN_SIGNAL trend_5_120_500_SIG,
    const SAN_SIGNAL sig30
-)
-  {
-
+) {
    return (
-             ((candleVol120SIG==SAN_SIGNAL::NOSIG)||(candleVol120SIG==SAN_SIGNAL::CLOSE))
-             ||(slopeVarSIG==SAN_SIGNAL::CLOSE)
-             ||(trend_5_120_500_SIG==SAN_SIGNAL::CLOSE)
-             ||(sig30==SAN_SIGNAL::NOSIG)
+             ((candleVol120SIG == SAN_SIGNAL::NOSIG) || (candleVol120SIG == SAN_SIGNAL::CLOSE))
+             || (slopeVarSIG == SAN_SIGNAL::CLOSE)
+             || (trend_5_120_500_SIG == SAN_SIGNAL::CLOSE)
+             || (sig30 == SAN_SIGNAL::NOSIG)
           );
-
-  }
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -2962,92 +2337,89 @@ bool              HSIG::getMktCloseOnFlat(
    const SANTREND cpScatterSIG,
    const SANTREND trendRatioSIG,
    const SAN_SIGNAL trendSIG
-)
-  {
-
+) {
    return (
              (
                 (
-                   (candleVol120SIG==SAN_SIGNAL::SIDEWAYS)
+                   (candleVol120SIG == SAN_SIGNAL::SIDEWAYS)
                 )
                 &&
                 (
-                   (slopeVarSIG==SAN_SIGNAL::SIDEWAYS)
-                   ||(cpScatterSIG==SANTREND::FLAT)
-                   ||(cpScatterSIG==SANTREND::FLATUP)
-                   ||(cpScatterSIG==SANTREND::FLATDOWN)
-                   ||(trendRatioSIG==SANTREND::FLAT)
-                   ||(trendRatioSIG==SANTREND::FLATUP)
-                   ||(trendRatioSIG==SANTREND::FLATDOWN)
-                   ||(trendSIG==SAN_SIGNAL::SIDEWAYS)
+                   (slopeVarSIG == SAN_SIGNAL::SIDEWAYS)
+                   || (cpScatterSIG == SANTREND::FLAT)
+                   || (cpScatterSIG == SANTREND::FLATUP)
+                   || (cpScatterSIG == SANTREND::FLATDOWN)
+                   || (trendRatioSIG == SANTREND::FLAT)
+                   || (trendRatioSIG == SANTREND::FLATUP)
+                   || (trendRatioSIG == SANTREND::FLATDOWN)
+                   || (trendSIG == SAN_SIGNAL::SIDEWAYS)
                 )
              )
              ||
              (
                 (
-                   (slopeVarSIG==SAN_SIGNAL::SIDEWAYS)
+                   (slopeVarSIG == SAN_SIGNAL::SIDEWAYS)
                 )
                 &&
                 (
-                   (candleVol120SIG==SAN_SIGNAL::SIDEWAYS)
-                   ||(cpScatterSIG==SANTREND::FLAT)
-                   ||(cpScatterSIG==SANTREND::FLATUP)
-                   ||(cpScatterSIG==SANTREND::FLATDOWN)
-                   ||(trendRatioSIG==SANTREND::FLAT)
-                   ||(trendRatioSIG==SANTREND::FLATUP)
-                   ||(trendRatioSIG==SANTREND::FLATDOWN)
-                   ||(trendSIG==SAN_SIGNAL::SIDEWAYS)
+                   (candleVol120SIG == SAN_SIGNAL::SIDEWAYS)
+                   || (cpScatterSIG == SANTREND::FLAT)
+                   || (cpScatterSIG == SANTREND::FLATUP)
+                   || (cpScatterSIG == SANTREND::FLATDOWN)
+                   || (trendRatioSIG == SANTREND::FLAT)
+                   || (trendRatioSIG == SANTREND::FLATUP)
+                   || (trendRatioSIG == SANTREND::FLATDOWN)
+                   || (trendSIG == SAN_SIGNAL::SIDEWAYS)
                 )
              )
              ||
              (
                 (
-                   (cpScatterSIG==SANTREND::FLAT)
-                   ||(cpScatterSIG==SANTREND::FLATUP)
-                   ||(cpScatterSIG==SANTREND::FLATDOWN)
+                   (cpScatterSIG == SANTREND::FLAT)
+                   || (cpScatterSIG == SANTREND::FLATUP)
+                   || (cpScatterSIG == SANTREND::FLATDOWN)
                 )
                 &&
-                ((candleVol120SIG==SAN_SIGNAL::SIDEWAYS)
-                 ||(slopeVarSIG==SAN_SIGNAL::SIDEWAYS)
-                 ||(trendRatioSIG==SANTREND::FLAT)
-                 ||(trendRatioSIG==SANTREND::FLATUP)
-                 ||(trendRatioSIG==SANTREND::FLATDOWN)
-                 ||(trendSIG==SAN_SIGNAL::SIDEWAYS)
+                ((candleVol120SIG == SAN_SIGNAL::SIDEWAYS)
+                 || (slopeVarSIG == SAN_SIGNAL::SIDEWAYS)
+                 || (trendRatioSIG == SANTREND::FLAT)
+                 || (trendRatioSIG == SANTREND::FLATUP)
+                 || (trendRatioSIG == SANTREND::FLATDOWN)
+                 || (trendSIG == SAN_SIGNAL::SIDEWAYS)
                 )
              )
              ||
              (
                 (
-                   (trendRatioSIG==SANTREND::FLAT)
-                   ||(trendRatioSIG==SANTREND::FLATUP)
-                   ||(trendRatioSIG==SANTREND::FLATDOWN)
+                   (trendRatioSIG == SANTREND::FLAT)
+                   || (trendRatioSIG == SANTREND::FLATUP)
+                   || (trendRatioSIG == SANTREND::FLATDOWN)
                 )
                 &&
-                ((candleVol120SIG==SAN_SIGNAL::SIDEWAYS)
-                 ||(slopeVarSIG==SAN_SIGNAL::SIDEWAYS)
-                 ||(cpScatterSIG==SANTREND::FLAT)
-                 ||(cpScatterSIG==SANTREND::FLATUP)
-                 ||(cpScatterSIG==SANTREND::FLATDOWN)
-                 ||(trendSIG==SAN_SIGNAL::SIDEWAYS)
+                ((candleVol120SIG == SAN_SIGNAL::SIDEWAYS)
+                 || (slopeVarSIG == SAN_SIGNAL::SIDEWAYS)
+                 || (cpScatterSIG == SANTREND::FLAT)
+                 || (cpScatterSIG == SANTREND::FLATUP)
+                 || (cpScatterSIG == SANTREND::FLATDOWN)
+                 || (trendSIG == SAN_SIGNAL::SIDEWAYS)
                 )
              )
              ||
              (
                 (
-                   (trendSIG==SAN_SIGNAL::SIDEWAYS)
+                   (trendSIG == SAN_SIGNAL::SIDEWAYS)
                 )
                 &&
-                ((candleVol120SIG==SAN_SIGNAL::SIDEWAYS)
-                 ||(slopeVarSIG==SAN_SIGNAL::SIDEWAYS)
-                 ||(cpScatterSIG==SANTREND::FLAT)
-                 ||(cpScatterSIG==SANTREND::FLATUP)
-                 ||(cpScatterSIG==SANTREND::FLATDOWN)
-                 ||(trendRatioSIG==SANTREND::FLAT)
-                 ||(trendRatioSIG==SANTREND::FLATUP)
-                 ||(trendRatioSIG==SANTREND::FLATDOWN)
+                ((candleVol120SIG == SAN_SIGNAL::SIDEWAYS)
+                 || (slopeVarSIG == SAN_SIGNAL::SIDEWAYS)
+                 || (cpScatterSIG == SANTREND::FLAT)
+                 || (cpScatterSIG == SANTREND::FLATUP)
+                 || (cpScatterSIG == SANTREND::FLATDOWN)
+                 || (trendRatioSIG == SANTREND::FLAT)
+                 || (trendRatioSIG == SANTREND::FLATUP)
+                 || (trendRatioSIG == SANTREND::FLATDOWN)
                 )
              )
           );
-
-  }
+}
 //+------------------------------------------------------------------+

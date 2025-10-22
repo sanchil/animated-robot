@@ -46,30 +46,25 @@ INDDATA indData;
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
 int OnInit() {
-
-   ArrayInitialize(buff1,EMPTY);
-   ArrayInitialize(buff2,EMPTY);
-   ArrayInitialize(buff3,EMPTY);
+   ArrayInitialize(buff1, EMPTY);
+   ArrayInitialize(buff2, EMPTY);
+   ArrayInitialize(buff3, EMPTY);
 //ArrayInitialize(buff4,EMPTY);
 //ArrayInitialize(buff5,EMPTY);
 //ArrayInitialize(buff6,EMPTY);
-
-
 //--- indicator buffers mapping
-   ArraySetAsSeries(buff1,true);
-   ArraySetAsSeries(buff2,true);
-   ArraySetAsSeries(buff3,true);
+   ArraySetAsSeries(buff1, true);
+   ArraySetAsSeries(buff2, true);
+   ArraySetAsSeries(buff3, true);
 //ArraySetAsSeries(buff4,true);
 //ArraySetAsSeries(buff5,true);
 //ArraySetAsSeries(buff6,true);
-
-   SetIndexBuffer(0,buff1,INDICATOR_CALCULATIONS);
-   SetIndexBuffer(1,buff2,INDICATOR_CALCULATIONS);
-   SetIndexBuffer(2,buff3,INDICATOR_CALCULATIONS);
+   SetIndexBuffer(0, buff1, INDICATOR_CALCULATIONS);
+   SetIndexBuffer(1, buff2, INDICATOR_CALCULATIONS);
+   SetIndexBuffer(2, buff3, INDICATOR_CALCULATIONS);
 //SetIndexBuffer(3,buff4,INDICATOR_CALCULATIONS);
 //SetIndexBuffer(4,buff5,INDICATOR_CALCULATIONS);
 //SetIndexBuffer(5,buff6,INDICATOR_CALCULATIONS);
-
 //---
    return(INIT_SUCCEEDED);
 }
@@ -229,7 +224,6 @@ int OnCalculate(const int rates_total,
    indData.maxProfit = maxProfit;
    indData.shift = SHIFT;
    indData.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);
-
    int i = rates_total - prev_calculated - 1;
    if(i < 0)
       i = 0;
@@ -240,7 +234,6 @@ int OnCalculate(const int rates_total,
          indData.time[j] = time[j];
          indData.std[j] = iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_CLOSE, j);
          indData.stdOpen[j] = iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_OPEN, j);
-
          indData.obv[j] = iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, j);
          indData.rsi[j] = iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, j);
          indData.ima5[j] = iMA(_Symbol, PERIOD_CURRENT, 5, 0, MODE_SMMA, PRICE_CLOSE, j);
@@ -268,7 +261,6 @@ int OnCalculate(const int rates_total,
       initCalc(indData);
       buff1[0] = buff1[0]; // Force buffer update
    }
-
    return(rates_total);
 }
 
@@ -304,11 +296,9 @@ void initCalc(const INDDATA &indData) {
 //|                                                                  |
 //+------------------------------------------------------------------+
 double buySell(const INDDATA &indData) {
-
    SIGBUFF sbuff = st1.imaSt1(indData);
 //   Print("buySell: sbuff.buff1[0] = ", sbuff.buff1[0], ", buff2[0] = ", sbuff.buff2[0], ", buff3[0] = ", sbuff.buff3[0]); // Debug
-
-   if((sbuff.buff2[0]!=EMPTY) && (sbuff.buff2[0]!=EMPTY_VALUE) && (sbuff.buff2[0]!=NULL)) {
+   if((sbuff.buff2[0] != EMPTY) && (sbuff.buff2[0] != EMPTY_VALUE) && (sbuff.buff2[0] != NULL)) {
       //buff2[0] = sbuff.buff2[0];
       if(!flipSig) {
          buff2[0] = sbuff.buff2[0];
@@ -318,26 +308,23 @@ double buySell(const INDDATA &indData) {
    } else {
       buff2[0] = EMPTY_VALUE;
    }
-   if((sbuff.buff3[0]!=EMPTY) && (sbuff.buff3[0]!=EMPTY_VALUE) && (sbuff.buff3[0]!=NULL)) {
+   if((sbuff.buff3[0] != EMPTY) && (sbuff.buff3[0] != EMPTY_VALUE) && (sbuff.buff3[0] != NULL)) {
       buff3[0] = sbuff.buff3[0];
    } else {
       buff3[0] = EMPTY_VALUE;
    }
-
 //if((sbuff.buff4[0]!=EMPTY) && (sbuff.buff4[0]!=EMPTY_VALUE) && (sbuff.buff4[0]!=NULL)) {
 //   // Setting Market type. Trending or flat
 //   buff4[0] = sbuff.buff4[0];
 //} else {
 //   buff4[0] = EMPTY_VALUE;
 //}
-
-   if(((sbuff.buff1[0]==EMPTY) || (sbuff.buff1[0]==EMPTY_VALUE) || (sbuff.buff1[0]==NULL))) {
+   if(((sbuff.buff1[0] == EMPTY) || (sbuff.buff1[0] == EMPTY_VALUE) || (sbuff.buff1[0] == NULL))) {
       //sbuff.buff1[0]=1000.314;
-      sbuff.buff1[0]=EMPTY_VALUE;
+      sbuff.buff1[0] = EMPTY_VALUE;
       return sbuff.buff1[0];
    }
-
-   if((sbuff.buff1[0]!=EMPTY) && (sbuff.buff1[0]!=EMPTY_VALUE) && (sbuff.buff1[0]!=NULL)) {
+   if((sbuff.buff1[0] != EMPTY) && (sbuff.buff1[0] != EMPTY_VALUE) && (sbuff.buff1[0] != NULL)) {
       if(!flipSig) {
          return sbuff.buff1[0];
       } else if(flipSig) {
@@ -345,7 +332,6 @@ double buySell(const INDDATA &indData) {
          return  sbuff.buff1[0];
       }
    }
-
    return sbuff.buff1[0];
 }
 
@@ -356,14 +342,11 @@ double buySell(const INDDATA &indData) {
 //+------------------------------------------------------------------+
 bool calculateNow(const int rates_total,
                   const int prev_calculated) {
-
-   int i=rates_total-prev_calculated-1;
-   if(i<0)
-      i=0;
-   while(i>=0)
+   int i = rates_total - prev_calculated - 1;
+   if(i < 0)
+      i = 0;
+   while(i >= 0)
       return true;
-
-
    return false;
 }
 //+------------------------------------------------------------------+
