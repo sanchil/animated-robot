@@ -418,14 +418,17 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                          ((tradeSIG == SAN_SIGNAL::TRADESELL) && (opensig == SAN_SIGNAL::SELL)) ||
                          (tradeSIG == SAN_SIGNAL::TRADE)
                       );
-   tBools.flatMktBool =  getMktFlatBoolSignal(
-                            ssSIG.candleVol120SIG,
-                            ssSIG.slopeVarSIG,
-                            ssSIG.cpScatterSIG,
-                            ssSIG.trendRatioSIG,
-                            trend_14_30_120_SIG
-                         );
+   //tBools.flatMktBool =  getMktFlatBoolSignal(
+   //                         ssSIG.candleVol120SIG,
+   //                         ssSIG.slopeVarSIG,
+   //                         ssSIG.cpScatterSIG,
+   //                         ssSIG.trendRatioSIG,
+   //                         trend_14_30_120_SIG
+   //                      );
+
+   tBools.flatMktBool = (opensig == SAN_SIGNAL::SIDEWAYS) ;
    tBools.volTradeBool = (ssSIG.volSIG == SAN_SIGNAL::TRADE);
+
    bool openSigBool = (
                          (opensig == SAN_SIGNAL::BUY)
                          || (opensig == SAN_SIGNAL::SELL)
@@ -500,9 +503,9 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
       } else if(tBools.closeSigTrReversalBool) {
          mktType = MKTTYP::MKTCLOSE;
          closeSIG = SAN_SIGNAL::CLOSE;
-      } else if(opensig == SAN_SIGNAL::SIDEWAYS) {
-         mktType = MKTTYP::MKTCLOSE;
-         closeSIG = SAN_SIGNAL::CLOSE;
+      } else if(tBools.flatMktBool) {
+         mktType = MKTTYP::MKTFLAT;
+         closeSIG = SAN_SIGNAL::SIDEWAYS;
       } else if(tBools.openTradeBool) {
          mktType = MKTTYP::MKTTR;
          openSIG = opensig;
