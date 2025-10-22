@@ -1001,33 +1001,33 @@ SAN_SIGNAL HSIG::simpleSIG(
 
       if(
          ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
-         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig3 == SAN_SIGNAL::NOSIG) || (sig3 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig4 == SAN_SIGNAL::NOSIG) || (sig4 == SAN_SIGNAL::SIDEWAYS))
+         ((sig2 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig3 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig4 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig1;
 
       if(
          ((sig2 == SAN_SIGNAL::BUY) || (sig2 == SAN_SIGNAL::SELL)) &&
-         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig3 == SAN_SIGNAL::NOSIG) || (sig3 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig4 == SAN_SIGNAL::NOSIG) || (sig4 == SAN_SIGNAL::SIDEWAYS))
+         ((sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig3 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig4 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig2;
 
       if(
          ((sig3 == SAN_SIGNAL::BUY) || (sig3 == SAN_SIGNAL::SELL)) &&
-         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig4 == SAN_SIGNAL::NOSIG) || (sig4 == SAN_SIGNAL::SIDEWAYS))
+         ((sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig2 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig4 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig3;
 
       if(
          ((sig4 == SAN_SIGNAL::BUY) || (sig4 == SAN_SIGNAL::SELL)) &&
-         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig3 == SAN_SIGNAL::NOSIG) || (sig3 == SAN_SIGNAL::SIDEWAYS))
+         ((sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig2 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig3 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig4;
 
@@ -1074,22 +1074,22 @@ SAN_SIGNAL HSIG::simpleSIG(
 
       if(
          ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
-         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig3 == SAN_SIGNAL::NOSIG) || (sig3 == SAN_SIGNAL::SIDEWAYS))
+         ((sig2 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig3 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig1;
 
       if(
          ((sig2 == SAN_SIGNAL::BUY) || (sig2 == SAN_SIGNAL::SELL)) &&
-         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig3 == SAN_SIGNAL::NOSIG) || (sig3 == SAN_SIGNAL::SIDEWAYS))
+         ((sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig3 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig2;
 
       if(
          ((sig3 == SAN_SIGNAL::BUY) || (sig3 == SAN_SIGNAL::SELL)) &&
-         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS)) &&
-         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS))
+         ((sig1 == SAN_SIGNAL::SIDEWAYS)) &&
+         ((sig2 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig3;
 
@@ -1105,12 +1105,14 @@ SAN_SIGNAL HSIG::simpleSIG(
          return sig1;
       if(
          ((sig1 == SAN_SIGNAL::BUY) || (sig1 == SAN_SIGNAL::SELL)) &&
-         ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS))
+         // ((sig2 == SAN_SIGNAL::NOSIG) || (sig2 == SAN_SIGNAL::SIDEWAYS))
+         ((sig2 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig1;
       if(
          ((sig2 == SAN_SIGNAL::BUY) || (sig2 == SAN_SIGNAL::SELL)) &&
-         ((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS))
+         //((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS))
+         ((sig1 == SAN_SIGNAL::SIDEWAYS))
       )
          return sig2;
 
