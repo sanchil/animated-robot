@@ -424,7 +424,7 @@ struct ORDERPARAMS {
       //      ADJUSTED_MAXTRADEPROFIT = NULL;
    };
 
-   double            getProfit(double defaultTP, int minLot = EMPTY, double tP = EMPTY_VALUE) {
+   double            getProfit(double defaultTP, double minLot = EMPTY, double tP = EMPTY_VALUE) {
       return ((tP != EMPTY_VALUE) && (minLot != EMPTY)) ? (tP * minLot) : (((tP != EMPTY_VALUE) && (minLot == EMPTY)) ? (tP * MICROLOTS) : (defaultTP * MICROLOTS));
    }
 
@@ -435,8 +435,13 @@ struct ORDERPARAMS {
    //+------------------------------------------------------------------+
    //|                                                                  |
    //+------------------------------------------------------------------+
-   void              initTrade(int minLot = 1, double tP = EMPTY_VALUE, double sL = EMPTY_VALUE) {
+   void              initTrade(double minLot = 1, double tP = EMPTY_VALUE, double sL = EMPTY_VALUE) {
+
       TOTALORDERS = OrdersTotal();
+      
+      MICROLOTS = minLot;
+      SAN_TRADE_VOL = (MICROLOTS * 0.01);
+      
       //      TAKEPROFIT= ((tP!=EMPTY_VALUE)&&(mL!=EMPTY))?(tP*mL):(((tP!=EMPTY_VALUE)&&(mL==EMPTY))?(tP*MICROLOTS):(0.1*MICROLOTS));
       TAKEPROFIT = getProfit(0.1, minLot, tP);
       if(_Period == PERIOD_M1) {
@@ -654,6 +659,7 @@ struct INDDATA {
    int               tradePosition;
    int               currSpread;
    int               shift;
+   double            microLots; 
 
 
    void              freeData() {
@@ -687,6 +693,7 @@ struct INDDATA {
       shift = NULL;
       currSpread = EMPTY;
       tradePosition = EMPTY;
+      double microLots = -1; 
    }
    INDDATA() {}
    ~INDDATA() {

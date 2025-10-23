@@ -103,8 +103,14 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool spreadBool = (indData.currSpread < tl.spreadLimit);
 //################################################################
 //################################################################
+   //bool openOrder = (util.isNewBar() && (totalOrders == 0));
+   //bool closeOrder = (!(util.isNewBar()) && (totalOrders > 0));
+
    bool openOrder = (op1.NEWCANDLE && (totalOrders == 0));
    bool closeOrder = (!op1.NEWCANDLE && (totalOrders > 0));
+
+
+
    SANTREND slopeTrendSIG = ss.trendRatioSIG;
    SIGMAVARIABILITY varSIG = ss.ima120SDSIG;
    bool spreadVolBool = (spreadBool && (ss.volSIG == SAN_SIGNAL::TRADE));
