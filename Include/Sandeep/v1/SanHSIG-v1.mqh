@@ -36,13 +36,13 @@
 
 const double _BASESLOPE_FAST = 0.6;
 const double _BASESLOPE_MEDIUM = 0.4;
-//const double _BASESLOPE_SLOW = 0.35; // This is for baseSlopeSIG by itself
-const double _BASESLOPE_SLOW = 0.3; // This is for baseSlopeSlope in tandem with a faster signal
+const double _BASESLOPE_SLOW = 0.35; // This is for baseSlopeSIG by itself
+//const double _BASESLOPE_SLOW = 0.3; // This is for baseSlopeSlope in tandem with a faster signal
 
 const double _STDSLOPE = -0.6;
 const int _OBVSLOPE = 100;
 const double _SLOPERATIO = 0.5;
-const double _SLOPESTEEPDIVE = -100.0;
+const double _SLOPESTEEPDIVE = -500.0;
 const int _SLOPERATIO_UPPERLIMIT = 20;
 const double _CLUSTERRANGEPLUS = 1 + 0.03;
 const double _CLUSTERRANGEMINUS = 1 - 0.03;
