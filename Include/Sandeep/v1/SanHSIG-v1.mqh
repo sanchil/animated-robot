@@ -36,11 +36,13 @@
 
 const double _BASESLOPE_FAST = 0.6;
 const double _BASESLOPE_MEDIUM = 0.4;
-const double _BASESLOPE_SLOW = 0.35;
+//const double _BASESLOPE_SLOW = 0.35; // This is for baseSlopeSIG by itself
+const double _BASESLOPE_SLOW = 0.3; // This is for baseSlopeSlope in tandem with a faster signal
 
 const double _STDSLOPE = -0.6;
 const int _OBVSLOPE = 100;
 const double _SLOPERATIO = 0.5;
+const double _SLOPESTEEPDIVE = -100.0;
 const int _SLOPERATIO_UPPERLIMIT = 20;
 const double _CLUSTERRANGEPLUS = 1 + 0.03;
 const double _CLUSTERRANGEMINUS = 1 - 0.03;
@@ -69,6 +71,7 @@ class HSIG {
    double            STDSLOPE;
    double            OBVSLOPE;
    double            SLOPERATIO;
+   double            SLOPESTEEPDIVE;
    double            SLOPERATIO_UPPERLIMIT;
    double            CLUSTERRANGEPLUS;
    double            CLUSTERRANGEMINUS;
@@ -319,6 +322,7 @@ HSIG::HSIG()
    STDSLOPE(_STDSLOPE),
    OBVSLOPE(_OBVSLOPE),
    SLOPERATIO(_SLOPERATIO),
+   SLOPESTEEPDIVE(_SLOPESTEEPDIVE),
    SLOPERATIO_UPPERLIMIT(_SLOPERATIO_UPPERLIMIT),
    CLUSTERRANGEPLUS(_CLUSTERRANGEPLUS),
    CLUSTERRANGEMINUS(_CLUSTERRANGEMINUS),
@@ -346,6 +350,7 @@ HSIG::HSIG(const SANSIGNALS &ss, SanUtils &util)
    STDSLOPE(_STDSLOPE),
    OBVSLOPE(_OBVSLOPE),
    SLOPERATIO(_SLOPERATIO),
+   SLOPESTEEPDIVE(_SLOPESTEEPDIVE),
    SLOPERATIO_UPPERLIMIT(_SLOPERATIO_UPPERLIMIT),
    CLUSTERRANGEPLUS(_CLUSTERRANGEPLUS),
    CLUSTERRANGEMINUS(_CLUSTERRANGEMINUS),
@@ -729,8 +734,8 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
 //trdStgy = TRADE_STRATEGIES::SLOPESIG;
    if(trdStgy == TRADE_STRATEGIES::SLOPESIG)
       //setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
-      setSIGForStrategy(baseSlopeSIG, trdStgy);
-   //setSIGForStrategy(slopeCandle120SIG, trdStgy);
+      //setSIGForStrategy(baseSlopeSIG, trdStgy);
+      setSIGForStrategy(slopeCandle120SIG, trdStgy);
 
 //trdStgy = TRADE_STRATEGIES::FASTSIG;
    if(trdStgy == TRADE_STRATEGIES::FASTSIG)
@@ -2069,7 +2074,7 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
    bool closeCandleAtrDP = (candleAtrDPRatio < 0.3);
    bool closeAtr = ((atrSIG == SAN_SIGNAL::NOTRADE) || (atrSIG == SAN_SIGNAL::NOSIG));
    bool closeSlopeRatioBool = (fMSWR < SLOPERATIO);
-   bool closeSlopeRatioSteepDiveBool = (fMSWR < -200);
+   bool closeSlopeRatioSteepDiveBool = (fMSWR < SLOPESTEEPDIVE);
    bool closeSlope30Bool = (slopeSIG(ss.imaSlope30Data, 0) == SAN_SIGNAL::CLOSE); //(fabs(slopeIMA30)<=0.3);
    bool closeBaseSlopeBool = (slopeSIG(ss.baseSlopeData, 2) == SAN_SIGNAL::CLOSE);
    bool closeClusterBool = (((rFM < 0) && (rMS < 0)) || ((rMS < 0) && (rFS < 0)) || ((rFM < 0) && (rFS < 0)));
@@ -2132,8 +2137,9 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
 //+------------------------------------------------------------------+
 //   Print("[CTRADE2] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio+" FLAT: "+flatBool);
    Print("[CTRADE2] stdOPSlope: " + NormalizeDouble(stdOPSlope, 2) + " stdCPSlope: " + NormalizeDouble(stdCPSlope, 2) + " obvCPSlope: " + NormalizeDouble(obvCPSlope, 2) + " Slope30: " + NormalizeDouble(slopeIMA30, 2) + " fMSWR: " + fMSWR + " rFM: " + rFM + " rMS: " + rMS + " candleAtrDP: " + candleAtrDPRatio);
-   Print("[CTRADE2] [bool1: " + closeTradeBool1 + " bool2: " + closeTradeBool2 + " bool3: " + closeTradeBool3 + " bool4: " + closeTradeBool4 + "] closeTrendStdCP: " + closeTrendStdCP + " closeSlopeRatioBool: " + closeSlopeRatioBool + " closeCandleAtrDP: " + closeCandleAtrDP + " closeAtr: " + closeAtr + " slope30: " + closeSlope30Bool + " cluster: " + closeClusterBool);
-   Print("[CTRADE2] [ closeTrendStdCP: " + closeTrendStdCP + " closeTrendStdCP1: " + closeTrendStdCP1 + " closeTrendStdCP2: " + closeTrendStdCP2 + " closeTrendStdCP3: " + closeTrendStdCP3 + " OP 60% " + NormalizeDouble((0.6 * (stdOPSlope + _Point)), 2) + " OP 80%: " + NormalizeDouble((0.8 * (stdOPSlope + _Point)), 2));
+   Print("[CTRADE2] [bool1: " + closeTradeBool1 + " bool2: " + closeTradeBool2 + " bool3: " + closeTradeBool3 + " bool4: " + closeTradeBool4 + " bool5:"+closeTradeBool5+"]");
+   Print("[CTRADE2]  closeTrendStdCP: " + closeTrendStdCP + " closeSlopeRatioBool: " + closeSlopeRatioBool + " closeCandleAtrDP: " + closeCandleAtrDP + " closeAtr: " + closeAtr + " slope30: " + closeSlope30Bool + " cluster: " + closeClusterBool);
+   //Print("[CTRADE2] [ closeTrendStdCP: " + closeTrendStdCP + " closeTrendStdCP1: " + closeTrendStdCP1 + " closeTrendStdCP2: " + closeTrendStdCP2 + " closeTrendStdCP3: " + closeTrendStdCP3 + " OP 60% " + NormalizeDouble((0.6 * (stdOPSlope + _Point)), 2) + " OP 80%: " + NormalizeDouble((0.8 * (stdOPSlope + _Point)), 2));
    return sig;
 }
 
