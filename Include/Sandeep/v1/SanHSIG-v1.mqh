@@ -438,6 +438,11 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                          (opensig == SAN_SIGNAL::BUY)
                          || (opensig == SAN_SIGNAL::SELL)
                       );
+   bool closeSigBool = (
+                          (closesig == SAN_SIGNAL::BUY)
+                          || (closesig == SAN_SIGNAL::SELL)
+                       );
+
    bool openTradeBool1 = (tBools.tradeBool);
    bool openTradeBool2 = (opensig == baseSlopeSIG);
    bool openTradeBool3 = (openTradeBool1 && openTradeBool2);
@@ -453,8 +458,8 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
 //if(tBools.closeFlatTradeBool)
 //   flatBool =true;
 
-   tBools.closeSigTrReversalBool =  getMktCloseOnReversal(opensig, ut);
-   tBools.closeSigTrCloseSigReversalBool =  getMktCloseOnReversal(closesig, ut);
+   tBools.closeSigTrReversalBool =  (openSigBool && getMktCloseOnReversal(opensig, ut));
+   tBools.closeSigTrCloseSigReversalBool = (closeSigBool && getMktCloseOnReversal(closesig, ut));
 
 //   tBools.closeSlopeRatios = getMktCloseOnSlopeRatio();
 //   tBools.closeOBVStdBool = (tBools.noTradeBool && getMktCloseOnStdCPOBV());
@@ -491,7 +496,9 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                            && tBools.noTradeBool
                         );
 
-   tBools.closeTradeBool = (closeSigBool1);
+   bool closeSigBool2 = (!closeSigBool1 && tBools.closeSigTrReversalBool);
+
+   tBools.closeTradeBool = (closeSigBool1 || closeSigBool2);
    tBools.openTradeBool = (
                              (!tBools.closeTradeBool)
                              && openSigBool
