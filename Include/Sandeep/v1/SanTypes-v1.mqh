@@ -438,10 +438,10 @@ struct ORDERPARAMS {
    void              initTrade(double minLot = 1, double tP = EMPTY_VALUE, double sL = EMPTY_VALUE) {
 
       TOTALORDERS = OrdersTotal();
-      
+
       MICROLOTS = minLot;
       SAN_TRADE_VOL = (MICROLOTS * 0.01);
-      
+
       //      TAKEPROFIT= ((tP!=EMPTY_VALUE)&&(mL!=EMPTY))?(tP*mL):(((tP!=EMPTY_VALUE)&&(mL==EMPTY))?(tP*MICROLOTS):(0.1*MICROLOTS));
       TAKEPROFIT = getProfit(0.1, minLot, tP);
       if(_Period == PERIOD_M1) {
@@ -659,7 +659,7 @@ struct INDDATA {
    int               tradePosition;
    int               currSpread;
    int               shift;
-   double            microLots; 
+   double            microLots;
 
 
    void              freeData() {
@@ -693,7 +693,7 @@ struct INDDATA {
       shift = NULL;
       currSpread = EMPTY;
       tradePosition = EMPTY;
-      double microLots = -1; 
+      double microLots = -1;
    }
    INDDATA() {}
    ~INDDATA() {
@@ -788,6 +788,7 @@ class SANSIGNALS {
    SAN_SIGNAL        fsig5;
    SAN_SIGNAL        fsig14;
    SAN_SIGNAL        fsig30;
+   SAN_SIGNAL        fsig60;
    SAN_SIGNAL        fsig120;
    SAN_SIGNAL        fsig240;
    SAN_SIGNAL        fsig500;
@@ -944,6 +945,7 @@ void  SANSIGNALS::initBase() {
    fsig5 = SAN_SIGNAL::NOSIG;
    fsig14 = SAN_SIGNAL::NOSIG;
    fsig30 = SAN_SIGNAL::NOSIG;
+   fsig60 = SAN_SIGNAL::NOSIG;
    fsig120 = SAN_SIGNAL::NOSIG;
    fsig240 = SAN_SIGNAL::NOSIG;
    fsig500 = SAN_SIGNAL::NOSIG;

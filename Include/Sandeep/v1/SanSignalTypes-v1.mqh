@@ -110,6 +110,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    fsig5 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima5[SHIFT], 21);
    fsig14 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima14[SHIFT], 21);
    fsig30 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima30[SHIFT], 21);
+   fsig60 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima60[SHIFT], 21);
    fsig120 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima120[SHIFT], 21);
    fsig240 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima240[SHIFT], 21);
    fsig500 = sig.fastSlowSIG(indData.close[SHIFT], indData.ima500[SHIFT], 21);
