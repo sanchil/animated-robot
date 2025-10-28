@@ -461,17 +461,38 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
    tBools.closeSigTrReversalBool =  (openSigBool && getMktCloseOnReversal(opensig, ut));
    tBools.closeSigTrCloseSigReversalBool = (closeSigBool && getMktCloseOnReversal(closesig, ut));
 
+//   Print(" ATR VOL DP: " +log(ceil(ssSIG.atrVolData.val1))+ " 10:"+log10(ceil(ssSIG.atrVolData.val1))+"Ratio: "+ (log(ceil(ssSIG.atrVolData.val1))/log10(ceil(ssSIG.atrVolData.val1))));
+
+// Close on primary trade signal paired with trade context
+   //bool closeSigBool1 = (
+   //                        (
+   //                           (
+   //                              (opensig == SAN_SIGNAL::CLOSE)
+   //                              || (opensig == SAN_SIGNAL::NOSIG)
+   //                              || (opensig == SAN_SIGNAL::SIDEWAYS)
+   //                           )
+   //                           && ssSIG.atrSIG == SAN_SIGNAL::NOTRADE
+   //                        )
+   //                        || tBools.noTradeBool
+   //                        //&& tBools.noTradeBool
+   //                     );
+
+
+   bool slowDownCloseFactor = ( tBools.noTradeBool || (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE));
+
    bool closeSigBool1 = (
                            (
                               (opensig == SAN_SIGNAL::CLOSE)
-                              || (opensig == SAN_SIGNAL::NOSIG)
-                              || (opensig == SAN_SIGNAL::SIDEWAYS)
+                              && ssSIG.atrSIG == SAN_SIGNAL::NOTRADE
                            )
+                           && slowDownCloseFactor
                            //|| tBools.noTradeBool
-                           && tBools.noTradeBool
+                           //&& tBools.noTradeBool
                         );
 
+// Close on trade reversal
    bool closeSigBool2 = (!closeSigBool1 && tBools.closeSigTrReversalBool);
+   // Close on sudden trade swings
    bool closeSigBool3 = (!closeSigBool1 && getMktCloseOnReversal(ssSIG.fsig60, ut));
 
 
