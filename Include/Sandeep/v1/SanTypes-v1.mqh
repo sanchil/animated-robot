@@ -736,7 +736,7 @@ class SANSIGNALS {
    SAN_SIGNAL        priceActionSIG;
    SAN_SIGNAL        adxSIG;
    SAN_SIGNAL        atrSIG;
-   //   SANTRENDSTRENGTH  atrSIG;
+   SAN_SIGNAL        obvCPSIG;
    SAN_SIGNAL        mfiSIG;
    SAN_SIGNAL        rsiSIG;
    SAN_SIGNAL        adxCovDivSIG;
@@ -893,6 +893,7 @@ void  SANSIGNALS::initBase() {
    candlePattStarSIG = SAN_SIGNAL::NOSIG;
    adxSIG = SAN_SIGNAL::NOSIG;
    atrSIG = SAN_SIGNAL::NOSIG;
+   obvCPSIG = SAN_SIGNAL::NOSIG;
    mfiSIG = SAN_SIGNAL::NOSIG;
    rsiSIG = SAN_SIGNAL::NOSIG;
    adxCovDivSIG = SAN_SIGNAL::NOSIG;

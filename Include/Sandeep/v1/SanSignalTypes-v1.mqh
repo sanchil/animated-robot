@@ -150,6 +150,8 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    stdCPSlope = sig.slopeSIGData(indData.std, 5, 21, 1);
    stdOPSlope = sig.slopeSIGData(indData.stdOpen, 5, 21, 1);
    obvCPSlope = sig.slopeSIGData(indData.obv, 5, 21, 1);
+   obvCPSIG = sig.obvCPSIG(indData.obv, 5, 21, 1);
+   
 //simpleSlope_14_SIG = sig.slopeSIG(imaSlope14Data,0);
 //simpleSlope_30_SIG = sig.slopeSIG(imaSlope30Data,0);
 //simpleSlope_120_SIG = sig.slopeSIG(imaSlope120Data,1);

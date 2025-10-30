@@ -462,6 +462,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
    tBools.closeSigTrCloseSigReversalBool = (closeSigBool && getMktCloseOnReversal(closesig, ut));
 
 //   Print(" ATR VOL DP: " +log(ceil(ssSIG.atrVolData.val1))+ " 10:"+log10(ceil(ssSIG.atrVolData.val1))+"Ratio: "+ (log(ceil(ssSIG.atrVolData.val1))/log10(ceil(ssSIG.atrVolData.val1))));
+   Print(" OBV Signal: " + ut.getSigString(ssSIG.obvCPSIG));
 
 // Close on primary trade signal paired with trade context
    //bool closeSigBool1 = (
@@ -485,7 +486,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                               (opensig == SAN_SIGNAL::CLOSE)
                               && ssSIG.atrSIG == SAN_SIGNAL::NOTRADE
                            )
-                           && slowDownCloseFactor
+                           || slowDownCloseFactor
                            //|| tBools.noTradeBool
                            //&& tBools.noTradeBool
                         );
