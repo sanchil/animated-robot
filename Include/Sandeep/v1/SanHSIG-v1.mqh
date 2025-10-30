@@ -40,7 +40,8 @@ const double _BASESLOPE_SLOW = 0.35; // This is for baseSlopeSIG by itself
 //const double _BASESLOPE_SLOW = 0.3; // This is for baseSlopeSlope in tandem with a faster signal
 
 const double _STDSLOPE = -0.6;
-const int _OBVSLOPE = 100;
+//const int _OBVSLOPE = 100;
+const int _OBVSLOPE = 2;
 const double _SLOPERATIO = 0.5;
 const double _SLOPESTEEPDIVE = -500.0;
 const int _SLOPERATIO_UPPERLIMIT = 20;
@@ -462,7 +463,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
    tBools.closeSigTrCloseSigReversalBool = (closeSigBool && getMktCloseOnReversal(closesig, ut));
 
 //   Print(" ATR VOL DP: " +log(ceil(ssSIG.atrVolData.val1))+ " 10:"+log10(ceil(ssSIG.atrVolData.val1))+"Ratio: "+ (log(ceil(ssSIG.atrVolData.val1))/log10(ceil(ssSIG.atrVolData.val1))));
-   Print(" OBV Signal: " + ut.getSigString(ssSIG.obvCPSIG));
+   //Print(" OBV Signal: " + ut.getSigString(ssSIG.obvCPSIG));
 
 // Close on primary trade signal paired with trade context
    //bool closeSigBool1 = (
@@ -1916,7 +1917,8 @@ SAN_SIGNAL HSIG::cTradeSIG(
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
    double stdOPSlope = ss.stdOPSlope.val1;
-   double obvCPSlope = ss.obvCPSlope.val1 * pipValue; // Normalize obvCPSlope
+   //double obvCPSlope = ss.obvCPSlope.val1 * pipValue; // Normalize obvCPSlope
+   double obvCPSlope = log(((fabs(ss.obvCPSlope.val1) * pipValue + 0.001) / (_Period + 0.001)));  // Normalize obvCPSlope
    double rFM =  ss.clusterData.matrixD[0];
    double rMS =  ss.clusterData.matrixD[1];
    double rFS =  ss.clusterData.matrixD[2];
@@ -1949,8 +1951,10 @@ SAN_SIGNAL HSIG::cTradeSIG(
    bool trendStdCP = ((stdCPSlope > STDSLOPE) && (stdCPSlope >= stdOPSlope));
    bool trendBuySlope30 = (slopeSIG(ss.imaSlope30Data, 0) == SAN_SIGNAL::BUY); //(slopeIMA30>0.4); // slope30 is not used for Trade Signal
    bool trendSellSlope30 = (slopeSIG(ss.imaSlope30Data, 0) == SAN_SIGNAL::SELL); //(slopeIMA30<-0.4);
-   bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
-   bool trendSellOBVBool = (obvCPSlope < (-1 * OBVSLOPE));
+   //bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
+   //bool trendSellOBVBool = (obvCPSlope < (-1 * OBVSLOPE));
+   bool trendBuyOBVBool = ((ss.obvCPSlope.val1 > 0) && (obvCPSlope > OBVSLOPE));
+   bool trendSellOBVBool = ((ss.obvCPSlope.val1 < 0) &&  (obvCPSlope > OBVSLOPE));
    bool trendBuyClusterBool = (
                                  (rFM > CLUSTERRANGEPLUS) &&
                                  (rMS > CLUSTERRANGEPLUS) &&
@@ -2066,7 +2070,9 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
    double stdOPSlope = ss.stdOPSlope.val1;
-   double obvCPSlope = ss.obvCPSlope.val1 * pipValue; // Normalize obvCPSlope
+   //double obvCPSlope = ss.obvCPSlope.val1 * pipValue; // Normalize obvCPSlope
+   double obvCPSlope = log(((fabs(ss.obvCPSlope.val1) * pipValue + 0.001) / (_Period + 0.001)));  // Normalize obvCPSlope
+
    double rFM =  ss.clusterData.matrixD[0];
    double rMS =  ss.clusterData.matrixD[1];
    double rFS =  ss.clusterData.matrixD[2];
@@ -2104,6 +2110,8 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
    bool trendStdCP = ((stdCPSlope > STDSLOPE) && (stdCPSlope >= stdOPSlope));
    bool trendSlopeRatioBool  = ((fMSWR >= SLOPERATIO) && (fMSWR <= SLOPERATIO_UPPERLIMIT));
    bool trendCandleAtrDP  = ((candleAtrDPRatio >= 0.1));
+   bool trendBuyOBVBool = ((ss.obvCPSlope.val1 > 0) && (obvCPSlope > OBVSLOPE));
+   bool trendSellOBVBool = ((ss.obvCPSlope.val1 < 0) &&  (obvCPSlope > OBVSLOPE));
    bool openTradeBool = (trendStdCP && trendSlopeRatioBool && trendCandleAtrDP);
    bool closeTradeBool1 = (
                              closeTrendStdCP
@@ -2166,11 +2174,19 @@ SAN_SIGNAL HSIG::cSIG(
 //const double SLOPE30LIMIT = 3;
 //const double OBVSLOPE = 3000;
    double stdCPSlope = ss.stdCPSlope.val1;
-   double obvCPSlope = ss.obvCPSlope.val1 * pipValue; // Normalize obvCPSlope
+   //double obvCPSlope = ss.obvCPSlope.val1 * pipValue; // Normalize obvCPSlope
+   double obvCPSlope = log(((fabs(ss.obvCPSlope.val1) * pipValue + 0.001) / (_Period + 0.001)));
+
    bool trendStdCP = (stdCPSlope > STDSLOPE);
 //bool closeOBVBool =  ((obvCPSlope > (-1*OBVSLOPE))&&(obvCPSlope < OBVSLOPE));
-   bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
-   bool trendSellOBVBool = (obvCPSlope < (-1 * OBVSLOPE));
+   //bool trendBuyOBVBool = (obvCPSlope > OBVSLOPE);
+   //bool trendSellOBVBool = (obvCPSlope < (-1 * OBVSLOPE));
+
+   bool trendBuyOBVBool = ((ss.obvCPSlope.val1 > 0) && (obvCPSlope > OBVSLOPE));
+   bool trendSellOBVBool = ((ss.obvCPSlope.val1 < 0) &&  (obvCPSlope > OBVSLOPE));
+
+
+
    SAN_SIGNAL slopesig = slopeSIG(ss.imaSlope30Data, 0);
    if(trendStdCP && (fabs(ss.imaSlope30Data.val1) > SLOPE30LIMIT)) {
       sig = slopesig;
