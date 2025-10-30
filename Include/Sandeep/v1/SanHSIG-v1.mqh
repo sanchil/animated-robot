@@ -481,11 +481,20 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
 
 
    bool slowDownCloseFactor = ( tBools.noTradeBool && (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE));
+   bool rsiObvCPClose = (
+                           ((ssSIG.rsiSIG == SAN_SIGNAL::BUY) || (ssSIG.rsiSIG == SAN_SIGNAL::SELL)) &&
+                           ( ssSIG.rsiSIG == ssSIG.obvCPSIG) &&
+                           (getMktCloseOnReversal(ssSIG.rsiSIG, ut))
+                        );
 
    bool closeSigBool1 = (
                            (
                               (opensig == SAN_SIGNAL::CLOSE)
-                              && ssSIG.atrSIG == SAN_SIGNAL::NOTRADE
+                              &&
+                              (
+                                 (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE) ||
+                                 rsiObvCPClose
+                              )
                            )
                            || slowDownCloseFactor
                            //|| tBools.noTradeBool
