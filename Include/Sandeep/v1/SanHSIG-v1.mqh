@@ -492,8 +492,9 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                               (opensig == SAN_SIGNAL::CLOSE)
                               &&
                               (
-                                 (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE) ||
-                                 rsiObvCPClose
+                                 (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE)
+                                 || rsiObvCPClose
+                                 //&& rsiObvCPClose
                               )
                            )
                            || slowDownCloseFactor
@@ -503,11 +504,12 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
 
 // Close on trade reversal
    bool closeSigBool2 = (!closeSigBool1 && tBools.closeSigTrReversalBool);
-   // Close on sudden trade swings
-   bool closeSigBool3 = (!closeSigBool1 && getMktCloseOnReversal(ssSIG.fsig60, ut));
+   //// Close on sudden trade swings
+   //// Avoid using this condistion.  Causes whiplas trades.
+   //bool closeSigBool3 = (!closeSigBool1 && getMktCloseOnReversal(ssSIG.fsig60, ut));
 
 
-   tBools.closeTradeBool = (closeSigBool1 || closeSigBool2 || closeSigBool3);
+   tBools.closeTradeBool = (closeSigBool1 || closeSigBool2);// || closeSigBool3);
    tBools.openTradeBool = (
                              (!tBools.closeTradeBool)
                              && openSigBool
