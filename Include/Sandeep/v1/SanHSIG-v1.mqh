@@ -497,7 +497,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                                  //&& rsiObvCPClose
                               )
                            )
-                           || slowDownCloseFactor
+                           && slowDownCloseFactor
                            //|| tBools.noTradeBool
                            //&& tBools.noTradeBool
                         );
