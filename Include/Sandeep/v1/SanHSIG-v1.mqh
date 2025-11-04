@@ -480,7 +480,10 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
    //                     );
 
 
-   bool slowDownCloseFactor = ( tBools.noTradeBool && (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE));
+   //bool slowDownCloseFactor = ( tBools.noTradeBool && (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE));
+   
+   bool slowDownCloseFactor = (tBools.noTradeBool);
+   
    bool rsiObvCPClose = (
                            ((ssSIG.rsiSIG == SAN_SIGNAL::BUY) || (ssSIG.rsiSIG == SAN_SIGNAL::SELL)) &&
                            ( ssSIG.rsiSIG == ssSIG.obvCPSIG) &&
@@ -498,8 +501,6 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                               )
                            )
                            && slowDownCloseFactor
-                           //|| tBools.noTradeBool
-                           //&& tBools.noTradeBool
                         );
 
 // Close on trade reversal
@@ -2124,6 +2125,7 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
    bool trendBuyOBVBool = ((ss.obvCPSlope.val1 > 0) && (obvCPSlope > OBVSLOPE));
    bool trendSellOBVBool = ((ss.obvCPSlope.val1 < 0) &&  (obvCPSlope > OBVSLOPE));
    bool openTradeBool = (trendStdCP && trendSlopeRatioBool && trendCandleAtrDP);
+   
    bool closeTradeBool1 = (
                              closeTrendStdCP
                              && closeSlopeRatioBool
@@ -2134,15 +2136,19 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
                              closeSlope30Bool
                              && closeTrendStdCP
                              && closeSlopeRatioBool
+                             && closeAtr
                           );
    bool closeTradeBool3 = (
                              closeSlope30Bool
                              && closeClusterBool
                              && closeSlopeRatioBool
-
+                             && closeAtr
                           );
 
-   bool closeTradeBool4 = (closeBaseSlopeBool);
+   bool closeTradeBool4 = (closeBaseSlopeBool && closeAtr);
+
+// closeAtr added to all but the following signal. This signal needs to catch fast and steep dives 
+// and issue a close signal real quick
 
    bool closeTradeBool5 = (closeSlopeRatioSteepDiveBool);
 
@@ -2153,7 +2159,6 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
                             closeTradeBool3 ||
                             closeTradeBool4 ||
                             closeTradeBool5
-
                          );
    if(closeTradeBool) {
       sig = SAN_SIGNAL::NOTRADE;
