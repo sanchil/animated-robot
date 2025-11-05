@@ -379,45 +379,7 @@ void HSIG::setTradeStrategy(const TRADE_STRATEGIES& st) {
 //|                                                                  |
 //+------------------------------------------------------------------+
 void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& st, SAN_SIGNAL closesig = SAN_SIGNAL::NOSIG) {
-//   bool noTradeBool = ((tradeSIG==SAN_SIGNAL::NOTRADE)||(tradeSIG==SAN_SIGNAL::NOSIG));
-//   bool tradeBool = (
-//                       ((tradeSIG==SAN_SIGNAL::TRADEBUY)&&(opensig==SAN_SIGNAL::BUY))||
-//                       ((tradeSIG==SAN_SIGNAL::TRADESELL)&&(opensig==SAN_SIGNAL::SELL))||
-//                       (tradeSIG==SAN_SIGNAL::TRADE)
-//                    );
-//
-//   bool flatMktBool =  getMktFlatBoolSignal(
-//                          ssSIG.candleVol120SIG,
-//                          ssSIG.slopeVarSIG,
-//                          ssSIG.cpScatterSIG,
-//                          ssSIG.trendRatioSIG,
-//                          trend_14_30_120_SIG
-//                       );
-//################ Open Strategies #########################################
-//bool openTradeBool = ((opensig==baseSlopeSIG)&&(stdCPSlope.val1>-0.6));
-//bool openTradeBool = ((opensig==baseSlopeSIG)&&tradeBool);
-////################ Close Strategies #########################################
-//
-//// getMktCloseOnVariableSlope(ss,util): This is great for close signals when the signals are steep
-//   bool closeSlopeVarBool = getMktCloseOnSlopeVariable(ssSIG,ut);
-//
-//// getMktCloseOnFlat(fastSIG,flatMktBool): This is great for handling close when market is flat.
-//   bool closeFlatTradeBool = getMktCloseOnFlat(opensig,flatMktBool);
-//
-//// This is a simple basic close signal on reversal of trade signal with current position.
-//   bool closeSigTrReversalBool =  getMktCloseOnReversal(opensig, ut);
-//   bool closeSigTrCloseSigReversalBool =  getMktCloseOnReversal(closesig, ut);
-//   bool closeSlopeRatios = getMktCloseOnSlopeRatio();
-//
-////  bool closeTradeBool2 = ((!closeFlatTradeBool&&!closeSigTrReversalBool) && noTradeBool);
-////bool closeOBVStdBool = getMktCloseOnStdCPOBV();
-//   bool closeOBVStdBool = (noTradeBool&&getMktCloseOnStdCPOBV());
-//   bool closeClusterStdBool = (getMktCloseOnStdCPCluster());
-//   bool closeSigBool = ((opensig==SAN_SIGNAL::CLOSE) || noTradeBool);
-//
-//   bool openTradeBool = (tradeBool);
-//   bool closeTradeBool = (closeOBVStdBool);
-//  static bool flatBool = false;
+
    tBools.noTradeBool = ((tradeSIG == SAN_SIGNAL::NOTRADE) || (tradeSIG == SAN_SIGNAL::NOSIG));
    tBools.tradeBool = (
                          ((tradeSIG == SAN_SIGNAL::TRADEBUY) && (opensig == SAN_SIGNAL::BUY)) ||
@@ -448,47 +410,27 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
    bool openTradeBool2 = (opensig == baseSlopeSIG);
    bool openTradeBool3 = (openTradeBool1 && openTradeBool2);
 
+   bool tradeContext = openTradeBool1;
 
-
-   //bool openTradeBool4 = (opensig == simpleSlope_30_SIG);
    tBools.closeSlopeVarBool = getMktCloseOnSlopeVariable(ssSIG, ut);
    tBools.closeFlatTradeBool = getMktCloseOnFlat(opensig, tBools.flatMktBool);
-
-// Set the static bool flatBool here to help
-// activate and close on secondary close post flat market.
-//if(tBools.closeFlatTradeBool)
-//   flatBool =true;
 
    tBools.closeSigTrReversalBool =  (openSigBool && getMktCloseOnReversal(opensig, ut));
    tBools.closeSigTrCloseSigReversalBool = (closeSigBool && getMktCloseOnReversal(closesig, ut));
 
-//   Print(" ATR VOL DP: " +log(ceil(ssSIG.atrVolData.val1))+ " 10:"+log10(ceil(ssSIG.atrVolData.val1))+"Ratio: "+ (log(ceil(ssSIG.atrVolData.val1))/log10(ceil(ssSIG.atrVolData.val1))));
-   //Print(" OBV Signal: " + ut.getSigString(ssSIG.obvCPSIG));
-
 // Close on primary trade signal paired with trade context
-   //bool closeSigBool1 = (
-   //                        (
-   //                           (
-   //                              (opensig == SAN_SIGNAL::CLOSE)
-   //                              || (opensig == SAN_SIGNAL::NOSIG)
-   //                              || (opensig == SAN_SIGNAL::SIDEWAYS)
-   //                           )
-   //                           && ssSIG.atrSIG == SAN_SIGNAL::NOTRADE
-   //                        )
-   //                        || tBools.noTradeBool
-   //                        //&& tBools.noTradeBool
-   //                     );
-
 
    //bool slowDownCloseFactor = ( tBools.noTradeBool && (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE));
    
    bool slowDownCloseFactor = (tBools.noTradeBool);
+   
    
    bool rsiObvCPClose = (
                            ((ssSIG.rsiSIG == SAN_SIGNAL::BUY) || (ssSIG.rsiSIG == SAN_SIGNAL::SELL)) &&
                            ( ssSIG.rsiSIG == ssSIG.obvCPSIG) &&
                            (getMktCloseOnReversal(ssSIG.rsiSIG, ut))
                         );
+
 
    bool closeSigBool1 = (
                            (
@@ -497,24 +439,41 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                               (
                                  (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE)
                                  || rsiObvCPClose
-                                 //&& rsiObvCPClose
                               )
                            )
                            && slowDownCloseFactor
                         );
 
+   
+
+   bool closeSigBool2 = (
+                           (
+                              (opensig == SAN_SIGNAL::CLOSE)
+                           )
+                           && slowDownCloseFactor
+                        );
+
 // Close on trade reversal
-   bool closeSigBool2 = (!closeSigBool1 && tBools.closeSigTrReversalBool);
+   
+   
+   bool slowCloseSigBool1 = (closeSigBool1 || (!closeSigBool1 && tBools.closeSigTrReversalBool));
+   
+   bool fastCloseSigBool1 = (closeSigBool2 || (!closeSigBool2 && tBools.closeSigTrReversalBool));
+
+
    //// Close on sudden trade swings
    //// Avoid using this condistion.  Causes whiplas trades.
    //bool closeSigBool3 = (!closeSigBool1 && getMktCloseOnReversal(ssSIG.fsig60, ut));
 
 
-   tBools.closeTradeBool = (closeSigBool1 || closeSigBool2);// || closeSigBool3);
+
+   //tBools.closeTradeBool = (slowCloseSigBool1);
+   tBools.closeTradeBool = (fastCloseSigBool1);
+   
    tBools.openTradeBool = (
                              (!tBools.closeTradeBool)
                              && openSigBool
-                             && openTradeBool1
+                             && tradeContext
                           );
 
 
@@ -757,7 +716,8 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
       //setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
       //setSIGForStrategy(baseSlopeSIG, trdStgy);
       //setSIGForStrategy(slopeCandle120SIG, trdStgy);
-      setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
+      //setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
+      setSIGForStrategy(ssSIG.obvCPSIG, trdStgy);
 
 //trdStgy = TRADE_STRATEGIES::FASTSIG;
    if(trdStgy == TRADE_STRATEGIES::FASTSIG)
