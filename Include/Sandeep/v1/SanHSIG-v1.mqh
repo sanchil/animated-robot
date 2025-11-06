@@ -421,44 +421,77 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
 // Close on primary trade signal paired with trade context
 
    //bool slowDownCloseFactor = ( tBools.noTradeBool && (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE));
-   
+
+
+
+   bool rsiObvCPCloseFactor = (
+                                 ((ssSIG.rsiSIG == SAN_SIGNAL::BUY) || (ssSIG.rsiSIG == SAN_SIGNAL::SELL)) &&
+                                 ( ssSIG.rsiSIG == ssSIG.obvCPSIG) &&
+                                 (
+                                    (getMktCloseOnReversal(ssSIG.rsiSIG, ut)) ||
+                                    ut.oppSignal(ssSIG.rsiSIG,opensig)
+                                 )
+                              );
+
+   bool atrCloseFactor = (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE);
+
    bool slowDownCloseFactor = (tBools.noTradeBool);
-   
-   
-   bool rsiObvCPClose = (
-                           ((ssSIG.rsiSIG == SAN_SIGNAL::BUY) || (ssSIG.rsiSIG == SAN_SIGNAL::SELL)) &&
-                           ( ssSIG.rsiSIG == ssSIG.obvCPSIG) &&
-                           (getMktCloseOnReversal(ssSIG.rsiSIG, ut))
-                        );
 
 
+
+
+// fastest close
    bool closeSigBool1 = (
+                           (
+                              (opensig == SAN_SIGNAL::CLOSE) || (opensig == SAN_SIGNAL::NOSIG)
+                           )
+                           || slowDownCloseFactor
+                        );
+// fast close
+   bool closeSigBool2 = (
                            (
                               (opensig == SAN_SIGNAL::CLOSE)
                               &&
                               (
-                                 (ssSIG.atrSIG == SAN_SIGNAL::NOTRADE)
-                                 || rsiObvCPClose
+                                 atrCloseFactor ||
+                                 rsiObvCPCloseFactor
+                              )
+                           )
+                           || slowDownCloseFactor
+                        );
+
+
+
+// medium close
+   bool closeSigBool3 = (
+                           (
+                              (opensig == SAN_SIGNAL::CLOSE) || (opensig == SAN_SIGNAL::NOSIG)
+                           )
+                           && slowDownCloseFactor
+                        );
+
+
+// slowest close
+
+   bool closeSigBool4 = (
+                           (
+                              (opensig == SAN_SIGNAL::CLOSE)
+                              &&
+                              (
+                                 atrCloseFactor ||
+                                 rsiObvCPCloseFactor
                               )
                            )
                            && slowDownCloseFactor
                         );
 
-   
-
-   bool closeSigBool2 = (
-                           (
-                              (opensig == SAN_SIGNAL::CLOSE)
-                           )
-                           && slowDownCloseFactor
-                        );
 
 // Close on trade reversal
-   
-   
-   bool slowCloseSigBool1 = (closeSigBool1 || (!closeSigBool1 && tBools.closeSigTrReversalBool));
-   
+   bool vFastCloseSigBool1 = (closeSigBool1 || (!closeSigBool1 && tBools.closeSigTrReversalBool));
    bool fastCloseSigBool1 = (closeSigBool2 || (!closeSigBool2 && tBools.closeSigTrReversalBool));
+   bool mediumCloseSigBool1 = (closeSigBool3 || (!closeSigBool3 && tBools.closeSigTrReversalBool));
+   bool slowCloseSigBool1 = (closeSigBool4 || (!closeSigBool4 && tBools.closeSigTrReversalBool));
+
 
 
    //// Close on sudden trade swings
@@ -467,9 +500,9 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
 
 
 
-   //tBools.closeTradeBool = (slowCloseSigBool1);
-   tBools.closeTradeBool = (fastCloseSigBool1);
-   
+   tBools.closeTradeBool = (slowCloseSigBool1);
+   //tBools.closeTradeBool = (fastCloseSigBool1);
+
    tBools.openTradeBool = (
                              (!tBools.closeTradeBool)
                              && openSigBool
@@ -716,8 +749,8 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
       //setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
       //setSIGForStrategy(baseSlopeSIG, trdStgy);
       //setSIGForStrategy(slopeCandle120SIG, trdStgy);
-      //setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
-      setSIGForStrategy(ssSIG.obvCPSIG, trdStgy);
+      setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
+   //setSIGForStrategy(ssSIG.obvCPSIG, trdStgy);
 
 //trdStgy = TRADE_STRATEGIES::FASTSIG;
    if(trdStgy == TRADE_STRATEGIES::FASTSIG)
@@ -1116,7 +1149,12 @@ SAN_SIGNAL HSIG::simpleSIG(
          //((sig1 == SAN_SIGNAL::NOSIG) || (sig1 == SAN_SIGNAL::SIDEWAYS))
          ((sig1 == SAN_SIGNAL::SIDEWAYS))
       )
-         return sig2;
+
+         if(
+            ((sig1 == SAN_SIGNAL::BUY) && (sig2 == SAN_SIGNAL::SELL)) ||
+            ((sig1 == SAN_SIGNAL::SELL) && (sig2 == SAN_SIGNAL::BUY))
+         )
+            return SAN_SIGNAL::CLOSE;
 
       return SAN_SIGNAL::NOSIG;
 
@@ -2085,7 +2123,7 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
    bool trendBuyOBVBool = ((ss.obvCPSlope.val1 > 0) && (obvCPSlope > OBVSLOPE));
    bool trendSellOBVBool = ((ss.obvCPSlope.val1 < 0) &&  (obvCPSlope > OBVSLOPE));
    bool openTradeBool = (trendStdCP && trendSlopeRatioBool && trendCandleAtrDP);
-   
+
    bool closeTradeBool1 = (
                              closeTrendStdCP
                              && closeSlopeRatioBool
@@ -2107,7 +2145,7 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
 
    bool closeTradeBool4 = (closeBaseSlopeBool && closeAtr);
 
-// closeAtr added to all but the following signal. This signal needs to catch fast and steep dives 
+// closeAtr added to all but the following signal. This signal needs to catch fast and steep dives
 // and issue a close signal real quick
 
    bool closeTradeBool5 = (closeSlopeRatioSteepDiveBool);
