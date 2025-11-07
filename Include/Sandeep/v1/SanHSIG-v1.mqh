@@ -153,6 +153,9 @@ class HSIG {
    SAN_SIGNAL        simpleSlope_120_SIG;
    SAN_SIGNAL        simpleSlope_240_SIG;
    SAN_SIGNAL        fastSlowSIG;
+   SAN_SIGNAL        obvSlp120SIG;
+   SAN_SIGNAL        obvCp120SIG;
+   SAN_SIGNAL        obvFastSIG;
 
    void              baseInit();
    void              setTradeStrategy(const TRADE_STRATEGIES& st);
@@ -307,6 +310,10 @@ void HSIG::baseInit() {
    simpleSlope_30_SIG = SAN_SIGNAL::NOSIG;
    simpleSlope_120_SIG = SAN_SIGNAL::NOSIG;
    simpleSlope_240_SIG = SAN_SIGNAL::NOSIG;
+   obvSlp120SIG = SAN_SIGNAL::NOSIG;
+   obvCp120SIG = SAN_SIGNAL::NOSIG;
+   obvFastSIG = SAN_SIGNAL::NOSIG;
+
    slopeRatioData.freeData();
    stdCPSlope.initDTYPE();
    obvCPSlope.initDTYPE();
@@ -429,7 +436,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                                  ( ssSIG.rsiSIG == ssSIG.obvCPSIG) &&
                                  (
                                     (getMktCloseOnReversal(ssSIG.rsiSIG, ut)) ||
-                                    ut.oppSignal(ssSIG.rsiSIG,opensig)
+                                    ut.oppSignal(ssSIG.rsiSIG, opensig)
                                  )
                               );
 
@@ -439,74 +446,105 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
 
 
 
+//###############################################################
+// fast signals
+// - slopeCandle120SIG
+// - simpleSlope_30_SIG
+// - fastSIG
+// - composite_CloseSIG_1
+// - obvSlp120SIG
+// - obvCp120SIG
+// - obvFastSIG
+
+// slow signals
+// - baseSlopeSIG
+// - cpSlopeCandle120SIG
+
+
+
 
 // fastest close
-   bool closeSigBool1 = (
-                           (
-                              (opensig == SAN_SIGNAL::CLOSE) || (opensig == SAN_SIGNAL::NOSIG)
-                           )
-                           || slowDownCloseFactor
-                        );
-// fast close
-   bool closeSigBool2 = (
-                           (
-                              (opensig == SAN_SIGNAL::CLOSE)
-                              &&
-                              (
-                                 atrCloseFactor ||
-                                 rsiObvCPCloseFactor
-                              )
-                           )
-                           || slowDownCloseFactor
-                        );
-
-
+// Use this for slow signals
+   bool fastCloseStrategy1 = (
+                                (
+                                   (opensig == SAN_SIGNAL::CLOSE) || (opensig == SAN_SIGNAL::NOSIG)
+                                )
+                                || slowDownCloseFactor
+                             );
 
 // medium close
-   bool closeSigBool3 = (
-                           (
-                              (opensig == SAN_SIGNAL::CLOSE) || (opensig == SAN_SIGNAL::NOSIG)
-                           )
-                           && slowDownCloseFactor
-                        );
+// Use this for fast signals
+   bool slowCloseStrategy1 = (
+                                (
+                                   (opensig == SAN_SIGNAL::CLOSE) || (opensig == SAN_SIGNAL::NOSIG)
+                                )
+                                && slowDownCloseFactor
+                             );
 
+//###############################################################
+// fast close
+// Use this for slow signals
+   bool fastCloseStrategy2 = (
+                                (
+                                   (opensig == SAN_SIGNAL::CLOSE)
+                                   &&
+                                   (
+                                      atrCloseFactor ||
+                                      rsiObvCPCloseFactor
+                                   )
+                                )
+                                || slowDownCloseFactor
+                             );
 
 // slowest close
+// Use this for fast signals
+   bool slowCloseStrategy2 = (
+                                (
+                                   (opensig == SAN_SIGNAL::CLOSE)
+                                   &&
+                                   (
+                                      atrCloseFactor ||
+                                      rsiObvCPCloseFactor
+                                   )
+                                )
+                                && slowDownCloseFactor
+                             );
 
-   bool closeSigBool4 = (
-                           (
-                              (opensig == SAN_SIGNAL::CLOSE)
-                              &&
-                              (
-                                 atrCloseFactor ||
-                                 rsiObvCPCloseFactor
-                              )
-                           )
-                           && slowDownCloseFactor
-                        );
+//###############################################################
+
+// fastest close
+// Use this for slow signals
+   bool fastCloseStrategy3 = (
+                                (
+                                   (opensig == SAN_SIGNAL::CLOSE) || (opensig == SAN_SIGNAL::NOSIG)
+                                )
+                             );
+//###############################################################
 
 
 // Close on trade reversal
-   bool vFastCloseSigBool1 = (closeSigBool1 || (!closeSigBool1 && tBools.closeSigTrReversalBool));
-   bool fastCloseSigBool1 = (closeSigBool2 || (!closeSigBool2 && tBools.closeSigTrReversalBool));
-   bool mediumCloseSigBool1 = (closeSigBool3 || (!closeSigBool3 && tBools.closeSigTrReversalBool));
-   bool slowCloseSigBool1 = (closeSigBool4 || (!closeSigBool4 && tBools.closeSigTrReversalBool));
+   bool vFastCloseSigBool1 = (fastCloseStrategy1 || (!fastCloseStrategy1 && tBools.closeSigTrReversalBool));
+   bool mediumCloseSigBool1 = (slowCloseStrategy1 || (!slowCloseStrategy1 && tBools.closeSigTrReversalBool));
+   bool fastCloseSigBool1 = (fastCloseStrategy2 || (!fastCloseStrategy2 && tBools.closeSigTrReversalBool));
+   bool slowCloseSigBool1 = (slowCloseStrategy2 || (!slowCloseStrategy2 && tBools.closeSigTrReversalBool));
+   bool pureCloseSigBool1 = (fastCloseStrategy3 || (!fastCloseStrategy3 && tBools.closeSigTrReversalBool));
+
+//   tBools.closeTradeBool = (vFastCloseSigBool1);
+//   //tBools.closeTradeBool = (mediumCloseSigBool1);
+//   //tBools.closeTradeBool = (slowCloseSigBool1);
+//
+//
+//   tBools.openTradeBool = (
+//                             (!tBools.closeTradeBool)
+//                             && openSigBool
+//                             && tradeContext
+//                          );
 
 
-
-   //// Close on sudden trade swings
-   //// Avoid using this condistion.  Causes whiplas trades.
-   //bool closeSigBool3 = (!closeSigBool1 && getMktCloseOnReversal(ssSIG.fsig60, ut));
-
-
-
-   tBools.closeTradeBool = (slowCloseSigBool1);
-   //tBools.closeTradeBool = (fastCloseSigBool1);
-
+   tBools.closeTradeBool = (pureCloseSigBool1);
    tBools.openTradeBool = (
                              (!tBools.closeTradeBool)
                              && openSigBool
-                             && tradeContext
                           );
 
 
@@ -827,10 +865,15 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    fastSIG = matchSIG(ss.fsig5, ss.fsig14, ss.fsig30);
 //dominantTrendSIG = matchSIG(ss.fsig5,trend_5_120_500_SIG,ss.slopeVarSIG);
 //domVolVarSIG = ss.tradeVolVarSIG;
+
 // ########### BEGIN::Composite close signals
    cpSlopeCandle120SIG = (simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG, util.convTrendToSig(ss.cpScatterSIG)) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG, util.convTrendToSig(ss.cpScatterSIG)) : SAN_SIGNAL::CLOSE;
    slopeCandle120SIG = (simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG) : SAN_SIGNAL::CLOSE;
    composite_CloseSIG_1 = (simpleSIG(c_SIG, simpleSlope_30_SIG, fastSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(c_SIG, simpleSlope_30_SIG, fastSIG) : SAN_SIGNAL::CLOSE;
+   obvSlp120SIG = (simpleSIG(ss.obvCPSIG, slopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, slopeCandle120SIG) : SAN_SIGNAL::CLOSE;
+   obvCp120SIG = (simpleSIG(ss.obvCPSIG, cpSlopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, cpSlopeCandle120SIG) : SAN_SIGNAL::CLOSE;
+   obvFastSIG = (simpleSIG(ss.obvCPSIG, fastSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, fastSIG) : SAN_SIGNAL::CLOSE;
+
 // ########### END::Composite close signals
 //   dominantTrendCPSIG = matchSIG(
 //                           util.convTrendToSig(ss.cpScatterSIG),
