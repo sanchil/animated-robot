@@ -106,6 +106,8 @@ class HSIG {
    SAN_SIGNAL        composite_CloseSIG_1;
    SAN_SIGNAL        composite_CloseSIG_2;
    SAN_SIGNAL        composite_CloseSIG_3;
+   SAN_SIGNAL        composite_CloseSIG_4;
+   SAN_SIGNAL        composite_CloseSIG_5;
    SAN_SIGNAL        c_SIG;
    SAN_SIGNAL        fastSIG;
    SAN_SIGNAL        hilbertSIG;
@@ -264,6 +266,8 @@ void HSIG::baseInit() {
    composite_CloseSIG_1 =  SAN_SIGNAL::NOSIG;
    composite_CloseSIG_2 =  SAN_SIGNAL::NOSIG;
    composite_CloseSIG_3 =  SAN_SIGNAL::NOSIG;
+   composite_CloseSIG_4 =  SAN_SIGNAL::NOSIG;
+   composite_CloseSIG_5 =  SAN_SIGNAL::NOSIG;
    c_SIG =  SAN_SIGNAL::NOSIG;
    hilbertSIG =  SAN_SIGNAL::NOSIG;
    dftSIG =  SAN_SIGNAL::NOSIG;
@@ -867,12 +871,16 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 //domVolVarSIG = ss.tradeVolVarSIG;
 
 // ########### BEGIN::Composite close signals
-   cpSlopeCandle120SIG = (simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG, util.convTrendToSig(ss.cpScatterSIG)) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG, util.convTrendToSig(ss.cpScatterSIG)) : SAN_SIGNAL::CLOSE;
-   slopeCandle120SIG = (simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.candleVol120SIG, ss.slopeVarSIG) : SAN_SIGNAL::CLOSE;
-   composite_CloseSIG_1 = (simpleSIG(c_SIG, simpleSlope_30_SIG, fastSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(c_SIG, simpleSlope_30_SIG, fastSIG) : SAN_SIGNAL::CLOSE;
-   obvSlp120SIG = (simpleSIG(ss.obvCPSIG, slopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, slopeCandle120SIG) : SAN_SIGNAL::CLOSE;
-   obvCp120SIG = (simpleSIG(ss.obvCPSIG, cpSlopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, cpSlopeCandle120SIG) : SAN_SIGNAL::CLOSE;
-   obvFastSIG = (simpleSIG(ss.obvCPSIG, fastSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, fastSIG) : SAN_SIGNAL::CLOSE;
+//   slopeCandle120SIG = (simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG) : SAN_SIGNAL::CLOSE;
+   slopeCandle120SIG = (simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG) : SAN_SIGNAL::CLOSE;
+   cpSlopeCandle120SIG = (simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG, util.convTrendToSig(ss.cpScatterSIG)) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG, util.convTrendToSig(ss.cpScatterSIG)) : SAN_SIGNAL::CLOSE;
+   composite_CloseSIG_1 = (simpleSIG(fastSIG, simpleSlope_30_SIG, c_SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(fastSIG, simpleSlope_30_SIG, c_SIG) : SAN_SIGNAL::CLOSE;
+   composite_CloseSIG_2 = (simpleSIG(composite_CloseSIG_1, cpSlopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(composite_CloseSIG_1, cpSlopeCandle120SIG) : SAN_SIGNAL::CLOSE;
+
+
+   //obvSlp120SIG = (simpleSIG(ss.obvCPSIG, slopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, slopeCandle120SIG) : SAN_SIGNAL::CLOSE;
+   //obvCp120SIG = (simpleSIG(ss.obvCPSIG, cpSlopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, cpSlopeCandle120SIG) : SAN_SIGNAL::CLOSE;
+   //obvFastSIG = (simpleSIG(ss.obvCPSIG, fastSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, fastSIG) : SAN_SIGNAL::CLOSE;
 
 // ########### END::Composite close signals
 //   dominantTrendCPSIG = matchSIG(

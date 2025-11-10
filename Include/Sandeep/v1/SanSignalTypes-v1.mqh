@@ -151,7 +151,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    stdOPSlope = sig.slopeSIGData(indData.stdOpen, 5, 21, 1);
    obvCPSlope = sig.slopeSIGData(indData.obv, 5, 21, 1);
    obvCPSIG = sig.obvCPSIG(indData.obv, 5, 21, 1);
-   
+   tradeSlopeSIG = sig.tradeSlopeSIG(imaSlope120Data, baseSlopeData);
 //simpleSlope_14_SIG = sig.slopeSIG(imaSlope14Data,0);
 //simpleSlope_30_SIG = sig.slopeSIG(imaSlope30Data,0);
 //simpleSlope_120_SIG = sig.slopeSIG(imaSlope120Data,1);
@@ -160,7 +160,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
 //slopeRatioData = sig.slopeRatioData(imaSlope30Data,imaSlope120Data,baseSlopeData);
    clusterData = sig.clusterData(indData.ima5[1], indData.ima14[1], indData.ima30[1]);
    slopeRatioData = sig.slopeRatioData(imaSlope5Data, imaSlope14Data, imaSlope30Data);
-//c_SIG = sig.cSIG(indData,util,1);
+   //c_SIG = sig.cSIG(indData,util,1);
 //#############################################################################################
 //        varDt = sig.varSIG(ima30SDSIG,ima120SDSIG,ima240SDSIG);
    //stats.hilbertTransform(indData.close,hilbertAmp,hilbertPhase,8,3);
