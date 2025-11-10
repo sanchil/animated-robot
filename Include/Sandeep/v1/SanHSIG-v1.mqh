@@ -876,6 +876,7 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    cpSlopeCandle120SIG = (simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG, util.convTrendToSig(ss.cpScatterSIG)) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG, util.convTrendToSig(ss.cpScatterSIG)) : SAN_SIGNAL::CLOSE;
    composite_CloseSIG_1 = (simpleSIG(fastSIG, simpleSlope_30_SIG, c_SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(fastSIG, simpleSlope_30_SIG, c_SIG) : SAN_SIGNAL::CLOSE;
    composite_CloseSIG_2 = (simpleSIG(composite_CloseSIG_1, cpSlopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(composite_CloseSIG_1, cpSlopeCandle120SIG) : SAN_SIGNAL::CLOSE;
+   composite_CloseSIG_3 = (simpleSIG(ss.candleVol120SIG, util.convTrendToSig(ss.cpScatterSIG)) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.candleVol120SIG, util.convTrendToSig(ss.cpScatterSIG)) : SAN_SIGNAL::CLOSE;
 
 
    //obvSlp120SIG = (simpleSIG(ss.obvCPSIG, slopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, slopeCandle120SIG) : SAN_SIGNAL::CLOSE;
