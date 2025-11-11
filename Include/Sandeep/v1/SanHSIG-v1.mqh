@@ -199,7 +199,7 @@ class HSIG {
       const SANTREND slowTrend,
       const SANTREND vSlowTrend = SANTREND::NOTREND
    );
-   SAN_SIGNAL        slopeSIG(const DTYPE& signalDt, const int signalType = 0);
+   SAN_SIGNAL        slopeSIG(const DTYPE& signalDt, const int signalType = 0, double compareSlope=0.35);
 
    SAN_SIGNAL        cTradeSIG(
       const SANSIGNALS &ss,
@@ -828,7 +828,7 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
 //+------------------------------------------------------------------+
 void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    baseTrendSIG = imaTrendSIG(ss.ima120240SIG, ss.trendRatio120SIG, ss.trendRatio240SIG);
-   baseSlopeSIG = slopeSIG(ss.baseSlopeData, 2);
+   baseSlopeSIG = slopeSIG(ss.baseSlopeData, 3, 0.6);
    cTSIG = cTradeSIG(ss, util, 1);
    atrCandle_tradeSIG = cTradeSIG_v2(ss, util, 1);
    tradeSIG = atrCandle_tradeSIG;
@@ -1877,7 +1877,7 @@ SAN_SIGNAL          HSIG::trendVolVarSIG(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType = 0) {
+SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType = 0, double compareSlope=0.35) {
    double slopeRange = 0.0;
    if(signalType == 0) {
       slopeRange = (BASESLOPE_FAST != NULL) ? BASESLOPE_FAST : 0.6;
@@ -1885,6 +1885,8 @@ SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType = 0) {
       slopeRange = (BASESLOPE_MEDIUM != NULL) ? BASESLOPE_MEDIUM : 0.4;
    } else if(signalType == 2) {
       slopeRange = (BASESLOPE_SLOW != NULL) ? BASESLOPE_SLOW : 0.15;
+   }else if(signalType == 3) {
+      slopeRange = (compareSlope != NULL) ? compareSlope : 0.4;
    }
 //if(signalType==2)Print("SAlope rane: "+slopeRange+" Slope vale: "+signalDt.val1);
 // comment
