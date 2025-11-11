@@ -113,10 +113,12 @@ class HSIG {
    SAN_SIGNAL        hilbertSIG;
    SAN_SIGNAL        dftSIG;
    SAN_SIGNAL        hilbertDftSIG;
+   
 
 
    SAN_SIGNAL        mainFastSIG;
    SAN_SIGNAL        slopeFastSIG;
+   SAN_SIGNAL        tradeSlopeSIG;
    //SAN_SIGNAL        rsiFastSIG;
    SAN_SIGNAL        cpFastSIG;
    SAN_SIGNAL        cpSlopeVarFastSIG;
@@ -277,6 +279,7 @@ void HSIG::baseInit() {
    fastSlowSIG =  SAN_SIGNAL::NOSIG;
    mainFastSIG = SAN_SIGNAL::NOSIG;
    slopeFastSIG = SAN_SIGNAL::NOSIG;
+   tradeSlopeSIG = SAN_SIGNAL::NOSIG;
 //rsiFastSIG = SAN_SIGNAL::NOSIG;
    cpFastSIG = SAN_SIGNAL::NOSIG;
    cpSlopeVarFastSIG = SAN_SIGNAL::NOSIG;
@@ -792,6 +795,7 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
       //setSIGForStrategy(baseSlopeSIG, trdStgy);
       //setSIGForStrategy(slopeCandle120SIG, trdStgy);
       setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
+      //setSIGForStrategy(tradeSlopeSIG, trdStgy);
    //setSIGForStrategy(ssSIG.obvCPSIG, trdStgy);
 
 //trdStgy = TRADE_STRATEGIES::FASTSIG;
@@ -829,6 +833,7 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    atrCandle_tradeSIG = cTradeSIG_v2(ss, util, 1);
    tradeSIG = atrCandle_tradeSIG;
    c_SIG = cSIG(ss, util, 1);
+   tradeSlopeSIG = ss.tradeSlopeSIG;
 //hilbertSIG =  (SAN_SIGNAL)ss.hilbertSIG.val4;
 //dftSIG =  (SAN_SIGNAL)ss.dftSIG.val5;
 //hilbertDftSIG = (SAN_SIGNAL)ss.hilbertDftSIG.val[0];
