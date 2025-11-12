@@ -794,7 +794,8 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
       //setSIGForStrategy(simpleSlope_30_SIG, trdStgy);
       //setSIGForStrategy(baseSlopeSIG, trdStgy);
       //setSIGForStrategy(slopeCandle120SIG, trdStgy);
-      setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
+      //setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
+      setSIGForStrategy(composite_CloseSIG_3, trdStgy);
       //setSIGForStrategy(tradeSlopeSIG, trdStgy);
    //setSIGForStrategy(ssSIG.obvCPSIG, trdStgy);
 
@@ -883,6 +884,7 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    composite_CloseSIG_2 = (simpleSIG(composite_CloseSIG_1, cpSlopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(composite_CloseSIG_1, cpSlopeCandle120SIG) : SAN_SIGNAL::CLOSE;
    composite_CloseSIG_3 = (simpleSIG(util.convTrendToSig(ss.cpScatterSIG), ss.candleVol120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(util.convTrendToSig(ss.cpScatterSIG), ss.candleVol120SIG) : SAN_SIGNAL::CLOSE;
    composite_CloseSIG_4 = (simpleSIG(util.convTrendToSig(ss.cpScatterSIG), baseSlopeSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(util.convTrendToSig(ss.cpScatterSIG), baseSlopeSIG) : SAN_SIGNAL::CLOSE;
+   composite_CloseSIG_5 = (simpleSIG(slopeCandle120SIG, baseSlopeSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(slopeCandle120SIG, baseSlopeSIG) : SAN_SIGNAL::CLOSE;
 
 
    //obvSlp120SIG = (simpleSIG(ss.obvCPSIG, slopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, slopeCandle120SIG) : SAN_SIGNAL::CLOSE;
