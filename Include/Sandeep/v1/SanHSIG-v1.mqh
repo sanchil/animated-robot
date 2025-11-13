@@ -542,7 +542,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
    bool slowCloseSigBool1 = (slowCloseStrategy2 || (!slowCloseStrategy2 && tBools.closeSigTrReversalBool));
    bool pureCloseSigBool1 = (fastCloseStrategy3 || (!fastCloseStrategy3 && tBools.closeSigTrReversalBool));
 
-   Print("pureCloseSigBool1: " + pureCloseSigBool1 + " fastCloseStrategy3: " + fastCloseStrategy3 + " tBools.closeSigTrReversalBool: " + tBools.closeSigTrReversalBool);
+   //Print("pureCloseSigBool1: " + pureCloseSigBool1 + " fastCloseStrategy3: " + fastCloseStrategy3 + " tBools.closeSigTrReversalBool: " + tBools.closeSigTrReversalBool);
 //   tBools.closeTradeBool = (vFastCloseSigBool1);
 //   //tBools.closeTradeBool = (mediumCloseSigBool1);
 //   //tBools.closeTradeBool = (slowCloseSigBool1);
