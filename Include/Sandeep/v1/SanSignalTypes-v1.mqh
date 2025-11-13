@@ -151,7 +151,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    stdOPSlope = sig.slopeSIGData(indData.stdOpen, 5, 21, 1);
    obvCPSlope = sig.slopeSIGData(indData.obv, 5, 21, 1);
    obvCPSIG = sig.obvCPSIG(indData.obv, 5, 21, 1);
-   tradeSlopeSIG = sig.tradeSlopeSIG(imaSlope120Data, baseSlopeData);
+   tradeSlopeSIG = sig.tradeSlopeSIG(imaSlope120Data, baseSlopeData, indData.magicnumber);
    clusterData = sig.clusterData(indData.ima5[1], indData.ima14[1], indData.ima30[1]);
    slopeRatioData = sig.slopeRatioData(imaSlope5Data, imaSlope14Data, imaSlope30Data);
    //c_SIG = sig.cSIG(indData,util,1);

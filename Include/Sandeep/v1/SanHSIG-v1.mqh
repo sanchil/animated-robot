@@ -108,12 +108,15 @@ class HSIG {
    SAN_SIGNAL        composite_CloseSIG_3;
    SAN_SIGNAL        composite_CloseSIG_4;
    SAN_SIGNAL        composite_CloseSIG_5;
+   SAN_SIGNAL        composite_CloseSIG_6;
+   SAN_SIGNAL        composite_CloseSIG_7;
+   SAN_SIGNAL        composite_CloseSIG_8;
    SAN_SIGNAL        c_SIG;
    SAN_SIGNAL        fastSIG;
    SAN_SIGNAL        hilbertSIG;
    SAN_SIGNAL        dftSIG;
    SAN_SIGNAL        hilbertDftSIG;
-   
+
 
 
    SAN_SIGNAL        mainFastSIG;
@@ -199,7 +202,7 @@ class HSIG {
       const SANTREND slowTrend,
       const SANTREND vSlowTrend = SANTREND::NOTREND
    );
-   SAN_SIGNAL        slopeSIG(const DTYPE& signalDt, const int signalType = 0, double compareSlope=0.35);
+   SAN_SIGNAL        slopeSIG(const DTYPE& signalDt, const int signalType = 0, double compareSlope = 0.35);
 
    SAN_SIGNAL        cTradeSIG(
       const SANSIGNALS &ss,
@@ -270,6 +273,9 @@ void HSIG::baseInit() {
    composite_CloseSIG_3 =  SAN_SIGNAL::NOSIG;
    composite_CloseSIG_4 =  SAN_SIGNAL::NOSIG;
    composite_CloseSIG_5 =  SAN_SIGNAL::NOSIG;
+   composite_CloseSIG_6 =  SAN_SIGNAL::NOSIG;
+   composite_CloseSIG_7 =  SAN_SIGNAL::NOSIG;
+   composite_CloseSIG_8 =  SAN_SIGNAL::NOSIG;
    c_SIG =  SAN_SIGNAL::NOSIG;
    hilbertSIG =  SAN_SIGNAL::NOSIG;
    dftSIG =  SAN_SIGNAL::NOSIG;
@@ -536,6 +542,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
    bool slowCloseSigBool1 = (slowCloseStrategy2 || (!slowCloseStrategy2 && tBools.closeSigTrReversalBool));
    bool pureCloseSigBool1 = (fastCloseStrategy3 || (!fastCloseStrategy3 && tBools.closeSigTrReversalBool));
 
+   Print("pureCloseSigBool1: " + pureCloseSigBool1 + " fastCloseStrategy3: " + fastCloseStrategy3 + " tBools.closeSigTrReversalBool: " + tBools.closeSigTrReversalBool);
 //   tBools.closeTradeBool = (vFastCloseSigBool1);
 //   //tBools.closeTradeBool = (mediumCloseSigBool1);
 //   //tBools.closeTradeBool = (slowCloseSigBool1);
@@ -795,9 +802,9 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
       //setSIGForStrategy(baseSlopeSIG, trdStgy);
       //setSIGForStrategy(slopeCandle120SIG, trdStgy);
       //setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
-      setSIGForStrategy(composite_CloseSIG_3, trdStgy);
+      setSIGForStrategy(composite_CloseSIG_7, trdStgy);
       //setSIGForStrategy(tradeSlopeSIG, trdStgy);
-   //setSIGForStrategy(ssSIG.obvCPSIG, trdStgy);
+   //  setSIGForStrategy(ssSIG.obvCPSIG, trdStgy);
 
 //trdStgy = TRADE_STRATEGIES::FASTSIG;
    if(trdStgy == TRADE_STRATEGIES::FASTSIG)
@@ -877,14 +884,19 @@ void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
 //domVolVarSIG = ss.tradeVolVarSIG;
 
 // ########### BEGIN::Composite close signals
-//   slopeCandle120SIG = (simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.candleVol120SIG,ss.slopeVarSIG) : SAN_SIGNAL::CLOSE;
+
+// Fast signals
    slopeCandle120SIG = (simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG) : SAN_SIGNAL::CLOSE;
-   cpSlopeCandle120SIG = (simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG, util.convTrendToSig(ss.cpScatterSIG)) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG, util.convTrendToSig(ss.cpScatterSIG)) : SAN_SIGNAL::CLOSE;
    composite_CloseSIG_1 = (simpleSIG(fastSIG, simpleSlope_30_SIG, c_SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(fastSIG, simpleSlope_30_SIG, c_SIG) : SAN_SIGNAL::CLOSE;
    composite_CloseSIG_2 = (simpleSIG(composite_CloseSIG_1, cpSlopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(composite_CloseSIG_1, cpSlopeCandle120SIG) : SAN_SIGNAL::CLOSE;
+   composite_CloseSIG_5 = (simpleSIG(slopeCandle120SIG, baseSlopeSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(slopeCandle120SIG, baseSlopeSIG) : SAN_SIGNAL::CLOSE;
+   composite_CloseSIG_7 = (simpleSIG(fastSIG, baseSlopeSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(fastSIG, baseSlopeSIG) : SAN_SIGNAL::CLOSE;
+
+// Slow signals
+   cpSlopeCandle120SIG = (simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG, util.convTrendToSig(ss.cpScatterSIG)) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.slopeVarSIG, ss.candleVol120SIG, util.convTrendToSig(ss.cpScatterSIG)) : SAN_SIGNAL::CLOSE;
    composite_CloseSIG_3 = (simpleSIG(util.convTrendToSig(ss.cpScatterSIG), ss.candleVol120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(util.convTrendToSig(ss.cpScatterSIG), ss.candleVol120SIG) : SAN_SIGNAL::CLOSE;
    composite_CloseSIG_4 = (simpleSIG(util.convTrendToSig(ss.cpScatterSIG), baseSlopeSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(util.convTrendToSig(ss.cpScatterSIG), baseSlopeSIG) : SAN_SIGNAL::CLOSE;
-   composite_CloseSIG_5 = (simpleSIG(slopeCandle120SIG, baseSlopeSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(slopeCandle120SIG, baseSlopeSIG) : SAN_SIGNAL::CLOSE;
+   composite_CloseSIG_6 = (simpleSIG(ss.candleVol120SIG, baseSlopeSIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.candleVol120SIG, baseSlopeSIG) : SAN_SIGNAL::CLOSE;
 
 
    //obvSlp120SIG = (simpleSIG(ss.obvCPSIG, slopeCandle120SIG) != SAN_SIGNAL::NOSIG) ? simpleSIG(ss.obvCPSIG, slopeCandle120SIG) : SAN_SIGNAL::CLOSE;
@@ -1880,7 +1892,7 @@ SAN_SIGNAL          HSIG::trendVolVarSIG(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType = 0, double compareSlope=0.35) {
+SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType = 0, double compareSlope = 0.35) {
    double slopeRange = 0.0;
    if(signalType == 0) {
       slopeRange = (BASESLOPE_FAST != NULL) ? BASESLOPE_FAST : 0.6;
@@ -1888,7 +1900,7 @@ SAN_SIGNAL HSIG::slopeSIG(const DTYPE& signalDt, const int signalType = 0, doubl
       slopeRange = (BASESLOPE_MEDIUM != NULL) ? BASESLOPE_MEDIUM : 0.4;
    } else if(signalType == 2) {
       slopeRange = (BASESLOPE_SLOW != NULL) ? BASESLOPE_SLOW : 0.15;
-   }else if(signalType == 3) {
+   } else if(signalType == 3) {
       slopeRange = (compareSlope != NULL) ? compareSlope : 0.4;
    }
 //if(signalType==2)Print("SAlope rane: "+slopeRange+" Slope vale: "+signalDt.val1);
