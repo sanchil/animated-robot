@@ -28,6 +28,7 @@
 //+------------------------------------------------------------------+
 
 const double LARGE_VAL = 123456.654321;
+//double TRADERATIO = 0.0;   // peak positive ratio
 
 struct CandleCharacter {
    double            upperTail;

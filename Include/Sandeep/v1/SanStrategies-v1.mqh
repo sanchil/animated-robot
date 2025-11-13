@@ -254,7 +254,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 
    //Print("[OPEN OBVSIG] :: obvSlp120SIG: " + util.getSigString(hSig.obvSlp120SIG) + " obvCp120SIG: " + util.getSigString(hSig.obvCp120SIG) + " obvFastSIG: " + util.getSigString(hSig.obvFastSIG));
 
-   Print("[TRADESIG] :: Trade Sig: " + util.getSigString(hSig.tradeSIG) + " Base Slope: " + util.getSigString(hSig.baseSlopeSIG) + " Base Slope: " + ss.baseSlopeData.val1 + " rsiSIG: " + util.getSigString(ss.rsiSIG) + " volSIG:" + util.getSigString(ss.volSIG) + " volSlopeSIG: " + util.getSigString(ss.volSlopeSIG) + " atr: " + util.getSigString(ss.atrSIG)+" Trade time: "+tradeStartTime); 
+   Print("[TRADESIG] :: Trade Sig: " + util.getSigString(hSig.tradeSIG) + " Base Slope: " + util.getSigString(hSig.baseSlopeSIG) + " Base Slope: " + ss.baseSlopeData.val1 + " rsiSIG: " + util.getSigString(ss.rsiSIG) + " volSIG:" + util.getSigString(ss.volSIG) + " volSlopeSIG: " + util.getSigString(ss.volSlopeSIG) + " atr: " + util.getSigString(ss.atrSIG)); 
    return sigBuff;
 }
 
