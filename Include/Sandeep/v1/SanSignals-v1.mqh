@@ -934,7 +934,7 @@ DataTransport SanSignals::slopeRatioData(
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1) {
    const double MIN_SLOW = 0.0001;
-   const double PEAK_DROP = 0.80;
+   const double PEAK_DROP = 0.90;
    const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
 
    double fastSlope = fast.val1;
