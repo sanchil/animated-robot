@@ -29,6 +29,7 @@ class SanSignals {
 
    SAN_SIGNAL        tradeSignal(const double ciStd, const double ciMfi, const double &atr[], const double ciAdxMain, const double ciAdxPlus, const double ciAdxMinus);
    SAN_SIGNAL        tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1);
+   SAN_SIGNAL        volatilitySlopeSignal(const DTYPE &stdDevOpen, const DTYPE &stdDevClose);
    SAN_SIGNAL        tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL);
    //SANTRENDSTRENGTH        atrSIG(const double &atr[], const int period=10);
    SAN_SIGNAL        atrSIG(const double &atr[], const int period = 10);
@@ -897,6 +898,91 @@ DataTransport SanSignals::slopeRatioData(
 //   return SAN_SIGNAL::NOSIG;
 //}
 
+
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1) {
+//   const double MIN_SLOW = 0.0001;
+//   const double PEAK_DROP = 0.90;
+//   const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
+//   const double closeInfinityVal[] = {1.3, 1.2, 1.1, 1.0, 100};
+//
+//   double fastSlope = fast.val1;
+//   double slowSlope = slow.val1;
+//
+//   // --- Avoid division by zero
+//   if(MathAbs(slowSlope) < MIN_SLOW) {
+//      if(fastSlope > 0) return SAN_SIGNAL::BUY;
+//      if(fastSlope < 0) return SAN_SIGNAL::SELL;
+//      return SAN_SIGNAL::NOSIG;
+//   }
+//
+//   // --- Raw ratio
+//   double ratio = fastSlope / slowSlope;
+//   double absRatio = MathAbs(ratio);
+//
+//   // --- Dynamic CLOSERATIO
+//   double absSlow = MathAbs(slowSlope);
+//
+//   double CLOSERATIO = closeRVal[4];
+//   int INFINITYRATIO = closeInfinityVal[4];
+//
+//   if(absSlow <= 0.35) CLOSERATIO = closeRVal[0];
+//   else if(absSlow <= 0.8)  CLOSERATIO = closeRVal[1];
+//   else if(absSlow <= 1.5)  CLOSERATIO = closeRVal[2];
+//   else if(absSlow <= 2.5)  CLOSERATIO = closeRVal[3];
+//
+//   // --- Debug print
+//   Print("fastslope: " + fastSlope + " slowslope: " + slowSlope + " ratio: " + NormalizeDouble(ratio, 3) + " closeRatio: " + CLOSERATIO + " m_peakRatio: " + NormalizeDouble(m_peakRatio, 3) + " " + (PEAK_DROP * 100) + "% m_peakRatio: " + NormalizeDouble((PEAK_DROP * m_peakRatio), 3)); // + " Magic number: " + magicnumber + " intrade: " + inTrade);
+//
+//   //Print("F:%.3f S:%.3f R:%.3f CR:%.2f PEAK:%.3f 80%%:%.3f",
+//   //      fastSlope, slowSlope, ratio, CLOSERATIO, m_peakRatio, PEAK_DROP * m_peakRatio);
+//
+//   // --- EXIT CONDITIONS (always check)
+//   if((ratio <= 0.0) || (ratio <= (-1 * INFINITYRATIO))) {
+//      m_peakRatio = 0;
+//      return SAN_SIGNAL::CLOSE;
+//   }
+//   if(m_peakRatio > 0 && ratio < PEAK_DROP * m_peakRatio) {
+//      m_peakRatio = 0;
+//      return SAN_SIGNAL::CLOSE;
+//   }
+//   if(ratio <= CLOSERATIO) {
+//      m_peakRatio = 0;
+//      return SAN_SIGNAL::CLOSE;
+//   }
+//
+//   // --- ENTRY: only if strong enough
+//   if(ratio > CLOSERATIO) {
+//      if(ratio > m_peakRatio) {
+//         m_peakRatio = ratio;  // update peak
+//      }
+//      return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+//   }
+//
+//   if((ratio >= INFINITYRATIO) && (fastSlope > 0)) {
+//      if(ratio > m_peakRatio) {
+//         m_peakRatio = ratio;  // update peak
+//      }
+//      return SAN_SIGNAL::BUY;
+//
+//   }
+//   if((ratio >= INFINITYRATIO) && (fastSlope < 0)) {
+//      if(ratio > m_peakRatio) {
+//         m_peakRatio = ratio;  // update peak
+//      }
+//      return SAN_SIGNAL::SELL;
+//   }
+//
+//   return SAN_SIGNAL::NOSIG;
+//}
+
+
 ////+------------------------------------------------------------------+
 ////|//| - Input value represent slopes of fast and slow signals
 //// - If slope of fast signal is greater than slow signal it is a buy.
@@ -928,14 +1014,11 @@ DataTransport SanSignals::slopeRatioData(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1) {
    const double MIN_SLOW = 0.0001;
    const double PEAK_DROP = 0.90;
    const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
+   const double INF_RVAL[]  = {10,  20,  50,  80,  100};  // INFINITY thresholds
 
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
@@ -949,46 +1032,102 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
 
    // --- Raw ratio
    double ratio = fastSlope / slowSlope;
+   double absRatio = MathAbs(ratio);
 
-   // --- Dynamic CLOSERATIO
+   // --- Dynamic thresholds
    double absSlow = MathAbs(slowSlope);
    double CLOSERATIO = closeRVal[4];
-   if(absSlow <= 0.35) CLOSERATIO = closeRVal[0];
-   else if(absSlow <= 0.8)  CLOSERATIO = closeRVal[1];
-   else if(absSlow <= 1.5)  CLOSERATIO = closeRVal[2];
-   else if(absSlow <= 2.5)  CLOSERATIO = closeRVal[3];
+   double INF_RATIO  = INF_RVAL[4];
+
+   if(absSlow <= 0.35) {
+      CLOSERATIO = closeRVal[0];
+      INF_RATIO = INF_RVAL[0];
+   } else if(absSlow <= 0.8)  {
+      CLOSERATIO = closeRVal[1];
+      INF_RATIO = INF_RVAL[1];
+   } else if(absSlow <= 1.5)  {
+      CLOSERATIO = closeRVal[2];
+      INF_RATIO = INF_RVAL[2];
+   } else if(absSlow <= 2.5)  {
+      CLOSERATIO = closeRVal[3];
+      INF_RATIO = INF_RVAL[3];
+   }
 
    // --- Debug print
-   Print("fastslope: " + fastSlope + " slowslope: " + slowSlope + " ratio: " + NormalizeDouble(ratio, 3) + " closeRatio: " + CLOSERATIO + " m_peakRatio: " + NormalizeDouble(m_peakRatio, 3) + " 80% m_peakRatio: " + NormalizeDouble((PEAK_DROP * m_peakRatio), 3)); // + " Magic number: " + magicnumber + " intrade: " + inTrade);
+   Print("fastslope: " + fastSlope + " slowslope: " + slowSlope + " ratio: " + NormalizeDouble(ratio, 3) + " closeRatio: " + CLOSERATIO + " m_peakRatio: " + NormalizeDouble(m_peakRatio, 3) + " " + (PEAK_DROP * 100) + "% m_peakRatio: " + NormalizeDouble((PEAK_DROP * m_peakRatio), 3)); // + " Magic number: " + magicnumber + " intrade: " + inTrade);
 
-   //Print("F:%.3f S:%.3f R:%.3f CR:%.2f PEAK:%.3f 80%%:%.3f",
-   //      fastSlope, slowSlope, ratio, CLOSERATIO, m_peakRatio, PEAK_DROP * m_peakRatio);
-
-   // --- EXIT CONDITIONS (always check)
-   if(ratio <= 0.0) {
-      m_peakRatio = 0;
-      return SAN_SIGNAL::CLOSE;
-   }
-   if(m_peakRatio > 0 && ratio < PEAK_DROP * m_peakRatio) {
-      m_peakRatio = 0;
-      return SAN_SIGNAL::CLOSE;
-   }
-   if(ratio <= CLOSERATIO) {
+   // --- INSTANT REVERSE: dagger drop/spike
+   if((ratio <= -INF_RATIO)) {
       m_peakRatio = 0;
       return SAN_SIGNAL::CLOSE;
    }
 
-   // --- ENTRY: only if strong enough
-   if(ratio > CLOSERATIO) {
-      if(ratio > m_peakRatio) {
-         m_peakRatio = ratio;  // update peak
-      }
+   // --- MOMENTUM DECAY
+   if(m_peakRatio > 0 && absRatio < PEAK_DROP * m_peakRatio) {
+      m_peakRatio = 0;
+      return SAN_SIGNAL::CLOSE;
+   }
+
+   // --- BELOW THRESHOLD
+   if(absRatio <= CLOSERATIO) {
+      m_peakRatio = 0;
+      return SAN_SIGNAL::CLOSE;
+   }
+
+   // --- ENTRY: normal
+   if(absRatio > CLOSERATIO) {
+      if(absRatio > m_peakRatio) m_peakRatio = absRatio;
+      return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+   }
+
+   // --- ENTRY: INFINITY SPIKE
+   if(absRatio >= INF_RATIO) {
+      if(absRatio > m_peakRatio) m_peakRatio = absRatio;
       return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
    }
 
    return SAN_SIGNAL::NOSIG;
 }
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::volatilitySlopeSignal(const DTYPE &stdDevOpen, const DTYPE &stdDevClose) {
+   const double MIN_SLOPE = 0.0001;  // avoid noise
+   const double VOL_RATIO_THRESHOLD = 1.1;
+
+////   // --- Current volatility
+////   double stdCP = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_CLOSE, shift);
+////   double stdOP = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_OPEN,  shift);
+////
+////   // --- Previous volatility
+////   double stdCP_prev = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_CLOSE, shift + period);
+////   double stdOP_prev = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_OPEN,  shift + period);
+//
+//   // --- Slopes
+//   double slopeCP = (stdCP - stdCP_prev) / period;
+//   double slopeOP = (stdOP - stdOP_prev) / period;
+
+   double slopeCP = stdDevClose.val1;
+   double slopeOP = stdDevOpen.val1;
+
+   // --- Avoid division by zero / noise
+   if(MathAbs(slopeCP) < MIN_SLOPE && MathAbs(slopeOP) < MIN_SLOPE)
+      return SAN_SIGNAL::NOSIG;
+
+   // --- DIVERGENCE: Close vol expanding faster
+   if(slopeCP > slopeOP * VOL_RATIO_THRESHOLD) {
+      return (slopeCP > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+   }
+
+   // --- CONVERGENCE: Open vol catching up → uncertainty
+   if(slopeOP > slopeCP * VOL_RATIO_THRESHOLD) {
+      return SAN_SIGNAL::CLOSE;
+   }
+
+   // --- No clear bias
+   return SAN_SIGNAL::NOSIG;
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
