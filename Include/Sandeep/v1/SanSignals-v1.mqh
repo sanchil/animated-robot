@@ -193,7 +193,7 @@ class SanSignals {
       const int shift = 1
    );
 
-   DTYPE             SanSignals::candleVolDt(
+   DTYPE             candleVolDt(
       const double &open[],
       const double &close[],
       const double &vol[],
