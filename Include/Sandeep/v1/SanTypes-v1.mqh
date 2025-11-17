@@ -802,6 +802,7 @@ class SANSIGNALS {
    SAN_SIGNAL        candleImaSIG;
    SAN_SIGNAL        candleVolSIG;
    SAN_SIGNAL        candleVol120SIG;
+   SAN_SIGNAL        candleVol120SIG_V2;
    SAN_SIGNAL        simpleSlope_14_SIG;
    SAN_SIGNAL        simpleSlope_30_SIG;
    SAN_SIGNAL        simpleSlope_120_SIG;
@@ -962,6 +963,7 @@ void  SANSIGNALS::initBase() {
    candleImaSIG = SAN_SIGNAL::NOSIG;
    candleVolSIG = SAN_SIGNAL::NOSIG;
    candleVol120SIG = SAN_SIGNAL::NOSIG;
+   candleVol120SIG_V2 = SAN_SIGNAL::NOSIG;
    simpleSlope_14_SIG =  SAN_SIGNAL::NOSIG;
    simpleSlope_30_SIG = SAN_SIGNAL::NOSIG;
    simpleSlope_120_SIG = SAN_SIGNAL::NOSIG;
