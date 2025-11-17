@@ -2241,8 +2241,8 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
 //|                                                                  |
 //+------------------------------------------------------------------+
 ////   Print("[CTRADE2] tradeSIG: "+ util.getSigString(sig)+" stdOPSlope: "+NormalizeDouble(stdOPSlope,2)+" stdCPSlope: "+NormalizeDouble(stdCPSlope,2)+" obvCPSlope: "+NormalizeDouble(obvCPSlope,2)+" Slope30: "+NormalizeDouble(slopeIMA30,2)+" fMSWR: "+fMSWR+" rFM: "+rFM+" rMS: "+rMS+" candleAtrDP: "+candleAtrDPRatio+" FLAT: "+flatBool);
-//   Print("[CTRADE2] stdOPSlope: " + NormalizeDouble(stdOPSlope, 2) + " stdCPSlope: " + NormalizeDouble(stdCPSlope, 2) + " obvCPSlope: " + NormalizeDouble(obvCPSlope, 2) + " Slope30: " + NormalizeDouble(slopeIMA30, 2) + " fMSWR: " + fMSWR + " rFM: " + rFM + " rMS: " + rMS + " candleAtrDP: " + candleAtrDPRatio);
-//   Print("[CTRADE2] [bool1: " + closeTradeBool1 + " bool2: " + closeTradeBool2 + " bool3: " + closeTradeBool3 + " bool4: " + closeTradeBool4 + " bool5:" + closeTradeBool5 + "]");
+   Print("[CTRADE2] stdOPSlope: " + NormalizeDouble(stdOPSlope, 2) + " stdCPSlope: " + NormalizeDouble(stdCPSlope, 2) + " obvCPSlope: " + NormalizeDouble(obvCPSlope, 2) + " Slope30: " + NormalizeDouble(slopeIMA30, 2) + " fMSWR: " + fMSWR + " rFM: " + rFM + " rMS: " + rMS + " candleAtrDP: " + candleAtrDPRatio);
+   Print("[CTRADE2] [bool1: " + closeTradeBool1 + " bool2: " + closeTradeBool2 + " bool3: " + closeTradeBool3 + " bool4: " + closeTradeBool4 + " bool5:" + closeTradeBool5 + "]");
 //   Print("[CTRADE2]  closeTrendStdCP: " + closeTrendStdCP + " closeSlopeRatioBool: " + closeSlopeRatioBool + " closeCandleAtrDP: " + closeCandleAtrDP + " closeAtr: " + closeAtr + " slope30: " + closeSlope30Bool + " cluster: " + closeClusterBool);
 //   //Print("[CTRADE2] [ closeTrendStdCP: " + closeTrendStdCP + " closeTrendStdCP1: " + closeTrendStdCP1 + " closeTrendStdCP2: " + closeTrendStdCP2 + " closeTrendStdCP3: " + closeTrendStdCP3 + " OP 60% " + NormalizeDouble((0.6 * (stdOPSlope + _Point)), 2) + " OP 80%: " + NormalizeDouble((0.8 * (stdOPSlope + _Point)), 2));
    return sig;
