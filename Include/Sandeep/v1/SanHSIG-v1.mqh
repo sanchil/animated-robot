@@ -837,7 +837,7 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
 void   HSIG::initSIG(const SANSIGNALS &ss, SanUtils &util) {
    baseTrendSIG = imaTrendSIG(ss.ima120240SIG, ss.trendRatio120SIG, ss.trendRatio240SIG);
    baseSlopeSIG = slopeSIG(ss.baseSlopeData, 3, 0.6);
-   cTSIG = cTradeSIG(ss, util, 1);
+   //cTSIG = cTradeSIG(ss, util, 1);
    atrCandle_tradeSIG = cTradeSIG_v2(ss, util, 1);
    tradeSIG = atrCandle_tradeSIG;
    c_SIG = cSIG(ss, util, 1);
@@ -1987,6 +1987,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
    double atrVolDP = NormalizeDouble(ss.atrVolData.val1, 3);
    double num_candleVolDP = EMPTY_VALUE;
    double denom_atrVolDP = EMPTY_VALUE;
+   
    if((int)ss.candleVolData.val1 == (int)ss.atrVolData.val1) {
       num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
       denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
@@ -1997,6 +1998,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
       num_candleVolDP = (ss.candleVolData.val1 - (int)ss.atrVolData.val1);
       denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
    }
+   
    double candleAtrDPRatio =  NormalizeDouble(num_candleVolDP / denom_atrVolDP, 3);
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
@@ -2201,7 +2203,7 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
    bool closeTradeBool1 = (
                              closeTrendStdCP
                              && closeSlopeRatioBool
-                             && closeCandleAtrDP
+                           //  && closeCandleAtrDP
                              && closeAtr
                           );
    bool closeTradeBool2 = (
