@@ -129,7 +129,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    ima500SDSIG = sig.stdDevSIG(indData.ima500, "IMA500", 21, SHIFT);
    candleVolSIG = sig.candleVolSIG_v1(indData.open, indData.close, indData.tick_volume, 60, SHIFT);
    candleVol120SIG = sig.candleVolSIG_v1(indData.open, indData.close, indData.tick_volume, 120, SHIFT);   
-   candleVol120SIG_V2 = sig.candleVolSIG_v2(indData.open, indData.close, indData.tick_volume, 120, SHIFT);
+   //candleVol120SIG_V2 = sig.candleVolSIG_v2(indData.open, indData.close, indData.tick_volume, 120, SHIFT);
    
    //slopeVarSIG = sig.slopeVarSIG(indData.ima30,indData.ima120,indData.ima240,5,10,1);
    slopeVarSIG = sig.slopeVarSIG(indData.ima5, indData.ima14, indData.ima30, 5, 10, 1);
