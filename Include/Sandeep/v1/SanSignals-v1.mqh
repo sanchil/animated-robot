@@ -195,7 +195,7 @@ class SanSignals {
 
    SAN_SIGNAL candleVolSIG_v2(
       const double &open[], const double &close[], const double &volume[],
-      int period = 120, double vol_spike_threshold = 2.0
+      int period = 30, double vol_spike_threshold = 2.0
    );
 
    DTYPE             candleVolDt(
@@ -1938,11 +1938,13 @@ SAN_SIGNAL   SanSignals::candleVolSIG_v1(
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::candleVolSIG_v2(
    const double &open[], const double &close[], const double &volume[],
-   int period = 120, double vol_spike_threshold = 2.0
+   int period = 30, double vol_spike_threshold = 2.0
 ) {
-   const int CONFIRM_N = 30;
-   double score_120 = stats.vWCM_Score(open, close, volume, period);
-   double score_30  = stats.vWCM_Score(open, close, volume, CONFIRM_N);
+   //const int CONFIRM_N = 30;
+   uint CONFIRM_N = (int)MathCeil(0.7 * period);
+     
+   double score_slow = stats.vWCM_Score(open, close, volume, period);
+   double score_fast  = stats.vWCM_Score(open, close, volume, CONFIRM_N);
 
    // --- 1. Volume Spike Filter
    double max_vol = ArrayMaximum(volume, period, 0);
@@ -1957,13 +1959,13 @@ SAN_SIGNAL SanSignals::candleVolSIG_v2(
    if(atr_pips < 10) return SAN_SIGNAL::NOSIG;  // too quiet
 
    // --- 3. Momentum Confirmation
-   bool same_direction = (score_120 > 0 && score_30 > 0) || (score_120 < 0 && score_30 < 0);
-   bool strength_ratio = MathAbs(score_120 / score_30) > 0.8;
+   bool same_direction = (score_slow > 0 && score_fast > 0) || (score_slow < 0 && score_fast < 0);
+   bool strength_ratio = MathAbs(score_slow / score_fast) > 0.8;
 
    if(!same_direction || !strength_ratio) return SAN_SIGNAL::NOSIG;
 
    // --- 4. Final Signal
-   return (score_120 > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+   return (score_slow > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
 }
 
 //+------------------------------------------------------------------+
