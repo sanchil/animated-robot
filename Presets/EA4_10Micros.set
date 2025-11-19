@@ -1,0 +1,8 @@
+magicNumber=1001
+noOfCandles=21
+TAKE_PROFIT=1.4
+STOP_LOSS=0.3
+recordData=false
+recordSignal=7000
+flipSig=false
+microLots=10.0
