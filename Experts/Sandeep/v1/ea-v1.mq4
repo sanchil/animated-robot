@@ -31,7 +31,7 @@ input bool flipSig = false; // Flip Signal
 // Lot size = 0.01.
 // 1 Microlot = 1*0.01=0.01, 10 Microlots = 10*0.01 = 0.1, 100 Microlots = 1,
 input double microLots = 1; // Micro Lots
- 
+
 
 double closeProfit;// Profit at which a trade is considered for closing. Also used for takeProfit.
 double stopLoss; // The current profit is adjusted by subtracting the spread and a margin added.
