@@ -1022,9 +1022,11 @@ DataTransport SanSignals::slopeRatioData(
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1) {
    const double MIN_SLOW = 0.0001;
-   const double PEAK_DROP = 0.90;
+   //const double PEAK_DROP = 0.95;
+   double PEAK_DROP = 0.95;
    const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
    const double INF_RVAL[]  = {10,  20,  50,  80,  100};  // INFINITY thresholds
+   const double PEAK_DROP_VAL[]  = {0.9,  0.92,  0.94,  0.96,  0.98};  // PEAK_DROP thresholds
 
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
@@ -1050,19 +1052,23 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
    if(absSlow <= 0.35) {
       CLOSERATIO = closeRVal[0];
       INF_RATIO = INF_RVAL[0];
+      PEAK_DROP = PEAK_DROP_VAL[0];
    } else if(absSlow <= 0.8) {
       CLOSERATIO = closeRVal[1];
       INF_RATIO = INF_RVAL[1];
+      PEAK_DROP = PEAK_DROP_VAL[1];
    } else if(absSlow <= 1.5) {
       CLOSERATIO = closeRVal[2];
       INF_RATIO = INF_RVAL[2];
+      PEAK_DROP = PEAK_DROP_VAL[2];
    } else if(absSlow <= 2.5) {
       CLOSERATIO = closeRVal[3];
       INF_RATIO = INF_RVAL[3];
+      PEAK_DROP = PEAK_DROP_VAL[3];
    }
 
 // --- Debug print
-   Print("fastslope: " + fastSlope + " slowslope: " + slowSlope + " ratio: " + NormalizeDouble(ratio, 3) + " closeRatio: " + CLOSERATIO + " m_peakRatio: " + NormalizeDouble(m_peakRatio, 3) + " " + (PEAK_DROP * 100) + "% m_peakRatio: " + NormalizeDouble((PEAK_DROP * m_peakRatio), 3)); // + " Magic number: " + magicnumber + " intrade: " + inTrade);
+   Print("fastslope: " + fastSlope + " slowslope: " + slowSlope + " ratio: " + NormalizeDouble(ratio, 3) + " closeRatio: " + CLOSERATIO + " m_peakRatio: " + NormalizeDouble(m_peakRatio, 3) + " " + (PEAK_DROP * 100) + "% m_peakRatio: " + NormalizeDouble((PEAK_DROP * m_peakRatio), 3)+" PEAK_DROP: "+PEAK_DROP); 
 
 // --- INSTANT REVERSE: dagger drop/spike
    if((ratio <= -INF_RATIO)) {
