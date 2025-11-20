@@ -70,9 +70,9 @@ class Stats {
    void              swap(double &a, double &b);
    double            det4(double &mat[][4]);
    double            detLU(const double &matrix[], const int rowSize);
-   double            dotProd(const double &series1[], const double &series2[], const int SIZE = 10, const int interval = 1, int SHIFT = 1);
+   double            dotProd(const double &series1[], const double &series2[], const int SIZE = 10, const int interval = 0, int SHIFT = 1);
    double            arraySum(const double &series1[], const int SIZE = 10, int SHIFT = 0);
-   double            vWCM_Score(const double &open[], const double &close[], const double &volume[], int N);
+   double            vWCM_Score(const double &open[], const double &close[], const double &volume[], int N=10, const int interval = 0,const int SHIFT =1);
    DTYPE             getDecimalVal(const double num, const double denom);
 
    DTYPE     slopeVal(
@@ -1109,7 +1109,7 @@ DTYPE Stats::extractDftPowerNPhase(const double &dftMag[], const double &dftPhas
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double  Stats::dotProd(const double &series1[], const double &series2[], const int SIZE = 10, const int interval = 1, int SHIFT = 1) {
+double  Stats::dotProd(const double &series1[], const double &series2[], const int SIZE = 10, const int interval = 0, int SHIFT = 1) {
    double dp = EMPTY_VALUE;
    for (int i = SHIFT; i < SIZE; i = (i + interval)) {
       if(dp == EMPTY_VALUE)dp = 0;
@@ -1130,21 +1130,28 @@ double  Stats::arraySum(const double &arr[], const int SIZE = 10, int SHIFT = 0)
    return sum;
 }
 
-
-double Stats::vWCM_Score(const double &open[], const double &close[], const double &volume[], int N) {
-   double total_vol = 0;
-   for(int i=0; i<N; i++) total_vol += volume[i];
-
-   if(total_vol == 0) return 0;
-
-   double score = 0;
-   for(int i=0; i<N; i++) {
-      double body_pips = (close[i] - open[i]) / _Point;
-      double vol_pct = volume[i] / total_vol;
-      score += vol_pct * body_pips;
+//+------------------------------------------------------------------+
+//| vWCM_Score - Volume-Weighted Candle Momentum                     |
+//+------------------------------------------------------------------+
+double Stats::vWCM_Score(const double &open[], const double &close[], 
+                         const double &volume[], int N = 10, const int interval = 0, int SHIFT = 1)
+{
+   double total_vol = 0.0;
+   for(int i = 0; i < N; i++) 
+      total_vol += volume[i];
+   
+   if(total_vol <= 0) return 0.0;
+   
+   double score = 0.0;
+   for(int i = SHIFT; i < N; i = (i + interval)) // ← skip incomplete bars
+   {
+      double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
+      double vol_weight = volume[i] / total_vol;
+      score += body_pips * vol_weight;
    }
    return score;
 }
+
 
 //+------------------------------------------------------------------+
 //|                                                                  |
