@@ -449,7 +449,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                                  ( ssSIG.rsiSIG == ssSIG.obvCPSIG) &&
                                  ( ssSIG.obvCPSIG == ssSIG.volatilitySIG) &&
                                  (
-                                    (getMktCloseOnReversal(ssSIG.rsiSIG, ut)) 
+                                    (getMktCloseOnReversal(ssSIG.rsiSIG, ut))
                                     //|| ut.oppSignal(ssSIG.rsiSIG, opensig)
                                  )
                               );
@@ -535,6 +535,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                                 )
                                 ||(rsiObvCPCloseFactor&&atrCloseFactor)
                              );
+   tBools.fastCloseStrategy3 = fastCloseStrategy3;
 
 // fastest close
 // Use this for slow signals
@@ -565,7 +566,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
 //                             && tradeContext
 //                          );
 
-   
+
    tBools.closeTradeBool = (pureCloseSigBool1);
    tBools.openTradeBool = (
                              (!tBools.closeTradeBool)
@@ -1998,7 +1999,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
    double atrVolDP = NormalizeDouble(ss.atrVolData.val1, 3);
    double num_candleVolDP = EMPTY_VALUE;
    double denom_atrVolDP = EMPTY_VALUE;
-   
+
    if((int)ss.candleVolData.val1 == (int)ss.atrVolData.val1) {
       num_candleVolDP = (ss.candleVolData.val1 - (int)ss.candleVolData.val1);
       denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
@@ -2009,7 +2010,7 @@ SAN_SIGNAL HSIG::cTradeSIG(
       num_candleVolDP = (ss.candleVolData.val1 - (int)ss.atrVolData.val1);
       denom_atrVolDP = (ss.atrVolData.val1 - (int)ss.atrVolData.val1);
    }
-   
+
    double candleAtrDPRatio =  NormalizeDouble(num_candleVolDP / denom_atrVolDP, 3);
    double slopeIMA30 = ss.imaSlope30Data.val1;
    double stdCPSlope = ss.stdCPSlope.val1;
@@ -2214,7 +2215,7 @@ SAN_SIGNAL HSIG::cTradeSIG_v2(
    bool closeTradeBool1 = (
                              closeTrendStdCP
                              && closeSlopeRatioBool
-                           //  && closeCandleAtrDP
+                             //  && closeCandleAtrDP
                              && closeAtr
                           );
    bool closeTradeBool2 = (

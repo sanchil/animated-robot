@@ -174,6 +174,8 @@ struct TRADEBOOLS {
    bool              closeRsiBool;
    bool              closeSigBool;
    bool              volTradeBool;
+   bool              fastCloseStrategy3;
+   bool              fastCloseStrategy4;
 };
 
 struct DTYPE {

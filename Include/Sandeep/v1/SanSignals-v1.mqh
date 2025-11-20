@@ -2055,7 +2055,7 @@ DTYPE SanSignals::candleVolDt(
    ArrayResize(candleBody, period);
    for(int i = 0; i < period; i++) {
       candleBody[i] = ((close[i] - open[i])/util.getPipValue(_Symbol));
-      candleBody[i] = (close[i] - open[i]);
+      //candleBody[i] = (close[i] - open[i]);
    }
    candleDt.val1 = stats.dotProd(candleBody, vol, period, interval, shift);
 
