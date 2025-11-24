@@ -537,6 +537,7 @@ void HSIG::setSIGForStrategy(const SAN_SIGNAL& opensig, const TRADE_STRATEGIES& 
                              );
                              
    tBools.fastCloseStrategy3 = fastCloseStrategy3;
+   tBools.rsiObvCPCloseFactor = (rsiObvCPCloseFactor&&atrCloseFactor);
 
 // fastest close
 // Use this for slow signals

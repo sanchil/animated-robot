@@ -176,6 +176,7 @@ struct TRADEBOOLS {
    bool              volTradeBool;
    bool              fastCloseStrategy3;
    bool              fastCloseStrategy4;
+   bool              rsiObvCPCloseFactor;
 };
 
 struct DTYPE {

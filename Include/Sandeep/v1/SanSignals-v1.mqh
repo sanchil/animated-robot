@@ -1032,6 +1032,13 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
 
+// Reconcile this block of code with avoid by division 
+// logic below. The avoid by zero will no longer trigger and becomes redundant   
+   const double MIN_TRADE_SLOPE = 0.2;
+   if(MathAbs(slowSlope) < MIN_TRADE_SLOPE) {     
+      return SAN_SIGNAL::NOSIG;
+   }
+   
 // --- Avoid division by zero
    if(MathAbs(slowSlope) < MIN_SLOW) {
       if(fastSlope > 0)
@@ -1040,6 +1047,7 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
          return SAN_SIGNAL::SELL;
       return SAN_SIGNAL::NOSIG;
    }
+   
 
 // --- Raw ratio
    double ratio = fastSlope / slowSlope;
