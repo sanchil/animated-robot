@@ -1032,22 +1032,23 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
 
-// Reconcile this block of code with avoid by division 
-// logic below. The avoid by zero will no longer trigger and becomes redundant   
+// Reconcile this block of code with avoid by division
+// logic below. The avoid by zero will no longer trigger and becomes redundant
    const double MIN_TRADE_SLOPE = 0.2;
-   if(MathAbs(slowSlope) < MIN_TRADE_SLOPE) {     
-      return SAN_SIGNAL::NOSIG;
-   }
-   
+   //if(MathAbs(slowSlope) < MIN_TRADE_SLOPE) {
+   //   return SAN_SIGNAL::NOSIG;
+   //}
+
 // --- Avoid division by zero
    if(MathAbs(slowSlope) < MIN_SLOW) {
-      if(fastSlope > 0)
+      if((fastSlope > 0) && (fastSlope>MIN_TRADE_SLOPE))
          return SAN_SIGNAL::BUY;
-      if(fastSlope < 0)
+      if((fastSlope < 0) && (fastSlope<(-1*MIN_TRADE_SLOPE)))
          return SAN_SIGNAL::SELL;
       return SAN_SIGNAL::NOSIG;
    }
-   
+
+
 
 // --- Raw ratio
    double ratio = fastSlope / slowSlope;
@@ -1077,40 +1078,42 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
    }
 
 // --- Debug print
-   Print("fastslope: " + fastSlope + " slowslope: " + slowSlope + " ratio: " + NormalizeDouble(ratio, 3) + " closeRatio: " + CLOSERATIO + " m_peakRatio: " + NormalizeDouble(m_peakRatio, 3) + " " + (PEAK_DROP * 100) + "% m_peakRatio: " + NormalizeDouble((PEAK_DROP * m_peakRatio), 3)+" PEAK_DROP: "+PEAK_DROP); 
+   Print("fastslope: " + fastSlope + " slowslope: " + slowSlope + " ratio: " + NormalizeDouble(ratio, 3) + " closeRatio: " + CLOSERATIO + " m_peakRatio: " + NormalizeDouble(m_peakRatio, 3) + " " + (PEAK_DROP * 100) + "% m_peakRatio: " + NormalizeDouble((PEAK_DROP * m_peakRatio), 3)+" PEAK_DROP: "+PEAK_DROP);
+   
+  // if(MathAbs(fastSlope)>MIN_TRADE_SLOPE) {
 
 // --- INSTANT REVERSE: dagger drop/spike
-   if((ratio <= -INF_RATIO)) {
-      m_peakRatio = 0;
-      return SAN_SIGNAL::CLOSE;
-   }
+      if((ratio <= -INF_RATIO)) {
+         m_peakRatio = 0;
+         return SAN_SIGNAL::CLOSE;
+      }
 
 // --- MOMENTUM DECAY
-   if(m_peakRatio > 0 && absRatio < PEAK_DROP * m_peakRatio) {
-      m_peakRatio = 0;
-      return SAN_SIGNAL::CLOSE;
-   }
+      if(m_peakRatio > 0 && absRatio < PEAK_DROP * m_peakRatio) {
+         m_peakRatio = 0;
+         return SAN_SIGNAL::CLOSE;
+      }
 
 // --- BELOW THRESHOLD
-   if(absRatio <= CLOSERATIO) {
-      m_peakRatio = 0;
-      return SAN_SIGNAL::CLOSE;
-   }
+      if(absRatio <= CLOSERATIO) {
+         m_peakRatio = 0;
+         return SAN_SIGNAL::CLOSE;
+      }
 
 // --- ENTRY: normal
-   if(absRatio > CLOSERATIO) {
-      if(absRatio > m_peakRatio)
-         m_peakRatio = absRatio;
-      return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
-   }
+      if(absRatio > CLOSERATIO) {
+         if(absRatio > m_peakRatio)
+            m_peakRatio = absRatio;
+         return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+      }
 
 // --- ENTRY: INFINITY SPIKE
-   if(absRatio >= INF_RATIO) {
-      if(absRatio > m_peakRatio)
-         m_peakRatio = absRatio;
-      return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
-   }
-
+      if(absRatio >= INF_RATIO) {
+         if(absRatio > m_peakRatio)
+            m_peakRatio = absRatio;
+         return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+      }
+   //}
    return SAN_SIGNAL::NOSIG;
 }
 
