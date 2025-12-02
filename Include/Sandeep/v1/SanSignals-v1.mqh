@@ -1030,9 +1030,13 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
 //const double PEAK_DROP = 0.95;
    double PEAK_DROP = 0.95;
    const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
-   const double INF_RVAL[]  = {10,  20,  50,  80,  100};  // INFINITY thresholds
+//   const double INF_RVAL[]  = {10,  20,  50,  80,  100};  // INFINITY thresholds
+   const double INF_RVAL[]  = {10,  15,  20,  30,  40};  // INFINITY thresholds
+
 //const double PEAK_DROP_VAL[]  = {0.935,  0.94,  0.96,  0.98,  0.99};  // PEAK_DROP thresholds
-   const double PEAK_DROP_VAL[]  = {0.978,  0.983,  0.988,  0.992,  0.998};  // PEAK_DROP thresholds
+   //const double PEAK_DROP_VAL[]  = {0.978,  0.983,  0.988,  0.992,  0.998};  // PEAK_DROP thresholds
+   const double PEAK_DROP_VAL[]  = {0.98,  0.987,  0.99,  0.998,  0.9998};  // PEAK_DROP thresholds
+
 
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
@@ -1080,6 +1084,10 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
       CLOSERATIO = closeRVal[3];
       INF_RATIO = INF_RVAL[3];
       PEAK_DROP = PEAK_DROP_VAL[3];
+   } else if(absSlow > 2.5) {
+      CLOSERATIO = closeRVal[4];
+      INF_RATIO = INF_RVAL[4];
+      PEAK_DROP = PEAK_DROP_VAL[4];
    }
 
 // --- Debug print
