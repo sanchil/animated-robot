@@ -1021,112 +1021,208 @@ DataTransport SanSignals::slopeRatioData(
 //I am leaning towards second option
 //                                            |
 //+------------------------------------------------------------------+
+//
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1) {
+//   const double MIN_SLOW = 0.0001;
+////const double PEAK_DROP = 0.95;
+//   double PEAK_DROP = 0.95;
+//   const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
+////   const double INF_RVAL[]  = {10,  20,  50,  80,  100};  // INFINITY thresholds
+//   const double INF_RVAL[]  = {10,  15,  20,  30,  40};  // INFINITY thresholds
+//
+////const double PEAK_DROP_VAL[]  = {0.935,  0.94,  0.96,  0.98,  0.99};  // PEAK_DROP thresholds
+//   //const double PEAK_DROP_VAL[]  = {0.978,  0.983,  0.988,  0.992,  0.998};  // PEAK_DROP thresholds
+//   const double PEAK_DROP_VAL[]  = {0.98,  0.987,  0.99,  0.998,  0.9998};  // PEAK_DROP thresholds
+//
+//
+//   double fastSlope = fast.val1;
+//   double slowSlope = slow.val1;
+//
+//// Reconcile this block of code with avoid by division
+//// logic below. The avoid by zero will no longer trigger and becomes redundant
+//   const double MIN_TRADE_SLOPE = 0.2;
+////if(MathAbs(slowSlope) < MIN_TRADE_SLOPE) {
+////   return SAN_SIGNAL::NOSIG;
+////}
+//
+//// --- Avoid division by zero
+//   if(MathAbs(slowSlope) < MIN_SLOW) {
+//      if((fastSlope > 0) && (fastSlope>MIN_TRADE_SLOPE))
+//         return SAN_SIGNAL::BUY;
+//      if((fastSlope < 0) && (fastSlope<(-1*MIN_TRADE_SLOPE)))
+//         return SAN_SIGNAL::SELL;
+//      return SAN_SIGNAL::NOSIG;
+//   }
+//
+//
+//
+//// --- Raw ratio
+//   double ratio = fastSlope / slowSlope;
+//   double absRatio = MathAbs(ratio);
+//
+//// --- Dynamic thresholds
+//   double absSlow = MathAbs(slowSlope);
+//   double CLOSERATIO = closeRVal[4];
+//   double INF_RATIO  = INF_RVAL[4];
+//
+//   if(absSlow <= 0.35) {
+//      CLOSERATIO = closeRVal[0];
+//      INF_RATIO = INF_RVAL[0];
+//      PEAK_DROP = PEAK_DROP_VAL[0];
+//   } else if(absSlow <= 0.8) {
+//      CLOSERATIO = closeRVal[1];
+//      INF_RATIO = INF_RVAL[1];
+//      PEAK_DROP = PEAK_DROP_VAL[1];
+//   } else if(absSlow <= 1.5) {
+//      CLOSERATIO = closeRVal[2];
+//      INF_RATIO = INF_RVAL[2];
+//      PEAK_DROP = PEAK_DROP_VAL[2];
+//   } else if(absSlow <= 2.5) {
+//      CLOSERATIO = closeRVal[3];
+//      INF_RATIO = INF_RVAL[3];
+//      PEAK_DROP = PEAK_DROP_VAL[3];
+//   } else if(absSlow > 2.5) {
+//      CLOSERATIO = closeRVal[4];
+//      INF_RATIO = INF_RVAL[4];
+//      PEAK_DROP = PEAK_DROP_VAL[4];
+//   }
+//
+//// --- Debug print
+//   Print("fastslope: " + fastSlope + " slowslope: " + slowSlope + " ratio: " + NormalizeDouble(ratio, 3) + " closeRatio: " + CLOSERATIO + " m_peakRatio: " + NormalizeDouble(m_peakRatio, 3) + " " + (PEAK_DROP * 100) + "% m_peakRatio: " + NormalizeDouble((PEAK_DROP * m_peakRatio), 3)+" PEAK_DROP: "+PEAK_DROP);
+//
+//// if(MathAbs(fastSlope)>MIN_TRADE_SLOPE) {
+//
+//   // CRITICAL FIX: If user wants "Negative = Close" (Trend Alignment)
+//   // This prevents buying when Fast is Up but Slow is Down.
+//   if(ratio < 0) {
+//      m_peakRatio = 0;
+//      return SAN_SIGNAL::CLOSE;
+//   }
+//// --- INSTANT REVERSE: dagger drop/spike
+//   if((ratio <= -INF_RATIO)) {
+//      m_peakRatio = 0;
+//      return SAN_SIGNAL::CLOSE;
+//   }
+//
+//// --- MOMENTUM DECAY
+//   if(m_peakRatio > 0 && absRatio < PEAK_DROP * m_peakRatio) {
+//      m_peakRatio = 0;
+//      return SAN_SIGNAL::CLOSE;
+//   }
+//
+//// --- BELOW THRESHOLD
+//   if(absRatio <= CLOSERATIO) {
+//      m_peakRatio = 0;
+//      return SAN_SIGNAL::CLOSE;
+//   }
+//
+//// --- ENTRY: normal
+//   if(absRatio > CLOSERATIO) {
+//      if(absRatio > m_peakRatio)
+//         m_peakRatio = absRatio;
+//      return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+//   }
+//
+//// --- ENTRY: INFINITY SPIKE
+//   if(absRatio >= INF_RATIO) {
+//      if(absRatio > m_peakRatio)
+//         m_peakRatio = absRatio;
+//      return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+//   }
+////}
+//   return SAN_SIGNAL::NOSIG;
+//}
+
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1) {
    const double MIN_SLOW = 0.0001;
-//const double PEAK_DROP = 0.95;
-   double PEAK_DROP = 0.95;
-   const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
-//   const double INF_RVAL[]  = {10,  20,  50,  80,  100};  // INFINITY thresholds
-   const double INF_RVAL[]  = {10,  15,  20,  30,  40};  // INFINITY thresholds
+   const double MIN_TRADE_SLOPE = 0.2; // Verify this scale matches your symbol's decimals
 
-//const double PEAK_DROP_VAL[]  = {0.935,  0.94,  0.96,  0.98,  0.99};  // PEAK_DROP thresholds
-   //const double PEAK_DROP_VAL[]  = {0.978,  0.983,  0.988,  0.992,  0.998};  // PEAK_DROP thresholds
-   const double PEAK_DROP_VAL[]  = {0.98,  0.987,  0.99,  0.998,  0.9998};  // PEAK_DROP thresholds
-
+   // --- Thresholds ---
+   const double closeRVal[]     = {1.3, 1.2, 1.1, 1.0, 0.9};
+   const double INF_RVAL[]      = {10,  15,  20,  30,  40};
+   const double PEAK_DROP_VAL[] = {0.98, 0.987, 0.99, 0.998, 0.9998};
 
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
 
-// Reconcile this block of code with avoid by division
-// logic below. The avoid by zero will no longer trigger and becomes redundant
-   const double MIN_TRADE_SLOPE = 0.2;
-//if(MathAbs(slowSlope) < MIN_TRADE_SLOPE) {
-//   return SAN_SIGNAL::NOSIG;
-//}
-
-// --- Avoid division by zero
+   // --- 1. AVOID DIVISION BY ZERO (Flat Market) ---
+   // If the slow trend is dead flat, ratio math is unstable.
+   // We revert to raw slope checks or stay out.
    if(MathAbs(slowSlope) < MIN_SLOW) {
-      if((fastSlope > 0) && (fastSlope>MIN_TRADE_SLOPE))
-         return SAN_SIGNAL::BUY;
-      if((fastSlope < 0) && (fastSlope<(-1*MIN_TRADE_SLOPE)))
-         return SAN_SIGNAL::SELL;
+      if(fastSlope > MIN_TRADE_SLOPE) return SAN_SIGNAL::BUY;
+      if(fastSlope < -MIN_TRADE_SLOPE) return SAN_SIGNAL::SELL;
+
+      m_peakRatio = 0; // Reset peak in noise
       return SAN_SIGNAL::NOSIG;
    }
 
-
-
-// --- Raw ratio
+   // --- 2. RAW RATIO CALCULATION ---
    double ratio = fastSlope / slowSlope;
-   double absRatio = MathAbs(ratio);
 
-// --- Dynamic thresholds
+   // --- 3. DIVERGENCE CHECK (The "Negative" Rule) ---
+   // If Ratio is negative, slopes are opposite (e.g. Fast is UP, Slow is DOWN)
+   // This covers your "Instant Reverse" logic automatically.
+   if(ratio < 0) {
+      m_peakRatio = 0;
+      return SAN_SIGNAL::CLOSE;
+   }
+
+   // --- 4. DYNAMIC THRESHOLD SELECTION ---
+   // We still need Abs(slowSlope) just to pick which threshold array index to use
    double absSlow = MathAbs(slowSlope);
-   double CLOSERATIO = closeRVal[4];
-   double INF_RATIO  = INF_RVAL[4];
+   int idx = 0;
 
-   if(absSlow <= 0.35) {
-      CLOSERATIO = closeRVal[0];
-      INF_RATIO = INF_RVAL[0];
-      PEAK_DROP = PEAK_DROP_VAL[0];
-   } else if(absSlow <= 0.8) {
-      CLOSERATIO = closeRVal[1];
-      INF_RATIO = INF_RVAL[1];
-      PEAK_DROP = PEAK_DROP_VAL[1];
-   } else if(absSlow <= 1.5) {
-      CLOSERATIO = closeRVal[2];
-      INF_RATIO = INF_RVAL[2];
-      PEAK_DROP = PEAK_DROP_VAL[2];
-   } else if(absSlow <= 2.5) {
-      CLOSERATIO = closeRVal[3];
-      INF_RATIO = INF_RVAL[3];
-      PEAK_DROP = PEAK_DROP_VAL[3];
-   } else if(absSlow > 2.5) {
-      CLOSERATIO = closeRVal[4];
-      INF_RATIO = INF_RVAL[4];
-      PEAK_DROP = PEAK_DROP_VAL[4];
-   }
+   if (absSlow <= 0.35)      idx = 0;
+   else if (absSlow <= 0.8)  idx = 1;
+   else if (absSlow <= 1.5)  idx = 2;
+   else if (absSlow <= 2.5)  idx = 3;
+   else                      idx = 4;
 
-// --- Debug print
-   Print("fastslope: " + fastSlope + " slowslope: " + slowSlope + " ratio: " + NormalizeDouble(ratio, 3) + " closeRatio: " + CLOSERATIO + " m_peakRatio: " + NormalizeDouble(m_peakRatio, 3) + " " + (PEAK_DROP * 100) + "% m_peakRatio: " + NormalizeDouble((PEAK_DROP * m_peakRatio), 3)+" PEAK_DROP: "+PEAK_DROP);
+   double CLOSERATIO = closeRVal[idx];
+   double INF_RATIO  = INF_RVAL[idx];
+   double PEAK_DROP  = PEAK_DROP_VAL[idx];
 
-// if(MathAbs(fastSlope)>MIN_TRADE_SLOPE) {
+   // --- 5. SIGNAL LOGIC ---
+   // At this point, 'ratio' is guaranteed Positive.
+   // It represents the magnitude of trend alignment.
 
-// --- INSTANT REVERSE: dagger drop/spike
-   if((ratio <= -INF_RATIO)) {
+   // A. MOMENTUM DECAY (Trailing Stop on Ratio)
+   if(m_peakRatio > 0 && ratio < (PEAK_DROP * m_peakRatio)) {
       m_peakRatio = 0;
       return SAN_SIGNAL::CLOSE;
    }
 
-// --- MOMENTUM DECAY
-   if(m_peakRatio > 0 && absRatio < PEAK_DROP * m_peakRatio) {
+   // B. WEAK ALIGNMENT (Below Threshold)
+   if(ratio <= CLOSERATIO) {
       m_peakRatio = 0;
       return SAN_SIGNAL::CLOSE;
    }
 
-// --- BELOW THRESHOLD
-   if(absRatio <= CLOSERATIO) {
-      m_peakRatio = 0;
-      return SAN_SIGNAL::CLOSE;
-   }
+   // C. ENTRY / CONTINUATION
+   // If we passed the checks above, we have a valid strong ratio
+   if(ratio > CLOSERATIO) {
+      // Update Peak Tracking
+      if(ratio > m_peakRatio) {
+         m_peakRatio = ratio;
+      }
 
-// --- ENTRY: normal
-   if(absRatio > CLOSERATIO) {
-      if(absRatio > m_peakRatio)
-         m_peakRatio = absRatio;
+      // Determine Direction
+      // Since Ratio is Positive, Fast and Slow have the same sign.
+      // We only need to check one of them.
       return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
    }
 
-// --- ENTRY: INFINITY SPIKE
-   if(absRatio >= INF_RATIO) {
-      if(absRatio > m_peakRatio)
-         m_peakRatio = absRatio;
-      return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
-   }
-//}
+   // D. INFINITY SPIKE (Optional Redundancy)
+   // The logic in 'C' actually covers this, but if you have distinct logic
+   // for huge spikes, you can keep it. Otherwise, 'C' handles ratios > INF_RATIO too.
+
    return SAN_SIGNAL::NOSIG;
 }
 
