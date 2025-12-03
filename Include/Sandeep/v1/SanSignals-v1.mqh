@@ -1137,93 +1137,75 @@ DataTransport SanSignals::slopeRatioData(
 //}
 
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1) {
-   const double MIN_SLOW = 0.0001;
-   const double MIN_TRADE_SLOPE = 0.2; // Verify this scale matches your symbol's decimals
+SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1)
+{
+   static datetime last_bar = 0;
+   static SAN_SIGNAL cachedSIG = NOSIG;
+   if(Time[0] == last_bar) return cachedSIG;
+   last_bar = Time[0];
 
-   // --- Thresholds ---
-   const double closeRVal[]     = {1.3, 1.2, 1.1, 1.0, 0.9};
-   const double INF_RVAL[]      = {10,  15,  20,  30,  40};
-   const double PEAK_DROP_VAL[] = {0.98, 0.987, 0.99, 0.998, 0.9998};
+   const double MIN_SLOW = 0.0001;
+   const double MIN_TRADE_SLOPE = 0.2;
+
+   const double closeRVal[]     = {1.3,  1.2,  1.1,  1.0,  0.9};
+   const double PEAK_DROP_VAL[] = {0.98, 0.987,0.99, 0.998,0.9998};
 
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
 
-   // --- 1. AVOID DIVISION BY ZERO (Flat Market) ---
-   // If the slow trend is dead flat, ratio math is unstable.
-   // We revert to raw slope checks or stay out.
+   // 1. Flat slow trend → raw fast slope decides
    if(MathAbs(slowSlope) < MIN_SLOW) {
-      if(fastSlope > MIN_TRADE_SLOPE) return SAN_SIGNAL::BUY;
-      if(fastSlope < -MIN_TRADE_SLOPE) return SAN_SIGNAL::SELL;
-
-      m_peakRatio = 0; // Reset peak in noise
-      return SAN_SIGNAL::NOSIG;
+      if(fastSlope > MIN_TRADE_SLOPE)  { cachedSIG = BUY;  return BUY;  }
+      if(fastSlope < -MIN_TRADE_SLOPE) { cachedSIG = SELL; return SELL; }
+      m_peakRatio = 0;
+      cachedSIG = NOSIG;
+      return NOSIG;
    }
 
-   // --- 2. RAW RATIO CALCULATION ---
+   // 2. Ratio (sign matters!)
    double ratio = fastSlope / slowSlope;
 
-   // --- 3. DIVERGENCE CHECK (The "Negative" Rule) ---
-   // If Ratio is negative, slopes are opposite (e.g. Fast is UP, Slow is DOWN)
-   // This covers your "Instant Reverse" logic automatically.
+   // 3. Instant reversal on divergence
    if(ratio < 0) {
       m_peakRatio = 0;
-      return SAN_SIGNAL::CLOSE;
+      cachedSIG = CLOSE;
+      return CLOSE;
    }
 
-   // --- 4. DYNAMIC THRESHOLD SELECTION ---
-   // We still need Abs(slowSlope) just to pick which threshold array index to use
+   // 4. Select regime
    double absSlow = MathAbs(slowSlope);
-   int idx = 0;
-
-   if (absSlow <= 0.35)      idx = 0;
-   else if (absSlow <= 0.8)  idx = 1;
-   else if (absSlow <= 1.5)  idx = 2;
-   else if (absSlow <= 2.5)  idx = 3;
-   else                      idx = 4;
+   int idx = (absSlow <= 0.35) ? 0 :
+             (absSlow <= 0.8)  ? 1 :
+             (absSlow <= 1.5)  ? 2 :
+             (absSlow <= 2.5)  ? 3 : 4;
 
    double CLOSERATIO = closeRVal[idx];
-   double INF_RATIO  = INF_RVAL[idx];
    double PEAK_DROP  = PEAK_DROP_VAL[idx];
 
-   // --- 5. SIGNAL LOGIC ---
-   // At this point, 'ratio' is guaranteed Positive.
-   // It represents the magnitude of trend alignment.
-
-   // A. MOMENTUM DECAY (Trailing Stop on Ratio)
-   if(m_peakRatio > 0 && ratio < (PEAK_DROP * m_peakRatio)) {
+   // 5. Momentum decay exit
+   if(m_peakRatio > 0 && ratio < PEAK_DROP * m_peakRatio) {
       m_peakRatio = 0;
-      return SAN_SIGNAL::CLOSE;
+      cachedSIG = CLOSE;
+      return CLOSE;
    }
 
-   // B. WEAK ALIGNMENT (Below Threshold)
+   // 6. Weak alignment exit
    if(ratio <= CLOSERATIO) {
       m_peakRatio = 0;
-      return SAN_SIGNAL::CLOSE;
+      cachedSIG = CLOSE;
+      return CLOSE;
    }
 
-   // C. ENTRY / CONTINUATION
-   // If we passed the checks above, we have a valid strong ratio
+   // 7. Valid entry/continuation
    if(ratio > CLOSERATIO) {
-      // Update Peak Tracking
-      if(ratio > m_peakRatio) {
+      if(ratio > m_peakRatio)
          m_peakRatio = ratio;
-      }
 
-      // Determine Direction
-      // Since Ratio is Positive, Fast and Slow have the same sign.
-      // We only need to check one of them.
-      return (fastSlope > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+      cachedSIG = (fastSlope > 0) ? BUY : SELL;
+      return cachedSIG;
    }
-
-   // D. INFINITY SPIKE (Optional Redundancy)
-   // The logic in 'C' actually covers this, but if you have distinct logic
-   // for huge spikes, you can keep it. Otherwise, 'C' handles ratios > INF_RATIO too.
-
-   return SAN_SIGNAL::NOSIG;
+   cachedSIG = NOSIG;
+   return NOSIG;
 }
 
 //+------------------------------------------------------------------+
