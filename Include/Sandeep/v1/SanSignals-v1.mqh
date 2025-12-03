@@ -788,7 +788,8 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
 //   const double PEAK_DROP_VAL[]  = {0.98,  0.987,  0.99,  0.998,  0.9998};  // PEAK_DROP thresholds
 
    const double closeRVal[]     = {1.3,  1.2,  1.1,  1.0,  0.9};
-   const double PEAK_DROP_VAL[] = {0.98, 0.987,0.99, 0.998,0.9998};
+   //const double PEAK_DROP_VAL[] = {0.98, 0.987,0.99, 0.998,0.9998};   
+   const double PEAK_DROP_VAL[] = {0.98, 0.985, 0.99, 0.995, 0.997};
 
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
