@@ -813,6 +813,7 @@ class SANSIGNALS {
    SAN_SIGNAL        simpleSlope_500_SIG;
    SAN_SIGNAL        c_SIG;
    SAN_SIGNAL        tradeSlopeSIG;
+   SAN_SIGNAL        slopeAnalyzerSIG;
    SAN_SIGNAL        volatilitySIG;
    SIGMAVARIABILITY        cpSDSIG;
    SIGMAVARIABILITY        ima5SDSIG;
@@ -974,6 +975,7 @@ void  SANSIGNALS::initBase() {
    simpleSlope_500_SIG =  SAN_SIGNAL::NOSIG;
    c_SIG =  SAN_SIGNAL::NOSIG;
    tradeSlopeSIG =  SAN_SIGNAL::NOSIG;
+   slopeAnalyzerSIG =  SAN_SIGNAL::NOSIG;
    volatilitySIG =  SAN_SIGNAL::NOSIG;
 //   hilbertDftSIG =  SAN_SIGNAL::NOSIG;
    cpSDSIG = SIGMAVARIABILITY::SIGMA_NULL;
