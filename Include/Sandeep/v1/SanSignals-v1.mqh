@@ -752,7 +752,7 @@ DataTransport SanSignals::slopeRatioData(
 //
 //   if(last_bar == Time[0]) return cachedSIG;
 //   last_bar = Time[0];
-//   
+//
 //   if((slope.val1 > minTradeSlope) && (slope.val1 > (adaptiveMaxSlope*maxSlope))) {
 //      if(slope.val1 >maxSlope)maxSlope =slope.val1;
 //      cachedSIG = SAN_SIGNAL::BUY;
@@ -767,10 +767,12 @@ DataTransport SanSignals::slopeRatioData(
 //
 //}
 
-SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
-{
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope) {
    static datetime last_bar = 0;
-   static SAN_SIGNAL cached = NOSIG;
+   static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
    static double peakPositive = 0;
    static double peakNegative = 0;
 
@@ -784,33 +786,33 @@ SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
    // BUY PATH
    if(s > MIN_SLOPE && s > DECAY * peakPositive) {
       peakPositive = MathMax(peakPositive, s);
-      cached = BUY;
+      cached = SAN_SIGNAL::BUY;
       Print("SLOPE ANALYZER → BUY | slope="+s+" | peakPos="+peakPositive);
-      return BUY;
+      return SAN_SIGNAL::BUY;
    }
 
    // SELL PATH
    if(s < -MIN_SLOPE && s < DECAY * peakNegative) {
       peakNegative = MathMin(peakNegative, s);  // more negative
-      cached = SELL;
+      cached = SAN_SIGNAL::SELL;
       Print("SLOPE ANALYZER → SELL | slope="+s+" | peakNeg="+peakNegative);
-      return SELL;
+      return SAN_SIGNAL::SELL;
    }
 
    // DECAY EXIT
    if(cached == BUY && s < DECAY * peakPositive) {
       peakPositive *= 0.9;  // optional: decay peak over time
-      cached = CLOSE;
-      return CLOSE;
+      cached = SAN_SIGNAL::CLOSE;
+      return SAN_SIGNAL::CLOSE;
    }
    if(cached == SELL && s > DECAY * peakNegative) {
       peakNegative *= 0.9;
-      cached = CLOSE;
-      return CLOSE;
+      cached = SAN_SIGNAL::CLOSE;
+      return SAN_SIGNAL::CLOSE;
    }
 
-   cached = NOSIG;
-   return NOSIG;
+   cached = SAN_SIGNAL::NOSIG;
+   return SAN_SIGNAL::NOSIG;
 }
 
 ////+------------------------------------------------------------------+
@@ -848,7 +850,7 @@ SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1) {
    static datetime last_bar = 0;
-   static SAN_SIGNAL cachedSIG = NOSIG;
+   static SAN_SIGNAL cachedSIG = SAN_SIGNAL::NOSIG;
    if(Time[0] == last_bar) return cachedSIG;
    last_bar = Time[0];
 
@@ -865,7 +867,8 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
 
    const double closeRVal[]     = {1.3,  1.2,  1.1,  1.0,  0.9};
    //const double PEAK_DROP_VAL[] = {0.98, 0.987,0.99, 0.998,0.9998};
-   const double PEAK_DROP_VAL[] = {0.98, 0.985, 0.99, 0.995, 0.997};
+   //const double PEAK_DROP_VAL[] = {0.98, 0.985, 0.99, 0.995, 0.997};
+   const double PEAK_DROP_VAL[] = {0.75, 0.8, 0.85, 0.9, 0.95};
 
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
@@ -873,16 +876,16 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
    // 1. Flat slow trend → raw fast slope decides
    if(MathAbs(slowSlope) < MIN_SLOW) {
       if(fastSlope > MIN_TRADE_SLOPE)  {
-         cachedSIG = BUY;
-         return BUY;
+         cachedSIG = SAN_SIGNAL::BUY;
+         return SAN_SIGNAL::BUY;
       }
       if(fastSlope < -MIN_TRADE_SLOPE) {
-         cachedSIG = SELL;
-         return SELL;
+         cachedSIG = SAN_SIGNAL::SELL;
+         return SAN_SIGNAL::SELL;
       }
       m_peakRatio = 0;
-      cachedSIG = NOSIG;
-      return NOSIG;
+      cachedSIG = SAN_SIGNAL::NOSIG;
+      return SAN_SIGNAL::NOSIG;
    }
 
    // 2. Ratio (sign matters!)
@@ -891,8 +894,8 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
    // 3. Instant reversal on divergence
    if(ratio < 0) {
       m_peakRatio = 0;
-      cachedSIG = CLOSE;
-      return CLOSE;
+      cachedSIG = SAN_SIGNAL::CLOSE;
+      return SAN_SIGNAL::CLOSE;
    }
 
    // 4. Select regime
@@ -909,15 +912,15 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
    // 5. Momentum decay exit
    if(m_peakRatio > 0 && ratio < PEAK_DROP * m_peakRatio) {
       m_peakRatio = 0;
-      cachedSIG = CLOSE;
-      return CLOSE;
+      cachedSIG = SAN_SIGNAL::CLOSE;
+      return SAN_SIGNAL::CLOSE;
    }
 
    // 6. Weak alignment exit
    if(ratio <= CLOSERATIO) {
       m_peakRatio = 0;
-      cachedSIG = CLOSE;
-      return CLOSE;
+      cachedSIG = SAN_SIGNAL::CLOSE;
+      return SAN_SIGNAL::CLOSE;
    }
 
    // 7. Valid entry/continuation
@@ -928,8 +931,8 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, ulong
       cachedSIG = (fastSlope > 0) ? BUY : SELL;
       return cachedSIG;
    }
-   cachedSIG = NOSIG;
-   return NOSIG;
+   cachedSIG = SAN_SIGNAL::NOSIG;
+   return SAN_SIGNAL::NOSIG;
 }
 
 //+------------------------------------------------------------------+

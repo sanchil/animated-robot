@@ -818,6 +818,7 @@ void   HSIG::processSignalsWithStrategy(const TRADE_STRATEGIES& trdStgy) {
       //setSIGForStrategy(cpSlopeCandle120SIG, trdStgy);
       //setSIGForStrategy(composite_CloseSIG_7, trdStgy);
       setSIGForStrategy(tradeSlopeSIG, trdStgy);
+      //setSIGForStrategy(ssSIG.slopeAnalyzerSIG, trdStgy);
    //  setSIGForStrategy(ssSIG.obvCPSIG, trdStgy);
 
 //trdStgy = TRADE_STRATEGIES::FASTSIG;
