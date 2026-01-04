@@ -1282,9 +1282,11 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
     // BRANCH B: The Standard Adaptive Engine
     double ratio = fastSlope / slowSlope;
 
-    // debug print (Vital for tuning)
-    PrintFormat("Ratio=%.3f | Peak=%.3f | DropLimit=%.3f | ATR=%.1f | Regime=%d", 
-                 ratio, m_peakRatio, (PEAK_DROP*m_peakRatio), atrPips, regimeIdx);
+    //// debug print (Vital for tuning)
+    //PrintFormat("Ratio=%.3f | Peak=%.3f | DropLimit=%.3f | ATR=%.1f | Regime=%d", 
+    //             ratio, m_peakRatio, (PEAK_DROP*m_peakRatio), atrPips, regimeIdx);
+
+    Print("Ratio="+ratio+" | Peak="+m_peakRatio+" | DropLimit="+(PEAK_DROP*m_peakRatio)+" | ATR="+atrPips+" | Regime="+regimeIdx);
 
     // 1. INSTANT REVERSAL (Divergence Check)
     // If slopes disagree (Ratio < 0), the trend is broken.
