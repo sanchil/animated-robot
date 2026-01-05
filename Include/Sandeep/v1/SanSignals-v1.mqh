@@ -32,7 +32,7 @@ class SanSignals {
    SAN_SIGNAL        tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope);
-   SAN_SIGNAL        volatilitySlopeSignal(const DTYPE &stdDevOpen, const DTYPE &stdDevClose);
+   SAN_SIGNAL        volatilityMomentumSIG(const DTYPE &stdDevOpen, const DTYPE &stdDevClose, const double atr = 0);
    SAN_SIGNAL        tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL);
    //SANTRENDSTRENGTH        atrSIG(const double &atr[], const int period=10);
    SAN_SIGNAL        atrSIG(const double &atr[], const int period = 10);
@@ -1324,45 +1324,119 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
    cached = NOSIG;
    return NOSIG;
 }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::volatilitySlopeSignal(const DTYPE &stdDevOpen, const DTYPE &stdDevClose) {
-   const double MIN_SLOPE = 0.0001;  // avoid noise
-   const double VOL_RATIO_THRESHOLD = 1.1;
-
-////   // --- Current volatility
-////   double stdCP = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_CLOSE, shift);
-////   double stdOP = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_OPEN,  shift);
-////
-////   // --- Previous volatility
-////   double stdCP_prev = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_CLOSE, shift + period);
-////   double stdOP_prev = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_OPEN,  shift + period);
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::volatilitySlopeSignal(const DTYPE &stdDevOpen, const DTYPE &stdDevClose) {
+//   const double MIN_SLOPE = 0.0001;  // avoid noise
+//   const double VOL_RATIO_THRESHOLD = 1.1;
 //
-//   // --- Slopes
-//   double slopeCP = (stdCP - stdCP_prev) / period;
-//   double slopeOP = (stdOP - stdOP_prev) / period;
+//////   // --- Current volatility
+//////   double stdCP = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_CLOSE, shift);
+//////   double stdOP = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_OPEN,  shift);
+//////
+//////   // --- Previous volatility
+//////   double stdCP_prev = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_CLOSE, shift + period);
+//////   double stdOP_prev = iStdDev(NULL, 0, period, 0, MODE_SMA, PRICE_OPEN,  shift + period);
+////
+////   // --- Slopes
+////   double slopeCP = (stdCP - stdCP_prev) / period;
+////   double slopeOP = (stdOP - stdOP_prev) / period;
+//
+//   double slopeCP = stdDevClose.val1;
+//   double slopeOP = stdDevOpen.val1;
+//
+//// --- Avoid division by zero / noise
+//   if(MathAbs(slopeCP) < MIN_SLOPE && MathAbs(slopeOP) < MIN_SLOPE)
+//      return SAN_SIGNAL::NOSIG;
+//
+//// --- DIVERGENCE: Close vol expanding faster
+//   if(slopeCP > slopeOP * VOL_RATIO_THRESHOLD) {
+//      return (slopeCP > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+//   }
+//
+//// --- CONVERGENCE: Open vol catching up → uncertainty
+//   if(slopeOP > slopeCP * VOL_RATIO_THRESHOLD) {
+//      return SAN_SIGNAL::CLOSE;
+//   }
+//
+//// --- No clear bias
+//   return SAN_SIGNAL::NOSIG;
+//}
+
+//+------------------------------------------------------------------+
+//| volatilityMomentumSIG — CP vs OP StdDev Slope Filter            |
+//|                                                                  |
+//| • If |slope_std(CP)| > |slope_std(OP)| → room for movement → TRADE |
+//| • Else → barrier → NO TRADE or CLOSE                             |
+//| • Integrates with your slope engine                              |
+//+------------------------------------------------------------------+
+
+SAN_SIGNAL SanSignals::volatilityMomentumSIG(const DTYPE &stdDevOpen, const DTYPE &stdDevClose, const double atr = 0)
+{
+   const double MIN_SLOPE = 0.0001;
+   double VOL_RATIO_THRESHOLD = 1.1;  // base
+
+   // Optional ATR adaptation (looser in high vol)
+   if(atr > 0)
+   {
+      double atrPips = atr / util.getPipValue(_Symbol);
+      VOL_RATIO_THRESHOLD = 1.05 + 0.15 * MathMin(atrPips / 50.0, 1.0);  // 1.05–1.20
+   }
 
    double slopeCP = stdDevClose.val1;
    double slopeOP = stdDevOpen.val1;
 
-// --- Avoid division by zero / noise
    if(MathAbs(slopeCP) < MIN_SLOPE && MathAbs(slopeOP) < MIN_SLOPE)
       return SAN_SIGNAL::NOSIG;
 
-// --- DIVERGENCE: Close vol expanding faster
-   if(slopeCP > slopeOP * VOL_RATIO_THRESHOLD) {
+   double ratioCP_OP = MathAbs(slopeCP) / (MathAbs(slopeOP) + MIN_SLOPE);
+
+   if(ratioCP_OP > VOL_RATIO_THRESHOLD)
       return (slopeCP > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
-   }
 
-// --- CONVERGENCE: Open vol catching up → uncertainty
-   if(slopeOP > slopeCP * VOL_RATIO_THRESHOLD) {
+   if(ratioCP_OP < (1.0 / VOL_RATIO_THRESHOLD))
       return SAN_SIGNAL::CLOSE;
-   }
 
-// --- No clear bias
-   return SAN_SIGNAL::NOSIG;
+   return SAN_SIGNAL::NOSIG;  // neutral
 }
+////+------------------------------------------------------------------+
+////| volatilityMomentumSIG — CP vs OP StdDev Slope Filter            |
+////|                                                                  |
+////| • If |slope_std(CP)| > |slope_std(OP)| → room for movement → TRADE |
+////| • Else → barrier → NO TRADE or CLOSE                             |
+////| • Integrates with your slope engine                              |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::volatilityMomentumSIG(const double &close[], const double &open[], const double atr, int period = 14)
+//{
+//   // Compute stddev arrays (use your existing buffers or iStdDevOnArray)
+//   double stdCP[(period+1)], stdOP[(period+1)];
+//   for(int i = 0; i <= period; i++)
+//   {
+//      stdCP[i] = iStdDevOnArray(close, 0, period, 0, MODE_SMA, i);
+//      stdOP[i] = iStdDevOnArray(open,  0, period, 0, MODE_SMA, i);
+//   }
+//
+//   // Compute slopes (use your existing slopeSIGData)
+//   DTYPE slopeCP = slopeSIGData(stdCP, 3, 5, 1);
+//   DTYPE slopeOP = slopeSIGData(stdOP, 3, 5, 1);
+//
+//   double absSlopeCP = MathAbs(slopeCP.val1);
+//   double absSlopeOP = MathAbs(slopeOP.val1);
+//
+//   // Core rule
+//   if(absSlopeCP > absSlopeOP * 1.1)  // 10% buffer to avoid noise
+//   {
+//      // Direction from close slope
+//      return (slopeCP.val1 > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+//   }
+//
+//   // Optional: ATR filter for low-vol dead markets
+//   double atrPips = atr / util.getPipValue(_Symbol);
+//   if(atrPips < 8.0) return SAN_SIGNAL::NOSIG;
+//
+//   return SAN_SIGNAL::NOTRADE;  // barrier or weak
+//}
 
 //+------------------------------------------------------------------+
 //|                                                                  |

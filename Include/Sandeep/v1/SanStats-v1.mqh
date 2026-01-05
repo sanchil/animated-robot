@@ -420,29 +420,53 @@ SLOPETYPE Stats::scatterPlot(const double& sig[], int SIZE = 21, int SHIFT = 1) 
    st.intercept = ((sumy - st.slope * sumx) / N);
    return st;
 }
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+////DataTransport   Stats::slopeVal(
+//DTYPE   Stats::slopeVal(
+//   const double &sig[],
+//   const int SLOPEDENOM = 3,
+//   const int SLOPEDENOM_WIDE = 5,
+//   const int shift = 1
+//) {
+////   DataTransport dt;
+//   DTYPE dt;
+//// double tPoint = ut.getPipValue(_Symbol);
+//   double tPoint = Point;
+//   //dt.matrixD[0] = NormalizeDouble(((sig[shift]-sig[SLOPEDENOM])/(SLOPEDENOM*tPoint)),3);
+//   //dt.matrixD[1] = NormalizeDouble(((sig[shift]-sig[SLOPEDENOM_WIDE])/(SLOPEDENOM_WIDE*tPoint)),3);
+//   //return dt;
+//   dt.val1 = NormalizeDouble(((sig[shift] - sig[SLOPEDENOM]) / (SLOPEDENOM * tPoint)), 3);
+//   dt.val2 = NormalizeDouble(((sig[shift] - sig[SLOPEDENOM_WIDE]) / (SLOPEDENOM_WIDE * tPoint)), 3);
+//   return dt;
+//}
+
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-//DataTransport   Stats::slopeVal(
-DTYPE   Stats::slopeVal(
+DTYPE Stats::slopeVal(
    const double &sig[],
    const int SLOPEDENOM = 3,
    const int SLOPEDENOM_WIDE = 5,
    const int shift = 1
 ) {
-//   DataTransport dt;
    DTYPE dt;
-// double tPoint = ut.getPipValue(_Symbol);
-   double tPoint = Point;
-   //dt.matrixD[0] = NormalizeDouble(((sig[shift]-sig[SLOPEDENOM])/(SLOPEDENOM*tPoint)),3);
-   //dt.matrixD[1] = NormalizeDouble(((sig[shift]-sig[SLOPEDENOM_WIDE])/(SLOPEDENOM_WIDE*tPoint)),3);
-   //return dt;
-   dt.val1 = NormalizeDouble(((sig[shift] - sig[SLOPEDENOM]) / (SLOPEDENOM * tPoint)), 3);
-   dt.val2 = NormalizeDouble(((sig[shift] - sig[SLOPEDENOM_WIDE]) / (SLOPEDENOM_WIDE * tPoint)), 3);
+   double pipValue = util.getPipValue(_Symbol);  // ← TRUE pip normalization
+   if(pipValue <= 0) pipValue = Point;           // safety fallback
+
+   dt.val1 = NormalizeDouble(
+                (sig[shift] - sig[shift + SLOPEDENOM]) / (SLOPEDENOM * pipValue), 4);
+
+   dt.val2 = NormalizeDouble(
+                (sig[shift] - sig[shift + SLOPEDENOM_WIDE]) / (SLOPEDENOM_WIDE * pipValue), 4);
+
+   // Bonus: acceleration
+   dt.val3 = dt.val1 - dt.val2;
+
    return dt;
 }
-
-
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -1122,7 +1146,7 @@ double  Stats::dotProd(const double &series1[], const double &series2[], const i
 //|                                                                  |
 //+------------------------------------------------------------------+
 double  Stats::arraySum(const double &arr[], const int SIZE = 10, int SHIFT = 0) {
-   double sum = EMPTY_VALUE;     
+   double sum = EMPTY_VALUE;
    for (int i = SHIFT; i < SIZE; i = i++) {
       if(sum == EMPTY_VALUE)sum = 0;
       sum += arr[i];
@@ -1133,18 +1157,16 @@ double  Stats::arraySum(const double &arr[], const int SIZE = 10, int SHIFT = 0)
 //+------------------------------------------------------------------+
 //| vWCM_Score - Volume-Weighted Candle Momentum                     |
 //+------------------------------------------------------------------+
-double Stats::vWCM_Score(const double &open[], const double &close[], 
-                         const double &volume[], int N = 10, const int interval = 0, int SHIFT = 1)
-{
+double Stats::vWCM_Score(const double &open[], const double &close[],
+                         const double &volume[], int N = 10, const int interval = 0, int SHIFT = 1) {
    double total_vol = 0.0;
-   for(int i = 0; i < N; i++) 
+   for(int i = 0; i < N; i++)
       total_vol += volume[i];
-   
+
    if(total_vol <= 0) return 0.0;
-   
+
    double score = 0.0;
-   for(int i = SHIFT; i < N; i = (i + interval)) // ← skip incomplete bars
-   {
+   for(int i = SHIFT; i < N; i = (i + interval)) { // ← skip incomplete bars
       double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
       double vol_weight = volume[i] / total_vol;
       score += body_pips * vol_weight;
