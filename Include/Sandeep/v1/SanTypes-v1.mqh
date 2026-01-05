@@ -177,6 +177,8 @@ struct TRADEBOOLS {
    bool              fastCloseStrategy3;
    bool              fastCloseStrategy4;
    bool              rsiObvCPCloseFactor;
+   bool              compositeSIGBool_1;
+   bool              openSIGBool;
 };
 
 struct DTYPE {
