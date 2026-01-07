@@ -55,6 +55,8 @@ class Stats {
    double            Arctan2(double y, double x);
    double            mean(const double &data[], int n = 0, double shift = 0);
    double            stdDev(const double &data[], int n = 0, int type = 0, int shift = 0);
+   double            skewness(const double &values[], int N, int shift = 0);
+   double            kurtosis(const double &values[], int N, int shift = 0);
    double            acf(const double &data[], int n = 0, int lag = 1);
 //   DataTransport     scatterPlotSlope(const double &y[],int n=0,int shift=0);
    SLOPETYPE         scatterPlot(const double& sig[], int SIZE = 21, int SHIFT = 1);
@@ -73,6 +75,7 @@ class Stats {
    double            dotProd(const double &series1[], const double &series2[], const int SIZE = 10, const int interval = 0, int SHIFT = 1);
    double            arraySum(const double &series1[], const int SIZE = 10, int SHIFT = 0);
    double            vWCM_Score(const double &open[], const double &close[], const double &volume[], int N=10, const int interval = 0,const int SHIFT =1);
+   double            vWCM_Score_v2(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1);
    DTYPE             getDecimalVal(const double num, const double denom);
 
    DTYPE     slopeVal(
@@ -268,6 +271,41 @@ double     Stats::stdDev(const double &data[], int type = 0, int n = 0, int shif
 };
 
 
+   // 4. Skewness & Kurtosis (Distribution Shape, skew -1 to 1, kurt excess)
+   double Stats::skewness(const double &values[], int N, int shift = 0) {
+      if(N <= 1) return 0.0;
+      double meanVal = 0.0;
+      for(int i = shift; i < N + shift; i++) meanVal += values[i];
+      meanVal /= N;
+      double variance = 0.0, skew = 0.0;
+      for(int i = shift; i < N + shift; i++) {
+         double dev = values[i] - meanVal;
+         variance += dev * dev;
+         skew += dev * dev * dev;
+      }
+      variance /= N;
+      double stdDev = MathSqrt(variance);
+      if(stdDev == 0) return 0.0;
+      return (skew / N) / (stdDev * stdDev * stdDev);
+   }
+
+   double Stats::kurtosis(const double &values[], int N, int shift = 0) {
+      if(N <= 1) return 0.0;
+      double meanVal = 0.0;
+      for(int i = shift; i < N + shift; i++) meanVal += values[i];
+      meanVal /= N;
+      double variance = 0.0, kurt = 0.0;
+      for(int i = shift; i < N + shift; i++) {
+         double dev = values[i] - meanVal;
+         variance += dev * dev;
+         kurt += dev * dev * dev * dev;
+      }
+      variance /= N;
+      double stdDev = MathSqrt(variance);
+      if(stdDev == 0) return 0.0;
+      double rawKurt = (kurt / N) / (variance * variance);
+      return rawKurt - 3.0;  // excess kurtosis
+   }
 //+------------------------------------------------------------------+
 //| Scatter plot formula:   m = Σ(xi - xmean)(yi - ymean) / Σ(xi - xmean)²
 //  m =(n Σ(xiyi)-ΣxiΣyi)/(nΣxi^2-(Σxi)^2)                                             |
@@ -1174,6 +1212,30 @@ double Stats::vWCM_Score(const double &open[], const double &close[],
    return score;
 }
 
+//+------------------------------------------------------------------+
+//| vWCM_Score v2 - Normalized & Safe                                |
+//+------------------------------------------------------------------+
+double Stats::vWCM_Score_v2(const double &open[], const double &close[],
+                            const double &volume[], int N = 10, int SHIFT = 1) {
+   double sum_force = 0.0;
+   double total_vol = 0.0;
+
+   // Single Loop: Safer and more efficient
+   for(int i = SHIFT; i < (N + SHIFT); i++) {
+      double vol = volume[i];
+      double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
+
+      // Force = Direction * Volume
+      sum_force += (body_pips * vol);
+      total_vol += vol;
+   }
+
+   if(total_vol <= 0) return 0.0;
+
+   // Result is "Weighted Average Pips per Candle"
+   // This makes it comparable to ATR or average candle size.
+   return sum_force / total_vol;
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1201,4 +1263,69 @@ Stats stats(util);
 
 //+------------------------------------------------------------------+
 
+//+------------------------------------------------------------------+
+
+
+//+------------------------------------------------------------------+
+//| MomentumStrength Class — Filters for Momentum Quality            |
+//|                                                                  |
+//| • ATR: Volatility proxy (normalized 0-1)                        |
+//| • ADX: Trend strength (normalized 0-1)                           |
+//| • ER: Directional efficiency (0-1)                               |
+//| • Skew/Kurtosis: Distribution shape (skew: -1 to 1; kurt: excess) |
+//| • vWCM: Volume-weighted force (normalized -1 to 1)               |
+//|                                                                  |
+//| Use as filter: e.g., if(strength < 0.5) return NOSIG;           |
+//+------------------------------------------------------------------+
+class MomentumStrength {
+ private:
+   SanUtils util;  // assume your util for pipValue
+
+ public:
+   MomentumStrength() { /* init if needed */ }
+   MomentumStrength(SanUtils& ut) {
+      util= ut;
+   }
+
+
+   // 1. ATR Normalization (Volatility Proxy, 0-1)
+   double atrStrength(const double atr, int period = 14, double maxAtr = 100.0) {
+      double atrPips = atr / util.getPipValue(_Symbol);
+      return MathMin(atrPips / maxAtr, 1.0);  // normalize to 0-1 (tune maxAtr per pair)
+   }
+
+   // 2. ADX Normalization (Trend Strength, 0-1)
+   double adxStrength(int period = 14, int shift = 0) {
+      double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
+      return MathMin(adx / 50.0, 1.0);  // 0-1 scale (>1 rare, cap at 1)
+   }
+
+   // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
+   double efficiencyRatio(const double &price[], int period = 14, int shift = 0) {
+      double net = MathAbs(price[shift] - price[shift + period]);
+      double sumAbs = 0.0;
+      for(int i = shift; i < shift + period; i++)
+         sumAbs += MathAbs(price[i] - price[i+1]);
+      return (sumAbs > 0) ? net / sumAbs : 0.0;
+   }
+
+   // 5. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
+   double vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1) {
+      double sum_force = 0.0;
+      double total_vol = 0.0;
+      for(int i = SHIFT; i < N + SHIFT; i++) {
+         double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
+         sum_force += body_pips * volume[i];
+         total_vol += volume[i];
+      }
+      if(total_vol <= 0) return 0.0;
+      double raw = sum_force / total_vol;
+      return stats.tanh(raw / 10.0);  // normalize -1 to 1 with tanh for bounded output
+   }
+};
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+MomentumStrength ms(util);
 //+------------------------------------------------------------------+

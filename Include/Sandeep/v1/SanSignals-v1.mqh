@@ -180,30 +180,38 @@ class SanSignals {
       const int shift = 1
    );
 
-   SAN_SIGNAL        candleVolSIG(
-      const double &open[],
-      const double &close[],
-      const double &vol[],
-      const int period = 10,
-      const int shift = 1
-   );
-
-   SAN_SIGNAL        candleVolSIG_v1(
-      const double &open[],
-      const double &close[],
-      const double &vol[],
-      const int period = 10,
-      const int shift = 1
-   );
-
-   SAN_SIGNAL        candleVolSIG_v2(
-      const double &open[], const double &close[], const double &volume[],const double atr,
-      int period = 30,const int SHIFT =1);
+//   SAN_SIGNAL        candleVolSIG(
+//      const double &open[],
+//      const double &close[],
+//      const double &vol[],
+//      const int period = 10,
+//      const int shift = 1
+//   );
+//
+//   SAN_SIGNAL        candleVolSIG_v1(
+//      const double &open[],
+//      const double &close[],
+//      const double &vol[],
+//      const int period = 10,
+//      const int shift = 1
+//   );
 
    SAN_SIGNAL       singleCandleVolSIG(
-      const double &open[], const double &close[],
-      const double &volume[], const double atr,
-      int period = 30, int SHIFT = 1);
+      const double &open[], 
+      const double &close[],
+      const double &volume[], 
+      const double atr,
+      int period = 30, 
+      int SHIFT = 1);
+      
+   SAN_SIGNAL        candleVolSIG(
+      const double &open[], 
+      const double &close[], 
+      const double &volume[],
+      const double atr,
+      int period = 30,
+      const int SHIFT =1
+      );
 
    DTYPE             candleVolDt(
       const double &open[],
@@ -1372,14 +1380,15 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
 //| • Integrates with your slope engine                              |
 //+------------------------------------------------------------------+
 
-SAN_SIGNAL SanSignals::volatilityMomentumSIG(const DTYPE &stdDevOpen, const DTYPE &stdDevClose, const double atr = 0)
-{
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::volatilityMomentumSIG(const DTYPE &stdDevOpen, const DTYPE &stdDevClose, const double atr = 0) {
    const double MIN_SLOPE = 0.0001;
    double VOL_RATIO_THRESHOLD = 1.1;  // base
 
    // Optional ATR adaptation (looser in high vol)
-   if(atr > 0)
-   {
+   if(atr > 0) {
       double atrPips = atr / util.getPipValue(_Symbol);
       VOL_RATIO_THRESHOLD = 1.05 + 0.15 * MathMin(atrPips / 50.0, 1.0);  // 1.05–1.20
    }
@@ -2042,267 +2051,215 @@ SAN_SIGNAL SanSignals::candleImaSIG(
       return SAN_SIGNAL::SELL;
    return SAN_SIGNAL::NOSIG;
 }
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-SAN_SIGNAL   SanSignals::candleVolSIG(
-   const double & open[],
-   const double & close[],
-   const double & vol[],
-   const int period = 10,
-   const int shift = 1
-) {
-   const double tPoint = Point();
-   const double LOWERLIMIT = 0.7;
-   const double UPPERLIMIT = 1.3;
-   double DOTPRODUCTSIZE = 10;
-   double diff[];
-   double redDotProduct = 0;
-   double greenDotProduct = 0;
-   double dotProduct = 0;
-   double dotProduct1 = 0;
-   double dotProduct2 = 0;
-   double ratio = EMPTY_VALUE;
-   ArrayResize(diff, (period + 1));
-   int timePeriod = 60;
-   if(_Period == PERIOD_M1) {
-      timePeriod = 60;
-      DOTPRODUCTSIZE = 20;
-   }
-   if(_Period == PERIOD_M5) {
-      timePeriod = (60 * 5);
-      DOTPRODUCTSIZE = 30;
-   }
-   if(_Period == PERIOD_M15) {
-      timePeriod = (60 * 15);
-      DOTPRODUCTSIZE = 50;
-   }
-   if(_Period == PERIOD_M30) {
-      timePeriod = (60 * 30);
-      DOTPRODUCTSIZE = 100;
-   }
-   if(_Period == PERIOD_H1) {
-      timePeriod = (60 * 60);
-      DOTPRODUCTSIZE = 200;
-   }
-   if(_Period == PERIOD_H4) {
-      timePeriod = (60 * 240);
-      DOTPRODUCTSIZE = 400;
-   }
-   if(_Period == PERIOD_D1) {
-      timePeriod = (60 * 1440);
-      DOTPRODUCTSIZE = 1440;
-   }
-   for(int i = shift, j = 0; i <= period; i++, j++)
-      //for(int i=shift,j=0; i<period; i++,j++)
-   {
-      diff[j] = ((close[i] - open[i]) / tPoint);
-      // dotProduct += (vol[i]*((diff[j]/10)/timePeriod));
-      // dotProduct1 += (vol[i]*((diff[j]/period)/timePeriod));
-      dotProduct += (vol[i] * ((diff[j] / (period * timePeriod))));
-      if(diff[j] < 0)
-         redDotProduct += fabs(vol[i] * diff[j]);
-      if(diff[j] > 0)
-         greenDotProduct += (vol[i] * diff[j]);
-      //  Print("Open values: "+(open[i])+" close values: "+ (close[i])+ " diff: "+diff[i]+" Volume: "+vol[i]);
-   }
-//Print("Combined dot product: "+ (NormalizeDouble(dotProduct,2))+" DOTPRODUCTSIZE: "+DOTPRODUCTSIZE);
-   if((greenDotProduct == 0) && (redDotProduct > 0)) {
-      ratio = 0;
-   } else if((greenDotProduct > 0) && (redDotProduct == 0)) {
-      ratio = NormalizeDouble(greenDotProduct, 2);
-   } else if((greenDotProduct > 0) && (redDotProduct > 0)) {
-      ratio = NormalizeDouble((greenDotProduct / redDotProduct), 2);
-   }
-// Print(" Red dot: "+redDotProduct+" Green dot: "+greenDotProduct+" ratio: "+ratio);
-   if(((ratio >= LOWERLIMIT) && (ratio <= UPPERLIMIT)) || (fabs(dotProduct) < DOTPRODUCTSIZE)) {
-      return SAN_SIGNAL::SIDEWAYS;
-   } else if((ratio < LOWERLIMIT) && (dotProduct <= (-1 * DOTPRODUCTSIZE))) {
-      return SAN_SIGNAL::SELL;
-   } else if((ratio > UPPERLIMIT) && (dotProduct >= DOTPRODUCTSIZE)) {
-      return SAN_SIGNAL::BUY;
-   }
-   return SAN_SIGNAL::NOSIG;
-}
-
-
-//+------------------------------------------------------------------+
-//  h1 = sigmoid(tick1*price1 + bias)
-//  h2 = sigmoid(Wh*h1 + tick2*price2 + bias)
-//  sigmoid = 1/(1+e^-x)
-//+------------------------------------------------------------------+
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-SAN_SIGNAL   SanSignals::candleVolSIG_v1(
-   const double & open[],
-   const double & close[],
-   const double & vol[],
-   const int period = 10,
-   const int shift = 1
-) {
-   const double tPoint = Point();
-   const double LOWERLIMIT = 0.8;
-   const double UPPERLIMIT = 1.2;
+//
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL   SanSignals::candleVolSIG(
+//   const double & open[],
+//   const double & close[],
+//   const double & vol[],
+//   const int period = 10,
+//   const int shift = 1
+//) {
+//   const double tPoint = Point();
 //   const double LOWERLIMIT = 0.7;
 //   const double UPPERLIMIT = 1.3;
-   double DOTPRODUCTSIZE = 10;
-   double diff[];
-   double redDotProduct = 0;
-   double greenDotProduct = 0;
-   double dotProduct = 0;
-//double dotProduct1=0;
-//double dotProduct2=0;
-   double fastDotProduct = 0;
-   double slowDotProduct = 0;
-   double ratio = EMPTY_VALUE;
-   uint slowPeriod = period;
-   uint fastPeriod = (int)MathCeil(0.7 * period);
-   ArrayResize(diff, (slowPeriod + 1));
-   int timePeriod = 60;
-   if(_Period == PERIOD_M1) {
-      timePeriod = 60;
-      DOTPRODUCTSIZE = 20;
-   }
-   if(_Period == PERIOD_M5) {
-      timePeriod = (60 * 5);
-      DOTPRODUCTSIZE = 30;
-   }
-   if(_Period == PERIOD_M15) {
-      timePeriod = (60 * 15);
-      DOTPRODUCTSIZE = 50;
-   }
-   if(_Period == PERIOD_M30) {
-      timePeriod = (60 * 30);
-      DOTPRODUCTSIZE = 100;
-   }
-   if(_Period == PERIOD_H1) {
-      timePeriod = (60 * 60);
-      DOTPRODUCTSIZE = 200;
-   }
-   if(_Period == PERIOD_H4) {
-      timePeriod = (60 * 240);
-      DOTPRODUCTSIZE = 400;
-   }
-   if(_Period == PERIOD_D1) {
-      timePeriod = (60 * 1440);
-      DOTPRODUCTSIZE = 1440;
-   }
-   for(int i = shift, j = 0; i <= slowPeriod; i++, j++)
-      //for(int i=shift,j=0; i<period; i++,j++)
-   {
-      diff[j] = ((close[i] - open[i]) / tPoint);
-      // dotProduct += (vol[i]*((slowDiff[j]/10)/timePeriod));
-      // dotProduct1 += (vol[i]*((slowDiff[j]/period)/timePeriod));
-      slowDotProduct += (vol[i] * ((diff[j] / (period * timePeriod))));
-      if(i <= fastPeriod) {
-         fastDotProduct += slowDotProduct;
-         if(diff[j] < 0)
-            redDotProduct += fabs(vol[i] * diff[j]);
-         if(diff[j] > 0)
-            greenDotProduct += (vol[i] * diff[j]);
-      }
-   }
-   if((greenDotProduct == 0) && (redDotProduct > 0)) {
-      ratio = 0;
-   } else if((greenDotProduct > 0) && (redDotProduct == 0)) {
-      ratio = NormalizeDouble(greenDotProduct, 2);
-   } else if((greenDotProduct > 0) && (redDotProduct > 0)) {
-      ratio = NormalizeDouble((greenDotProduct / redDotProduct), 2);
-   }
-   bool sameSideBool = (((slowDotProduct > 0) && (fastDotProduct > 0)) || ((slowDotProduct < 0) && (fastDotProduct < 0)));
-   bool oppSideBuyBool = ((slowDotProduct < 0) && (fastDotProduct > 0));
-   bool oppSideSellBool = ((slowDotProduct > 0) && (fastDotProduct < 0));
-   bool oppSideBool = (oppSideBuyBool || oppSideSellBool);
-   bool flatBool = ((ratio >= LOWERLIMIT) && (ratio <= UPPERLIMIT));
-   bool varBool = ((ratio < LOWERLIMIT) || (ratio > UPPERLIMIT));
-   double prodRatio = 0;
-   prodRatio = (NormalizeDouble((slowDotProduct / fastDotProduct), 2));
-   bool prodSigBool = ((prodRatio > 0) && (prodRatio < 1.5));
-// Print(" Red dot: "+redDotProduct+" Green dot: "+greenDotProduct+" ratio: "+ratio);
-// Print("Slow dot product: "+ (NormalizeDouble(slowDotProduct,2))+" fast dotproduct: "+ (NormalizeDouble(fastDotProduct,2))+" Ratio: "+ratio+" prodRatio: "+prodRatio+" DPSIZE: "+DOTPRODUCTSIZE);
-   if(varBool && (prodRatio < 0) && oppSideBuyBool) {
-      //return SAN_SIGNAL::CLOSESELL;
-      //return SAN_SIGNAL::BUY;
-      return SAN_SIGNAL::CLOSE;
-   } else if(varBool && (prodRatio < 0) && oppSideSellBool) {
-      //return SAN_SIGNAL::CLOSEBUY;
-      //return SAN_SIGNAL::SELL;
-      return SAN_SIGNAL::CLOSE;
-   } else if(flatBool || (fabs(fastDotProduct) < DOTPRODUCTSIZE)) {
-      return SAN_SIGNAL::SIDEWAYS;
-   } else if((ratio < LOWERLIMIT) && (fastDotProduct <= (-1 * DOTPRODUCTSIZE)) && prodSigBool) {
-      return SAN_SIGNAL::SELL;
-   } else if((ratio > UPPERLIMIT) && (fastDotProduct >= DOTPRODUCTSIZE) && prodSigBool) {
-      return SAN_SIGNAL::BUY;
-   }
-   return SAN_SIGNAL::NOSIG;
-}
-
-//SAN_SIGNAL SanSignals::candleVolSIG_v2(
-//   const double &open[],
-//   const double &close[],
-//   const double &volume[],
-//   const double atr,
-//   int period = 30,
-//   const int SHIFT =1
-//) {
-//   static datetime last_bar_time = 0;
-//   static double   cached_slow = 0;
-//   static double   cached_fast = 0;
-//   static SAN_SIGNAL cached_sig = SAN_SIGNAL::NOSIG;
-//
-//   // --- Only recalculate on new bar
-//   if(Time[0] == last_bar_time) {
-//      return cached_sig;  // instant return
+//   double DOTPRODUCTSIZE = 10;
+//   double diff[];
+//   double redDotProduct = 0;
+//   double greenDotProduct = 0;
+//   double dotProduct = 0;
+//   double dotProduct1 = 0;
+//   double dotProduct2 = 0;
+//   double ratio = EMPTY_VALUE;
+//   ArrayResize(diff, (period + 1));
+//   int timePeriod = 60;
+//   if(_Period == PERIOD_M1) {
+//      timePeriod = 60;
+//      DOTPRODUCTSIZE = 20;
 //   }
-//   last_bar_time = Time[0];
-//
-//   // --- ATR filter (quiet market = no trade)
-//   double atr_pips = atr / _Point;
-//   if(atr_pips < 8.0) {
-//      cached_sig = SAN_SIGNAL::NOSIG;
-//      return cached_sig;
+//   if(_Period == PERIOD_M5) {
+//      timePeriod = (60 * 5);
+//      DOTPRODUCTSIZE = 30;
 //   }
-//
-//   // --- Use your perfect vWCM_Score
-//   int fast_n = (int)MathMax(10, period * 0.7);
-//
-//   double score_slow = stats.vWCM_Score(open, close, volume, period,SHIFT);
-//   double score_fast = stats.vWCM_Score(open, close, volume, fast_n,SHIFT);
-//
-//   // --- Agreement logic
-//   bool same_direction = (score_slow > 0 && score_fast > 0) ||
-//                         (score_slow < 0 && score_fast < 0);
-//   bool strength_ok    = MathAbs(score_slow / (score_fast + 1e-10)) > 0.75;
-//
-//   SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
-//   if(same_direction && strength_ok) {
-//      sig = (score_slow > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+//   if(_Period == PERIOD_M15) {
+//      timePeriod = (60 * 15);
+//      DOTPRODUCTSIZE = 50;
 //   }
-//
-//   // --- Cache result
-//   cached_slow = score_slow;
-//   cached_fast = score_fast;
-//   cached_sig  = sig;
-//
-//   PrintFormat("vWCM: Slow=%.4f Fast=%.4f ATR=%.1f pips → %s",
-//               score_slow, score_fast, atr_pips,
-//               (sig==BUY?"BUY":sig==SELL?"SELL":"NOSIG"));
-//
-//   return sig;
+//   if(_Period == PERIOD_M30) {
+//      timePeriod = (60 * 30);
+//      DOTPRODUCTSIZE = 100;
+//   }
+//   if(_Period == PERIOD_H1) {
+//      timePeriod = (60 * 60);
+//      DOTPRODUCTSIZE = 200;
+//   }
+//   if(_Period == PERIOD_H4) {
+//      timePeriod = (60 * 240);
+//      DOTPRODUCTSIZE = 400;
+//   }
+//   if(_Period == PERIOD_D1) {
+//      timePeriod = (60 * 1440);
+//      DOTPRODUCTSIZE = 1440;
+//   }
+//   for(int i = shift, j = 0; i <= period; i++, j++)
+//      //for(int i=shift,j=0; i<period; i++,j++)
+//   {
+//      diff[j] = ((close[i] - open[i]) / tPoint);
+//      // dotProduct += (vol[i]*((diff[j]/10)/timePeriod));
+//      // dotProduct1 += (vol[i]*((diff[j]/period)/timePeriod));
+//      dotProduct += (vol[i] * ((diff[j] / (period * timePeriod))));
+//      if(diff[j] < 0)
+//         redDotProduct += fabs(vol[i] * diff[j]);
+//      if(diff[j] > 0)
+//         greenDotProduct += (vol[i] * diff[j]);
+//      //  Print("Open values: "+(open[i])+" close values: "+ (close[i])+ " diff: "+diff[i]+" Volume: "+vol[i]);
+//   }
+////Print("Combined dot product: "+ (NormalizeDouble(dotProduct,2))+" DOTPRODUCTSIZE: "+DOTPRODUCTSIZE);
+//   if((greenDotProduct == 0) && (redDotProduct > 0)) {
+//      ratio = 0;
+//   } else if((greenDotProduct > 0) && (redDotProduct == 0)) {
+//      ratio = NormalizeDouble(greenDotProduct, 2);
+//   } else if((greenDotProduct > 0) && (redDotProduct > 0)) {
+//      ratio = NormalizeDouble((greenDotProduct / redDotProduct), 2);
+//   }
+//// Print(" Red dot: "+redDotProduct+" Green dot: "+greenDotProduct+" ratio: "+ratio);
+//   if(((ratio >= LOWERLIMIT) && (ratio <= UPPERLIMIT)) || (fabs(dotProduct) < DOTPRODUCTSIZE)) {
+//      return SAN_SIGNAL::SIDEWAYS;
+//   } else if((ratio < LOWERLIMIT) && (dotProduct <= (-1 * DOTPRODUCTSIZE))) {
+//      return SAN_SIGNAL::SELL;
+//   } else if((ratio > UPPERLIMIT) && (dotProduct >= DOTPRODUCTSIZE)) {
+//      return SAN_SIGNAL::BUY;
+//   }
+//   return SAN_SIGNAL::NOSIG;
 //}
+//
+//
+////+------------------------------------------------------------------+
+////  h1 = sigmoid(tick1*price1 + bias)
+////  h2 = sigmoid(Wh*h1 + tick2*price2 + bias)
+////  sigmoid = 1/(1+e^-x)
+////+------------------------------------------------------------------+
+//
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL   SanSignals::candleVolSIG_v1(
+//   const double & open[],
+//   const double & close[],
+//   const double & vol[],
+//   const int period = 10,
+//   const int shift = 1
+//) {
+//   const double tPoint = Point();
+//   const double LOWERLIMIT = 0.8;
+//   const double UPPERLIMIT = 1.2;
+////   const double LOWERLIMIT = 0.7;
+////   const double UPPERLIMIT = 1.3;
+//   double DOTPRODUCTSIZE = 10;
+//   double diff[];
+//   double redDotProduct = 0;
+//   double greenDotProduct = 0;
+//   double dotProduct = 0;
+////double dotProduct1=0;
+////double dotProduct2=0;
+//   double fastDotProduct = 0;
+//   double slowDotProduct = 0;
+//   double ratio = EMPTY_VALUE;
+//   uint slowPeriod = period;
+//   uint fastPeriod = (int)MathCeil(0.7 * period);
+//   ArrayResize(diff, (slowPeriod + 1));
+//   int timePeriod = 60;
+//   if(_Period == PERIOD_M1) {
+//      timePeriod = 60;
+//      DOTPRODUCTSIZE = 20;
+//   }
+//   if(_Period == PERIOD_M5) {
+//      timePeriod = (60 * 5);
+//      DOTPRODUCTSIZE = 30;
+//   }
+//   if(_Period == PERIOD_M15) {
+//      timePeriod = (60 * 15);
+//      DOTPRODUCTSIZE = 50;
+//   }
+//   if(_Period == PERIOD_M30) {
+//      timePeriod = (60 * 30);
+//      DOTPRODUCTSIZE = 100;
+//   }
+//   if(_Period == PERIOD_H1) {
+//      timePeriod = (60 * 60);
+//      DOTPRODUCTSIZE = 200;
+//   }
+//   if(_Period == PERIOD_H4) {
+//      timePeriod = (60 * 240);
+//      DOTPRODUCTSIZE = 400;
+//   }
+//   if(_Period == PERIOD_D1) {
+//      timePeriod = (60 * 1440);
+//      DOTPRODUCTSIZE = 1440;
+//   }
+//   for(int i = shift, j = 0; i <= slowPeriod; i++, j++)
+//      //for(int i=shift,j=0; i<period; i++,j++)
+//   {
+//      diff[j] = ((close[i] - open[i]) / tPoint);
+//      // dotProduct += (vol[i]*((slowDiff[j]/10)/timePeriod));
+//      // dotProduct1 += (vol[i]*((slowDiff[j]/period)/timePeriod));
+//      slowDotProduct += (vol[i] * ((diff[j] / (period * timePeriod))));
+//      if(i <= fastPeriod) {
+//         fastDotProduct += slowDotProduct;
+//         if(diff[j] < 0)
+//            redDotProduct += fabs(vol[i] * diff[j]);
+//         if(diff[j] > 0)
+//            greenDotProduct += (vol[i] * diff[j]);
+//      }
+//   }
+//   if((greenDotProduct == 0) && (redDotProduct > 0)) {
+//      ratio = 0;
+//   } else if((greenDotProduct > 0) && (redDotProduct == 0)) {
+//      ratio = NormalizeDouble(greenDotProduct, 2);
+//   } else if((greenDotProduct > 0) && (redDotProduct > 0)) {
+//      ratio = NormalizeDouble((greenDotProduct / redDotProduct), 2);
+//   }
+//   bool sameSideBool = (((slowDotProduct > 0) && (fastDotProduct > 0)) || ((slowDotProduct < 0) && (fastDotProduct < 0)));
+//   bool oppSideBuyBool = ((slowDotProduct < 0) && (fastDotProduct > 0));
+//   bool oppSideSellBool = ((slowDotProduct > 0) && (fastDotProduct < 0));
+//   bool oppSideBool = (oppSideBuyBool || oppSideSellBool);
+//   bool flatBool = ((ratio >= LOWERLIMIT) && (ratio <= UPPERLIMIT));
+//   bool varBool = ((ratio < LOWERLIMIT) || (ratio > UPPERLIMIT));
+//   double prodRatio = 0;
+//   prodRatio = (NormalizeDouble((slowDotProduct / fastDotProduct), 2));
+//   bool prodSigBool = ((prodRatio > 0) && (prodRatio < 1.5));
+//// Print(" Red dot: "+redDotProduct+" Green dot: "+greenDotProduct+" ratio: "+ratio);
+//// Print("Slow dot product: "+ (NormalizeDouble(slowDotProduct,2))+" fast dotproduct: "+ (NormalizeDouble(fastDotProduct,2))+" Ratio: "+ratio+" prodRatio: "+prodRatio+" DPSIZE: "+DOTPRODUCTSIZE);
+//   if(varBool && (prodRatio < 0) && oppSideBuyBool) {
+//      //return SAN_SIGNAL::CLOSESELL;
+//      //return SAN_SIGNAL::BUY;
+//      return SAN_SIGNAL::CLOSE;
+//   } else if(varBool && (prodRatio < 0) && oppSideSellBool) {
+//      //return SAN_SIGNAL::CLOSEBUY;
+//      //return SAN_SIGNAL::SELL;
+//      return SAN_SIGNAL::CLOSE;
+//   } else if(flatBool || (fabs(fastDotProduct) < DOTPRODUCTSIZE)) {
+//      return SAN_SIGNAL::SIDEWAYS;
+//   } else if((ratio < LOWERLIMIT) && (fastDotProduct <= (-1 * DOTPRODUCTSIZE)) && prodSigBool) {
+//      return SAN_SIGNAL::SELL;
+//   } else if((ratio > UPPERLIMIT) && (fastDotProduct >= DOTPRODUCTSIZE) && prodSigBool) {
+//      return SAN_SIGNAL::BUY;
+//   }
+//   return SAN_SIGNAL::NOSIG;
+//}
+
+
+
 //+------------------------------------------------------------------+
-//| Ultra-fast, hang-proof candleVolSIG_v2 using your vWCM_Score     |
+//| singleCandleVolSIG - Final, bulletproof version                     |
 //+------------------------------------------------------------------+
-//+------------------------------------------------------------------+
-//| candleVolSIG_v2 - Final, bulletproof version                     |
-//+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::candleVolSIG_v2(
-   const double &open[], const double &close[],
-   const double &volume[], const double atr,
+SAN_SIGNAL SanSignals::singleCandleVolSIG(
+   const double &open[], 
+   const double &close[],
+   const double &volume[], 
+   const double atr,
    int period = 30, int SHIFT = 1) {
    static datetime last_bar = 0;
    static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
@@ -2313,15 +2270,54 @@ SAN_SIGNAL SanSignals::candleVolSIG_v2(
    last_bar = Time[0];
 
    double atr_pips = atr / _Point;
-   if(atr_pips < 8.0) {
-      cached = SAN_SIGNAL::NOSIG;
+   //if(atr_pips < 8.0) {
+   //   cached = SAN_SIGNAL::NOSIG;
+   //   return cached;
+   //}
+   //double slow = stats.vWCM_Score(open, close, volume, period,0,SHIFT);
+   double slow = ms.vWCM(open, close, volume, period,SHIFT);
+
+   cached = (slow > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+
+   PrintFormat("vWCM | ATR:%.1f pips | Slow:%.4f",
+               atr_pips, slow,
+               cached==BUY?"BUY":cached==SELL?"SELL":"NOSIG");
+
+   return cached;
+}
+
+//+------------------------------------------------------------------+
+//| Ultra-fast, hang-proof candleVolSIG_v2 using your vWCM_Score     |
+//+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| candleVolSIG_v2 - Final, bulletproof version                     |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::candleVolSIG(
+   const double &open[], 
+   const double &close[],
+   const double &volume[], 
+   const double atr,
+   int period = 30, int SHIFT = 1) {
+   static datetime last_bar = 0;
+   static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
+
+   if(Time[0] == last_bar)
       return cached;
-   }
+
+   last_bar = Time[0];
+
+   double atr_pips = atr / _Point;
+   //if(atr_pips < 8.0) {
+   //   cached = SAN_SIGNAL::NOSIG;
+   //   return cached;
+   //}
 
    int fast_n = (int)MathMax(10, period * 0.7);
 
-   double slow = stats.vWCM_Score(open, close, volume, period,0,SHIFT);
-   double fast = stats.vWCM_Score(open, close, volume, fast_n,0,SHIFT);
+   //double slow = stats.vWCM_Score(open, close, volume, period,0,SHIFT);
+   //double fast = stats.vWCM_Score(open, close, volume, fast_n,0,SHIFT);
+   double slow = ms.vWCM(open, close, volume, period,SHIFT);
+   double fast = ms.vWCM(open, close, volume, fast_n,SHIFT);
 
    bool agree_dir  = (slow > 0 && fast > 0) || (slow < 0 && fast < 0);
    bool agree_str  = MathAbs(slow / (fast + 1e-10)) > 0.75;
@@ -2337,40 +2333,6 @@ SAN_SIGNAL SanSignals::candleVolSIG_v2(
    return cached;
 }
 
-//+------------------------------------------------------------------+
-//| Ultra-fast, hang-proof candleVolSIG_v2 using your vWCM_Score     |
-//+------------------------------------------------------------------+
-//+------------------------------------------------------------------+
-//| singleCandleVolSIG - Final, bulletproof version                     |
-//+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::singleCandleVolSIG(
-   const double &open[], const double &close[],
-   const double &volume[], const double atr,
-   int period = 30, int SHIFT = 1) {
-   static datetime last_bar = 0;
-   static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
-
-   if(Time[0] == last_bar)
-      return cached;
-
-   last_bar = Time[0];
-
-   double atr_pips = atr / _Point;
-   if(atr_pips < 8.0) {
-      cached = SAN_SIGNAL::NOSIG;
-      return cached;
-   }
-   double slow = stats.vWCM_Score(open, close, volume, period,0,SHIFT);
-
-
-   cached = (slow > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
-
-   PrintFormat("vWCM | ATR:%.1f pips | Slow:%.4f",
-               atr_pips, slow,
-               cached==BUY?"BUY":cached==SELL?"SELL":"NOSIG");
-
-   return cached;
-}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -3141,7 +3103,7 @@ SAN_SIGNAL  SanSignals::dominantTrendSIG(
    bool closeOnReverseBool = ((ss.volSIG == SAN_SIGNAL::REVERSETRADE) || (ss.volSIG == SAN_SIGNAL::NOTRADE) || (ss.volSIG == SAN_SIGNAL::CLOSE));
    bool noReverseBool = ((ss.volSIG != SAN_SIGNAL::REVERSETRADE) && (ss.volSIG != SAN_SIGNAL::NOTRADE) && (ss.volSIG != SAN_SIGNAL::CLOSE));
    bool sideWaysBool = (
-                          (ss.candleVol120SIG == SAN_SIGNAL::SIDEWAYS)
+                          (ss.candleVolSIG == SAN_SIGNAL::SIDEWAYS)
                           || (ss.slopeVarSIG == SAN_SIGNAL::SIDEWAYS)
                        );
    bool flatTrendRatioBool = ((ss.trendRatioSIG == SANTREND::FLAT) || (ss.trendRatioSIG == SANTREND::FLATUP) || (ss.trendRatioSIG == SANTREND::FLATDOWN));

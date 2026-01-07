@@ -135,7 +135,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool noVolWindPressure = ((ss.volSIG == SAN_SIGNAL::REVERSETRADE) || (ss.volSIG == SAN_SIGNAL::CLOSE));
 //bool noVarBool = (variabilityVal==0);
    bool noVarBool = (!varBool);
-   bool candleVol120Bool = (((ss.candleVol120SIG == SAN_SIGNAL::SELL) && varNegBool) || ((ss.candleVol120SIG == SAN_SIGNAL::BUY) && varPosBool));
+   bool candleVol120Bool = (((ss.candleVolSIG == SAN_SIGNAL::SELL) && varNegBool) || ((ss.candleVolSIG == SAN_SIGNAL::BUY) && varPosBool));
    bool slopeVarBool = (ss.slopeVarSIG == SAN_SIGNAL::SELL || ss.slopeVarSIG == SAN_SIGNAL::BUY);
    HSIG hSig(ss, util);
    h = hSig;
@@ -154,7 +154,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    bool fastOpenTrade3 = ((hSig.slopeFastSIG != SAN_SIGNAL::NOSIG) && (hSig.slopeFastSIG == hSig.mainFastSIG));
    //bool fastOpenTrade4 = (slopeTrendVarBool && (ss.ima1430SIG!=SAN_SIGNAL::NOSIG) && (ss.ima1430SIG==hSig.dominantTrendSIG));   // ss.ima514SIG
    //bool fastOpenTrade5 = (slopeTrendVarBool && (ss.slopeVarSIG!=SAN_SIGNAL::NOSIG) && (ss.slopeVarSIG==hSig.dominantTrendSIG));  // ss.slopeVarSIG
-   //bool fastOpenTrade6 = (candleVolVar120Bool && (ss.candleVol120SIG!=SAN_SIGNAL::NOSIG) && (ss.candleVol120SIG==hSig.dominantTrendSIG));  // ss.candleVol120SIG
+   //bool fastOpenTrade6 = (candleVolVar120Bool && (ss.candleVolSIG!=SAN_SIGNAL::NOSIG) && (ss.candleVolSIG==hSig.dominantTrendSIG));  // ss.candleVolSIG
 //
 //// #################################################################################
    //bool fastOpenTrade10 = (fastOpenTrade3||fastOpenTrade4||fastOpenTrade5||fastOpenTrade6);
@@ -168,7 +168,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 //bool closeProfitLoss = ((_Period >= PERIOD_M1) && (ss.profitPercentageSIG == SAN_SIGNAL::CLOSE));
    bool closeProfitLoss = ((_Period >= PERIOD_M1) && (ss.profitSIG == SAN_SIGNAL::CLOSE));
    bool closeTrade1 = (noVolWindPressure && (
-                          (ss.candleVol120SIG == SAN_SIGNAL::SIDEWAYS)
+                          (ss.candleVolSIG == SAN_SIGNAL::SIDEWAYS)
                           || (ss.slopeVarSIG == SAN_SIGNAL::SIDEWAYS)
                           || (ss.trendRatioSIG == SANTREND::FLAT)
                           || (ss.trendRatioSIG == SANTREND::FLATUP)
@@ -250,7 +250,7 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
 // Print("[TIME] : Current: "+ TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES)+" GMT: "+ TimeToString(TimeGMT(), TIME_DATE|TIME_MINUTES));
    Print("[SLOW COPEN]:: cp120: " + util.getSigString(hSig.cpSlopeCandle120SIG)  + " cCloseSIG3: " + util.getSigString(hSig.composite_CloseSIG_3) + " cCloseSIG4: " + util.getSigString(hSig.composite_CloseSIG_4)  + " tradeSlopeSig: "+ util.getSigString(ss.tradeSlopeSIG)+" slopeAnalyzerSIG: "+util.getSigString(ss.slopeAnalyzerSIG)+" volatilityMomentum: "+util.getSigString(ss.volatilitySIG)); 
    Print("[FAST COPEN]:: slope120: " + util.getSigString(hSig.slopeCandle120SIG) + " cCloseSIG1: " + util.getSigString(hSig.composite_CloseSIG_1) + " cCloseSIG2: " + util.getSigString(hSig.composite_CloseSIG_2) + " cCloseSIG5: " + util.getSigString(hSig.composite_CloseSIG_5) + " cCloseSIG7: " + util.getSigString(hSig.composite_CloseSIG_7)+" rsiObv: "+hSig.tBools.rsiObvCPCloseFactor);
-   Print("[OPEN] :: domSIG: " + util.getSigString(dominantSIG) +" c_SIG: " + util.getSigString(hSig.c_SIG)+" Slope30: " + util.getSigString(hSig.simpleSlope_30_SIG) + " fastSIG: " + util.getSigString(hSig.fastSIG) + " obvCPSIG: " + util.getSigString(ss.obvCPSIG) + " cpScatt: " + util.getSigString(ss.cpScatterSIG) + " sVarSIG: " + util.getSigString(ss.slopeVarSIG) + " cV120SIG: " + util.getSigString(ss.candleVol120SIG));
+   Print("[OPEN] :: domSIG: " + util.getSigString(dominantSIG) +" c_SIG: " + util.getSigString(hSig.c_SIG)+" Slope30: " + util.getSigString(hSig.simpleSlope_30_SIG) + " fastSIG: " + util.getSigString(hSig.fastSIG) + " obvCPSIG: " + util.getSigString(ss.obvCPSIG) + " cpScatt: " + util.getSigString(ss.cpScatterSIG) + " sVarSIG: " + util.getSigString(ss.slopeVarSIG) + " candleVol: " + util.getSigString(ss.candleVolSIG));
 
    //Print("[OPEN OBVSIG] :: obvSlp120SIG: " + util.getSigString(hSig.obvSlp120SIG) + " obvCp120SIG: " + util.getSigString(hSig.obvCp120SIG) + " obvFastSIG: " + util.getSigString(hSig.obvFastSIG));
 
