@@ -57,6 +57,7 @@ class Stats {
    double            stdDev(const double &data[], int n = 0, int type = 0, int shift = 0);
    double            skewness(const double &values[], int N, int shift = 0);
    double            kurtosis(const double &values[], int N, int shift = 0);
+   int               histogram(const double &values[], int N = 20, int bins = 5, double binSize = 0.2);
    double            acf(const double &data[], int n = 0, int lag = 1);
 //   DataTransport     scatterPlotSlope(const double &y[],int n=0,int shift=0);
    SLOPETYPE         scatterPlot(const double& sig[], int SIZE = 21, int SHIFT = 1);
@@ -271,41 +272,77 @@ double     Stats::stdDev(const double &data[], int type = 0, int n = 0, int shif
 };
 
 
-   // 4. Skewness & Kurtosis (Distribution Shape, skew -1 to 1, kurt excess)
-   double Stats::skewness(const double &values[], int N, int shift = 0) {
-      if(N <= 1) return 0.0;
-      double meanVal = 0.0;
-      for(int i = shift; i < N + shift; i++) meanVal += values[i];
-      meanVal /= N;
-      double variance = 0.0, skew = 0.0;
-      for(int i = shift; i < N + shift; i++) {
-         double dev = values[i] - meanVal;
-         variance += dev * dev;
-         skew += dev * dev * dev;
-      }
-      variance /= N;
-      double stdDev = MathSqrt(variance);
-      if(stdDev == 0) return 0.0;
-      return (skew / N) / (stdDev * stdDev * stdDev);
+// 4. Skewness & Kurtosis (Distribution Shape, skew -1 to 1, kurt excess)
+double Stats::skewness(const double &values[], int N, int shift = 0) {
+   if(N <= 1) return 0.0;
+   double meanVal = 0.0;
+   for(int i = shift; i < N + shift; i++) meanVal += values[i];
+   meanVal /= N;
+   double variance = 0.0, skew = 0.0;
+   for(int i = shift; i < N + shift; i++) {
+      double dev = values[i] - meanVal;
+      variance += dev * dev;
+      skew += dev * dev * dev;
+   }
+   variance /= N;
+   double stdDev = MathSqrt(variance);
+   if(stdDev == 0) return 0.0;
+   return (skew / N) / (stdDev * stdDev * stdDev);
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+double Stats::kurtosis(const double &values[], int N, int shift = 0) {
+   if(N <= 1) return 0.0;
+   double meanVal = 0.0;
+   for(int i = shift; i < N + shift; i++) meanVal += values[i];
+   meanVal /= N;
+   double variance = 0.0, kurt = 0.0;
+   for(int i = shift; i < N + shift; i++) {
+      double dev = values[i] - meanVal;
+      variance += dev * dev;
+      kurt += dev * dev * dev * dev;
+   }
+   variance /= N;
+   double stdDev = MathSqrt(variance);
+   if(stdDev == 0) return 0.0;
+   double rawKurt = (kurt / N) / (variance * variance);
+   return rawKurt - 3.0;  // excess kurtosis
+}
+
+//+------------------------------------------------------------------+
+//| histogram — Dominant Bin Finder with Dynamic Bins               |
+//+------------------------------------------------------------------+
+int Stats::histogram(const double &values[], int N = 20, int bins = 5, double binSize = 0.2)
+{
+   int counts[];
+   ArrayResize(counts, bins);  // Dynamic — fixes MQL4 fixed-size limit
+   ArrayInitialize(counts, 0);
+
+   // Optional: Normalize by ATR for cross-pair/TF (use iATR)
+   double atr = iATR(NULL, 0, 14, 1);
+   binSize = binSize * (atr / util.getPipValue(_Symbol));  // adaptive size
+
+   for(int i = 0; i < N; i++)
+   {
+      // Safety for zero/NaN
+      if(!MathIsValidNumber(values[i])) continue;
+      int bin = (int)((values[i] + 1.0) / binSize);  // shift for negative
+      if(bin >= 0 && bin < bins) counts[bin]++;
    }
 
-   double Stats::kurtosis(const double &values[], int N, int shift = 0) {
-      if(N <= 1) return 0.0;
-      double meanVal = 0.0;
-      for(int i = shift; i < N + shift; i++) meanVal += values[i];
-      meanVal /= N;
-      double variance = 0.0, kurt = 0.0;
-      for(int i = shift; i < N + shift; i++) {
-         double dev = values[i] - meanVal;
-         variance += dev * dev;
-         kurt += dev * dev * dev * dev;
+   int maxCount = 0, domBin = -1;
+   for(int b = 0; b < bins; b++)
+      if(counts[b] > maxCount) {
+         maxCount = counts[b];
+         domBin = b;
       }
-      variance /= N;
-      double stdDev = MathSqrt(variance);
-      if(stdDev == 0) return 0.0;
-      double rawKurt = (kurt / N) / (variance * variance);
-      return rawKurt - 3.0;  // excess kurtosis
-   }
+
+   if(maxCount < N * 0.5) return -1;  // no dominance
+
+   return domBin;  // e.g., 4 = strong positive
+}
 //+------------------------------------------------------------------+
 //| Scatter plot formula:   m = Σ(xi - xmean)(yi - ymean) / Σ(xi - xmean)²
 //  m =(n Σ(xiyi)-ΣxiΣyi)/(nΣxi^2-(Σxi)^2)                                             |
@@ -1277,39 +1314,37 @@ Stats stats(util);
 //|                                                                  |
 //| Use as filter: e.g., if(strength < 0.5) return NOSIG;           |
 //+------------------------------------------------------------------+
-class MomentumStrength
-{
-private:
+class MomentumStrength {
+ private:
    SanUtils util;  // assume your util for pipValue
 
-public:
+ public:
    MomentumStrength() { /* init if needed */ }
-   MomentumStrength(SanUtils& ut) { util = ut; }
+   MomentumStrength(SanUtils& ut) {
+      util = ut;
+   }
 
    // 1. ATR Normalization (Volatility Proxy, 0-1 with TF scaling)
-   double atrStrength(const double atr)
-   {
+   double atrStrength(const double atr) {
       double pipValue = util.getPipValue(_Symbol);
       double atrPips = (pipValue > 0) ? atr / pipValue : 0.0;  // Safety div
-     
+
       // Dynamic scaling based on timeframe (Logarithmic scale)
       double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
       double atrCeiling = MathCeil(12.0 * tfScale);  // Your recommended multiplier
-      double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);     
+      double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
       return atrNorm;  // 0-1: low = quiet/weak, high = wild/strong
    }
 
    // 2. ADX Normalization (Trend Strength, 0-1)
    //double adxStrength(int period = 14, int shift = 0)
-   double adxStrength(const double scale=50.0, int period = 10, int shift = 1)
-   {
+   double adxStrength(const double scale=50.0, int period = 10, int shift = 1) {
       double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
       return MathMin(adx /scale, 1.0); // 0-1 scale (>1 rare, cap at 1)
    }
 
    // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
-   double efficiencyRatio(const double &price[], int period = 14, int shift = 0)
-   {
+   double efficiencyRatio(const double &price[], int period = 14, int shift = 0) {
       double net = MathAbs(price[shift] - price[shift + period]);
       double sumAbs = 0.0;
       for(int i = shift; i < shift + period; i++)
@@ -1318,12 +1353,10 @@ public:
    }
 
    // 5. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
-   double vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1)
-   {
+   double vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1) {
       double sum_force = 0.0;
       double total_vol = 0.0;
-      for(int i = SHIFT; i < N + SHIFT; i++)
-      {
+      for(int i = SHIFT; i < N + SHIFT; i++) {
          double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
          sum_force += body_pips * volume[i];
          total_vol += volume[i];

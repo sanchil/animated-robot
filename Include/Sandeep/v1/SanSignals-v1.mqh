@@ -2336,11 +2336,13 @@ SAN_SIGNAL SanSignals::singleCandleVolSIG(
    const double &volume[],
    const double atr,
    int period = 30, int SHIFT = 1) {
+   
+   
    static datetime last_bar = 0;
    static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
-
    if(Time[0] == last_bar)
       return cached;
+      
 
    last_bar = Time[0];
 
@@ -2351,8 +2353,13 @@ SAN_SIGNAL SanSignals::singleCandleVolSIG(
    //}
    //double slow = stats.vWCM_Score(open, close, volume, period,0,SHIFT);
    double slow = ms.vWCM(open, close, volume, period,SHIFT);
-
-   cached = (slow > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+   Print("[SLOWVCM]: "+slow);
+   
+   if((slow > -0.05)&&(slow < 0.1))cached = SAN_SIGNAL::NOSIG;
+   if(slow >= 0.1) cached = SAN_SIGNAL::BUY;
+   if(slow <= -0.05) cached = SAN_SIGNAL::SELL;
+   
+   //cached = (slow > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
 
    //PrintFormat("vWCM | ATR:%.1f pips | Slow:%.4f",
    //            atr_pips, slow,
