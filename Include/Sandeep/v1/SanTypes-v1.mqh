@@ -647,9 +647,9 @@ struct INDDATA {
    double            obv[70];
    double            rsi[70];
    double            atr[70];
-   //   double            adx[70];
-   //   double            adxPlus[70];
-   //   double            adxMinus[70];
+   //double            adx[70];
+   //double            adxPlus[70];
+   //double            adxMinus[70];
    double            ima5[70];
    double            ima14[70];
    double            ima30[70];

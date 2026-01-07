@@ -126,6 +126,9 @@ int OnCalculate(const int rates_total,
          indData.ima30[j] = iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, j);
          indData.ima60[j] = iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, j);
          indData.atr[j] = iATR(_Symbol, PERIOD_CURRENT, noOfCandles, j);
+         //indData.adx[j] = iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,MODE_MAIN,j);
+         //indData.adxPlus[j] = iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,1,j);
+         //indData.adxMinus[j] = iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,2,j);
          if(GetLastError() != 0) {
             Print("Error in first loop at j = ", j, ": ", GetLastError());
             return(0);

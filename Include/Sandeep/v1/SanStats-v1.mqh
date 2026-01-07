@@ -1300,10 +1300,11 @@ public:
    }
 
    // 2. ADX Normalization (Trend Strength, 0-1)
-   double adxStrength(int period = 14, int shift = 0)
+   //double adxStrength(int period = 14, int shift = 0)
+   double adxStrength(const double scale=50.0, int period = 10, int shift = 1)
    {
       double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
-      return MathMin(adx / 50.0, 1.0); // 0-1 scale (>1 rare, cap at 1)
+      return MathMin(adx /scale, 1.0); // 0-1 scale (>1 rare, cap at 1)
    }
 
    // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
