@@ -1235,19 +1235,25 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
    const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
    double CLOSERATIO = closeRVal[regimeIdx];
 
+
    // B. Volatility Normalization (Market Mood) -> Determines PEAK_DROP
    //    Logic: Higher Volatility = Wider Stop (Trend Following)
    //           Lower Volatility  = Tighter Stop (Scalping)
-   double pipValue = util.getPipValue(_Symbol);
-   double atrPips  = (pipValue > 0) ? atr / pipValue : 0; // Safety div
-
-   // Dynamic scaling based on timeframe (Logarithmic scale)
-   double tfScale   = (_Period > 1) ? MathLog(_Period) : 1.0;
-   //double atrCeiling = MathCeil(5.0 * tfScale);
-   // With this (10–15× is realistic):
-   double atrCeiling = MathCeil(12.0 * tfScale);  // or 15.0 for more sensitivity
-   double atrNorm    = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
-
+//   double pipValue = util.getPipValue(_Symbol);
+//   double atrPips  = (pipValue > 0) ? atr / pipValue : 0; // Safety div
+//
+//   // Dynamic scaling based on timeframe (Logarithmic scale)
+//   double tfScale   = (_Period > 1) ? MathLog(_Period) : 1.0;
+//   //double atrCeiling = MathCeil(5.0 * tfScale);
+//   // With this (10–15× is realistic):
+//   double atrCeiling = MathCeil(12.0 * tfScale);  // or 15.0 for more sensitivity
+//   double atrNorm    = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
+//   
+   double atrNorm    = ms.atrStrength(atr);
+//   double adxNorm    = ms.atrStrength(atr);
+   
+   //Print("ATR norm1: "+atrNorm+"ATR norm2: "+atrNorm1+ " Equal: "+(atrNorm==atrNorm1));
+   
    // The Masterpiece Formula: 0.82 (Tight) to ~0.98 (Loose)
    double PEAK_DROP = 0.82 + 0.16 * MathSqrt(atrNorm);
    PEAK_DROP = MathMax(MathMin(PEAK_DROP, 0.99), 0.70); // Hard clamp for safety
@@ -1290,7 +1296,7 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
    //PrintFormat("Ratio=%.3f | Peak=%.3f | DropLimit=%.3f | ATR=%.1f | Regime=%d",
    //             ratio, m_peakRatio, (PEAK_DROP*m_peakRatio), atrPips, regimeIdx);
 
-   Print("Ratio="+ratio+" | Peak="+m_peakRatio+" | DropLimit="+(PEAK_DROP*m_peakRatio)+" | ATR="+atrPips+" | Regime="+regimeIdx);
+   Print("Ratio="+ratio+" | Peak="+m_peakRatio+" | DropLimit="+(PEAK_DROP*m_peakRatio)+" | Regime="+regimeIdx);
 
    // 1. INSTANT REVERSAL (Divergence Check)
    // If slopes disagree (Ratio < 0), the trend is broken.
@@ -2279,9 +2285,9 @@ SAN_SIGNAL SanSignals::singleCandleVolSIG(
 
    cached = (slow > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
 
-   PrintFormat("vWCM | ATR:%.1f pips | Slow:%.4f",
-               atr_pips, slow,
-               cached==BUY?"BUY":cached==SELL?"SELL":"NOSIG");
+   //PrintFormat("vWCM | ATR:%.1f pips | Slow:%.4f",
+   //            atr_pips, slow,
+   //            cached==BUY?"BUY":cached==SELL?"SELL":"NOSIG");
 
    return cached;
 }

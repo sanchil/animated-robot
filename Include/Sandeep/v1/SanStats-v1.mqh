@@ -1277,31 +1277,38 @@ Stats stats(util);
 //|                                                                  |
 //| Use as filter: e.g., if(strength < 0.5) return NOSIG;           |
 //+------------------------------------------------------------------+
-class MomentumStrength {
- private:
+class MomentumStrength
+{
+private:
    SanUtils util;  // assume your util for pipValue
 
- public:
+public:
    MomentumStrength() { /* init if needed */ }
-   MomentumStrength(SanUtils& ut) {
-      util= ut;
-   }
+   MomentumStrength(SanUtils& ut) { util = ut; }
 
-
-   // 1. ATR Normalization (Volatility Proxy, 0-1)
-   double atrStrength(const double atr, int period = 14, double maxAtr = 100.0) {
-      double atrPips = atr / util.getPipValue(_Symbol);
-      return MathMin(atrPips / maxAtr, 1.0);  // normalize to 0-1 (tune maxAtr per pair)
+   // 1. ATR Normalization (Volatility Proxy, 0-1 with TF scaling)
+   double atrStrength(const double atr)
+   {
+      double pipValue = util.getPipValue(_Symbol);
+      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0;  // Safety div
+     
+      // Dynamic scaling based on timeframe (Logarithmic scale)
+      double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
+      double atrCeiling = MathCeil(12.0 * tfScale);  // Your recommended multiplier
+      double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);     
+      return atrNorm;  // 0-1: low = quiet/weak, high = wild/strong
    }
 
    // 2. ADX Normalization (Trend Strength, 0-1)
-   double adxStrength(int period = 14, int shift = 0) {
+   double adxStrength(int period = 14, int shift = 0)
+   {
       double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
-      return MathMin(adx / 50.0, 1.0);  // 0-1 scale (>1 rare, cap at 1)
+      return MathMin(adx / 50.0, 1.0); // 0-1 scale (>1 rare, cap at 1)
    }
 
    // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
-   double efficiencyRatio(const double &price[], int period = 14, int shift = 0) {
+   double efficiencyRatio(const double &price[], int period = 14, int shift = 0)
+   {
       double net = MathAbs(price[shift] - price[shift + period]);
       double sumAbs = 0.0;
       for(int i = shift; i < shift + period; i++)
@@ -1310,20 +1317,21 @@ class MomentumStrength {
    }
 
    // 5. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
-   double vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1) {
+   double vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1)
+   {
       double sum_force = 0.0;
       double total_vol = 0.0;
-      for(int i = SHIFT; i < N + SHIFT; i++) {
+      for(int i = SHIFT; i < N + SHIFT; i++)
+      {
          double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
          sum_force += body_pips * volume[i];
          total_vol += volume[i];
       }
       if(total_vol <= 0) return 0.0;
       double raw = sum_force / total_vol;
-      return stats.tanh(raw / 10.0);  // normalize -1 to 1 with tanh for bounded output
+      return stats.tanh(raw / 10.0); // normalize -1 to 1 with tanh for bounded output
    }
 };
-
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
