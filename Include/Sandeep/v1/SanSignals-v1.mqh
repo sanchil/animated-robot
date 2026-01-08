@@ -32,6 +32,7 @@ class SanSignals {
    SAN_SIGNAL        tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope);
+   SAN_SIGNAL        layeredMomentumSIG(const double &slopes[], int N = 20);
    SAN_SIGNAL        volatilityMomentumSIG(const DTYPE &stdDevOpen, const DTYPE &stdDevClose, const double atr = 0);
    SAN_SIGNAL        tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL);
    //SANTRENDSTRENGTH        atrSIG(const double &atr[], const int period=10);
@@ -777,122 +778,7 @@ DataTransport SanSignals::slopeRatioData(
 //
 //}
 
-////+------------------------------------------------------------------+
-////|                                                                  |
-////+------------------------------------------------------------------+
-//SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope, const double adx) {
-//   static datetime last_bar = 0;
-//   static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
-//   static double peakPositive = 0;
-//   static double peakNegative = 0;
-//
-//   if(Time[0] == last_bar) return cached;
-//   last_bar = Time[0];
-//
-//   const double DECAY = 0.8;
-//   const double MIN_SLOPE = 0.2;
-//   double s = slope.val1;
-//   double adxNorm = ms.adxStrength(adx);
-//
-//// Adapt DECAY: looser (up to 0.95) in strong trends (high adxNorm)
-//   double adaptedDecay = BASE_DECAY + 0.15 * adxNorm;  // 0.8 (weak) → 0.95 (strong)
-//
-//   // BUY PATH
-//   if(s > MIN_SLOPE && s > DECAY * peakPositive) {
-//      peakPositive = MathMax(peakPositive, s);
-//      cached = SAN_SIGNAL::BUY;
-//      Print("SLOPE ANALYZER → BUY | slope="+s+" | peakPos="+peakPositive);
-//      return SAN_SIGNAL::BUY;
-//   }
-//
-//   // SELL PATH
-//   if(s < -MIN_SLOPE && s < DECAY * peakNegative) {
-//      peakNegative = MathMin(peakNegative, s);  // more negative
-//      cached = SAN_SIGNAL::SELL;
-//      Print("SLOPE ANALYZER → SELL | slope="+s+" | peakNeg="+peakNegative);
-//      return SAN_SIGNAL::SELL;
-//   }
-//
-//   // DECAY EXIT
-//   if(cached == BUY && s < DECAY * peakPositive) {
-//      peakPositive *= 0.9;  // optional: decay peak over time
-//      cached = SAN_SIGNAL::CLOSE;
-//      return SAN_SIGNAL::CLOSE;
-//   }
-//   if(cached == SELL && s > DECAY * peakNegative) {
-//      peakNegative *= 0.9;
-//      cached = SAN_SIGNAL::CLOSE;
-//      return SAN_SIGNAL::CLOSE;
-//   }
-//
-//   cached = SAN_SIGNAL::NOSIG;
-//   return SAN_SIGNAL::NOSIG;
-//}
 
-////+------------------------------------------------------------------+
-////| slopeAnalyzerSIG — Pure Momentum Analyzer with ADX Normalization |
-////|                                                                  |
-////| • Uses adxNorm to adapt DECAY: looser in strong trends           |
-////| • Once-per-bar cached for MT4 efficiency                         |
-////|                                                                  |
-////| This enhances momentum sustainability in forex indicators.       |
-////+------------------------------------------------------------------+
-//SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
-//{
-//   static datetime last_bar = 0;
-//   static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
-//   static double peakPositive = 0;
-//   static double peakNegative = 0;
-//   
-//   if(Time[0] == last_bar) return cached;
-//   last_bar = Time[0];
-//   
-//   const double BASE_DECAY = 0.8;  // Base for weak trends
-//   const double MIN_SLOPE = 0.2;
-//   
-//   double s = slope.val1;
-//   
-//   // Compute adxNorm using MomentumStrength (assumes ms instance available)
-//   double adxNorm = ms.adxStrength();  // Normalized 0-1 trend strength
-//   
-//   // Adapt DECAY: looser (up to 0.95) in strong trends (high adxNorm)
-//   double adaptedDecay = BASE_DECAY + 0.15 * adxNorm;  // 0.8 (weak) → 0.95 (strong)
-//   
-//   // BUY PATH
-//   if(s > MIN_SLOPE && s > adaptedDecay * peakPositive)
-//   {
-//      peakPositive = MathMax(peakPositive, s);
-//      cached = SAN_SIGNAL::BUY;
-//      Print("SLOPE ANALYZER → BUY | slope="+DoubleToString(s,2)+" | peakPos="+DoubleToString(peakPositive,2)+" | adxNorm="+DoubleToString(adxNorm,2));
-//      return SAN_SIGNAL::BUY;
-//   }
-//   
-//   // SELL PATH
-//   if(s < -MIN_SLOPE && s < adaptedDecay * peakNegative)
-//   {
-//      peakNegative = MathMin(peakNegative, s);  // more negative
-//      cached = SAN_SIGNAL::SELL;
-//      Print("SLOPE ANALYZER → SELL | slope="+DoubleToString(s,2)+" | peakNeg="+DoubleToString(peakNegative,2)+" | adxNorm="+DoubleToString(adxNorm,2));
-//      return SAN_SIGNAL::SELL;
-//   }
-//   
-//   // DECAY EXIT (adapted for trend strength)
-//   if(cached == BUY && s < adaptedDecay * peakPositive)
-//   {
-//      peakPositive *= 0.9;  // optional decay
-//      cached = SAN_SIGNAL::CLOSE;
-//      return SAN_SIGNAL::CLOSE;
-//   }
-//   if(cached == SELL && s > adaptedDecay * peakNegative)
-//   {
-//      peakNegative *= 0.9;
-//      cached = SAN_SIGNAL::CLOSE;
-//      return SAN_SIGNAL::CLOSE;
-//   }
-//   
-//   cached = SAN_SIGNAL::NOSIG;
-//   return SAN_SIGNAL::NOSIG;
-//}
 
 //+------------------------------------------------------------------+
 //| slopeAnalyzerSIG — Pure Momentum Analyzer with ADX Normalization |
@@ -902,8 +788,7 @@ DataTransport SanSignals::slopeRatioData(
 //|                                                                  |
 //| This enhances momentum sustainability in forex indicators.       |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
-{
+SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope) {
    // --- 1. Efficiency Cache ---
    static datetime last_bar = 0;
    static SAN_SIGNAL cached = NOSIG;
@@ -928,8 +813,7 @@ SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
    bool isBuyBreakout = (peakPositive == 0 && s > MIN_SLOPE);
    bool isBuyContinuation = (peakPositive > 0 && s > (peakPositive * adaptedDecay));
 
-   if(s > MIN_SLOPE && (isBuyBreakout || isBuyContinuation))
-   {
+   if(s > MIN_SLOPE && (isBuyBreakout || isBuyContinuation)) {
       peakPositive = MathMax(peakPositive, s);
       peakNegative = 0;  // CRITICAL RESET
 
@@ -941,8 +825,7 @@ SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
    bool isSellBreakout = (peakNegative == 0 && s < -MIN_SLOPE);
    bool isSellContinuation = (peakNegative < 0 && s < (peakNegative * adaptedDecay));
 
-   if(s < -MIN_SLOPE && (isSellBreakout || isSellContinuation))
-   {
+   if(s < -MIN_SLOPE && (isSellBreakout || isSellContinuation)) {
       peakNegative = MathMin(peakNegative, s);
       peakPositive = 0;  // CRITICAL RESET
 
@@ -951,15 +834,13 @@ SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
    }
 
    // EXIT LOGIC
-   if(cached == SAN_SIGNAL::BUY && s < (peakPositive * adaptedDecay))
-   {
+   if(cached == SAN_SIGNAL::BUY && s < (peakPositive * adaptedDecay)) {
       peakPositive *= 0.85;
       cached = SAN_SIGNAL::CLOSE;
       return SAN_SIGNAL::CLOSE;
    }
 
-   if(cached == SAN_SIGNAL::SELL && s > (peakNegative * adaptedDecay))
-   {
+   if(cached == SAN_SIGNAL::SELL && s > (peakNegative * adaptedDecay)) {
       peakNegative *= 0.85;
       cached = SAN_SIGNAL::CLOSE;
       return SAN_SIGNAL::CLOSE;
@@ -967,6 +848,18 @@ SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
 
    // Neutral Fallback
    cached = SAN_SIGNAL::NOSIG;
+   return SAN_SIGNAL::NOSIG;
+}
+
+
+//+------------------------------------------------------------------+
+//| Layered Filter: ADX → Histogram for Momentum Strength            |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::layeredMomentumSIG(const double &slopes[], int N = 20) {
+   double gate = ms.layeredMomentumFilter(slopes,N);
+   if(gate == 0) return SAN_SIGNAL::NOSIG;
+   if(gate == 1) return SAN_SIGNAL::BUY;
+   if(gate == -1) return SAN_SIGNAL::SELL;
    return SAN_SIGNAL::NOSIG;
 }
 ////+------------------------------------------------------------------+
@@ -2411,13 +2304,13 @@ SAN_SIGNAL SanSignals::singleCandleVolSIG(
    const double &volume[],
    const double atr,
    int period = 30, int SHIFT = 1) {
-   
-   
+
+
    static datetime last_bar = 0;
    static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
    if(Time[0] == last_bar)
       return cached;
-      
+
 
    last_bar = Time[0];
 
@@ -2429,11 +2322,11 @@ SAN_SIGNAL SanSignals::singleCandleVolSIG(
    //double slow = stats.vWCM_Score(open, close, volume, period,0,SHIFT);
    double slow = ms.vWCM(open, close, volume, period,SHIFT);
    Print("[SLOWVCM]: "+slow);
-   
+
    if((slow > -0.05)&&(slow < 0.1))cached = SAN_SIGNAL::NOSIG;
    if(slow >= 0.1) cached = SAN_SIGNAL::BUY;
    if(slow <= -0.05) cached = SAN_SIGNAL::SELL;
-   
+
    //cached = (slow > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
 
    //PrintFormat("vWCM | ATR:%.1f pips | Slow:%.4f",

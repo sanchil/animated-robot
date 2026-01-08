@@ -314,8 +314,7 @@ double Stats::kurtosis(const double &values[], int N, int shift = 0) {
 //+------------------------------------------------------------------+
 //| histogram — Dominant Bin Finder with Dynamic Bins               |
 //+------------------------------------------------------------------+
-int Stats::histogram(const double &values[], int N = 20, int bins = 5, double binSize = 0.2)
-{
+int Stats::histogram(const double &values[], int N = 20, int bins = 5, double binSize = 0.2) {
    int counts[];
    ArrayResize(counts, bins);  // Dynamic — fixes MQL4 fixed-size limit
    ArrayInitialize(counts, 0);
@@ -324,8 +323,7 @@ int Stats::histogram(const double &values[], int N = 20, int bins = 5, double bi
    double atr = iATR(NULL, 0, 14, 1);
    binSize = binSize * (atr / util.getPipValue(_Symbol));  // adaptive size
 
-   for(int i = 0; i < N; i++)
-   {
+   for(int i = 0; i < N; i++) {
       // Safety for zero/NaN
       if(!MathIsValidNumber(values[i])) continue;
       int bin = (int)((values[i] + 1.0) / binSize);  // shift for negative
@@ -1314,35 +1312,106 @@ Stats stats(util);
 //|                                                                  |
 //| Use as filter: e.g., if(strength < 0.5) return NOSIG;           |
 //+------------------------------------------------------------------+
+//class MomentumStrength {
+// private:
+//   SanUtils util;  // assume your util for pipValue
+//
+// public:
+//   MomentumStrength() { /* init if needed */ }
+//   MomentumStrength(SanUtils& ut) {
+//      util = ut;
+//   }
+//
+//   // 1. ATR Normalization (Volatility Proxy, 0-1 with TF scaling)
+//   double atrStrength(const double atr) {
+//      double pipValue = util.getPipValue(_Symbol);
+//      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0;  // Safety div
+//
+//      // Dynamic scaling based on timeframe (Logarithmic scale)
+//      double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
+//      double atrCeiling = MathCeil(12.0 * tfScale);  // Your recommended multiplier
+//      double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
+//      return atrNorm;  // 0-1: low = quiet/weak, high = wild/strong
+//   }
+//
+//   // 2. ADX Normalization (Trend Strength, 0-1)
+//   //double adxStrength(int period = 14, int shift = 0)
+//   double adxStrength(const double scale=50.0, int period = 10, int shift = 1) {
+//      double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
+//      return MathMin(adx /scale, 1.0); // 0-1 scale (>1 rare, cap at 1)
+//   }
+//
+//   // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
+//   double efficiencyRatio(const double &price[], int period = 14, int shift = 0) {
+//      double net = MathAbs(price[shift] - price[shift + period]);
+//      double sumAbs = 0.0;
+//      for(int i = shift; i < shift + period; i++)
+//         sumAbs += MathAbs(price[i] - price[i+1]);
+//      return (sumAbs > 0) ? net / sumAbs : 0.0;
+//   }
+//
+//   // 5. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
+//   double vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1) {
+//      double sum_force = 0.0;
+//      double total_vol = 0.0;
+//      for(int i = SHIFT; i < N + SHIFT; i++) {
+//         double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
+//         sum_force += body_pips * volume[i];
+//         total_vol += volume[i];
+//      }
+//      if(total_vol <= 0) return 0.0;
+//      double raw = sum_force / total_vol;
+//      return stats.tanh(raw / 10.0); // normalize -1 to 1 with tanh for bounded output
+//   }
+//
+//   //+------------------------------------------------------------------+
+////| Layered Filter: ADX → Histogram for Momentum Strength            |
+////+------------------------------------------------------------------+
+//   double layeredMomentumFilter(const double &values[], int N = 20) {
+//      // Step 1: ADX Gate (Mathematical Filter) — quick check
+//      double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);  // Built-in MQL4 function
+//      if(adx < 20.0) return 0;  // Weak momentum — skip histogram
+//
+//      // Step 2: Histogram (Statistical Filter) — only if ADX passes
+//      int domBin = stats.histogram(values, N);  // Your binning function
+//      if(domBin == -1) return 0;  // No dominance — weak
+//
+//      // Skew/Kurt for fine-tuning (optional, from your Stats)
+//      double skew = stats.skewness(values, N);
+//      double kurt = stats.kurtosis(values, N);
+//      if(MathAbs(skew) < 0.3 || kurt > 2.0) return 0;  // Symmetric/choppy or spiky extremes
+//
+//      // Dominant bin direction
+//      if(domBin > 2) return 1.0;   // Positive dominant
+//      if(domBin < 2) return -1.0;  // Negative dominant
+//      return 0;                // Neutral
+//   }
+//};
+
+
 class MomentumStrength {
  private:
-   SanUtils util;  // assume your util for pipValue
-
+   SanUtils util; // assume your util for pipValue
  public:
    MomentumStrength() { /* init if needed */ }
    MomentumStrength(SanUtils& ut) {
       util = ut;
    }
-
    // 1. ATR Normalization (Volatility Proxy, 0-1 with TF scaling)
    double atrStrength(const double atr) {
       double pipValue = util.getPipValue(_Symbol);
-      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0;  // Safety div
-
+      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0; // Safety div
       // Dynamic scaling based on timeframe (Logarithmic scale)
       double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
-      double atrCeiling = MathCeil(12.0 * tfScale);  // Your recommended multiplier
+      double atrCeiling = MathCeil(12.0 * tfScale); // Your recommended multiplier
       double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
-      return atrNorm;  // 0-1: low = quiet/weak, high = wild/strong
+      return atrNorm; // 0-1: low = quiet/weak, high = wild/strong
    }
-
    // 2. ADX Normalization (Trend Strength, 0-1)
-   //double adxStrength(int period = 14, int shift = 0)
    double adxStrength(const double scale=50.0, int period = 10, int shift = 1) {
       double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
-      return MathMin(adx /scale, 1.0); // 0-1 scale (>1 rare, cap at 1)
+      return MathMin(adx / scale, 1.0); // 0-1 scale (>1 rare, cap at 1)
    }
-
    // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
    double efficiencyRatio(const double &price[], int period = 14, int shift = 0) {
       double net = MathAbs(price[shift] - price[shift + period]);
@@ -1351,8 +1420,7 @@ class MomentumStrength {
          sumAbs += MathAbs(price[i] - price[i+1]);
       return (sumAbs > 0) ? net / sumAbs : 0.0;
    }
-
-   // 5. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
+   // 3. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
    double vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1) {
       double sum_force = 0.0;
       double total_vol = 0.0;
@@ -1364,6 +1432,25 @@ class MomentumStrength {
       if(total_vol <= 0) return 0.0;
       double raw = sum_force / total_vol;
       return stats.tanh(raw / 10.0); // normalize -1 to 1 with tanh for bounded output
+   }
+   //+------------------------------------------------------------------+
+   //| Layered Filter: ADX → Histogram for Momentum Strength            |
+   //+------------------------------------------------------------------+
+   double layeredMomentumFilter(const double &values[], int N = 20) {
+      // Step 1: ADX Gate (Mathematical Filter) — quick check
+      double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1); // Built-in MQL4 function
+      if(adx < 20.0) return 0; // Weak momentum — skip histogram
+      // Step 2: Histogram (Statistical Filter) — only if ADX passes
+      int domBin = stats.histogram(values, N); // Your binning function
+      if(domBin == -1) return 0; // No dominance — weak
+      // Skew/Kurt for fine-tuning (optional, from your Stats)
+      double skew = stats.skewness(values, N);
+      double kurt = stats.kurtosis(values, N);
+      if(MathAbs(skew) < 0.3 || kurt > 2.0) return 0; // Symmetric/choppy or spiky extremes
+      // Dominant bin direction
+      if(domBin > 2) return 1.0; // Positive dominant
+      if(domBin < 2) return -1.0; // Negative dominant
+      return 0; // Neutral
    }
 };
 //+------------------------------------------------------------------+
