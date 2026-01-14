@@ -57,7 +57,11 @@ class Stats {
    double            stdDev(const double &data[], int n = 0, int type = 0, int shift = 0);
    double            skewness(const double &values[], int N, int shift = 0);
    double            kurtosis(const double &values[], int N, int shift = 0);
+   double            kurtosis_v2(const double &values[]);
+
    int               histogram(const double &values[], int N = 20, int bins = 5, double binSize = 0.2);
+   int               histogram_v2(const double &values[], int bins=5);
+
    double            acf(const double &data[], int n = 0, int lag = 1);
 //   DataTransport     scatterPlotSlope(const double &y[],int n=0,int shift=0);
    SLOPETYPE         scatterPlot(const double& sig[], int SIZE = 21, int SHIFT = 1);
@@ -85,6 +89,15 @@ class Stats {
       const int SLOPEDENOM_WIDE = 5,
       const int shift = 1
    );
+
+   D20TYPE slopeRange(
+      const double &sig[],
+      const int SLOPEDENOM = 3,
+      const int range = 15,
+      const int shift = 1
+   );
+
+   bool slopeRange_v2(const double &sig[], double &outputArr[], int range=15, int slopeDenom=3, int shift=1);
 
    DataTransport     slopeFastMediumSlow(
       const double &fast[],
@@ -311,10 +324,39 @@ double Stats::kurtosis(const double &values[], int N, int shift = 0) {
    return rawKurt - 3.0;  // excess kurtosis
 }
 
+
+//+------------------------------------------------------------------+
+//| 3. Kurtosis: Measures "Spikiness"                                |
+//+------------------------------------------------------------------+
+double Stats::kurtosis_v2(const double &values[]) {
+   int N = ArraySize(values);
+   if(N < 4) return 0.0;
+
+   double mean = 0;
+   for(int i=0; i<N; i++) mean += values[i];
+   mean /= N;
+
+   double s2 = 0, s4 = 0;
+   for(int i=0; i<N; i++) {
+      double dev = values[i] - mean;
+      s2 += dev * dev;
+      s4 += dev * dev * dev * dev;
+   }
+   double variance = s2 / N;
+
+   if(variance < 0.00000001) return 0.0;
+
+   // Excess Kurtosis (Normal dist = 0)
+   return (s4 / N) / (variance * variance) - 3.0;
+}
+
+
 //+------------------------------------------------------------------+
 //| histogram — Dominant Bin Finder with Dynamic Bins               |
 //+------------------------------------------------------------------+
 int Stats::histogram(const double &values[], int N = 20, int bins = 5, double binSize = 0.2) {
+
+   if(bins < 1 || N < 1) return -1;  // Safety: invalid params → no dominance
    int counts[];
    ArrayResize(counts, bins);  // Dynamic — fixes MQL4 fixed-size limit
    ArrayInitialize(counts, 0);
@@ -341,6 +383,55 @@ int Stats::histogram(const double &values[], int N = 20, int bins = 5, double bi
 
    return domBin;  // e.g., 4 = strong positive
 }
+
+//+------------------------------------------------------------------+
+//| 2. Histogram: Centered & Dynamic                                 |
+//| Uses Min/Max normalization so it never crashes on negative values|
+//+------------------------------------------------------------------+
+int Stats::histogram_v2(const double &values[], int bins=5) {
+   int N = ArraySize(values);
+   if(N == 0) return -1;
+
+   // Find dynamic range to prevent index errors
+   double maxVal = -DBL_MAX;
+   double minVal = DBL_MAX;
+   for(int i=0; i<N; i++) {
+      if(values[i] > maxVal) maxVal = values[i];
+      if(values[i] < minVal) minVal = values[i];
+   }
+
+   // If flatline (no variance), return middle bin
+   if(maxVal - minVal < 0.00001) return bins / 2;
+
+   int counts[];
+   ArrayResize(counts, bins);
+   ArrayInitialize(counts, 0);
+
+   double step = (maxVal - minVal) / bins;
+
+   for(int i=0; i<N; i++) {
+      // Normalized mapping 0 to bins-1
+      int binIdx = (int)((values[i] - minVal) / step);
+      if(binIdx >= bins) binIdx = bins - 1;
+      if(binIdx < 0) binIdx = 0;
+      counts[binIdx]++;
+   }
+
+   int maxCount = 0;
+   int domBin = -1;
+   for(int b=0; b<bins; b++) {
+      if(counts[b] > maxCount) {
+         maxCount = counts[b];
+         domBin = b;
+      }
+   }
+
+   // Require 40% dominance (statistical conviction)
+   if(maxCount < N * 0.4) return -1;
+
+   return domBin;
+}
+
 //+------------------------------------------------------------------+
 //| Scatter plot formula:   m = Σ(xi - xmean)(yi - ymean) / Σ(xi - xmean)²
 //  m =(n Σ(xiyi)-ΣxiΣyi)/(nΣxi^2-(Σxi)^2)                                             |
@@ -539,6 +630,102 @@ DTYPE Stats::slopeVal(
    dt.val3 = dt.val1 - dt.val2;
 
    return dt;
+}
+
+
+
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+////+------------------------------------------------------------------+
+////| |
+////+------------------------------------------------------------------+
+//D20TYPE Stats::slopeRange(
+//   const double &sig[],
+//   const int SLOPEDENOM = 3,
+//   const int range = 15,
+//   const int shift = 1
+//) {
+//   D20TYPE dt;
+//   if(range < 1 || shift < 0 || (shift + range + SLOPEDENOM) > ArraySize(sig)) return dt;  // Safety
+//
+//   double pipValue = util.getPipValue(_Symbol);
+//   if(pipValue <= 0) pipValue = Point;
+//
+//   ArrayResize(dt.val, range);  // Dynamic sizing
+//
+//   for(int i = shift; i < shift + range; i++) {
+//      dt.val[i - shift] = NormalizeDouble(
+//                             (sig[i] - sig[i + SLOPEDENOM]) / (SLOPEDENOM * pipValue), 4);
+//   }
+//   return dt;
+//}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+D20TYPE Stats::slopeRange(
+   const double &sig[],
+   const int SLOPEDENOM = 3,
+   const int range = 15,
+   const int shift = 1
+) {
+   D20TYPE dt; // Created on stack, initialized to EMPTY_VALUE
+
+   // SAFETY CHECK 1: Input Validation
+   if(range < 1 || shift < 0 || (shift + range + SLOPEDENOM) > ArraySize(sig)) return dt;
+
+   // SAFETY CHECK 2: Max Limit Enforcement
+   // If you ask for 70 items, we cap it at 60 to prevent array out of range
+   int safeRange = range;
+   if(safeRange > 60) {
+      Print("Error: Range exceeds fixed struct limit of 60");
+      safeRange = 60;
+   }
+
+   double pipValue = util.getPipValue(_Symbol);
+   if(pipValue <= 0) pipValue = Point;
+
+   // No ArrayResize needed (it's always 60)
+
+   for(int i = shift; i < shift + safeRange; i++) {
+      // We must map 'i' back to 0-based index for the struct
+      int structIdx = i - shift;
+
+      dt.val[structIdx] = NormalizeDouble(
+                             (sig[i] - sig[i + SLOPEDENOM]) / (SLOPEDENOM * pipValue), 4);
+   }
+
+   return dt; // Returns a COPY of the struct
+}
+
+// Change return type to bool for error checking
+bool Stats::slopeRange_v2(const double &sig[], double &outputArr[], int range=15, int slopeDenom=3, int shift=1) {
+
+   // Safety Check: Not enough data in source
+   if(ArraySize(sig) < range + shift + slopeDenom) return false;
+
+   // Efficient Resizing
+   if(ArraySize(outputArr) != range) ArrayResize(outputArr, range);
+
+   //// Optimization: Get PipValue once per call, not inside the loop
+   //double pipVal = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   //long digits = SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+
+   //// Adjust for 3/5 digit brokers
+   //if(digits == 3 || digits == 5) pipVal *= 10;
+   //if(pipVal == 0) pipVal = 0.0001;
+
+   double pipValue = util.getPipValue(_Symbol);
+   if(pipValue <= 0) pipValue = Point;
+
+   for(int i = 0; i < range; i++) {
+      int idx = shift + i;
+      // Slope logic
+      double rawVal = (sig[idx] - sig[idx + slopeDenom]) / (double)slopeDenom;
+      outputArr[i] = rawVal / pipValue;
+   }
+   return true; // Success
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1448,11 +1635,44 @@ class MomentumStrength {
       double kurt = stats.kurtosis(values, N);
       if(MathAbs(skew) < 0.3 || kurt > 2.0) return 0; // Symmetric/choppy or spiky extremes
       // Dominant bin direction
+      if(domBin == 4) return 1;  // Strong Buy Signal
+      if(domBin == 0) return -1; // Strong Sell Signal
+
       if(domBin > 2) return 1.0; // Positive dominant
       if(domBin < 2) return -1.0; // Negative dominant
       return 0; // Neutral
    }
 };
+
+int _layeredMomentumFilter(const double &signalArr[], int N = 20) {
+
+   // 1. Get Slopes (Pass array by reference)
+   double slopes[];
+   stats.slopeRange_v2(signalArr, slopes, N, 1);
+
+   // 2. Filter: ADX (Trend Strength Gate)
+   // Note: Ideally, pass the Symbol/TF, don't assume NULL/0
+   double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+   if(adx < 20) return 0; // Market is ranging
+
+   // 3. Filter: Kurtosis (Trend Stability)
+   // High kurtosis (>3) means the "trend" is just volatile spikes.
+   // Low kurtosis (<1) means steady, consistent movement.
+   double kurt = stats.kurtosis_v2(slopes);
+   if(kurt > 5.0) return 0; // Too erratic/risky
+
+   // 4. Filter: Histogram (Directional Conviction)
+   int domBin = stats.histogram_v2(slopes, 5);
+
+   // Bin Mapping (assuming 5 bins):
+   // 0=Strong Down, 1=Weak Down, 2=Neutral, 3=Weak Up, 4=Strong Up
+
+   if(domBin == 4) return 1;  // Strong Buy Signal
+   if(domBin == 0) return -1; // Strong Sell Signal
+
+   return 0;
+};
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+

@@ -32,7 +32,7 @@ class SanSignals {
    SAN_SIGNAL        tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope);
-   SAN_SIGNAL        layeredMomentumSIG(const double &slopes[], int N = 20);
+   SAN_SIGNAL        layeredMomentumSIG(const double &signal[], int N = 20);
    SAN_SIGNAL        volatilityMomentumSIG(const DTYPE &stdDevOpen, const DTYPE &stdDevClose, const double atr = 0);
    SAN_SIGNAL        tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL);
    //SANTRENDSTRENGTH        atrSIG(const double &atr[], const int period=10);
@@ -855,13 +855,29 @@ SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope) {
 //+------------------------------------------------------------------+
 //| Layered Filter: ADX → Histogram for Momentum Strength            |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::layeredMomentumSIG(const double &slopes[], int N = 20) {
+SAN_SIGNAL SanSignals::layeredMomentumSIG(const double &signal[], int N = 20) {
+   D20TYPE dt;
+   double slopes[];
+   if(stats.slopeRange_v2(signal, slopes, N, 1)) {
+      // Calculation successful, proceed safely
+      double gate = ms.layeredMomentumFilter(slopes, N);
+   } else {
+      Print("Not enough data for slopes!");
+   }
+   
    double gate = ms.layeredMomentumFilter(slopes,N);
    if(gate == 0) return SAN_SIGNAL::NOSIG;
    if(gate == 1) return SAN_SIGNAL::BUY;
    if(gate == -1) return SAN_SIGNAL::SELL;
    return SAN_SIGNAL::NOSIG;
 }
+
+//+------------------------------------------------------------------+
+//| SIGNAL LOGIC                                                     |
+//+------------------------------------------------------------------+
+//Stats stats; // Instance
+//Stats stats(util);
+
 ////+------------------------------------------------------------------+
 ////|//| - Input value represent slopes of fast and slow signals
 //// - If slope of fast signal is greater than slow signal it is a buy.
@@ -3266,6 +3282,7 @@ D20TYPE SanSignals::hilbertDftSIG(
    DTYPE dft;
    DTYPE ht;
    D20TYPE d20;
+  // ArrayResize(d20.val, 17);
    static SAN_SIGNAL hibertdftSIG = SAN_SIGNAL::NOSIG;
    d20.val[0] = SAN_SIGNAL::NOTRADE;
    dft = dftSIG(close, SIZE);
