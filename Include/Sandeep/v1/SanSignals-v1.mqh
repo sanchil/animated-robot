@@ -856,16 +856,8 @@ SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope) {
 //| Layered Filter: ADX → Histogram for Momentum Strength            |
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::layeredMomentumSIG(const double &signal[], int N = 20) {
-   D20TYPE dt;
-   double slopes[];
-   if(stats.slopeRange_v2(signal, slopes, N, 1)) {
-      // Calculation successful, proceed safely
-      double gate = ms.layeredMomentumFilter(slopes, N);
-   } else {
-      Print("Not enough data for slopes!");
-   }
    
-   double gate = ms.layeredMomentumFilter(slopes,N);
+   double gate = ms.layeredMomentumFilter(signal,N);
    if(gate == 0) return SAN_SIGNAL::NOSIG;
    if(gate == 1) return SAN_SIGNAL::BUY;
    if(gate == -1) return SAN_SIGNAL::SELL;

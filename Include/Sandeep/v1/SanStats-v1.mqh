@@ -318,6 +318,8 @@ double Stats::kurtosis(const double &values[], int N, int shift = 0) {
       kurt += dev * dev * dev * dev;
    }
    variance /= N;
+   if(variance < 0.00000001) return 0.0;
+
    double stdDev = MathSqrt(variance);
    if(stdDev == 0) return 0.0;
    double rawKurt = (kurt / N) / (variance * variance);
@@ -1624,15 +1626,21 @@ class MomentumStrength {
    //| Layered Filter: ADX → Histogram for Momentum Strength            |
    //+------------------------------------------------------------------+
    double layeredMomentumFilter(const double &values[], int N = 20) {
+
+// 1. Get Slopes (Pass array by reference)
+      double slopes[];
+      stats.slopeRange_v2(values, slopes, N, 1);
+
+
       // Step 1: ADX Gate (Mathematical Filter) — quick check
       double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1); // Built-in MQL4 function
       if(adx < 20.0) return 0; // Weak momentum — skip histogram
       // Step 2: Histogram (Statistical Filter) — only if ADX passes
-      int domBin = stats.histogram(values, N); // Your binning function
+      int domBin = stats.histogram(slopes, N); // Your binning function
       if(domBin == -1) return 0; // No dominance — weak
       // Skew/Kurt for fine-tuning (optional, from your Stats)
-      double skew = stats.skewness(values, N);
-      double kurt = stats.kurtosis(values, N);
+      double skew = stats.skewness(slopes, N);
+      double kurt = stats.kurtosis(slopes, N);
       if(MathAbs(skew) < 0.3 || kurt > 2.0) return 0; // Symmetric/choppy or spiky extremes
       // Dominant bin direction
       if(domBin == 4) return 1;  // Strong Buy Signal
@@ -1642,36 +1650,39 @@ class MomentumStrength {
       if(domBin < 2) return -1.0; // Negative dominant
       return 0; // Neutral
    }
+
+   int layeredMomentumFilter_v2(const double &values[], int N = 20) {
+
+      // 1. Get Slopes (Pass array by reference)
+      double slopes[];
+      stats.slopeRange_v2(values, slopes, N, 1);
+
+      // 2. Filter: ADX (Trend Strength Gate)
+      // Note: Ideally, pass the Symbol/TF, don't assume NULL/0
+      double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+      if(adx < 20) return 0; // Market is ranging
+
+      // 3. Filter: Kurtosis (Trend Stability)
+      // High kurtosis (>3) means the "trend" is just volatile spikes.
+      // Low kurtosis (<1) means steady, consistent movement.
+      double kurt = stats.kurtosis_v2(slopes);
+      if(kurt > 5.0) return 0; // Too erratic/risky
+
+      // 4. Filter: Histogram (Directional Conviction)
+      int domBin = stats.histogram_v2(slopes, 5);
+
+      // Bin Mapping (assuming 5 bins):
+      // 0=Strong Down, 1=Weak Down, 2=Neutral, 3=Weak Up, 4=Strong Up
+
+      if(domBin == 4) return 1;  // Strong Buy Signal
+      if(domBin == 0) return -1; // Strong Sell Signal
+
+      return 0;
+   }
+
 };
 
-int _layeredMomentumFilter(const double &signalArr[], int N = 20) {
 
-   // 1. Get Slopes (Pass array by reference)
-   double slopes[];
-   stats.slopeRange_v2(signalArr, slopes, N, 1);
-
-   // 2. Filter: ADX (Trend Strength Gate)
-   // Note: Ideally, pass the Symbol/TF, don't assume NULL/0
-   double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
-   if(adx < 20) return 0; // Market is ranging
-
-   // 3. Filter: Kurtosis (Trend Stability)
-   // High kurtosis (>3) means the "trend" is just volatile spikes.
-   // Low kurtosis (<1) means steady, consistent movement.
-   double kurt = stats.kurtosis_v2(slopes);
-   if(kurt > 5.0) return 0; // Too erratic/risky
-
-   // 4. Filter: Histogram (Directional Conviction)
-   int domBin = stats.histogram_v2(slopes, 5);
-
-   // Bin Mapping (assuming 5 bins):
-   // 0=Strong Down, 1=Weak Down, 2=Neutral, 3=Weak Up, 4=Strong Up
-
-   if(domBin == 4) return 1;  // Strong Buy Signal
-   if(domBin == 0) return -1; // Strong Sell Signal
-
-   return 0;
-};
 
 //+------------------------------------------------------------------+
 //|                                                                  |
