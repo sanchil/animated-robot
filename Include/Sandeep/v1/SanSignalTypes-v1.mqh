@@ -159,6 +159,8 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT) {
    tradeSlopeSIG = sig.tradeSlopeSIG_v3(imaSlope120Data, baseSlopeData,indData.atr[1], indData.magicnumber);
   // sig.tradeSlopeSIG_v2(imaSlope120Data, baseSlopeData,indData.atr[1], indData.magicnumber);
    slopeAnalyzerSIG = sig.slopeAnalyzerSIG(imaSlope30Data);
+   momSIG = sig.layeredMomentumSIG(indData.ima30);
+   
    volatilitySIG = sig.volatilityMomentumSIG(stdOPSlope,stdCPSlope,indData.atr[1]);
    clusterData = sig.clusterData(indData.ima5[1], indData.ima14[1], indData.ima30[1]);
    slopeRatioData = sig.slopeRatioData(imaSlope5Data, imaSlope14Data, imaSlope30Data);

@@ -248,13 +248,13 @@ SIGBUFF SanStrategies::imaSt1(const INDDATA &indData) {
    //stats.sigMeanDeTrend(indData.close,c,5);
    //Print("DETREND: c0: "+c[0]+" c1: "+c[1]+"c2: "+c[2]+"c3: "+c[3]+"c4: "+c[4]+" new mean: "+ stats.mean(c));
 // Print("[TIME] : Current: "+ TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES)+" GMT: "+ TimeToString(TimeGMT(), TIME_DATE|TIME_MINUTES));
-   Print("[SLOW COPEN]:: cp120: " + util.getSigString(hSig.cpSlopeCandle120SIG)  + " cCloseSIG3: " + util.getSigString(hSig.composite_CloseSIG_3) + " cCloseSIG4: " + util.getSigString(hSig.composite_CloseSIG_4)  + " tradeSlopeSig: "+ util.getSigString(ss.tradeSlopeSIG)+" slopeAnalyzerSIG: "+util.getSigString(ss.slopeAnalyzerSIG)+" volatilityMomentum: "+util.getSigString(ss.volatilitySIG)); 
+   Print("[SLOW COPEN]:: cp120: " + util.getSigString(hSig.cpSlopeCandle120SIG) +" momSIG: "+util.getSigString(ss.momSIG) + " tradeSlopeSig: "+ util.getSigString(ss.tradeSlopeSIG)+" slopeAnalyzerSIG: "+util.getSigString(ss.slopeAnalyzerSIG)+" volatilityMomentum: "+util.getSigString(ss.volatilitySIG)); 
    Print("[FAST COPEN]:: slope120: " + util.getSigString(hSig.slopeCandle120SIG) + " cCloseSIG1: " + util.getSigString(hSig.composite_CloseSIG_1) + " cCloseSIG2: " + util.getSigString(hSig.composite_CloseSIG_2) + " cCloseSIG5: " + util.getSigString(hSig.composite_CloseSIG_5) + " cCloseSIG7: " + util.getSigString(hSig.composite_CloseSIG_7)+" rsiObv: "+hSig.tBools.rsiObvCPCloseFactor);
    Print("[OPEN] :: domSIG: " + util.getSigString(dominantSIG) +" c_SIG: " + util.getSigString(hSig.c_SIG)+" Slope30: " + util.getSigString(hSig.simpleSlope_30_SIG) + " fastSIG: " + util.getSigString(hSig.fastSIG) + " obvCPSIG: " + util.getSigString(ss.obvCPSIG) + " cpScatt: " + util.getSigString(ss.cpScatterSIG) + " sVarSIG: " + util.getSigString(ss.slopeVarSIG) + " candleVol: " + util.getSigString(ss.candleVolSIG));
 
    //Print("[OPEN OBVSIG] :: obvSlp120SIG: " + util.getSigString(hSig.obvSlp120SIG) + " obvCp120SIG: " + util.getSigString(hSig.obvCp120SIG) + " obvFastSIG: " + util.getSigString(hSig.obvFastSIG));
 
-   Print("[TRADESIG] :: Trade Sig: " + util.getSigString(hSig.tradeSIG) + " Base Slope: " + util.getSigString(hSig.baseSlopeSIG) + " Base Slope: " + ss.baseSlopeData.val1 + " rsiSIG: " + util.getSigString(ss.rsiSIG) + " volSIG:" + util.getSigString(ss.volSIG) + " volSlopeSIG: " + util.getSigString(ss.volSlopeSIG) + " atr: " + util.getSigString(ss.atrSIG)+" atrPipsPerTimeFrame: "+NormalizeDouble((((indData.atr[1] / util.getPipValue(_Symbol)))/((_Period > 1) ? log(_Period) : _Period)),3)); 
+   Print("[TRADESIG] :: Trade Sig: " + util.getSigString(hSig.tradeSIG) + " Base Slope: " + util.getSigString(hSig.baseSlopeSIG) + " Base Slope: " + ss.baseSlopeData.val1 + " rsiSIG: " + util.getSigString(ss.rsiSIG) + " volSIG:" + util.getSigString(ss.volSIG) + " volSlopeSIG: " + util.getSigString(ss.volSlopeSIG) + " atr: " + util.getSigString(ss.atrSIG)+" atrPipsPerTimeFrame: "+util.normalizeForTimeFrame(indData.atr[1])); 
    return sigBuff;
 }
 
