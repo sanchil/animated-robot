@@ -63,8 +63,8 @@ public:
 
    int               histogram(const double &values[], int N = 20, int bins = 5, double binSize = 0.2);
    int               histogram_v2(const double &values[], int bins=5);
-   int               histogram_Direction(const double &values[], int bins=5, double threshold=0.0002);
-   int               histogram_Magnitude(const double &values[], int bins=5, double minThresh=0.0002);
+   int               histogram_Direction(const double &values[], int N = 20, int bins=5, double threshold=0.2);
+   int               histogram_Magnitude(const double &values[], int N = 20, int bins=5, double minThresh=0.2);
 
    double            acf(const double &data[], int n = 0, int lag = 1);
    //   DataTransport     scatterPlotSlope(const double &y[],int n=0,int shift=0);
@@ -543,9 +543,9 @@ int Stats::histogram_v2(const double &values[], int bins=5)
 //| Bins are anchored to 0.                                          |
 //| Bin 0=Strong Sell, Bin 2=Neutral, Bin 4=Strong Buy               |
 //+------------------------------------------------------------------+
-int Stats::histogram_Direction(const double &values[], int bins=5, double threshold=0.0002)
+int Stats::histogram_Direction(const double &values[], int N = 20, int bins=5, double threshold=0.2)
   {
-   int N = ArraySize(values);
+//int N = ArraySize(values);
    if(N == 0)
       return -1;
 
@@ -599,9 +599,9 @@ int Stats::histogram_Direction(const double &values[], int bins=5, double thresh
 //| Left = Weak (Noise), Right = Strong (Momentum)                   |
 //| Enforces a 'floor' so tiny noise doesn't look like a trend.      |
 //+------------------------------------------------------------------+
-int Stats::histogram_Magnitude(const double &values[], int bins=5, double minThresh=0.0002)
+int Stats::histogram_Magnitude(const double &values[], int N = 20, int bins=5, double minThresh=0.2)
   {
-   int N = ArraySize(values);
+// int N = ArraySize(values);
    if(N == 0)
       return -1;
 
@@ -2050,14 +2050,15 @@ public:
      {
       // --- Step 1: Get Smoothed Slopes (in PIPS) ---
       double slopes[];
+      //Print("STAGE-1");
       // Denominator 3 smooths noise. Shift 1 to avoid open candle.
       if(!stats.slopeRange_v2(values, slopes, N, 3, 1))
          return 0;
-
+      //Print("STAGE-2");
       int SIZE = ArraySize(slopes);
       if(SIZE < N)
          return 0; // Safety
-
+      //Print("STAGE-3");
       // --- Step 2: Directional Consensus (The 80% Rule) ---
       int slopeBuy = 0;
       int slopeSell = 0;
@@ -2082,42 +2083,56 @@ public:
       // If mixed direction (choppy), exit immediately
       if(sig == SAN_SIGNAL::NOSIG)
          return 0;
-
+      //Print("STAGE-4");
       // --- Step 3: ADX Gate (Market Awake?) ---
       double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+      //Print("STAGE-4.1: ADX: "+adx);
       if(adx < 20.0)
          return 0;
-
+      //Print("STAGE-5");
       // --- Step 4: Histogram Gate (Momentum Conviction) ---
       // Threshold = 1.0 Pip.
       // If max slope < 1.0 pip, it is forced into lower bins (Weak).
       // This effectively filters out "drifting" markets.
-      int domBin = stats.histogram_Magnitude(slopes, 5, 1.0);
 
+      //double atr = iATR(NULL, 0, 14, 1);
+      //double pipUnit = util.getPipValue(_Symbol);
+      //if(pipUnit == 0)
+      //   pipUnit = Point;
+      //double thresh = (atr / pipUnit) * 0.10; // 10% of ATR is the noise floor
+
+      int domBin = stats.histogram_Magnitude(slopes, N, 5, 0.2);
+
+      //int domBin = stats.histogram_Magnitude(slopes, 5, 1.0);
+      //Print("STAGE-5.1: "+domBin);
       if(domBin == -1)
          return 0; // No clustering (flat distribution)
-      if(domBin < 3)
+      //Print("STAGE-6");
+      //if(domBin < 3)
+      if(domBin < 1)
          return 0;   // Cluster is in Left/Middle (Weak) bins
-
+      //Print("STAGE-7");
       // --- Step 5: Quality Gate (Statistical Stability) ---
+
       double skew = stats.skewness(slopes, N);
       double kurt = stats.kurtosis_v3(slopes, N);
+      //Print("STAGE-7.1: skew: "+skew+" kurt: "+kurt);
 
       // Reject Parabolic Bubbles (High Skew > 0.5)
       // We want steady trends, not explosions that might reverse.
       if(MathAbs(skew) > 0.5)
          return 0;
-
+      //Print("STAGE-8");
       // Reject News Spikes (High Kurtosis > 2.0)
       if(kurt > 2.0)
          return 0;
-
+      //Print("STAGE-9");
       // --- Final Signal Trigger ---
       if(sig == SAN_SIGNAL::BUY)
          return 1.0;
       if(sig == SAN_SIGNAL::SELL)
          return -1.0;
-
+      //Print("STAGE-10");
       return 0.0;
      }
   };

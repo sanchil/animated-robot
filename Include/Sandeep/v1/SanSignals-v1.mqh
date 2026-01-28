@@ -35,6 +35,7 @@ public:
    SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope);
    SAN_SIGNAL        layeredMomentumSIG(const double &signal[], int N = 20);
    SAN_SIGNAL        volatilityMomentumSIG(const DTYPE &stdDevOpen, const DTYPE &stdDevClose, const double atr = 0);
+   SAN_SIGNAL        volatilityMomentumDirectionSIG(const DTYPE &stdDevOpen,const DTYPE &stdDevClose,const double priceSlope,const double atr = 0);
    SAN_SIGNAL        tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL);
    //SANTRENDSTRENGTH        atrSIG(const double &atr[], const int period=10);
    SAN_SIGNAL        atrSIG(const double &atr[], const int period = 10);
@@ -1586,39 +1587,111 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
 //| • If |slope_std(CP)| > |slope_std(OP)| → room for movement → TRADE |
 //| • Else → barrier → NO TRADE or CLOSE                             |
 //| • Integrates with your slope engine                              |
+//
+//| SIGNAL: Volatility State Filter (Direction Agnostic)             |
+//| Returns:                                                         |
+//|   TRADE   = Market is Active & Efficient (Expansion Phase)       |
+//|   NOTRADE = Market is Squeezing or Choppy (Contraction/Noise)    |
 //+------------------------------------------------------------------+
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::volatilityMomentumSIG(const DTYPE &stdDevOpen, const DTYPE &stdDevClose, const double atr = 0)
+SAN_SIGNAL SanSignals::volatilityMomentumSIG(
+   const DTYPE &stdDevOpen,   // Volatility of Open Prices
+   const DTYPE &stdDevClose,  // Volatility of Close Prices
+   const double atr = 0
+)
   {
-   const double MIN_SLOPE = 0.0001;
-   double VOL_RATIO_THRESHOLD = 1.1;  // base
+   const double MIN_SLOPE = 0.00001; // Epsilon to prevent div/0
+   double VOL_RATIO_THRESHOLD = 1.1;
 
-// Optional ATR adaptation (looser in high vol)
+// 1. Adaptive Threshold (ATR)
+// In high volatility (high ATR), we increase the threshold.
+// We demand higher efficiency to avoid getting trapped in "whipsaws".
    if(atr > 0)
      {
-      double atrPips = atr / util.getPipValue(_Symbol);
-      VOL_RATIO_THRESHOLD = 1.05 + 0.15 * MathMin(atrPips / 50.0, 1.0);  // 1.05–1.20
+      double pipVal = util.getPipValue(_Symbol);
+      if(pipVal == 0)
+         pipVal = Point;
+
+      double atrPips = atr / pipVal;
+      // Scales threshold from 1.05 up to 1.20 based on ATR intensity
+      VOL_RATIO_THRESHOLD = 1.05 + 0.15 * MathMin(atrPips / 50.0, 1.0);
      }
 
-   double slopeCP = stdDevClose.val1;
-   double slopeOP = stdDevOpen.val1;
+   double volSlopeCP = stdDevClose.val1; // Expansion rate of Close (Signal)
+   double volSlopeOP = stdDevOpen.val1;  // Expansion rate of Open (Noise)
 
-   if(MathAbs(slopeCP) < MIN_SLOPE && MathAbs(slopeOP) < MIN_SLOPE)
+// --- STATE 1: THE SQUEEZE (NOTRADE) ---
+// If Close Volatility is falling (Negative Slope), the bands are tightening.
+// Energy is building up, but the move hasn't started yet.
+   if(volSlopeCP <= 0)
+      return SAN_SIGNAL::NOTRADE;
+
+// --- STATE 2: THE EFFICIENCY CHECK ---
+
+// Denominator is the "Noise" (Open Volatility).
+// We use MathAbs because even if Open Vol is dropping (negative slope),
+// a shrinking noise floor against a rising signal is a GOOD thing.
+   double denominator = MathAbs(volSlopeOP);
+   if(denominator < MIN_SLOPE)
+      denominator = MIN_SLOPE;
+
+   double ratio = volSlopeCP / denominator;
+
+// --- STATE 3: THE DECISION ---
+
+// CASE A: Efficient Expansion (TRADE)
+// The Signal (Close) is expanding significantly faster than the Noise (Open).
+// This confirms a directional breakout is in progress.
+   if(ratio > VOL_RATIO_THRESHOLD)
+     {
+      return SAN_SIGNAL::TRADE;
+     }
+
+// CASE B: Inefficient Chop (NOTRADE)
+// Either the Open Volatility is expanding too fast (gap/wicks),
+// or the Close Volatility isn't strong enough to beat the threshold.
+   return SAN_SIGNAL::NOTRADE;
+  }
+
+//+------------------------------------------------------------------+
+//| SIGNAL: Volatility Quality Filter                                |
+//| Returns: BUY/SELL if Volatility supports the move.               |
+//|          CLOSE if Volatility is chaotic (Open > Close).          |
+//|          NOSIG if Volatility is contracting (Squeeze).
+//           |
+//| SIGNAL: Volatility + Direction Wrapper                           |
+//| Purpose: Combines Market State (Vol) with Market Direction (Slope)|
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::volatilityMomentumDirectionSIG(
+   const DTYPE &stdDevOpen,   // Volatility of Open Prices
+   const DTYPE &stdDevClose,  // Volatility of Close Prices
+   const double priceSlope,   // Actual Price Direction
+   const double atr = 0
+)
+  {
+// --- STEP 1: Check Market State (Reuse Core Logic) ---
+// We delegate the complex volatility math to the base function.
+   SAN_SIGNAL volState = volatilityMomentumSIG(stdDevOpen, stdDevClose, atr);
+
+// If the base function says "NOTRADE" (Squeeze or Chop),
+// we respect that and exit immediately.
+   if(volState == SAN_SIGNAL::NOTRADE)
       return SAN_SIGNAL::NOSIG;
 
-   double ratioCP_OP = MathAbs(slopeCP) / (MathAbs(slopeOP) + MIN_SLOPE);
+// --- STEP 2: Determine Direction ---
+// If we reached here, volState is SAN_SIGNAL::TRADE.
+// Now we simply look at the Price Slope to decide Buy vs Sell.
 
-   if(ratioCP_OP > VOL_RATIO_THRESHOLD)
-      return (slopeCP > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+// Use a tiny epsilon to handle floating point "perfect zero"
+   if(priceSlope > 1.0e-8)
+      return SAN_SIGNAL::BUY;
 
-   if(ratioCP_OP < (1.0 / VOL_RATIO_THRESHOLD))
-      return SAN_SIGNAL::CLOSE;
+   if(priceSlope < -1.0e-8)
+      return SAN_SIGNAL::SELL;
 
-   return SAN_SIGNAL::NOSIG;  // neutral
+// Rare case: Volatility is good, but Price is perfectly flat.
+   return SAN_SIGNAL::NOSIG;
   }
+
 ////+------------------------------------------------------------------+
 ////| volatilityMomentumSIG — CP vs OP StdDev Slope Filter            |
 ////|                                                                  |

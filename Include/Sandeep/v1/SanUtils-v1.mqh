@@ -1132,7 +1132,10 @@ double SanUtils::getSigVarBool(const SIGMAVARIABILITY &varSIG)
 double SanUtils::normalizeForTimeFrame(const double value)
   {
    double val = MathMax(0,value);
-   return NormalizeDouble((((val / util.getPipValue(_Symbol)))/((_Period > 1) ? log(_Period) : _Period)),3);
+   double pipUnit = util.getPipValue(_Symbol);
+   if(pipUnit == 0)
+      pipUnit = Point;
+   return NormalizeDouble((((val / pipUnit))/((_Period > 1) ? log(_Period) : _Period)),3);
   }
 
 //+------------------------------------------------------------------+
