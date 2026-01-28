@@ -164,7 +164,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
    momSIG = sig.layeredMomentumSIG(indData.ima30);
 
    //volatilitySIG = sig.volatilityMomentumSIG(stdOPSlope,stdCPSlope,indData.atr[1]);
-   volatilitySIG = sig.volatilityMomentumDirectionSIG(stdOPSlope,stdCPSlope,imaSlope30Data.val1,indData.atr[1]);
+   volatilitySIG = sig.volatilityMomentumDirectionSIG(stdOPSlope,stdCPSlope,indData.stdOpen[1],indData.std[1],imaSlope30Data.val1,indData.atr[1]);
 
    clusterData = sig.clusterData(indData.ima5[1], indData.ima14[1], indData.ima30[1]);
    slopeRatioData = sig.slopeRatioData(imaSlope5Data, imaSlope14Data, imaSlope30Data);

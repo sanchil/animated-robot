@@ -2007,7 +2007,7 @@ public:
       return (sumAbs > 0) ? net / sumAbs : 0.0;
      }
    // 3. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
-   double            vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1)
+   double  vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1)
      {
       double sum_force = 0.0;
       double total_vol = 0.0;
@@ -2046,7 +2046,7 @@ public:
    //|    - Skewness < 0.5: Rejects "Parabolic" moves (Bubbles).        |
    //|    - RESULT: Accepts only linear, steady, sustainable trends.    |
    //+------------------------------------------------------------------+
-   double            layeredMomentumFilter(const double &values[], int N = 20)
+   double  layeredMomentumFilter(const double &values[], int N = 20)
      {
       // --- Step 1: Get Smoothed Slopes (in PIPS) ---
       double slopes[];
