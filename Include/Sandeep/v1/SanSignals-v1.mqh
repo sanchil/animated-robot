@@ -34,7 +34,15 @@ public:
    SAN_SIGNAL        tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope);
    SAN_SIGNAL        layeredMomentumSIG(const double &signal[], int N = 20);
-   SAN_SIGNAL        volatilityMomentumSIG(const DTYPE &stdDevOpen, const DTYPE &stdDevClose,const double stdOpen,const double stdCp, const double atr = 0);
+   //SAN_SIGNAL        volatilityMomentumSIG(const DTYPE &stdDevOpen, const DTYPE &stdDevClose,const double stdOpen,const double stdCp, const double atr = 0);
+   SAN_SIGNAL        volatilityMomentumSIG(
+   const DTYPE &stdDevOpen,
+   const DTYPE &stdDevClose,
+   const double stdOpen,
+   const double stdCp,
+   const double atr,
+   double strictness = 1.0); 
+
    SAN_SIGNAL        volatilityMomentumDirectionSIG(const DTYPE &stdDevOpen,const DTYPE &stdDevClose,const double stdOpen,const double stdCp,const double priceSlope,const double atr = 0);
    SAN_SIGNAL        tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL);
    //SANTRENDSTRENGTH        atrSIG(const double &atr[], const int period=10);
@@ -1443,13 +1451,27 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
 //   double atrCeiling = MathCeil(12.0 * tfScale);  // or 15.0 for more sensitivity
 //   double atrNorm    = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
 //
-   double atrNorm    = ms.atrStrength(atr);
+//   double atrNorm    = ms.atrStrength(atr);
 //   double adxNorm    = ms.atrStrength(atr);
 
 //Print("ATR norm1: "+atrNorm+"ATR norm2: "+atrNorm1+ " Equal: "+(atrNorm==atrNorm1));
 
-// The Masterpiece Formula: 0.82 (Tight) to ~0.98 (Loose)
-   double PEAK_DROP = 0.82 + 0.16 * MathSqrt(atrNorm);
+//// The Masterpiece Formula: 0.82 (Tight) to ~0.98 (Loose)
+//   double PEAK_DROP = 0.82 + 0.16 * MathSqrt(atrNorm);
+
+   double atrSq = ms.atrStrength(atr); // Returns x^2 (0.0 to 1.0)
+
+// Since atrSq is already squared, taking Sqrt returns us to Linear.
+// Linear is actually good for Exits (Proportional Adaptation).
+// 0.0 (Calm) -> 0.98 (Tight)
+// 0.5 (Mid)  -> 0.90 (Medium)
+// 1.0 (Wild) -> 0.82 (Loose)
+
+// Trend Following Logic: Tight in Quiet, Loose in Loud
+// atrSq is a squared value and so we will need a MathSqrt((MathSqrt(atrNorm)), a double square root here
+// however a single square root is also fine. it keeps the decay linear instead of
+   double PEAK_DROP = 0.98 - (0.16 * MathSqrt(atrSq));
+
    PEAK_DROP = MathMax(MathMin(PEAK_DROP, 0.99), 0.70); // Hard clamp for safety
 
 // --- 4. CORE LOGIC BRANCHING ---
@@ -1628,74 +1650,320 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
 //|   NOTRADE = Market is Squeezing or Choppy (Contraction/Noise)    |
 //+------------------------------------------------------------------+
 
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::volatilityMomentumSIG(
+//   const DTYPE &stdDevOpen,   // Slope Struct (Open)
+//   const DTYPE &stdDevClose,  // Slope Struct (Close)
+//   const double stdOpen,      // Absolute Value (Open)
+//   const double stdCp,        // Absolute Value (Close)
+//   const double atr           // ATR for Foundation Check
+//)
+//  {
+//   const double MIN_SLOPE = 0.00001;
+//   double VOL_RATIO_THRESHOLD = 1.1;
+//
+//// 1. Adaptive Threshold (ATR)
+//// In high volatility (high ATR), we increase the threshold.
+//// We demand higher efficiency to avoid getting trapped in "whipsaws".
+//   if(atr > 0)
+//     {
+//      double pipVal = util.getPipValue(_Symbol);
+//      if(pipVal == 0)
+//         pipVal = Point;
+//
+//      double atrPips = atr / pipVal;
+//      // Scales threshold from 1.05 up to 1.20 based on ATR intensity
+//      VOL_RATIO_THRESHOLD = 1.05 + 0.15 * MathMin(atrPips / 50.0, 1.0);
+//     }
+//
+//
+////// --- STEP 1: Market Excitement Check (ADX) ---
+////double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+////if(adx < 20.0)
+////   return SAN_SIGNAL::NOTRADE;
+//
+//// --- STEP 2: Absolute Ratio Check (Space/Structure) ---
+//// FIX: Use MIN_SLOPE to prevent division by zero
+//   double denominator = stdOpen;
+//   if(denominator < MIN_SLOPE)
+//      denominator = MIN_SLOPE;
+//
+//   double ratio = stdCp / denominator;
+//
+//// Ratio > 0.95 means Close Volatility is essentially as big or bigger than Open.
+//   bool structureValid = (ratio > 0.95);
+//
+//// --- STEP 3: Slope Expansion Check (Time/Momentum) ---
+//// 1. Close accelerating faster than Open?
+//// 2. Is Close actually expanding? (Slope > MIN_SLOPE instead of 0 for noise safety)
+//   bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1) && (stdDevClose.val1 > MIN_SLOPE);
+//
+//// --- STEP 4: Steady Foundation Check ---
+//   bool foundationSteady = (stdOpen < (atr * 0.25));
+//
+//// --- DECISION ---
+//   if(structureValid && momentumValid)
+//      //   if(momentumValid)
+//      //if(structureValid)
+//     {
+//      if(foundationSteady)
+//         return SAN_SIGNAL::TRADE;
+//
+//      //if(ratio > 1.25)
+//      if(ratio > VOL_RATIO_THRESHOLD)
+//         return SAN_SIGNAL::TRADE;
+//     }
+//
+//   return SAN_SIGNAL::NOTRADE;
+//  }
+
+//SAN_SIGNAL SanSignals::volatilityMomentumSIG(
+//   const DTYPE &stdDevOpen,   // Slope Struct (Open)
+//   const DTYPE &stdDevClose,  // Slope Struct (Close)
+//   const double stdOpen,      // Absolute Value (Open)
+//   const double stdCp,        // Absolute Value (Close)
+//   const double atr           // ATR for Foundation Check
+//)
+//{
+//   const double MIN_SLOPE = 0.00001;
+//
+//   // --- 1. SETUP ADAPTIVE THRESHOLD ---
+//   // Base = 1.05. Max = 1.20. Scales with ATR intensity.
+//   // High Volatility environments require a stricter threshold to avoid fakeouts.
+//   double VOL_RATIO_THRESHOLD = 1.1;
+//
+//   if(atr > 0)
+//   {
+//      double pipVal = util.getPipValue(_Symbol);
+//      if(pipVal == 0) pipVal = Point;
+//
+//      double atrPips = atr / pipVal;
+//      // If ATR is 50 pips, we add full 0.15 (Result 1.20).
+//      // If ATR is 0 pips, we add 0.0 (Result 1.05).
+//      VOL_RATIO_THRESHOLD = 1.05 + 0.15 * MathMin(atrPips / 50.0, 1.0);
+//   }
+//
+//    //--- 2. OPTIONAL: ADX GATE ---
+//    //Currently disabled for faster signal reaction.
+//    //Uncomment to filter out completely dead markets.
+//    double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+//    if(adx < 20.0) return SAN_SIGNAL::NOTRADE;
+//
+//   // --- 3. STRUCTURE GATE (Ratio) ---
+//   // Prevents division by zero and calculates Body vs Base ratio.
+//   double denominator = stdOpen;
+//   if(denominator < MIN_SLOPE) denominator = MIN_SLOPE;
+//
+//   double ratio = stdCp / denominator;
+//
+//   // Rule: Close Volatility must maintain at least 95% of Open Volatility.
+//   // Filters out "long wick" rejection candles.
+//   bool structureValid = (ratio > 0.95);
+//
+//   // --- 4. MOMENTUM GATE (Slopes) ---
+//   // Rule A: Close is expanding faster than Open (stdDevClose.val1 > stdDevOpen.val1)
+//   // Rule B: Close is positively expanding (stdDevClose.val1 > MIN_SLOPE)
+//   bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1) && (stdDevClose.val1 > MIN_SLOPE);
+//
+//   // --- 5. FOUNDATION CHECK (Origin Quality) ---
+//   // Rule: Did this move start from a quiet base? (< 25% of ATR)
+//   bool foundationSteady = (stdOpen < (atr * 0.25));
+//
+//   // --- 6. FINAL DECISION ---
+//   // We require BOTH Valid Structure AND Valid Momentum to proceed.
+//   if(structureValid && momentumValid)
+//   {
+//      // SCENARIO A: The "Sniper" Entry
+//      // The move started quietly (Steady Foundation).
+//      // We trust the structure immediately.
+//      if(foundationSteady)
+//         return SAN_SIGNAL::TRADE;
+//
+//      // SCENARIO B: The "Bulldozer" Entry
+//      // The move started noisily (Unsteady Foundation).
+//      // We only trade if the force (Ratio) overwhelms the noise (Threshold).
+//      if(ratio > VOL_RATIO_THRESHOLD)
+//         return SAN_SIGNAL::TRADE;
+//   }
+//
+//   return SAN_SIGNAL::NOTRADE;
+//}
+
+
+//SAN_SIGNAL SanSignals::volatilityMomentumSIG(
+//   const DTYPE &stdDevOpen,
+//   const DTYPE &stdDevClose,
+//   const double stdOpen,
+//   const double stdCp,
+//   const double atr
+//)
+//  {
+//   const double MIN_SLOPE = 0.00001;
+//
+//
+////--- 1. ADX GATE ---
+////Currently disabled for faster signal reaction.
+////Uncomment to filter out completely dead markets.
+//   double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+//   if(adx < 20.0)
+//      return SAN_SIGNAL::NOTRADE;
+//
+//
+//// --- 2. SETUP ADAPTIVE THRESHOLD (The Fix) ---
+//// We replace the hardcoded "50.0" pips logic with your reusable class.
+//// ms.atrStrength handles the Timeframe Scaling (Logarithmic) automatically.
+//
+//// volScore is 0.0 (Quiet) to 1.0 (Extreme Volatility)
+//   double volScore = ms.atrStrength(atr);
+//
+//// Map the 0-1 score to your desired threshold range (1.05 to 1.20)
+//// If Score = 0.0 -> Threshold = 1.05 (Loose)
+//// If Score = 1.0 -> Threshold = 1.20 (Strict)
+//   double VOL_RATIO_THRESHOLD = 1.05 + (0.15 * volScore);
+//
+//
+//// --- 3. STRUCTURE GATE (Ratio) ---
+//   double denominator = stdOpen;
+//   if(denominator < MIN_SLOPE)
+//      denominator = MIN_SLOPE;
+//   double ratio = stdCp / denominator;
+//
+//   bool structureValid = (ratio > 0.95);
+//
+//// --- 4. MOMENTUM GATE (Slopes) ---
+//   bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1) && (stdDevClose.val1 > MIN_SLOPE);
+//
+//// --- 5. FOUNDATION CHECK ---
+//// We can technically reuse volScore here too, but the raw calculation
+//// (Open < 25% of current ATR) is physically precise for this specific bar.
+//   bool foundationSteady = (stdOpen < (atr * 0.25));
+//
+//// --- 6. DECISION ---
+//   if(structureValid && momentumValid)
+//     {
+//      // SCENARIO A: Sniper Entry (Quiet Start)
+//      if(foundationSteady)
+//         return SAN_SIGNAL::TRADE;
+//
+//      // SCENARIO B: Bulldozer Entry (Noisy Start)
+//      // Now uses the timeframe-agnostic threshold!
+//      if(ratio > VOL_RATIO_THRESHOLD)
+//         return SAN_SIGNAL::TRADE;
+//     }
+//
+//   return SAN_SIGNAL::NOTRADE;
+//  }
+
 //+------------------------------------------------------------------+
+//| volatilityMomentumSIG — CP vs OP StdDev Slope Filter            |
 //|                                                                  |
+//| • If |slope_std(CP)| > |slope_std(OP)| → room for movement → TRADE |
+//| • Else → barrier → NO TRADE or CLOSE                             |
+//| • Integrates with your slope engine                              |
+//
+//| SIGNAL: Volatility State Filter (Direction Agnostic)             |
+//| Returns:                                                         |
+//|   TRADE   = Market is Active & Efficient (Expansion Phase)       |
+//|   NOTRADE = Market is Squeezing or Choppy (Contraction/Noise)    |
+//|                                                                  |
+//|                                                                  |
+//| FUNCTION: volatilityMomentumSIG                                  |
+//| PURPOSE:  Filters market noise to identify efficient breakouts.  |
+//| RETURNS:  TRADE (Valid Volatility) or NOTRADE (Noise/Squeeze)    |
+//+------------------------------------------------------------------+
+//| ALGORITHM LOGIC:                                                 |
+//|                                                                  |
+//| 1. ADX FILTER (Optional/Commented):                              |
+//|    - Ensures market is 'awake' (ADX > 20).                       |
+//|                                                                  |
+//| 2. STRUCTURE GATE (Space):                                       |
+//|    - Metric: Ratio = StdDev(Close) / StdDev(Open)                |
+//|    - Rule: Ratio > 0.95                                          |
+//|    - Why: Rejects Dojis/Wicks where price failed to hold gains.  |
+//|                                                                  |
+//| 3. MOMENTUM GATE (Time):                                         |
+//|    - Metric: Slope(Close) vs Slope(Open)                         |
+//|    - Rule: Slope(Close) > Slope(Open) AND Slope(Close) > 0       |
+//|    - Why: Ensures volatility is expanding (accelerating),        |
+//|           not contracting (squeeze) or decelerating.             |
+//|                                                                  |
+//| 4. DECISION MATRIX (Context via ATR):                            |
+//|    - Metric: Foundation = StdDev(Open) < 0.25 * ATR              |
+//|    - Path A (Sniper): If Foundation is Steady (Quiet Start),     |
+//|             TRADE immediately (Ratio > 0.95 is sufficient).      |
+//|    - Path B (Bulldozer): If Foundation is Noisy (Messy Start),   |
+//|             TRADE only if Ratio > Adaptive Threshold (1.05-1.20).|
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| FUNCTION: volatilityMomentumSIG                                  |
+//| PARAMS:   strictness (1.0 = Entry Mode, < 1.0 = Exit/Decay Mode) |
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::volatilityMomentumSIG(
-   const DTYPE &stdDevOpen,   // Slope Struct (Open)
-   const DTYPE &stdDevClose,  // Slope Struct (Close)
-   const double stdOpen,      // Absolute Value (Open)
-   const double stdCp,        // Absolute Value (Close)
-   const double atr           // ATR for Foundation Check
+   const DTYPE &stdDevOpen,
+   const DTYPE &stdDevClose,
+   const double stdOpen,
+   const double stdCp,
+   const double atr,
+   double strictness = 1.0 // <--- NEW: Defaults to Strict Entry
 )
-  {
+{
    const double MIN_SLOPE = 0.00001;
-   double VOL_RATIO_THRESHOLD = 1.1;
 
-// 1. Adaptive Threshold (ATR)
-// In high volatility (high ATR), we increase the threshold.
-// We demand higher efficiency to avoid getting trapped in "whipsaws".
-   if(atr > 0)
-     {
-      double pipVal = util.getPipValue(_Symbol);
-      if(pipVal == 0)
-         pipVal = Point;
+   // --- 1. ADX GATE ---
+   double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+   if(adx < 20.0) return SAN_SIGNAL::NOTRADE;
 
-      double atrPips = atr / pipVal;
-      // Scales threshold from 1.05 up to 1.20 based on ATR intensity
-      VOL_RATIO_THRESHOLD = 1.05 + 0.15 * MathMin(atrPips / 50.0, 1.0);
-     }
+   // --- 2. SETUP THRESHOLDS ---
+   // We decay the "Structure Requirement" based on strictness.
+   // Entry (1.0) -> Needs 0.95 (High Quality)
+   // Exit  (0.7) -> Needs 0.66 (Survival Quality)
+   double baseStructReq = 0.95;
+   double activeStructReq = baseStructReq * strictness; 
 
-
-//// --- STEP 1: Market Excitement Check (ADX) ---
-//double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
-//if(adx < 20.0)
-//   return SAN_SIGNAL::NOTRADE;
-
-// --- STEP 2: Absolute Ratio Check (Space/Structure) ---
-// FIX: Use MIN_SLOPE to prevent division by zero
+   // --- 3. STRUCTURE GATE (Ratio) ---
    double denominator = stdOpen;
-   if(denominator < MIN_SLOPE)
-      denominator = MIN_SLOPE;
-
+   if(denominator < MIN_SLOPE) denominator = MIN_SLOPE;
    double ratio = stdCp / denominator;
 
-// Ratio > 0.95 means Close Volatility is essentially as big or bigger than Open.
-   bool structureValid = (ratio > 0.95);
+   // Uses the DECAYED threshold
+   bool structureValid = (ratio > activeStructReq);
 
-// --- STEP 3: Slope Expansion Check (Time/Momentum) ---
-// 1. Close accelerating faster than Open?
-// 2. Is Close actually expanding? (Slope > MIN_SLOPE instead of 0 for noise safety)
+   // --- 4. MOMENTUM GATE (Slopes) ---
+   // We keep this strict. If slope flips negative, we usually want out.
+   // (Unless you want to decay MIN_SLOPE too, but keeping it static is safer).
    bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1) && (stdDevClose.val1 > MIN_SLOPE);
 
-// --- STEP 4: Steady Foundation Check ---
-   bool foundationSteady = (stdOpen < (atr * 0.25));
-
-// --- DECISION ---
+   // --- 5. DECISION ---
    if(structureValid && momentumValid)
-      //   if(momentumValid)
-      //if(structureValid)
-     {
-      if(foundationSteady)
-         return SAN_SIGNAL::TRADE;
+   {
+      // MODE A: EXIT / MANAGEMENT (Strictness < 1.0)
+      // If we are just managing an open trade, we don't care about "Sniper vs Bulldozer".
+      // We just care that the Structure and Momentum are still valid.
+      if(strictness < 0.99) 
+         return SAN_SIGNAL::TRADE; // Keep holding
+      
+      
+      // MODE B: NEW ENTRY (Strictness == 1.0)
+      // Run the rigorous checks for new breakouts.
+      
+      double volScore = ms.atrStrength(atr);
+      double VOL_RATIO_THRESHOLD = 1.05 + (0.15 * volScore);
+      
+      bool foundationSteady = (stdOpen < (atr * 0.25));
 
-      //if(ratio > 1.25)
-      if(ratio > VOL_RATIO_THRESHOLD)
-         return SAN_SIGNAL::TRADE;
-     }
+      // Scenario 1: Sniper
+      if(foundationSteady) return SAN_SIGNAL::TRADE;
+
+      // Scenario 2: Bulldozer
+      if(ratio > VOL_RATIO_THRESHOLD) return SAN_SIGNAL::TRADE;
+   }
 
    return SAN_SIGNAL::NOTRADE;
-  }
+}
+
 //+------------------------------------------------------------------+
 //| SIGNAL: Volatility Quality Filter                                |
 //| Returns: BUY/SELL if Volatility supports the move.               |

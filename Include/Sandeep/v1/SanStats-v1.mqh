@@ -1989,7 +1989,7 @@ public:
       double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
       double atrCeiling = MathCeil(12.0 * tfScale); // Your recommended multiplier
       double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
-      return atrNorm; // 0-1: low = quiet/weak, high = wild/strong
+      return (atrNorm*atrNorm); // 0-1: low = quiet/weak, high = wild/strong
      }
    // 2. ADX Normalization (Trend Strength, 0-1)
    double            adxStrength(const double scale=50.0, int period = 10, int shift = 1)
