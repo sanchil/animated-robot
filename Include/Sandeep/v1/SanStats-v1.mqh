@@ -2135,6 +2135,51 @@ public:
       //Print("STAGE-10");
       return 0.0;
      }
+     
+     // =================================================================
+   // GROUP: DECAY & RETENTION STRATEGIES
+   // Purpose: Calculate multiplier (0.0-1.0) to lower exit thresholds
+   // =================================================================
+
+   // 1. TIME DECAY (Linear)
+   // Use Case: Reduce strictness simply because time has passed.
+   // Example: getLinearTimeRetention(barsHeld, 0.05, 0.60);
+   double getLinearTimeRetention(int barsHeld, double decayRate = 0.05, double floor = 0.60)
+   {
+      double retention = 1.0 - (barsHeld * decayRate);
+      return MathMax(retention, floor);
+   }
+
+   // 2. VOLATILITY DECAY (Adaptive Trend Following)
+   // Use Case: "Tight Leash" in Calm, "Loose Leash" in Turbulent.
+   // Returns: High value (0.98) in Calm, Lower value (0.82) in Volatility.
+   double getVolAdaptiveRetention(double atr)
+   {
+      // 1. Get Normalized Volatility (0.0 to 1.0)
+      // Note: We use the raw linear norm here (no power curve) for proportional adaptation.
+      double volScore = atrStrength(atr); 
+      
+      // 2. Trend Following Logic
+      // Calm (0.0) -> 0.98 Retention (Strict)
+      // Wild (1.0) -> 0.82 Retention (Loose)
+      // Sqrt makes it loosen quickly as soon as volatility starts.
+      double retention = 0.98 - (0.16 * MathSqrt(volScore));
+      
+      // Safety Clamp: Never loosen below 70%
+      return MathMax(retention, 0.70);
+   }
+
+   // 3. HYBRID DECAY (Time + Volatility)
+   // Use Case: The longer we hold AND the crazier the market, the looser we get.
+   // Or: We hold tight in calm markets but relax as time passes.
+   double getHybridRetention(int barsHeld, double atr)
+   {
+      double timeRet = getLinearTimeRetention(barsHeld, 0.02, 0.80); // Slow time decay
+      double volRet  = getVolAdaptiveRetention(atr);                 // Adaptive vol decay
+      
+      // Combine them: (e.g., 0.95 * 0.90 = 0.855)
+      return (timeRet * volRet);
+   }
   };
 
 
