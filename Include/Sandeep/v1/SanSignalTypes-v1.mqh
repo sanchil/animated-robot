@@ -160,8 +160,9 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
    obvCPSIG = sig.obvCPSIG(indData.obv, 5, 21, 1);
    tradeSlopeSIG = sig.tradeSlopeSIG_v3(imaSlope120Data, baseSlopeData,indData.atr[1], indData.magicnumber);
 // sig.tradeSlopeSIG_v2(imaSlope120Data, baseSlopeData,indData.atr[1], indData.magicnumber);
-   slopeAnalyzerSIG = sig.slopeAnalyzerSIG(imaSlope30Data);
-   momSIG = sig.layeredMomentumSIG(indData.ima30);
+   slopeAnalyzerSIG = sig.slopeAnalyzerSIG(imaSlope120Data);
+   //momSIG = sig.layeredMomentumSIG(indData.ima60);
+   momSIG = sig.layeredMomentumSIG(indData.ima120);
 
    //volatilitySIG = sig.volatilityMomentumSIG(stdOPSlope,stdCPSlope,indData.atr[1]);
    volatilitySIG = sig.volatilityMomentumDirectionSIG(stdOPSlope,stdCPSlope,indData.stdOpen[1],indData.std[1],imaSlope30Data.val1,indData.atr[1]);

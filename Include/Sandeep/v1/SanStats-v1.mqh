@@ -1981,7 +1981,7 @@ public:
       stats =st;
      }
    // 1. ATR Normalization (Volatility Proxy, 0-1 with TF scaling)
-   double            atrStrength(const double atr)
+   double   atrStrength(const double atr)
      {
       double pipValue = util.getPipValue(_Symbol);
       double atrPips = (pipValue > 0) ? atr / pipValue : 0.0; // Safety div
@@ -1990,12 +1990,15 @@ public:
       double atrCeiling = MathCeil(12.0 * tfScale); // Your recommended multiplier
       double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
       return (atrNorm*atrNorm); // 0-1: low = quiet/weak, high = wild/strong
+      //return (atrNorm); // 0-1: low = quiet/weak, high = wild/strong
      }
    // 2. ADX Normalization (Trend Strength, 0-1)
-   double            adxStrength(const double scale=50.0, int period = 10, int shift = 1)
+   double   adxStrength(const double scale=50.0, int period = 10, int shift = 1)
      {
       double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
-      return MathMin(adx / scale, 1.0); // 0-1 scale (>1 rare, cap at 1)
+      double normAdx = MathMin(adx / scale, 1.0);
+      return (normAdx*normAdx); // 0-1 scale (>1 rare, cap at 1)
+      //return (normAdx); // 0-1: low = quiet/weak, high = wild/strong
      }
    // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
    double            efficiencyRatio(const double &price[], int period = 14, int shift = 0)
@@ -2109,7 +2112,7 @@ public:
          return 0; // No clustering (flat distribution)
       //Print("STAGE-6");
       //if(domBin < 3)
-      if(domBin < 1)
+      if(domBin < 2)
          return 0;   // Cluster is in Left/Middle (Weak) bins
       //Print("STAGE-7");
       // --- Step 5: Quality Gate (Statistical Stability) ---
@@ -2127,6 +2130,8 @@ public:
       if(kurt > 2.0)
          return 0;
       //Print("STAGE-9");
+      
+      //Print("domBin: "+ domBin+ " kurt: "+kurt+ " skewn: "+skew);
       // --- Final Signal Trigger ---
       if(sig == SAN_SIGNAL::BUY)
          return 1.0;

@@ -34,8 +34,8 @@ public:
    SAN_SIGNAL        tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope);
    SAN_SIGNAL        layeredMomentumSIG(const double &signal[], int N = 20);
-   SAN_SIGNAL        volatilityMomentumSIG_v1(const DTYPE &stdDevOpen, const DTYPE &stdDevClose,const double stdOpen,const double stdCp, const double atr = 0);
-   SAN_SIGNAL        volatilityMomentumSIG_v2(
+
+   SAN_SIGNAL        volatilityMomentumSIG(
       const DTYPE &stdDevOpen,
       const DTYPE &stdDevClose,
       const double stdOpen,
@@ -43,7 +43,24 @@ public:
       const double atr,
       double strictness = 1.0);
 
-   SAN_SIGNAL        volatilityMomentumDirectionSIG(const DTYPE &stdDevOpen,const DTYPE &stdDevClose,const double stdOpen,const double stdCp,const double priceSlope,const double atr = 0);
+   SAN_SIGNAL        SanSignals::volatilityMomentumSIG_v2(
+      const DTYPE &stdDevOpen,
+      const DTYPE &stdDevClose,
+      const double stdOpen,
+      const double stdCp,
+      const double atr,
+      double strictness = 1.0          // 1.0 = Entry mode, 0.75–0.85 = Management mode
+   );
+
+   SAN_SIGNAL        volatilityMomentumDirectionSIG(
+      const DTYPE &stdDevOpen,
+      const DTYPE &stdDevClose,
+      const double stdOpen,
+      const double stdCp,
+      const double priceSlope,
+      const double atr = 0,
+      double strictness = 1.0
+   );
    SAN_SIGNAL        tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL);
    //SANTRENDSTRENGTH        atrSIG(const double &atr[], const int period=10);
    SAN_SIGNAL        atrSIG(const double &atr[], const int period = 10);
@@ -907,6 +924,83 @@ DataTransport SanSignals::slopeRatioData(
 
 
 
+////+------------------------------------------------------------------+
+////| slopeAnalyzerSIG — Pure Momentum Analyzer with ADX Normalization |
+////|                                                                  |
+////| • Uses adxNorm to adapt DECAY: looser in strong trends           |
+////| • Once-per-bar cached for MT4 efficiency                         |
+////|                                                                  |
+////| This enhances momentum sustainability in forex indicators.       |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
+//  {
+//// --- 1. Efficiency Cache ---
+//   static datetime last_bar = 0;
+//   static SAN_SIGNAL cached = NOSIG;
+//
+//   if(Time[0] == last_bar)
+//      return cached;
+//   last_bar = Time[0];
+//
+//// --- 2. State Memory ---
+//   static double peakPositive = 0;
+//   static double peakNegative = 0;
+//
+//   const double BASE_DECAY = 0.8;
+//   const double MIN_SLOPE = 0.2;
+//
+//   double s = slope.val1;
+//
+//// 3. Adaptive Logic
+//   double adxNorm = ms.adxStrength();
+//   double adaptedDecay = BASE_DECAY + (0.18 * adxNorm);
+//
+//// BUY LOGIC
+//   bool isBuyBreakout = (peakPositive == 0 && s > MIN_SLOPE);
+//   bool isBuyContinuation = (peakPositive > 0 && s > (peakPositive * adaptedDecay));
+//
+//   if(s > MIN_SLOPE && (isBuyBreakout || isBuyContinuation))
+//     {
+//      peakPositive = MathMax(peakPositive, s);
+//      peakNegative = 0;  // CRITICAL RESET
+//
+//      cached = SAN_SIGNAL::BUY;
+//      return SAN_SIGNAL::BUY;
+//     }
+//
+//// SELL LOGIC
+//   bool isSellBreakout = (peakNegative == 0 && s < -MIN_SLOPE);
+//   bool isSellContinuation = (peakNegative < 0 && s < (peakNegative * adaptedDecay));
+//
+//   if(s < -MIN_SLOPE && (isSellBreakout || isSellContinuation))
+//     {
+//      peakNegative = MathMin(peakNegative, s);
+//      peakPositive = 0;  // CRITICAL RESET
+//
+//      cached = SAN_SIGNAL::SELL;
+//      return SAN_SIGNAL::SELL;
+//     }
+//
+//// EXIT LOGIC
+//   if(cached == SAN_SIGNAL::BUY && s < (peakPositive * adaptedDecay))
+//     {
+//      peakPositive *= 0.85;
+//      cached = SAN_SIGNAL::CLOSE;
+//      return SAN_SIGNAL::CLOSE;
+//     }
+//
+//   if(cached == SAN_SIGNAL::SELL && s > (peakNegative * adaptedDecay))
+//     {
+//      peakNegative *= 0.85;
+//      cached = SAN_SIGNAL::CLOSE;
+//      return SAN_SIGNAL::CLOSE;
+//     }
+//
+//// Neutral Fallback
+//   cached = SAN_SIGNAL::NOSIG;
+//   return SAN_SIGNAL::NOSIG;
+//  }
+
 //+------------------------------------------------------------------+
 //| slopeAnalyzerSIG — Pure Momentum Analyzer with ADX Normalization |
 //|                                                                  |
@@ -915,22 +1009,28 @@ DataTransport SanSignals::slopeRatioData(
 //|                                                                  |
 //| This enhances momentum sustainability in forex indicators.       |
 //+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
   {
-// --- 1. Efficiency Cache ---
-   static datetime last_bar = 0;
-   static SAN_SIGNAL cached = NOSIG;
+// --- 1. Cache Fix: Do not cache continuously if using Shift 0 data ---
+// Only use Time[0] cache if you are strictly analyzing closed bars (Shift 1).
+// If analyzing live price (Shift 0), we must re-evaluate every tick
+// or use a timer (e.g., check every 10 seconds).
 
-   if(Time[0] == last_bar)
-      return cached;
-   last_bar = Time[0];
+// For safety, we remove the strict Time[0] block to allow intra-bar updates.
+// If efficiency is key, check only on new ticks closer to Close.
 
 // --- 2. State Memory ---
    static double peakPositive = 0;
    static double peakNegative = 0;
+   static SAN_SIGNAL currentIdx = SAN_SIGNAL::NOSIG; // Track current internal state
 
    const double BASE_DECAY = 0.8;
    const double MIN_SLOPE = 0.2;
+   const double HYSTERESIS = 0.90; // Exit is 10% lower than entry requirements
 
    double s = slope.val1;
 
@@ -938,53 +1038,71 @@ SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
    double adxNorm = ms.adxStrength();
    double adaptedDecay = BASE_DECAY + (0.18 * adxNorm);
 
-// BUY LOGIC
-   bool isBuyBreakout = (peakPositive == 0 && s > MIN_SLOPE);
-   bool isBuyContinuation = (peakPositive > 0 && s > (peakPositive * adaptedDecay));
+// --- LOGIC GATE ---
 
-   if(s > MIN_SLOPE && (isBuyBreakout || isBuyContinuation))
+// A. RESET LOGIC (Crucial: Clear opposite peaks to prevent "Zombie" states)
+   if(s < -MIN_SLOPE)
+      peakPositive = 0;
+   if(s > MIN_SLOPE)
+      peakNegative = 0;
+
+// B. BUY LOGIC
+// We use the peak to define the trend, but we don't decay the peak variable itself.
+   double buyThreshold = (peakPositive > 0) ? (peakPositive * adaptedDecay) : MIN_SLOPE;
+
+// Check for NEW Peak
+   if(s > buyThreshold)
      {
-      peakPositive = MathMax(peakPositive, s);
-      peakNegative = 0;  // CRITICAL RESET
-
-      cached = SAN_SIGNAL::BUY;
+      peakPositive = MathMax(peakPositive, s); // Update Peak
+      currentIdx = SAN_SIGNAL::BUY;
       return SAN_SIGNAL::BUY;
      }
 
-// SELL LOGIC
-   bool isSellBreakout = (peakNegative == 0 && s < -MIN_SLOPE);
-   bool isSellContinuation = (peakNegative < 0 && s < (peakNegative * adaptedDecay));
+// C. SELL LOGIC
+   double sellThreshold = (peakNegative < 0) ? (peakNegative * adaptedDecay) : -MIN_SLOPE;
 
-   if(s < -MIN_SLOPE && (isSellBreakout || isSellContinuation))
+   if(s < sellThreshold) // Note: sellThreshold is negative, so s must be lower (more negative)
      {
-      peakNegative = MathMin(peakNegative, s);
-      peakPositive = 0;  // CRITICAL RESET
-
-      cached = SAN_SIGNAL::SELL;
+      peakNegative = MathMin(peakNegative, s); // Update Peak
+      currentIdx = SAN_SIGNAL::SELL;
       return SAN_SIGNAL::SELL;
      }
 
-// EXIT LOGIC
-   if(cached == SAN_SIGNAL::BUY && s < (peakPositive * adaptedDecay))
+// D. EXIT LOGIC with HYSTERESIS
+// We only exit if slope drops significantly below the threshold that got us in.
+// This creates a "Deadband" where no action is taken (holding the trade).
+
+   if(currentIdx == SAN_SIGNAL::BUY)
      {
-      peakPositive *= 0.85;
-      cached = SAN_SIGNAL::CLOSE;
-      return SAN_SIGNAL::CLOSE;
+      // Exit strictly if slope drops below (Threshold * Hysteresis)
+      // Example: If Peak is 10, Decay is 0.8 -> Threshold is 8.0.
+      // We only exit if slope drops below 7.2 (8.0 * 0.9).
+      double exitLevel = (peakPositive * adaptedDecay) * HYSTERESIS;
+
+      if(s < exitLevel)
+        {
+         currentIdx = SAN_SIGNAL::NOSIG; // Reset State
+         // Do NOT degrade peakPositive here. Let it stand as resistance.
+         // If price wants to buy again, it must beat the 'real' trend line or wait for full reset.
+         return SAN_SIGNAL::CLOSE;
+        }
+      return SAN_SIGNAL::BUY; // HOLD
      }
 
-   if(cached == SAN_SIGNAL::SELL && s > (peakNegative * adaptedDecay))
+   if(currentIdx == SAN_SIGNAL::SELL)
      {
-      peakNegative *= 0.85;
-      cached = SAN_SIGNAL::CLOSE;
-      return SAN_SIGNAL::CLOSE;
+      double exitLevel = (peakNegative * adaptedDecay) * HYSTERESIS;
+
+      if(s > exitLevel)
+        {
+         currentIdx = SAN_SIGNAL::NOSIG;
+         return SAN_SIGNAL::CLOSE;
+        }
+      return SAN_SIGNAL::SELL; // HOLD
      }
 
-// Neutral Fallback
-   cached = SAN_SIGNAL::NOSIG;
    return SAN_SIGNAL::NOSIG;
   }
-
-
 //+------------------------------------------------------------------+
 //| Layered Filter: ADX → Histogram for Momentum Strength            |
 //+------------------------------------------------------------------+
@@ -1459,7 +1577,7 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
 //// The Masterpiece Formula: 0.82 (Tight) to ~0.98 (Loose)
 //   double PEAK_DROP = 0.82 + 0.16 * MathSqrt(atrNorm);
 
-   //double atrSq = ms.atrStrength(atr); // Returns x^2 (0.0 to 1.0)
+//double atrSq = ms.atrStrength(atr); // Returns x^2 (0.0 to 1.0)
 
 // Since atrSq is already squared, taking Sqrt returns us to Linear.
 // Linear is actually good for Exits (Proportional Adaptation).
@@ -1470,7 +1588,7 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
 // Trend Following Logic: Tight in Quiet, Loose in Loud
 // atrSq is a squared value and so we will need a MathSqrt((MathSqrt(atrNorm)), a double square root here
 // however a single square root is also fine. it keeps the decay linear instead of
-   //double PEAK_DROP = 0.98 - (0.16 * MathSqrt(atrSq));
+//double PEAK_DROP = 0.98 - (0.16 * MathSqrt(atrSq));
    double PEAK_DROP = ms.getVolAdaptiveRetention(atr);
    PEAK_DROP = MathMax(MathMin(PEAK_DROP, 0.99), 0.70); // Hard clamp for safety
 
@@ -1792,69 +1910,69 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, co
 //}
 
 
-SAN_SIGNAL SanSignals::volatilityMomentumSIG_v1(
-   const DTYPE &stdDevOpen,
-   const DTYPE &stdDevClose,
-   const double stdOpen,
-   const double stdCp,
-   const double atr
-)
-  {
-   const double MIN_SLOPE = 0.00001;
-
-
-//--- 1. ADX GATE ---
-//Currently disabled for faster signal reaction.
-//Uncomment to filter out completely dead markets.
-   double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
-   if(adx < 20.0)
-      return SAN_SIGNAL::NOTRADE;
-
-
-// --- 2. SETUP ADAPTIVE THRESHOLD (The Fix) ---
-// We replace the hardcoded "50.0" pips logic with your reusable class.
-// ms.atrStrength handles the Timeframe Scaling (Logarithmic) automatically.
-
-// volScore is 0.0 (Quiet) to 1.0 (Extreme Volatility)
-   double volScore = ms.atrStrength(atr);
-
-// Map the 0-1 score to your desired threshold range (1.05 to 1.20)
-// If Score = 0.0 -> Threshold = 1.05 (Loose)
-// If Score = 1.0 -> Threshold = 1.20 (Strict)
-   double VOL_RATIO_THRESHOLD = 1.05 + (0.15 * volScore);
-
-
-// --- 3. STRUCTURE GATE (Ratio) ---
-   double denominator = stdOpen;
-   if(denominator < MIN_SLOPE)
-      denominator = MIN_SLOPE;
-   double ratio = stdCp / denominator;
-
-   bool structureValid = (ratio > 0.95);
-
-// --- 4. MOMENTUM GATE (Slopes) ---
-   bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1) && (stdDevClose.val1 > MIN_SLOPE);
-
-// --- 5. FOUNDATION CHECK ---
-// We can technically reuse volScore here too, but the raw calculation
-// (Open < 25% of current ATR) is physically precise for this specific bar.
-   bool foundationSteady = (stdOpen < (atr * 0.25));
-
-// --- 6. DECISION ---
-   if(structureValid && momentumValid)
-     {
-      // SCENARIO A: Sniper Entry (Quiet Start)
-      if(foundationSteady)
-         return SAN_SIGNAL::TRADE;
-
-      // SCENARIO B: Bulldozer Entry (Noisy Start)
-      // Now uses the timeframe-agnostic threshold!
-      if(ratio > VOL_RATIO_THRESHOLD)
-         return SAN_SIGNAL::TRADE;
-     }
-
-   return SAN_SIGNAL::NOTRADE;
-  }
+//SAN_SIGNAL SanSignals::volatilityMomentumSIG_v1(
+//   const DTYPE &stdDevOpen,
+//   const DTYPE &stdDevClose,
+//   const double stdOpen,
+//   const double stdCp,
+//   const double atr
+//)
+//  {
+//   const double MIN_SLOPE = 0.00001;
+//
+//
+////--- 1. ADX GATE ---
+////Currently disabled for faster signal reaction.
+////Uncomment to filter out completely dead markets.
+//   double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+//   if(adx < 20.0)
+//      return SAN_SIGNAL::NOTRADE;
+//
+//
+//// --- 2. SETUP ADAPTIVE THRESHOLD (The Fix) ---
+//// We replace the hardcoded "50.0" pips logic with your reusable class.
+//// ms.atrStrength handles the Timeframe Scaling (Logarithmic) automatically.
+//
+//// volScore is 0.0 (Quiet) to 1.0 (Extreme Volatility)
+//   double volScore = ms.atrStrength(atr);
+//
+//// Map the 0-1 score to your desired threshold range (1.05 to 1.20)
+//// If Score = 0.0 -> Threshold = 1.05 (Loose)
+//// If Score = 1.0 -> Threshold = 1.20 (Strict)
+//   double VOL_RATIO_THRESHOLD = 1.05 + (0.15 * volScore);
+//
+//
+//// --- 3. STRUCTURE GATE (Ratio) ---
+//   double denominator = stdOpen;
+//   if(denominator < MIN_SLOPE)
+//      denominator = MIN_SLOPE;
+//   double ratio = stdCp / denominator;
+//
+//   bool structureValid = (ratio > 0.95);
+//
+//// --- 4. MOMENTUM GATE (Slopes) ---
+//   bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1) && (stdDevClose.val1 > MIN_SLOPE);
+//
+//// --- 5. FOUNDATION CHECK ---
+//// We can technically reuse volScore here too, but the raw calculation
+//// (Open < 25% of current ATR) is physically precise for this specific bar.
+//   bool foundationSteady = (stdOpen < (atr * 0.25));
+//
+//// --- 6. DECISION ---
+//   if(structureValid && momentumValid)
+//     {
+//      // SCENARIO A: Sniper Entry (Quiet Start)
+//      if(foundationSteady)
+//         return SAN_SIGNAL::TRADE;
+//
+//      // SCENARIO B: Bulldozer Entry (Noisy Start)
+//      // Now uses the timeframe-agnostic threshold!
+//      if(ratio > VOL_RATIO_THRESHOLD)
+//         return SAN_SIGNAL::TRADE;
+//     }
+//
+//   return SAN_SIGNAL::NOTRADE;
+//  }
 
 //+------------------------------------------------------------------+
 //| volatilityMomentumSIG — CP vs OP StdDev Slope Filter            |
@@ -1901,7 +2019,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v1(
 //| FUNCTION: volatilityMomentumSIG                                  |
 //| PARAMS:   strictness (1.0 = Entry Mode, < 1.0 = Exit/Decay Mode) |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::volatilityMomentumSIG_v2(
+SAN_SIGNAL SanSignals::volatilityMomentumSIG(
    const DTYPE &stdDevOpen,
    const DTYPE &stdDevClose,
    const double stdOpen,
@@ -1912,19 +2030,31 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v2(
   {
    const double MIN_SLOPE = 0.00001;
 
-// --- 1. ADX GATE ---
-   double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
-   if(adx < 20.0)
+// =============================================================
+// 1. DYNAMIC ATR FLOOR (using your atrStrength)
+// =============================================================
+   double atrNorm     = ms.atrStrength(atr);                    // 0.0 = dead, 1.0 = wild
+//double minATR_pips = 8.0 + (14.0 * (1.0 - atrNorm));         // 8 pips (wild) → 22 pips (dead)
+   double minATR_pips = 2.5 + (8.0 * (1.0 - atrNorm));         // 8 pips (wild) → 22 pips (dead)
+   double atrPips = atr / util.getPipValue(_Symbol);
+   if(atrPips < minATR_pips)
       return SAN_SIGNAL::NOTRADE;
 
-// --- 2. SETUP THRESHOLDS ---
+// =============================================================
+// 2. ADX GATE
+// =============================================================
+   if(iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1) < 20.0)
+      return SAN_SIGNAL::NOTRADE;
+
+
+// --- 3. SETUP THRESHOLDS ---
 // We decay the "Structure Requirement" based on strictness.
 // Entry (1.0) -> Needs 0.95 (High Quality)
 // Exit  (0.7) -> Needs 0.66 (Survival Quality)
    double baseStructReq = 0.95;
    double activeStructReq = baseStructReq * strictness;
 
-// --- 3. STRUCTURE GATE (Ratio) ---
+// --- 4. STRUCTURE GATE (Ratio) ---
    double denominator = stdOpen;
    if(denominator < MIN_SLOPE)
       denominator = MIN_SLOPE;
@@ -1933,12 +2063,12 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v2(
 // Uses the DECAYED threshold
    bool structureValid = (ratio > activeStructReq);
 
-// --- 4. MOMENTUM GATE (Slopes) ---
+// --- 5. MOMENTUM GATE (Slopes) ---
 // We keep this strict. If slope flips negative, we usually want out.
 // (Unless you want to decay MIN_SLOPE too, but keeping it static is safer).
    bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1) && (stdDevClose.val1 > MIN_SLOPE);
 
-// --- 5. DECISION ---
+// --- 6. DECISION ---
    if(structureValid && momentumValid)
      {
       // MODE A: EXIT / MANAGEMENT (Strictness < 1.0)
@@ -1968,6 +2098,122 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v2(
    return SAN_SIGNAL::NOTRADE;
   }
 
+
+//+------------------------------------------------------------------+
+//| volatilityMomentumSIG — CP vs OP StdDev Slope Filter            |
+//|                                                                  |
+//| • If |slope_std(CP)| > |slope_std(OP)| → room for movement → TRADE |
+//| • Else → barrier → NO TRADE or CLOSE                             |
+//| • Integrates with your slope engine                              |
+//
+//| SIGNAL: Volatility State Filter (Direction Agnostic)             |
+//| Returns:                                                         |
+//|   TRADE   = Market is Active & Efficient (Expansion Phase)       |
+//|   NOTRADE = Market is Squeezing or Choppy (Contraction/Noise)    |
+//|                                                                  |
+//|                                                                  |
+//| FUNCTION: volatilityMomentumSIG                                  |
+//| PURPOSE:  Filters market noise to identify efficient breakouts.  |
+//| RETURNS:  TRADE (Valid Volatility) or NOTRADE (Noise/Squeeze)    |
+//+------------------------------------------------------------------+
+//| ALGORITHM LOGIC:                                                 |
+//|                                                                  |
+//| 1. ADX FILTER (Optional/Commented):                              |
+//|    - Ensures market is 'awake' (ADX > 20).                       |
+//|                                                                  |
+//| 2. STRUCTURE GATE (Space):                                       |
+//|    - Metric: Ratio = StdDev(Close) / StdDev(Open)                |
+//|    - Rule: Ratio > 0.95                                          |
+//|    - Why: Rejects Dojis/Wicks where price failed to hold gains.  |
+//|                                                                  |
+//| 3. MOMENTUM GATE (Time):                                         |
+//|    - Metric: Slope(Close) vs Slope(Open)                         |
+//|    - Rule: Slope(Close) > Slope(Open) AND Slope(Close) > 0       |
+//|    - Why: Ensures volatility is expanding (accelerating),        |
+//|           not contracting (squeeze) or decelerating.             |
+//|                                                                  |
+//| 4. DECISION MATRIX (Context via ATR):                            |
+//|    - Metric: Foundation = StdDev(Open) < 0.25 * ATR              |
+//|    - Path A (Sniper): If Foundation is Steady (Quiet Start),     |
+//|             TRADE immediately (Ratio > 0.95 is sufficient).      |
+//|    - Path B (Bulldozer): If Foundation is Noisy (Messy Start),   |
+//|             TRADE only if Ratio > Adaptive Threshold (1.05-1.20).|
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| FUNCTION: volatilityMomentumSIG                                  |
+//| PARAMS:   strictness (1.0 = Entry Mode, < 1.0 = Exit/Decay Mode) |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::volatilityMomentumSIG(
+   const DTYPE &stdDevOpen,
+   const DTYPE &stdDevClose,
+   const double stdOpen,
+   const double stdCp,
+   const double atr,
+   double strictness = 1.0          // 1.0 = Entry mode, 0.75–0.85 = Management mode
+)
+  {
+// =============================================================
+// 1. DYNAMIC ATR FLOOR (using your atrStrength)
+// =============================================================
+   double atrNorm     = ms.atrStrength(atr);                    // 0.0 = dead, 1.0 = wild
+   double minATR_pips = 8.0 + (14.0 * (1.0 - atrNorm));         // 8 pips (wild) → 22 pips (dead)
+
+   double atrPips = atr / util.getPipValue(_Symbol);
+   if(atrPips < minATR_pips)
+      return SAN_SIGNAL::NOTRADE;
+
+// =============================================================
+// 2. ADX GATE
+// =============================================================
+   if(iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1) < 20.0)
+      return SAN_SIGNAL::NOTRADE;
+
+// =============================================================
+// 3. SLOPE NOISE FILTER
+// =============================================================
+   const double MIN_SLOPE = 0.00005;
+   if(stdDevClose.val1 < MIN_SLOPE)
+      return SAN_SIGNAL::NOTRADE;
+
+// =============================================================
+// 4. STRUCTURE GATE (decayed with strictness)
+// =============================================================
+   double denominator   = (stdOpen < MIN_SLOPE) ? MIN_SLOPE : stdOpen;
+   double ratio         = stdCp / denominator;
+   double requiredRatio = 0.95 * strictness;                     // Entry: 0.95, Management: ~0.70
+
+   bool structureValid = (ratio > requiredRatio);
+
+// =============================================================
+// 5. MOMENTUM GATE
+// =============================================================
+   bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1);
+
+// =============================================================
+// 6. FINAL DECISION
+// =============================================================
+   if(structureValid && momentumValid)
+     {
+      if(strictness < 0.99)                    // Management mode
+         return SAN_SIGNAL::TRADE;
+
+      // Entry mode (strictness ≈ 1.0)
+      bool foundationSteady = (stdOpen < atr * 0.25);
+ 
+      //double VOL_RATIO_THRESHOLD = 1.05 + (0.15 * atrNorm);
+      //if(foundationSteady || ratio > VOL_RATIO_THRESHOLD)
+      // Hard 1.25 value is better
+      if(foundationSteady || ratio > 1.20)
+         return SAN_SIGNAL::TRADE;
+     }
+
+   return SAN_SIGNAL::NOTRADE;
+  }
+
+//+------------------------------------------------------------------+
+//| volatilityMomentumDirectionSIG — Wrapper                         |
+//+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 //| SIGNAL: Volatility Quality Filter                                |
 //| Returns: BUY/SELL if Volatility supports the move.               |
@@ -1977,19 +2223,25 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v2(
 //| SIGNAL: Volatility + Direction Wrapper                           |
 //| Purpose: Combines Market State (Vol) with Market Direction (Slope)|
 //+------------------------------------------------------------------+
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::volatilityMomentumDirectionSIG(
    const DTYPE &stdDevOpen,   // Volatility of Open Prices
    const DTYPE &stdDevClose,  // Volatility of Close Prices
    const double stdOpen,
    const double stdCp,
    const double priceSlope,   // Actual Price Direction
-   const double atr = 0
+   const double atr = 0,
+   double strictness = 1.0
 )
   {
 // --- STEP 1: Check Market State (Reuse Core Logic) ---
 // We delegate the complex volatility math to the base function.
-   //SAN_SIGNAL volState = volatilityMomentumSIG_v1(stdDevOpen, stdDevClose,stdOpen,stdCp,atr);
-   SAN_SIGNAL volState = volatilityMomentumSIG_v2(stdDevOpen, stdDevClose,stdOpen,stdCp,atr);
+//SAN_SIGNAL volState = volatilityMomentumSIG_v1(stdDevOpen, stdDevClose,stdOpen,stdCp,atr);
+   SAN_SIGNAL volState = volatilityMomentumSIG_v2(stdDevOpen, stdDevClose,stdOpen,stdCp,atr, strictness);
 
 // If the base function says "NOTRADE" (Squeeze or Chop),
 // we respect that and exit immediately.
@@ -2000,11 +2252,17 @@ SAN_SIGNAL SanSignals::volatilityMomentumDirectionSIG(
 // If we reached here, volState is SAN_SIGNAL::TRADE.
 // Now we simply look at the Price Slope to decide Buy vs Sell.
 
-// Use a tiny epsilon to handle floating point "perfect zero"
-   if(priceSlope > 1.0e-8)
-      return SAN_SIGNAL::BUY;
+//// Use a tiny epsilon to handle floating point "perfect zero"
+//   if(priceSlope > 1.0e-8)
+//      return SAN_SIGNAL::BUY;
+//
+//   if(priceSlope < -1.0e-8)
+//      return SAN_SIGNAL::SELL;
 
-   if(priceSlope < -1.0e-8)
+// Direction from price slope
+   if(priceSlope >  0.0001)
+      return SAN_SIGNAL::BUY;
+   if(priceSlope < -0.0001)
       return SAN_SIGNAL::SELL;
 
 // Rare case: Volatility is good, but Price is perfectly flat.
