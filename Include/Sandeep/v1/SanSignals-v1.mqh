@@ -1365,29 +1365,32 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG(
    double strictness = 1.0          // 1.0 = Entry mode, 0.75–0.85 = Management mode
 )
   {
+
 // =============================================================
 // 1. DYNAMIC ATR FLOOR (using your atrStrength)
 // =============================================================
    double atrNorm     = ms.atrStrength(atr);                    // 0.0 = dead, 1.0 = wild
-   double minATR_pips = 8.0 + (14.0 * (1.0 - atrNorm));         // 8 pips (wild) → 22 pips (dead)
+//double minATR_pips = 8.0 + (14.0 * (1.0 - atrNorm));         // 8 pips (wild) → 22 pips (dead)
+   double minATR_pips = 2.5 + (8.0 * (1.0 - atrNorm));         // 2.5 pips (wild) → 10.5 pips (dead)
 
    double atrPips = atr / util.getPipValue(_Symbol);
    if(atrPips < minATR_pips)
       return SAN_SIGNAL::NOTRADE;
 
+   //Print("GATE:1 ATR");
 // =============================================================
 // 2. ADX GATE
 // =============================================================
    if(iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1) < 20.0)
       return SAN_SIGNAL::NOTRADE;
-
+   //Print("GATE:2 ADX");
 // =============================================================
 // 3. SLOPE NOISE FILTER
 // =============================================================
    const double MIN_SLOPE = 0.00005;
    if(stdDevClose.val1 < MIN_SLOPE)
       return SAN_SIGNAL::NOTRADE;
-
+   //Print("GATE:3 SLOPE NOISE");
 // =============================================================
 // 4. STRUCTURE GATE (decayed with strictness)
 // =============================================================
@@ -1397,22 +1400,27 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG(
 
    bool structureValid = (ratio > requiredRatio);
 
+   //Print("GATE:4 STRUCTURE");
 // =============================================================
 // 5. MOMENTUM GATE
 // =============================================================
    bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1);
 
+   //Print("GATE:5 MOMENTUM");
 // =============================================================
 // 6. FINAL DECISION
 // =============================================================
    if(structureValid && momentumValid)
      {
+     
+      //Print("GATE:6 STRICTNESS: "+(strictness < 0.99));
       if(strictness < 0.99)                    // Management mode
          return SAN_SIGNAL::TRADE;
 
       // Entry mode (strictness ≈ 1.0)
       bool foundationSteady = (stdOpen < atr * 0.25);
- 
+      Print("GATE:7 FOUNDATION: "+foundationSteady +" Ratio > 1.2: "+(ratio > 1.20)+" ratio: "+ratio + "  stdClose: "+stdCp+" stdOpen: "+stdOpen);
+
       //double VOL_RATIO_THRESHOLD = 1.05 + (0.15 * atrNorm);
       //if(foundationSteady || ratio > VOL_RATIO_THRESHOLD)
       // Hard 1.25 value is better
