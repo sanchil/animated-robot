@@ -1369,73 +1369,94 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const
 //| volatilityMomentumSIG — Volatility Efficiency Filter             |
 //| Returns: TRADE (Expansion/Breakout) or NOTRADE (Noise/Squeeze)   |
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| volatilityMomentumSIG — The "Gatekeeper" (Universal Version)     |
+//+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::volatilityMomentumSIG(
-   const DTYPE &stdDevOpen,   // Slope of StdDev (Open)
-   const DTYPE &stdDevClose,  // Slope of StdDev (Close)
-   const double stdOpen,      // Raw StdDev Value (Open)
-   const double stdCp,        // Raw StdDev Value (Close)
-   const double atr,          // Current ATR
-   double strictness = 1.0    // 1.0 = Entry (Strict), <1.0 = Management (Loose)
+   const DTYPE &stdDevOpen,
+   const DTYPE &stdDevClose,
+   const double stdOpen,
+   const double stdCp,
+   const double atr,
+   double strictness = 1.0
 )
   {
 // =============================================================
-   // 1. TIMEFRAME-AGNOSTIC ATR FLOOR
-   // =============================================================
-   double atrNorm = ms.atrStrength(atr); 
-   
-   // A. Re-calculate the "Ceiling" for the current timeframe
-   // (Matches your atrStrength logic: M15=32, H1=49, D1=88 pips)
+// 1. TIMEFRAME-AGNOSTIC ATR FLOOR (The "Spread Safety" Gate)
+// =============================================================
+   double atrNorm = ms.atrStrength(atr);
+
+// Calculate Dynamic Ceiling based on Timeframe (M15=~32, H1=~49)
    double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
-   double atrCeiling = 12.0 * tfScale; 
+   double atrCeiling = 12.0 * tfScale;
 
-   // B. Calculate Dynamic Floor
-   // Formula: Base Spread (2.0) + Variable Cushion
-   // The Cushion is roughly 1/12th of the Ceiling, scaled by how "dead" the market is.
-   double cushion = (atrCeiling / 12.0) * (1.0 - atrNorm);
-   
+// Formula: 2.0 pips (Base) + Cushion (Scaling based on Quietness)
+// cushionDivisor: 12.0 is Safe, 18.0 is Aggressive.
+// We use 15.0 as a balanced default.
+   double cushion = (atrCeiling / 15.0) * (1.0 - atrNorm);
    double minATR_pips = 2.0 + cushion;
-   
-// =============================================================
-// 2. MOMENTUM GATE (Is volatility accelerating?)
-// =============================================================
-// Rule A: Acceleration. The 'Close' slope must be steeper than 'Open'.
-   bool isAccelerating = (stdDevClose.val1 > stdDevOpen.val1);
 
-// Rule B: Expansion. The slope must be positive. We don't trade contractions.
+   Print("GATE:0: ATR "+ minATR_pips);
+
+      if((atr / util.getPipValue(_Symbol)) < minATR_pips)
+         return SAN_SIGNAL::NOTRADE;
+
+// =============================================================
+// 2. THE ADX GATE (Restored & Calibrated)
+// =============================================================
+// We only apply this gate during strict Entry Mode.
+   if(strictness > 0.9)
+     {
+      double adxRaw = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+
+      // CRITICAL FIX: M15 scalps need a lower ADX threshold (15-18)
+      // H1/H4 trends need a standard threshold (20-25)
+      // We use a simple check: If Timeframe < H1, lower the bar.
+      double adxThreshold = (Period() < PERIOD_H1) ? 15.0 : 20.0;
+      Print("GATE:1: ADX "+ (adxRaw < adxThreshold)+ "adxRaw: "+adxRaw+" adxThreshold: "+adxThreshold);
+      if(adxRaw < adxThreshold)
+         return SAN_SIGNAL::NOTRADE;
+     }
+
+// =============================================================
+// 3. MOMENTUM GATE (Acceleration)
+// =============================================================
+// Close Slope > Open Slope (Speeding up)
+   bool isAccelerating = (stdDevClose.val1 > stdDevOpen.val1);
+// Slope > 0 (Expanding)
    bool isExpanding = (stdDevClose.val1 > 0);
 
 // =============================================================
-// 3. STRUCTURE GATE (Is the move efficient?)
+// 4. STRUCTURE GATE (Efficiency)
 // =============================================================
-// Compare Closing Volatility vs Opening Volatility.
-// Ratio > 1.0 means the move is holding strong at the close (Solid Candle).
-// Ratio < 0.9 means the move is fading (Wick/Doji).
    double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
    double ratio = stdCp / denominator;
    double requiredRatio = 0.95 * strictness;
 
+
 // =============================================================
-// 4. DECISION MATRIX (Sniper vs Bulldozer)
+// 5. DECISION MATRIX
 // =============================================================
-// Check Foundation: Was the start of the candle quiet? (StdDev < 25% of ATR)
    bool foundationSteady = (stdOpen < (atr * 0.25));
 
-// LOGIC:
-   if((ratio > requiredRatio) && isAccelerating)
+   Print("DECISION GATE: foundationSteady: "+ foundationSteady+" ratio: "+(ratio > requiredRatio)+" accelerating: "+isAccelerating+" expanding: "+isExpanding);
+
+      if((ratio > requiredRatio) && isAccelerating)
      {
-      // Management Mode: Accept any acceleration (Loose)
+      // Management Mode (Loose)
       if(strictness < 0.99)
          return SAN_SIGNAL::TRADE;
 
-      // Entry Mode: Strict Rules
+      // Entry Mode (Strict)
       if(isExpanding)
         {
-         // PATH A (Sniper): Quiet start + Acceleration = TRADE
+         // A. Sniper (Quiet Start)
          if(foundationSteady)
             return SAN_SIGNAL::TRADE;
 
-         // PATH B (Bulldozer): Noisy start? Demand a massive surge (>1.2x)
-         if(ratio > 1.20)
+         // B. Bulldozer (Noisy Start) -> M15 adjusted ratio
+         // We lower requirement slightly to 1.15 to catch fast M15 breakouts
+         if(ratio > 1.15)
             return SAN_SIGNAL::TRADE;
         }
      }
