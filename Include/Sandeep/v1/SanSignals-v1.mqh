@@ -1309,127 +1309,222 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const
    return NOSIG;
   }
 
+// | --------------------------------------------------------------------------------------------------------------
+// | --------------------------------------------------------------------------------------------------------------
 
+// | --------------------------------------------------------------------------------------------------------------
+// | 1. The Dynamic ATR Floor
+// | --------------------------------------------------------------------------------------------------------------
+
+// |  Concept: "Don't drive if the car is out of gas."
+
+// |  How: It calculates a minimum daily range (ATR) required to trade.
+
+// |  If the market is generally "Wild" (High Norm), it lowers the bar (8 pips)
+// |  because momentum is easy to find.
+
+// |  If the market is "Dead" (Low Norm), it raises the bar (22 pips) to force
+// |  you to wait for a real wakeup call.
+
+// | --------------------------------------------------------------------------------------------------------------
+// |  2. The Momentum Gate (Acceleration)
+// | --------------------------------------------------------------------------------------------------------------
+
+// |  Concept: "Press the gas pedal."
+
+// |  How: It compares the Slope of the Close (Right now) against the Slope of the Open (Start of candle).
+
+// |  Close > Open means volatility is speeding up.
+
+// |  Close > 0 means volatility is expanding (Price is moving away from the average).
+
+// | --------------------------------------------------------------------------------------------------------------
+// |  3. The Structure Gate (Efficiency)
+// | --------------------------------------------------------------------------------------------------------------
+// |  Concept: "No wicks."
+
+// |  How: It creates a ratio: Current Volatility / Starting Volatility.
+
+// |  If the ratio is High (> 1.0), it means the price is pushing boundaries
+// |  and holding them (Big Body Candle).
+
+// |  If the ratio is Low (< 0.9), it means price spiked and came back (Doji/Wick).
+// |  The filter blocks this.
+
+// | --------------------------------------------------------------------------------------------------------------
+// |  4. The Decision Matrix (Sniper vs. Bulldozer)
+// | --------------------------------------------------------------------------------------------------------------
+// |  Concept: Context matters.
+
+// |  Scenario A (Sniper): The candle started quiet (Low Vol). Suddenly, volatility spikes.
+// |  This is a fresh breakout.
+// |  TRADE immediately.
+
+// |  Scenario B (Bulldozer): The candle started loud (High Vol). A small spike now might just be noise. WAIT.
+// |  Only trade if the spike is massive (Ratio > 1.20).
+// |  --------------------------------------------------------------------------------------------------------------
+// | --------------------------------------------------------------------------------------------------------------
 
 //+------------------------------------------------------------------+
-//| volatilityMomentumSIG — CP vs OP StdDev Slope Filter            |
-//|                                                                  |
-//| • If |slope_std(CP)| > |slope_std(OP)| → room for movement → TRADE |
-//| • Else → barrier → NO TRADE or CLOSE                             |
-//| • Integrates with your slope engine                              |
-//
-//| SIGNAL: Volatility State Filter (Direction Agnostic)             |
-//| Returns:                                                         |
-//|   TRADE   = Market is Active & Efficient (Expansion Phase)       |
-//|   NOTRADE = Market is Squeezing or Choppy (Contraction/Noise)    |
-//|                                                                  |
-//|                                                                  |
-//| FUNCTION: volatilityMomentumSIG                                  |
-//| PURPOSE:  Filters market noise to identify efficient breakouts.  |
-//| RETURNS:  TRADE (Valid Volatility) or NOTRADE (Noise/Squeeze)    |
-//+------------------------------------------------------------------+
-//| ALGORITHM LOGIC:                                                 |
-//|                                                                  |
-//| 1. ADX FILTER (Optional/Commented):                              |
-//|    - Ensures market is 'awake' (ADX > 20).                       |
-//|                                                                  |
-//| 2. STRUCTURE GATE (Space):                                       |
-//|    - Metric: Ratio = StdDev(Close) / StdDev(Open)                |
-//|    - Rule: Ratio > 0.95                                          |
-//|    - Why: Rejects Dojis/Wicks where price failed to hold gains.  |
-//|                                                                  |
-//| 3. MOMENTUM GATE (Time):                                         |
-//|    - Metric: Slope(Close) vs Slope(Open)                         |
-//|    - Rule: Slope(Close) > Slope(Open) AND Slope(Close) > 0       |
-//|    - Why: Ensures volatility is expanding (accelerating),        |
-//|           not contracting (squeeze) or decelerating.             |
-//|                                                                  |
-//| 4. DECISION MATRIX (Context via ATR):                            |
-//|    - Metric: Foundation = StdDev(Open) < 0.25 * ATR              |
-//|    - Path A (Sniper): If Foundation is Steady (Quiet Start),     |
-//|             TRADE immediately (Ratio > 0.95 is sufficient).      |
-//|    - Path B (Bulldozer): If Foundation is Noisy (Messy Start),   |
-//|             TRADE only if Ratio > Adaptive Threshold (1.05-1.20).|
-//+------------------------------------------------------------------+
-
-//+------------------------------------------------------------------+
-//| FUNCTION: volatilityMomentumSIG                                  |
-//| PARAMS:   strictness (1.0 = Entry Mode, < 1.0 = Exit/Decay Mode) |
+//| volatilityMomentumSIG — Volatility Efficiency Filter             |
+//| Returns: TRADE (Expansion/Breakout) or NOTRADE (Noise/Squeeze)   |
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::volatilityMomentumSIG(
-   const DTYPE &stdDevOpen,
-   const DTYPE &stdDevClose,
-   const double stdOpen,
-   const double stdCp,
-   const double atr,
-   double strictness = 1.0          // 1.0 = Entry mode, 0.75–0.85 = Management mode
+   const DTYPE &stdDevOpen,   // Slope of StdDev (Open)
+   const DTYPE &stdDevClose,  // Slope of StdDev (Close)
+   const double stdOpen,      // Raw StdDev Value (Open)
+   const double stdCp,        // Raw StdDev Value (Close)
+   const double atr,          // Current ATR
+   double strictness = 1.0    // 1.0 = Entry (Strict), <1.0 = Management (Loose)
 )
   {
+// =============================================================
+   // 1. TIMEFRAME-AGNOSTIC ATR FLOOR
+   // =============================================================
+   double atrNorm = ms.atrStrength(atr); 
+   
+   // A. Re-calculate the "Ceiling" for the current timeframe
+   // (Matches your atrStrength logic: M15=32, H1=49, D1=88 pips)
+   double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
+   double atrCeiling = 12.0 * tfScale; 
+
+   // B. Calculate Dynamic Floor
+   // Formula: Base Spread (2.0) + Variable Cushion
+   // The Cushion is roughly 1/12th of the Ceiling, scaled by how "dead" the market is.
+   double cushion = (atrCeiling / 12.0) * (1.0 - atrNorm);
+   
+   double minATR_pips = 2.0 + cushion;
+   
+// =============================================================
+// 2. MOMENTUM GATE (Is volatility accelerating?)
+// =============================================================
+// Rule A: Acceleration. The 'Close' slope must be steeper than 'Open'.
+   bool isAccelerating = (stdDevClose.val1 > stdDevOpen.val1);
+
+// Rule B: Expansion. The slope must be positive. We don't trade contractions.
+   bool isExpanding = (stdDevClose.val1 > 0);
 
 // =============================================================
-// 1. DYNAMIC ATR FLOOR (using your atrStrength)
+// 3. STRUCTURE GATE (Is the move efficient?)
 // =============================================================
-   double atrNorm     = ms.atrStrength(atr);                    // 0.0 = dead, 1.0 = wild
-//double minATR_pips = 8.0 + (14.0 * (1.0 - atrNorm));         // 8 pips (wild) → 22 pips (dead)
-   double minATR_pips = 2.5 + (8.0 * (1.0 - atrNorm));         // 2.5 pips (wild) → 10.5 pips (dead)
+// Compare Closing Volatility vs Opening Volatility.
+// Ratio > 1.0 means the move is holding strong at the close (Solid Candle).
+// Ratio < 0.9 means the move is fading (Wick/Doji).
+   double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
+   double ratio = stdCp / denominator;
+   double requiredRatio = 0.95 * strictness;
 
-   double atrPips = atr / util.getPipValue(_Symbol);
-   if(atrPips < minATR_pips)
-      return SAN_SIGNAL::NOTRADE;
+// =============================================================
+// 4. DECISION MATRIX (Sniper vs Bulldozer)
+// =============================================================
+// Check Foundation: Was the start of the candle quiet? (StdDev < 25% of ATR)
+   bool foundationSteady = (stdOpen < (atr * 0.25));
 
-   //Print("GATE:1 ATR");
-// =============================================================
-// 2. ADX GATE
-// =============================================================
-   if(iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1) < 20.0)
-      return SAN_SIGNAL::NOTRADE;
-   //Print("GATE:2 ADX");
-// =============================================================
-// 3. SLOPE NOISE FILTER
-// =============================================================
-   const double MIN_SLOPE = 0.00005;
-   if(stdDevClose.val1 < MIN_SLOPE)
-      return SAN_SIGNAL::NOTRADE;
-   //Print("GATE:3 SLOPE NOISE");
-// =============================================================
-// 4. STRUCTURE GATE (decayed with strictness)
-// =============================================================
-   double denominator   = (stdOpen < MIN_SLOPE) ? MIN_SLOPE : stdOpen;
-   double ratio         = stdCp / denominator;
-   double requiredRatio = 0.95 * strictness;                     // Entry: 0.95, Management: ~0.70
-
-   bool structureValid = (ratio > requiredRatio);
-
-   //Print("GATE:4 STRUCTURE");
-// =============================================================
-// 5. MOMENTUM GATE
-// =============================================================
-   bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1);
-
-   //Print("GATE:5 MOMENTUM");
-// =============================================================
-// 6. FINAL DECISION
-// =============================================================
-   if(structureValid && momentumValid)
+// LOGIC:
+   if((ratio > requiredRatio) && isAccelerating)
      {
-     
-      //Print("GATE:6 STRICTNESS: "+(strictness < 0.99));
-      if(strictness < 0.99)                    // Management mode
+      // Management Mode: Accept any acceleration (Loose)
+      if(strictness < 0.99)
          return SAN_SIGNAL::TRADE;
 
-      // Entry mode (strictness ≈ 1.0)
-      bool foundationSteady = (stdOpen < atr * 0.25);
-      Print("GATE:7 FOUNDATION: "+foundationSteady +" Ratio > 1.2: "+(ratio > 1.20)+" ratio: "+ratio + "  stdClose: "+stdCp+" stdOpen: "+stdOpen);
+      // Entry Mode: Strict Rules
+      if(isExpanding)
+        {
+         // PATH A (Sniper): Quiet start + Acceleration = TRADE
+         if(foundationSteady)
+            return SAN_SIGNAL::TRADE;
 
-      //double VOL_RATIO_THRESHOLD = 1.05 + (0.15 * atrNorm);
-      //if(foundationSteady || ratio > VOL_RATIO_THRESHOLD)
-      // Hard 1.25 value is better
-      if(foundationSteady || ratio > 1.20)
-         return SAN_SIGNAL::TRADE;
+         // PATH B (Bulldozer): Noisy start? Demand a massive surge (>1.2x)
+         if(ratio > 1.20)
+            return SAN_SIGNAL::TRADE;
+        }
      }
 
    return SAN_SIGNAL::NOTRADE;
   }
+
+
+////+------------------------------------------------------------------+
+////| FUNCTION: volatilityMomentumSIG                                  |
+////| PARAMS:   strictness (1.0 = Entry Mode, < 1.0 = Exit/Decay Mode) |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::volatilityMomentumSIG(
+//   const DTYPE &stdDevOpen,
+//   const DTYPE &stdDevClose,
+//   const double stdOpen,
+//   const double stdCp,
+//   const double atr,
+//   double strictness = 1.0          // 1.0 = Entry mode, 0.75–0.85 = Management mode
+//)
+//  {
+//
+//// =============================================================
+//// 1. DYNAMIC ATR FLOOR (using your atrStrength)
+//// =============================================================
+//   double atrNorm     = ms.atrStrength(atr);                    // 0.0 = dead, 1.0 = wild
+////double minATR_pips = 8.0 + (14.0 * (1.0 - atrNorm));         // 8 pips (wild) → 22 pips (dead)
+//   double minATR_pips = 1.0 + (1.2 * (1.0 - atrNorm));         // 1.0 pips (wild) → 2.2 pips (dead)
+//
+//   Print("GATE:0 minATRpips: "+ minATR_pips);
+//
+//   double atrPips = atr / util.getPipValue(_Symbol);
+//   if(atrPips < minATR_pips)
+//      return SAN_SIGNAL::NOTRADE;
+//
+//   Print("GATE:1 ATR");
+//// =============================================================
+//// 2. ADX GATE
+//// =============================================================
+//   double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+//   if(adx < 20.0)
+//      return SAN_SIGNAL::NOTRADE;
+//   Print("GATE:2 ADX: "+adx+" Min Slope close: "+stdDevClose.val1 + " Slope open "+stdDevOpen.val1);
+//// =============================================================
+//// 3. SLOPE NOISE FILTER
+//// =============================================================
+//   const double MIN_SLOPE = 0.00005;
+//   if(stdDevClose.val1 < MIN_SLOPE)
+//      return SAN_SIGNAL::NOTRADE;
+//   Print("GATE:3 SLOPE NOISE"+stdDevClose.val1);
+//// =============================================================
+//// 4. STRUCTURE GATE (decayed with strictness)
+//// =============================================================
+//   double denominator   = (stdOpen < MIN_SLOPE) ? MIN_SLOPE : stdOpen;
+//   double ratio         = stdCp / denominator;
+//   double requiredRatio = 0.95 * strictness;                     // Entry: 0.95, Management: ~0.70
+//
+//   bool structureValid = (ratio > requiredRatio);
+//
+//   Print("GATE:4 STRUCTURE: "+(ratio > requiredRatio));
+//// =============================================================
+//// 5. MOMENTUM GATE
+//// =============================================================
+//   bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1);
+//
+//   Print("GATE:5 MOMENTUM: "+(stdDevClose.val1 > stdDevOpen.val1));
+//// =============================================================
+//// 6. FINAL DECISION
+//// =============================================================
+//   if(structureValid && momentumValid)
+//     {
+//
+//      Print("GATE:6 STRICTNESS: "+(strictness < 0.99));
+//      if(strictness < 0.99)                    // Management mode
+//         return SAN_SIGNAL::TRADE;
+//
+//      // Entry mode (strictness ≈ 1.0)
+//      bool foundationSteady = (stdOpen < atr * 0.25);
+//      Print("GATE:7 FOUNDATION: "+foundationSteady +" Ratio > 1.2: "+(ratio > 1.20)+" ratio: "+ratio + "  stdClose: "+stdCp+" stdOpen: "+stdOpen);
+//
+//      //double VOL_RATIO_THRESHOLD = 1.05 + (0.15 * atrNorm);
+//      //if(foundationSteady || ratio > VOL_RATIO_THRESHOLD)
+//      // Hard 1.25 value is better
+//      if(foundationSteady || ratio > 1.20)
+//         return SAN_SIGNAL::TRADE;
+//     }
+//
+//   return SAN_SIGNAL::NOTRADE;
+//  }
 
 //+------------------------------------------------------------------+
 //| volatilityMomentumDirectionSIG — Wrapper                         |
