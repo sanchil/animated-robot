@@ -1380,6 +1380,12 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const
 //| volatilityMomentumSIG — The Universal Volatility Engine          |
 //| Automatically adapts Strictness based on Timeframe (M1/M15 vs H1)|
 //+------------------------------------------------------------------+
+
+
+//+------------------------------------------------------------------+
+//| volatilityMomentumSIG — Pure Dynamic Physics Version             |
+//| Removes hardcoded M15/H1 switches. Adapts via Ratios.            |
+//+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::volatilityMomentumSIG(
    const DTYPE &stdDevOpen,
    const DTYPE &stdDevClose,
@@ -1390,137 +1396,200 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG(
 )
   {
 // =============================================================
-// 0. AUTO-TUNER: Detect Regime (Scalping vs Swing)
+// 1. DYNAMIC ATR FLOOR (Pip Value Physics)
 // =============================================================
-   bool isScalping = (Period() < PERIOD_H1);
-
-// =============================================================
-// 1. TIMEFRAME-AGNOSTIC ATR FLOOR
-// =============================================================
+// We keep this. It relates spread cost to volatility.
    double atrNorm = ms.atrStrength(atr);
    double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
+
+// DYNAMIC: Scale the cushion based on Strictness (Entry vs Mgmt)
+// strictness 1.0 -> Divisor 12.0. strictness 0.8 -> Divisor 10.0.
+   double cushionDiv = 12.0 * strictness;
    double atrCeiling = 12.0 * tfScale;
+   double cushion = (atrCeiling / cushionDiv) * (1.0 - atrNorm);
 
-// TUNING: Use 15.0 (Loose) for Scalping, 12.0 (Strict) for Swing
-   double divFactor = isScalping ? 15.0 : 12.0;
-
-   double cushion = (atrCeiling / divFactor) * (1.0 - atrNorm);
-   double minATR_pips = 2.0 + cushion;
-
-   Print("GATE 0:");
-   if((atr / util.getPipValue(_Symbol)) < minATR_pips)
+   //Print("GATE 0: cushionDiv: "+cushionDiv+" atrCeiling: "+atrCeiling+" cushion: "+cushion);
+   if((atr / util.getPipValue(_Symbol)) < (2.0 + cushion))
       return SAN_SIGNAL::NOTRADE;
 
-   Print("GATE 1:"+minATR_pips);
-
 // =============================================================
-// 2. THE ADX GATE (Auto-Scaled)
+// 2. TREND POWER (The Universal Normalizer)
 // =============================================================
    double adxRaw = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
 
-   if(strictness > 0.9)
-     {
-      // TUNING: 15.0 for Scalping, 20.0 for Swing
-      double adxThreshold = isScalping ? 15.0 : 20.0;
-      Print("GATE 2: adxThreshold: "+adxThreshold+" adxRaw: "+adxRaw+" bool:  "+(adxRaw < adxThreshold));
-      if(adxRaw < adxThreshold)
-         return SAN_SIGNAL::NOTRADE;
-     }
+// "Power 1.0" = ADX 20 (The universal baseline for "Alive")
+   double trendPower = adxRaw / 20.0;
+   //Print("GATE 1: adxRaw: "+adxRaw+" trendPower: "+trendPower + "(0.75 * strictness):"+(0.75 * strictness)+" bool: "+(trendPower < (0.75 * strictness)));
+// GATE: Minimum Viable Trend
+// Entry (1.0) requires Power > 0.75 (ADX 15).
+// Management (0.8) requires Power > 0.5 (ADX 10).
+   if(trendPower < (0.75 * strictness))
+      return SAN_SIGNAL::NOTRADE;
 
 // =============================================================
-// 3. MOMENTUM GATES
+// 3. MOMENTUM PHYSICS
 // =============================================================
    bool isAccelerating = (stdDevClose.val1 > stdDevOpen.val1);
    bool isExpanding = (stdDevClose.val1 > 0);
-//bool isTrendy = (adxRaw > 30.0); // Universal "Runaway Trend" rule
-//bool isTrendy = (adxRaw > (isScalping ? 25.0 : 30.0));
-   bool isTrendy = (adxRaw > (isScalping ? 22.0 : 26.0));
 
+// "Runaway" is no longer a hard number. It's relative strength.
+// If Trend is 50% stronger than baseline (ADX > 30), it's Runaway.
+   bool isRunaway = (trendPower > 1.5);
+   //Print("GATE 2: isAccelerating: "+isAccelerating+" isExpanding: "+isExpanding + "isExpanding:"+isExpanding+" isRunaway: "+isRunaway);
 // =============================================================
-// 4. STRUCTURE GATE
+// 4. DYNAMIC STRUCTURE (The "Sliding Threshold")
 // =============================================================
-                   double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
+   double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
    double ratio = stdCp / denominator;
-   double requiredRatio = 0.95 * strictness;
+
+// BASE REQUIREMENT: 1.15 (Significant Expansion)
+// DISCOUNT: We subtract from the requirement based on Trend Strength.
+// - ADX 20 (Power 1.0) -> Discount 0.0 -> Req 1.15
+// - ADX 30 (Power 1.5) -> Discount 0.1 -> Req 1.05
+// - ADX 40 (Power 2.0) -> Discount 0.2 -> Req 0.95
+   double trendDiscount = 0.20 * (trendPower - 1.0);
+
+// Clamp the discount so we never require less than 1.0 (Holding)
+   double dynamicThreshold = MathMax(1.0, 1.15 - trendDiscount);
 
 // =============================================================
 // 5. DECISION MATRIX
 // =============================================================
    bool foundationSteady = (stdOpen < (atr * 0.25));
-   bool hasMomentum = (isAccelerating || isTrendy);
-
-   if((ratio > requiredRatio) && hasMomentum)
+   bool hasMomentum = (isAccelerating || isRunaway);
+   //Print("GATE 3: hasMomentum: "+hasMomentum+" foundationSteady: "+foundationSteady + "dynamicThreshold:"+dynamicThreshold+" dynamicThreshold: "+dynamicThreshold);
+   if((ratio > (0.95 * strictness)) && hasMomentum)
      {
-      // Management Mode
+      //Print("GATE 4: hasMomentum: "+hasMomentum);
       if(strictness < 0.99)
          return SAN_SIGNAL::TRADE;
 
-      // Entry Mode
-      if(isExpanding || isTrendy)
+      //Print("GATE 5: hasMomentum: "+hasMomentum);
+      if(isExpanding || isRunaway)
         {
-         // A. Sniper (Quiet Start)
+         //Print("GATE 6:");
+         // A. Sniper
          if(foundationSteady)
             return SAN_SIGNAL::TRADE;
-
-         // B. Bulldozer (Noisy Start)
-         // M15 Adjustment: Lower requirement to 1.15
-
-         // *** THE FIX ***
-         // If we are in a Runaway Trend (isTrendy), we lower the bar.
-         // We don't need a 15% explosion. We just need to hold the line (> 1.0).
-
-         double bulldozerThreshold = (isTrendy) ? 1.0 : (isScalping ? 1.15 : 1.20);
-         Print("GATE 3: bulldozerThreshold: "+bulldozerThreshold+" ratio: "+ratio+" isTrendy: "+isTrendy+" isScalping:  "+isScalping);
-         //// *** THE FIX ***
-         //// If we are in a Runaway Trend (isTrendy), we lower the bar.
-         //// We don't need a 15% explosion. We just need to hold the line (> 1.0).
-         //if(isTrendy)
-         //   bulldozerThreshold = 1.0;
-
-         if(ratio > bulldozerThreshold)
+         //Print("GATE 7:");
+         // B. Dynamic Bulldozer
+         // Now uses the auto-calculated threshold
+         if(ratio > dynamicThreshold)
             return SAN_SIGNAL::TRADE;
         }
      }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+-----------------'-------------------------------------------------+
+   //Print("GATE 8:");
    return SAN_SIGNAL::NOTRADE;
+  }
+
+
+//SAN_SIGNAL SanSignals::volatilityMomentumSIG(
+//   const DTYPE &stdDevOpen,
+//   const DTYPE &stdDevClose,
+//   const double stdOpen,
+//   const double stdCp,
+//   const double atr,
+//   double strictness = 1.0
+//)
+//  {
+//// =============================================================
+//// 0. AUTO-TUNER: Detect Regime (Scalping vs Swing)
+//// =============================================================
+//   bool isScalping = (Period() < PERIOD_H1);
+//
+//// =============================================================
+//// 1. TIMEFRAME-AGNOSTIC ATR FLOOR
+//// =============================================================
+//   double atrNorm = ms.atrStrength(atr);
+//   double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
+//   double atrCeiling = 12.0 * tfScale;
+//
+//// TUNING: Use 15.0 (Loose) for Scalping, 12.0 (Strict) for Swing
+//   double divFactor = isScalping ? 15.0 : 12.0;
+//
+//   double cushion = (atrCeiling / divFactor) * (1.0 - atrNorm);
+//   double minATR_pips = 2.0 + cushion;
+//
+//   Print("GATE 0:");
+//   if((atr / util.getPipValue(_Symbol)) < minATR_pips)
+//      return SAN_SIGNAL::NOTRADE;
+//
+//   Print("GATE 1:"+minATR_pips);
+//
+//// =============================================================
+//// 2. THE ADX GATE (Auto-Scaled)
+//// =============================================================
+//   double adxRaw = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+//
+//   if(strictness > 0.9)
+//     {
+//      // TUNING: 15.0 for Scalping, 20.0 for Swing
+//      double adxThreshold = isScalping ? 15.0 : 20.0;
+//      Print("GATE 2: adxThreshold: "+adxThreshold+" adxRaw: "+adxRaw+" bool:  "+(adxRaw < adxThreshold));
+//      if(adxRaw < adxThreshold)
+//         return SAN_SIGNAL::NOTRADE;
+//     }
+//
+//// =============================================================
+//// 3. MOMENTUM GATES
+//// =============================================================
+//   bool isAccelerating = (stdDevClose.val1 > stdDevOpen.val1);
+//   bool isExpanding = (stdDevClose.val1 > 0);
+////bool isTrendy = (adxRaw > 30.0); // Universal "Runaway Trend" rule
+////bool isTrendy = (adxRaw > (isScalping ? 25.0 : 30.0));
+//   bool isTrendy = (adxRaw > (isScalping ? 22.0 : 26.0));
+//
+//// =============================================================
+//// 4. STRUCTURE GATE
+//// =============================================================
+//                   double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
+//   double ratio = stdCp / denominator;
+//   double requiredRatio = 0.95 * strictness;
+//
 //// =============================================================
 //// 5. DECISION MATRIX
 //// =============================================================
 //   bool foundationSteady = (stdOpen < (atr * 0.25));
-//
-//// *** THE FIX ***
-//// We demand Structure (Ratio).
-//// AND we demand EITHER Acceleration (New move) OR Trend (Cruising speed).
 //   bool hasMomentum = (isAccelerating || isTrendy);
 //
-//   Print("GATE 3: isAccelerating: "+isAccelerating+" isExpanding: "+isExpanding+" isTrendy:  "+isTrendy+" foundationSteady: "+foundationSteady+" hasMomentum: "+hasMomentum);
 //   if((ratio > requiredRatio) && hasMomentum)
 //     {
-//      Print("GATE 4:");
 //      // Management Mode
 //      if(strictness < 0.99)
 //         return SAN_SIGNAL::TRADE;
-//      Print("GATE 5:");
+//
 //      // Entry Mode
-//      // (We can simplify this now because 'hasMomentum' already checked 'isTrendy')
 //      if(isExpanding || isTrendy)
 //        {
-//         Print("GATE 6:");
 //         // A. Sniper (Quiet Start)
 //         if(foundationSteady)
 //            return SAN_SIGNAL::TRADE;
-//         Print("GATE 7:");
+//
 //         // B. Bulldozer (Noisy Start)
 //         // M15 Adjustment: Lower requirement to 1.15
-//         double bulldozerThreshold = isScalping ? 1.15 : 1.20;
-//         Print("GATE 8:");
+//
+//         // *** THE FIX ***
+//         // If we are in a Runaway Trend (isTrendy), we lower the bar.
+//         // We don't need a 15% explosion. We just need to hold the line (> 1.0).
+//
+//         double bulldozerThreshold = (isTrendy) ? 1.0 : (isScalping ? 1.15 : 1.20);
+//         Print("GATE 3: bulldozerThreshold: "+bulldozerThreshold+" ratio: "+ratio+" isTrendy: "+isTrendy+" isScalping:  "+isScalping);
+//         //// *** THE FIX ***
+//         //// If we are in a Runaway Trend (isTrendy), we lower the bar.
+//         //// We don't need a 15% explosion. We just need to hold the line (> 1.0).
+//         //if(isTrendy)
+//         //   bulldozerThreshold = 1.0;
+//
 //         if(ratio > bulldozerThreshold)
 //            return SAN_SIGNAL::TRADE;
 //        }
 //     }
-//
-//   Print("GATE 9:");
 //   return SAN_SIGNAL::NOTRADE;
-  }
+//
+//  }
 
 
 

@@ -1871,284 +1871,387 @@ Stats stats(util);
 //Stats stats;
 //+------------------------------------------------------------------+
 
-//+------------------------------------------------------------------+
-
-//+------------------------------------------------------------------+
-
-
-//+------------------------------------------------------------------+
-//| MomentumStrength Class — Filters for Momentum Quality            |
-//|                                                                  |
-//| • ATR: Volatility proxy (normalized 0-1)                        |
-//| • ADX: Trend strength (normalized 0-1)                           |
-//| • ER: Directional efficiency (0-1)                               |
-//| • Skew/Kurtosis: Distribution shape (skew: -1 to 1; kurt: excess) |
-//| • vWCM: Volume-weighted force (normalized -1 to 1)               |
-//|                                                                  |
-//| Use as filter: e.g., if(strength < 0.5) return NOSIG;           |
-//+------------------------------------------------------------------+
-//class MomentumStrength {
-// private:
-//   SanUtils util;  // assume your util for pipValue
-//
-// public:
-//   MomentumStrength() { /* init if needed */ }
-//   MomentumStrength(SanUtils& ut) {
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//class MomentumStrength
+//  {
+//private:
+//   SanUtils          util; // assume your util for pipValue
+//   Stats             stats; // Statistical library instance
+//public:
+//                     MomentumStrength() { /* init if needed */ }
+//                     MomentumStrength(SanUtils& ut) {util = ut;}
+//                     MomentumStrength(SanUtils& ut,Stats& st)
+//     {
 //      util = ut;
-//   }
-//
+//      stats =st;
+//     }
 //   // 1. ATR Normalization (Volatility Proxy, 0-1 with TF scaling)
-//   double atrStrength(const double atr) {
+//   double            atrStrength(const double atr)
+//     {
 //      double pipValue = util.getPipValue(_Symbol);
-//      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0;  // Safety div
-//
+//      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0; // Safety div
 //      // Dynamic scaling based on timeframe (Logarithmic scale)
 //      double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
-//      double atrCeiling = MathCeil(12.0 * tfScale);  // Your recommended multiplier
+//      double atrCeiling = MathCeil(12.0 * tfScale); // Your recommended multiplier
 //      double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
-//      return atrNorm;  // 0-1: low = quiet/weak, high = wild/strong
-//   }
-//
+//      return (atrNorm*atrNorm); // 0-1: low = quiet/weak, high = wild/strong
+//      //return (atrNorm); // 0-1: low = quiet/weak, high = wild/strong
+//     }
 //   // 2. ADX Normalization (Trend Strength, 0-1)
-//   //double adxStrength(int period = 14, int shift = 0)
-//   double adxStrength(const double scale=50.0, int period = 10, int shift = 1) {
+//   double            adxStrength(const double scale=50.0, int period = 10, int shift = 1)
+//     {
 //      double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
-//      return MathMin(adx /scale, 1.0); // 0-1 scale (>1 rare, cap at 1)
-//   }
-//
+//      double normAdx = MathMin(adx / scale, 1.0);
+//      return (normAdx*normAdx); // 0-1 scale (>1 rare, cap at 1)
+//      //return (normAdx); // 0-1: low = quiet/weak, high = wild/strong
+//     }
 //   // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
-//   double efficiencyRatio(const double &price[], int period = 14, int shift = 0) {
+//   double            efficiencyRatio(const double &price[], int period = 14, int shift = 0)
+//     {
 //      double net = MathAbs(price[shift] - price[shift + period]);
 //      double sumAbs = 0.0;
 //      for(int i = shift; i < shift + period; i++)
 //         sumAbs += MathAbs(price[i] - price[i+1]);
 //      return (sumAbs > 0) ? net / sumAbs : 0.0;
-//   }
-//
-//   // 5. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
-//   double vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1) {
+//     }
+//   // 3. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
+//   double            vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1)
+//     {
 //      double sum_force = 0.0;
 //      double total_vol = 0.0;
-//      for(int i = SHIFT; i < N + SHIFT; i++) {
+//      for(int i = SHIFT; i < N + SHIFT; i++)
+//        {
 //         double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
 //         sum_force += body_pips * volume[i];
 //         total_vol += volume[i];
-//      }
-//      if(total_vol <= 0) return 0.0;
+//        }
+//      if(total_vol <= 0)
+//         return 0.0;
 //      double raw = sum_force / total_vol;
 //      return stats.tanh(raw / 10.0); // normalize -1 to 1 with tanh for bounded output
-//   }
+//     }
 //
 //   //+------------------------------------------------------------------+
-////| Layered Filter: ADX → Histogram for Momentum Strength            |
-////+------------------------------------------------------------------+
-//   double layeredMomentumFilter(const double &values[], int N = 20) {
-//      // Step 1: ADX Gate (Mathematical Filter) — quick check
-//      double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);  // Built-in MQL4 function
-//      if(adx < 20.0) return 0;  // Weak momentum — skip histogram
+//   //| FUNCTION: layeredMomentumFilter                                  |
+//   //| PURPOSE:  Identifies High-Quality, Sustainable Trends            |
+//   //| RETURNS:  1 (Buy), -1 (Sell), 0 (Neutral/No Signal)              |
+//   //+------------------------------------------------------------------+
+//   //| ALGORITHM LOGIC:                                                 |
+//   //| 1. Directional Consensus (The "80% Rule"):                       |
+//   //|    - Calculates slopes for the last N bars.                      |
+//   //|    - Requires 80% of slopes to agree on direction (Buy/Sell).    |
+//   //|                                                                  |
+//   //| 2. Volatility Gate (ADX):                                        |
+//   //|    - Rejects low volatility (ADX < 20) to avoid ranging markets. |
+//   //|                                                                  |
+//   //| 3. Strength Gate (Histogram Magnitude):                          |
+//   //|    - Maps slope strengths into 5 bins (0=Weak to 4=Strong).      |
+//   //|    - Requires the dominant bin to be > 2 (Top 40% strength).     |
+//   //|    - Filters out "lazy" trends that lack conviction.             |
+//   //|                                                                  |
+//   //| 4. Quality Gate (Statistical Stability):                         |
+//   //|    - Kurtosis < 2.0: Rejects "Spikes" (News events/Wicks).       |
+//   //|    - Skewness < 0.5: Rejects "Parabolic" moves (Bubbles).        |
+//   //|    - RESULT: Accepts only linear, steady, sustainable trends.    |
+//   //+------------------------------------------------------------------+
+//   double            layeredMomentumFilter(const double &values[], int N = 20)
+//     {
+//      // --- Step 1: Get Smoothed Slopes (in PIPS) ---
+//      double slopes[];
+//      //Print("STAGE-1");
+//      // Denominator 3 smooths noise. Shift 1 to avoid open candle.
+//      if(!stats.slopeRange_v2(values, slopes, N, 3, 1))
+//         return 0;
+//      //Print("STAGE-2");
+//      int SIZE = ArraySize(slopes);
+//      if(SIZE < N)
+//         return 0; // Safety
+//      //Print("STAGE-3");
+//      // --- Step 2: Directional Consensus (The 80% Rule) ---
+//      int slopeBuy = 0;
+//      int slopeSell = 0;
+//      for(int i=0; i<SIZE; i++)
+//        {
+//         if(slopes[i] > 0)
+//            slopeBuy++;
+//         if(slopes[i] < 0)
+//            slopeSell++;
+//        }
 //
-//      // Step 2: Histogram (Statistical Filter) — only if ADX passes
-//      int domBin = stats.histogram(values, N);  // Your binning function
-//      if(domBin == -1) return 0;  // No dominance — weak
+//      SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
 //
-//      // Skew/Kurt for fine-tuning (optional, from your Stats)
-//      double skew = stats.skewness(values, N);
-//      double kurt = stats.kurtosis(values, N);
-//      if(MathAbs(skew) < 0.3 || kurt > 2.0) return 0;  // Symmetric/choppy or spiky extremes
+//      // Logic: 80% of bars must agree on direction
+//      // Use >= to capture 80% or more (e.g. 16/20, 17/20...)
+//      if((double)slopeBuy >= 0.8 * SIZE)
+//         sig = SAN_SIGNAL::BUY;
+//      else
+//         if((double)slopeSell >= 0.8 * SIZE)
+//            sig = SAN_SIGNAL::SELL;
 //
-//      // Dominant bin direction
-//      if(domBin > 2) return 1.0;   // Positive dominant
-//      if(domBin < 2) return -1.0;  // Negative dominant
-//      return 0;                // Neutral
-//   }
-//};
+//      // If mixed direction (choppy), exit immediately
+//      if(sig == SAN_SIGNAL::NOSIG)
+//         return 0;
+//      //Print("STAGE-4");
+//      // --- Step 3: ADX Gate (Market Awake?) ---
+//      
+//      //double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+//      ////Print("STAGE-4.1: ADX: "+adx);
+//      //if(adx < 20.0)
+//      //   return 0;
+//
+//      //###############################################
+//      // --- Step 3: Dynamic ADX Gate ---
+//      double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
+//      // 1. Determine Baseline (15 for Scalping, 20 for Swing)
+//      double baseline = (Period() < PERIOD_H1) ? 15.0 : 20.0;
+//      // 2. Check
+//      if(adx < baseline)
+//         return 0;
+//     //###############################################
+//
+//
+//      //Print("STAGE-5");
+//      // --- Step 4: Histogram Gate (Momentum Conviction) ---
+//      // Threshold = 1.0 Pip.
+//      // If max slope < 1.0 pip, it is forced into lower bins (Weak).
+//      // This effectively filters out "drifting" markets.
+//
+//      //double atr = iATR(NULL, 0, 14, 1);
+//      //double pipUnit = util.getPipValue(_Symbol);
+//      //if(pipUnit == 0)
+//      //   pipUnit = Point;
+//      //double thresh = (atr / pipUnit) * 0.10; // 10% of ATR is the noise floor
+//
+//      int domBin = stats.histogram_Magnitude(slopes, N, 5, 0.2);
+//
+//      //int domBin = stats.histogram_Magnitude(slopes, 5, 1.0);
+//      //Print("STAGE-5.1: "+domBin);
+//      if(domBin == -1)
+//         return 0; // No clustering (flat distribution)
+//      //Print("STAGE-6");
+//      //if(domBin < 3)
+//      if(domBin < 2)
+//         return 0;   // Cluster is in Left/Middle (Weak) bins
+//      //Print("STAGE-7");
+//      // --- Step 5: Quality Gate (Statistical Stability) ---
+//
+//      double skew = stats.skewness(slopes, N);
+//      double kurt = stats.kurtosis_v3(slopes, N);
+//      //Print("STAGE-7.1: skew: "+skew+" kurt: "+kurt);
+//
+//      // Reject Parabolic Bubbles (High Skew > 0.5)
+//      // We want steady trends, not explosions that might reverse.
+//      if(MathAbs(skew) > 0.5)
+//         return 0;
+//      //Print("STAGE-8");
+//      // Reject News Spikes (High Kurtosis > 2.0)
+//      if(kurt > 2.0)
+//         return 0;
+//      //Print("STAGE-9");
+//
+//      //Print("domBin: "+ domBin+ " kurt: "+kurt+ " skewn: "+skew);
+//      // --- Final Signal Trigger ---
+//      if(sig == SAN_SIGNAL::BUY)
+//         return 1.0;
+//      if(sig == SAN_SIGNAL::SELL)
+//         return -1.0;
+//      //Print("STAGE-10");
+//      return 0.0;
+//     }
+//
+//   // =================================================================
+//   // GROUP: DECAY & RETENTION STRATEGIES
+//   // Purpose: Calculate multiplier (0.0-1.0) to lower exit thresholds
+//   // =================================================================
+//
+//   // 1. TIME DECAY (Linear)
+//   // Use Case: Reduce strictness simply because time has passed.
+//   // Example: getLinearTimeRetention(barsHeld, 0.05, 0.60);
+//   double            getLinearTimeRetention(int barsHeld, double decayRate = 0.05, double floor = 0.60)
+//     {
+//      double retention = 1.0 - (barsHeld * decayRate);
+//      return MathMax(retention, floor);
+//     }
+//
+//   // 2. VOLATILITY DECAY (Adaptive Trend Following)
+//   // Use Case: "Tight Leash" in Calm, "Loose Leash" in Turbulent.
+//   // Returns: High value (0.98) in Calm, Lower value (0.82) in Volatility.
+//   double            getVolAdaptiveRetention(double atr)
+//     {
+//      // 1. Get Normalized Volatility (0.0 to 1.0)
+//      // Note: We use the raw linear norm here (no power curve) for proportional adaptation.
+//      double volScore = atrStrength(atr);
+//
+//      // 2. Trend Following Logic
+//      // Calm (0.0) -> 0.98 Retention (Strict)
+//      // Wild (1.0) -> 0.82 Retention (Loose)
+//      // Sqrt makes it loosen quickly as soon as volatility starts.
+//      double retention = 0.98 - (0.16 * MathSqrt(volScore));
+//
+//      // Safety Clamp: Never loosen below 70%
+//      return MathMax(retention, 0.70);
+//     }
+//
+//   // 3. HYBRID DECAY (Time + Volatility)
+//   // Use Case: The longer we hold AND the crazier the market, the looser we get.
+//   // Or: We hold tight in calm markets but relax as time passes.
+//   double            getHybridRetention(int barsHeld, double atr)
+//     {
+//      double timeRet = getLinearTimeRetention(barsHeld, 0.02, 0.80); // Slow time decay
+//      double volRet  = getVolAdaptiveRetention(atr);                 // Adaptive vol decay
+//
+//      // Combine them: (e.g., 0.95 * 0.90 = 0.855)
+//      return (timeRet * volRet);
+//     }
+//  };
 
 
 //+------------------------------------------------------------------+
-//|                                                                  |
+//| CLASS: MomentumStrength                                          |
+//| Purpose: Centralized library for Market Physics metrics.         |
+//| Contains: ATR (Vol), ADX (Trend), ER (Efficiency), vWCM (Force)  |
 //+------------------------------------------------------------------+
 class MomentumStrength
-  {
+{
 private:
-   SanUtils          util; // assume your util for pipValue
-   Stats             stats; // Statistical library instance
+   SanUtils          util; 
+   Stats             stats; 
+
 public:
-                     MomentumStrength() { /* init if needed */ }
-                     MomentumStrength(SanUtils& ut) {util = ut;}
-                     MomentumStrength(SanUtils& ut,Stats& st)
-     {
-      util = ut;
-      stats =st;
-     }
+   MomentumStrength() { }
+   MomentumStrength(SanUtils& ut) {util = ut;}
+   MomentumStrength(SanUtils& ut,Stats& st) { util = ut; stats = st; }
+
+   // =================================================================
+   // GROUP 1: BASE METRICS (The Physics)
+   // =================================================================
+
    // 1. ATR Normalization (Volatility Proxy, 0-1 with TF scaling)
-   double   atrStrength(const double atr)
-     {
+   double atrStrength(const double atr)
+   {
       double pipValue = util.getPipValue(_Symbol);
-      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0; // Safety div
+      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0; 
+      
       // Dynamic scaling based on timeframe (Logarithmic scale)
       double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
-      double atrCeiling = MathCeil(12.0 * tfScale); // Your recommended multiplier
+      double atrCeiling = MathCeil(12.0 * tfScale); 
+      
       double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
-      return (atrNorm*atrNorm); // 0-1: low = quiet/weak, high = wild/strong
-      //return (atrNorm); // 0-1: low = quiet/weak, high = wild/strong
-     }
+      return (atrNorm*atrNorm); // Squared (Quadratic) to suppress noise
+   }
+
    // 2. ADX Normalization (Trend Strength, 0-1)
-   double   adxStrength(const double scale=50.0, int period = 10, int shift = 1)
-     {
+   double adxStrength(const double scale=50.0, int period = 10, int shift = 1)
+   {
       double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
       double normAdx = MathMin(adx / scale, 1.0);
-      return (normAdx*normAdx); // 0-1 scale (>1 rare, cap at 1)
-      //return (normAdx); // 0-1: low = quiet/weak, high = wild/strong
-     }
+      return (normAdx*normAdx); // Squared to suppress weak trends
+   }
+
+   // 2.b HELPER: Universal Trend Power (The "New Standard")
+   // Returns: 1.0 if ADX is 20. 0.75 if ADX is 15.
+   double getTrendPower(int period = 14, int shift = 1)
+   {
+      double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
+      return (adx / 20.0);
+   }
+
    // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
-   double            efficiencyRatio(const double &price[], int period = 14, int shift = 0)
-     {
+   // 1.0 = Straight Line (Perfect Efficiency)
+   // 0.0 = Random Chop (Zero Efficiency)
+   double efficiencyRatio(const double &price[], int period = 14, int shift = 0)
+   {
       double net = MathAbs(price[shift] - price[shift + period]);
       double sumAbs = 0.0;
       for(int i = shift; i < shift + period; i++)
          sumAbs += MathAbs(price[i] - price[i+1]);
       return (sumAbs > 0) ? net / sumAbs : 0.0;
-     }
-   // 3. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
-   double  vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1)
-     {
+   }
+
+   // 4. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
+   double vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1)
+   {
       double sum_force = 0.0;
       double total_vol = 0.0;
       for(int i = SHIFT; i < N + SHIFT; i++)
-        {
+      {
          double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
          sum_force += body_pips * volume[i];
          total_vol += volume[i];
-        }
-      if(total_vol <= 0)
-         return 0.0;
+      }
+      if(total_vol <= 0) return 0.0;
+      
       double raw = sum_force / total_vol;
-      return stats.tanh(raw / 10.0); // normalize -1 to 1 with tanh for bounded output
-     }
+      return stats.tanh(raw / 10.0); 
+   }
+
+   // =================================================================
+   // GROUP 2: FILTERS & SIGNALS
+   // =================================================================
 
    //+------------------------------------------------------------------+
    //| FUNCTION: layeredMomentumFilter                                  |
-   //| PURPOSE:  Identifies High-Quality, Sustainable Trends            |
-   //| RETURNS:  1 (Buy), -1 (Sell), 0 (Neutral/No Signal)              |
+   //| REFACTORED: Now uses Universal Trend Power (No Timeframe Hacks)  |
    //+------------------------------------------------------------------+
-   //| ALGORITHM LOGIC:                                                 |
-   //| 1. Directional Consensus (The "80% Rule"):                       |
-   //|    - Calculates slopes for the last N bars.                      |
-   //|    - Requires 80% of slopes to agree on direction (Buy/Sell).    |
-   //|                                                                  |
-   //| 2. Volatility Gate (ADX):                                        |
-   //|    - Rejects low volatility (ADX < 20) to avoid ranging markets. |
-   //|                                                                  |
-   //| 3. Strength Gate (Histogram Magnitude):                          |
-   //|    - Maps slope strengths into 5 bins (0=Weak to 4=Strong).      |
-   //|    - Requires the dominant bin to be > 2 (Top 40% strength).     |
-   //|    - Filters out "lazy" trends that lack conviction.             |
-   //|                                                                  |
-   //| 4. Quality Gate (Statistical Stability):                         |
-   //|    - Kurtosis < 2.0: Rejects "Spikes" (News events/Wicks).       |
-   //|    - Skewness < 0.5: Rejects "Parabolic" moves (Bubbles).        |
-   //|    - RESULT: Accepts only linear, steady, sustainable trends.    |
-   //+------------------------------------------------------------------+
-   double  layeredMomentumFilter(const double &values[], int N = 20)
-     {
-      // --- Step 1: Get Smoothed Slopes (in PIPS) ---
+   double layeredMomentumFilter(const double &values[], int N = 20)
+   {
+      // --- Step 1: Get Smoothed Slopes ---
       double slopes[];
-      //Print("STAGE-1");
-      // Denominator 3 smooths noise. Shift 1 to avoid open candle.
-      if(!stats.slopeRange_v2(values, slopes, N, 3, 1))
-         return 0;
-      //Print("STAGE-2");
+      if(!stats.slopeRange_v2(values, slopes, N, 3, 1)) return 0;
+      
       int SIZE = ArraySize(slopes);
-      if(SIZE < N)
-         return 0; // Safety
-      //Print("STAGE-3");
+      if(SIZE < N) return 0;
+
       // --- Step 2: Directional Consensus (The 80% Rule) ---
       int slopeBuy = 0;
       int slopeSell = 0;
       for(int i=0; i<SIZE; i++)
-        {
-         if(slopes[i] > 0)
-            slopeBuy++;
-         if(slopes[i] < 0)
-            slopeSell++;
-        }
+      {
+         if(slopes[i] > 0) slopeBuy++;
+         if(slopes[i] < 0) slopeSell++;
+      }
 
       SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
+      if((double)slopeBuy >= 0.8 * SIZE) sig = SAN_SIGNAL::BUY;
+      else if((double)slopeSell >= 0.8 * SIZE) sig = SAN_SIGNAL::SELL;
 
-      // Logic: 80% of bars must agree on direction
-      // Use >= to capture 80% or more (e.g. 16/20, 17/20...)
-      if((double)slopeBuy >= 0.8 * SIZE)
-         sig = SAN_SIGNAL::BUY;
-      else
-         if((double)slopeSell >= 0.8 * SIZE)
-            sig = SAN_SIGNAL::SELL;
+      if(sig == SAN_SIGNAL::NOSIG) return 0;
 
-      // If mixed direction (choppy), exit immediately
-      if(sig == SAN_SIGNAL::NOSIG)
+      // --- Step 3: DYNAMIC ADX GATE (Unified Trend Power) ---
+      // We reject anything below "Trend Power 0.75" (ADX 15).
+      // This allows M15 scalps AND early H1 entries, but kills dead markets.
+      double power = getTrendPower(14, 1);
+      
+      if(power < 0.75) 
          return 0;
-      //Print("STAGE-4");
-      // --- Step 3: ADX Gate (Market Awake?) ---
-      double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
-      //Print("STAGE-4.1: ADX: "+adx);
-      if(adx < 20.0)
-         return 0;
-      //Print("STAGE-5");
+
       // --- Step 4: Histogram Gate (Momentum Conviction) ---
-      // Threshold = 1.0 Pip.
-      // If max slope < 1.0 pip, it is forced into lower bins (Weak).
-      // This effectively filters out "drifting" markets.
-
-      //double atr = iATR(NULL, 0, 14, 1);
-      //double pipUnit = util.getPipValue(_Symbol);
-      //if(pipUnit == 0)
-      //   pipUnit = Point;
-      //double thresh = (atr / pipUnit) * 0.10; // 10% of ATR is the noise floor
-
       int domBin = stats.histogram_Magnitude(slopes, N, 5, 0.2);
+      if(domBin == -1) return 0; 
+      if(domBin < 2) return 0;   
 
-      //int domBin = stats.histogram_Magnitude(slopes, 5, 1.0);
-      //Print("STAGE-5.1: "+domBin);
-      if(domBin == -1)
-         return 0; // No clustering (flat distribution)
-      //Print("STAGE-6");
-      //if(domBin < 3)
-      if(domBin < 2)
-         return 0;   // Cluster is in Left/Middle (Weak) bins
-      //Print("STAGE-7");
       // --- Step 5: Quality Gate (Statistical Stability) ---
-
       double skew = stats.skewness(slopes, N);
       double kurt = stats.kurtosis_v3(slopes, N);
-      //Print("STAGE-7.1: skew: "+skew+" kurt: "+kurt);
 
       // Reject Parabolic Bubbles (High Skew > 0.5)
-      // We want steady trends, not explosions that might reverse.
-      if(MathAbs(skew) > 0.5)
-         return 0;
-      //Print("STAGE-8");
+      if(MathAbs(skew) > 0.5) return 0;
       // Reject News Spikes (High Kurtosis > 2.0)
-      if(kurt > 2.0)
-         return 0;
-      //Print("STAGE-9");
-      
-      //Print("domBin: "+ domBin+ " kurt: "+kurt+ " skewn: "+skew);
+      if(kurt > 2.0) return 0;
+
       // --- Final Signal Trigger ---
-      if(sig == SAN_SIGNAL::BUY)
-         return 1.0;
-      if(sig == SAN_SIGNAL::SELL)
-         return -1.0;
-      //Print("STAGE-10");
+      if(sig == SAN_SIGNAL::BUY) return 1.0;
+      if(sig == SAN_SIGNAL::SELL) return -1.0;
       return 0.0;
-     }
-     
-     // =================================================================
-   // GROUP: DECAY & RETENTION STRATEGIES
-   // Purpose: Calculate multiplier (0.0-1.0) to lower exit thresholds
+   }
+      
+   // =================================================================
+   // GROUP 3: DECAY & RETENTION STRATEGIES
    // =================================================================
 
    // 1. TIME DECAY (Linear)
-   // Use Case: Reduce strictness simply because time has passed.
-   // Example: getLinearTimeRetention(barsHeld, 0.05, 0.60);
    double getLinearTimeRetention(int barsHeld, double decayRate = 0.05, double floor = 0.60)
    {
       double retention = 1.0 - (barsHeld * decayRate);
@@ -2156,38 +2259,26 @@ public:
    }
 
    // 2. VOLATILITY DECAY (Adaptive Trend Following)
-   // Use Case: "Tight Leash" in Calm, "Loose Leash" in Turbulent.
-   // Returns: High value (0.98) in Calm, Lower value (0.82) in Volatility.
    double getVolAdaptiveRetention(double atr)
    {
       // 1. Get Normalized Volatility (0.0 to 1.0)
-      // Note: We use the raw linear norm here (no power curve) for proportional adaptation.
       double volScore = atrStrength(atr); 
       
       // 2. Trend Following Logic
-      // Calm (0.0) -> 0.98 Retention (Strict)
-      // Wild (1.0) -> 0.82 Retention (Loose)
       // Sqrt makes it loosen quickly as soon as volatility starts.
       double retention = 0.98 - (0.16 * MathSqrt(volScore));
       
-      // Safety Clamp: Never loosen below 70%
       return MathMax(retention, 0.70);
    }
 
    // 3. HYBRID DECAY (Time + Volatility)
-   // Use Case: The longer we hold AND the crazier the market, the looser we get.
-   // Or: We hold tight in calm markets but relax as time passes.
    double getHybridRetention(int barsHeld, double atr)
    {
-      double timeRet = getLinearTimeRetention(barsHeld, 0.02, 0.80); // Slow time decay
-      double volRet  = getVolAdaptiveRetention(atr);                 // Adaptive vol decay
-      
-      // Combine them: (e.g., 0.95 * 0.90 = 0.855)
+      double timeRet = getLinearTimeRetention(barsHeld, 0.02, 0.80); 
+      double volRet  = getVolAdaptiveRetention(atr);                 
       return (timeRet * volRet);
    }
-  };
-
-
+};
 
 //+------------------------------------------------------------------+
 //|                                                                  |
