@@ -1372,6 +1372,14 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const
 //+------------------------------------------------------------------+
 //| volatilityMomentumSIG — The "Gatekeeper" (Universal Version)     |
 //+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| volatilityMomentumSIG — M15 Scalper Tuned                        |
+//+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| volatilityMomentumSIG — The Universal Volatility Engine          |
+//| Automatically adapts Strictness based on Timeframe (M1/M15 vs H1)|
+//+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::volatilityMomentumSIG(
    const DTYPE &stdDevOpen,
    const DTYPE &stdDevClose,
@@ -1380,172 +1388,174 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG(
    const double atr,
    double strictness = 1.0
 )
-  {
-// =============================================================
-// 1. TIMEFRAME-AGNOSTIC ATR FLOOR (The "Spread Safety" Gate)
-// =============================================================
-   double atrNorm = ms.atrStrength(atr);
+{
+   // =============================================================
+   // 0. AUTO-TUNER: Detect Regime (Scalping vs Swing)
+   // =============================================================
+   bool isScalping = (Period() < PERIOD_H1);
 
-// Calculate Dynamic Ceiling based on Timeframe (M15=~32, H1=~49)
+   // =============================================================
+   // 1. TIMEFRAME-AGNOSTIC ATR FLOOR
+   // =============================================================
+   double atrNorm = ms.atrStrength(atr);
    double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
    double atrCeiling = 12.0 * tfScale;
 
-// Formula: 2.0 pips (Base) + Cushion (Scaling based on Quietness)
-// cushionDivisor: 12.0 is Safe, 18.0 is Aggressive.
-// We use 15.0 as a balanced default.
-   double cushion = (atrCeiling / 15.0) * (1.0 - atrNorm);
+   // TUNING: Use 15.0 (Loose) for Scalping, 12.0 (Strict) for Swing
+   double divFactor = isScalping ? 15.0 : 12.0; 
+   
+   double cushion = (atrCeiling / divFactor) * (1.0 - atrNorm);
    double minATR_pips = 2.0 + cushion;
 
-   Print("GATE:0: ATR "+ minATR_pips);
+   if((atr / util.getPipValue(_Symbol)) < minATR_pips)
+      return SAN_SIGNAL::NOTRADE;
 
-      if((atr / util.getPipValue(_Symbol)) < minATR_pips)
-         return SAN_SIGNAL::NOTRADE;
+   // =============================================================
+   // 2. THE ADX GATE (Auto-Scaled)
+   // =============================================================
+   double adxRaw = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
 
-// =============================================================
-// 2. THE ADX GATE (Restored & Calibrated)
-// =============================================================
-// We only apply this gate during strict Entry Mode.
    if(strictness > 0.9)
-     {
-      double adxRaw = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
-
-      // CRITICAL FIX: M15 scalps need a lower ADX threshold (15-18)
-      // H1/H4 trends need a standard threshold (20-25)
-      // We use a simple check: If Timeframe < H1, lower the bar.
-      double adxThreshold = (Period() < PERIOD_H1) ? 15.0 : 20.0;
-      Print("GATE:1: ADX "+ (adxRaw < adxThreshold)+ "adxRaw: "+adxRaw+" adxThreshold: "+adxThreshold);
+   {
+      // TUNING: 15.0 for Scalping, 20.0 for Swing
+      double adxThreshold = isScalping ? 15.0 : 20.0;
       if(adxRaw < adxThreshold)
          return SAN_SIGNAL::NOTRADE;
-     }
+   }
 
-// =============================================================
-// 3. MOMENTUM GATE (Acceleration)
-// =============================================================
-// Close Slope > Open Slope (Speeding up)
+   // =============================================================
+   // 3. MOMENTUM GATES
+   // =============================================================
    bool isAccelerating = (stdDevClose.val1 > stdDevOpen.val1);
-// Slope > 0 (Expanding)
    bool isExpanding = (stdDevClose.val1 > 0);
+   bool isTrendy = (adxRaw > 30.0); // Universal "Runaway Trend" rule
 
-// =============================================================
-// 4. STRUCTURE GATE (Efficiency)
-// =============================================================
+   // =============================================================
+   // 4. STRUCTURE GATE
+   // =============================================================
    double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
    double ratio = stdCp / denominator;
    double requiredRatio = 0.95 * strictness;
 
-
-// =============================================================
-// 5. DECISION MATRIX
-// =============================================================
+   // =============================================================
+   // 5. DECISION MATRIX
+   // =============================================================
    bool foundationSteady = (stdOpen < (atr * 0.25));
 
-   Print("DECISION GATE: foundationSteady: "+ foundationSteady+" ratio: "+(ratio > requiredRatio)+" accelerating: "+isAccelerating+" expanding: "+isExpanding);
+   if((ratio > requiredRatio) && isAccelerating)
+   {
+      if(strictness < 0.99) return SAN_SIGNAL::TRADE;
 
-      if((ratio > requiredRatio) && isAccelerating)
-     {
-      // Management Mode (Loose)
-      if(strictness < 0.99)
-         return SAN_SIGNAL::TRADE;
+      if(isExpanding || isTrendy)
+      {
+         // A. Sniper (Quiet Start) - Universal
+         if(foundationSteady) return SAN_SIGNAL::TRADE;
 
-      // Entry Mode (Strict)
-      if(isExpanding)
-        {
-         // A. Sniper (Quiet Start)
-         if(foundationSteady)
-            return SAN_SIGNAL::TRADE;
-
-         // B. Bulldozer (Noisy Start) -> M15 adjusted ratio
-         // We lower requirement slightly to 1.15 to catch fast M15 breakouts
-         if(ratio > 1.15)
-            return SAN_SIGNAL::TRADE;
-        }
-     }
+         // B. Bulldozer (Noisy Start)
+         // TUNING: 1.15 for Scalping, 1.20 for Swing
+         double bulldozerThreshold = isScalping ? 1.15 : 1.20;
+         
+         if(ratio > bulldozerThreshold) return SAN_SIGNAL::TRADE;
+      }
+   }
 
    return SAN_SIGNAL::NOTRADE;
-  }
-
-
-////+------------------------------------------------------------------+
-////| FUNCTION: volatilityMomentumSIG                                  |
-////| PARAMS:   strictness (1.0 = Entry Mode, < 1.0 = Exit/Decay Mode) |
-////+------------------------------------------------------------------+
+}
+//
 //SAN_SIGNAL SanSignals::volatilityMomentumSIG(
 //   const DTYPE &stdDevOpen,
 //   const DTYPE &stdDevClose,
 //   const double stdOpen,
 //   const double stdCp,
 //   const double atr,
-//   double strictness = 1.0          // 1.0 = Entry mode, 0.75–0.85 = Management mode
+//   double strictness = 1.0
 //)
 //  {
+//// =============================================================
+//// 1. TIMEFRAME-AGNOSTIC ATR FLOOR (The "Spread Safety" Gate)
+//// =============================================================
+//   double atrNorm = ms.atrStrength(atr);
+//
+//// Calculate Dynamic Ceiling based on Timeframe (M15=~32, H1=~49)
+//   double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
+//   double atrCeiling = 12.0 * tfScale;
+//
+//// Formula: 2.0 pips (Base) + Cushion (Scaling based on Quietness)
+//// cushionDivisor: 12.0 is Safe, 18.0 is Aggressive.
+//// We use 15.0 as a balanced default.
+//   double cushion = (atrCeiling / 15.0) * (1.0 - atrNorm);
+//   double minATR_pips = 2.0 + cushion;
+//
+//   Print("GATE:0: ATR "+ minATR_pips);
+//
+//      if((atr / util.getPipValue(_Symbol)) < minATR_pips)
+//         return SAN_SIGNAL::NOTRADE;
 //
 //// =============================================================
-//// 1. DYNAMIC ATR FLOOR (using your atrStrength)
+//// 2. THE ADX GATE (Restored & Calibrated)
 //// =============================================================
-//   double atrNorm     = ms.atrStrength(atr);                    // 0.0 = dead, 1.0 = wild
-////double minATR_pips = 8.0 + (14.0 * (1.0 - atrNorm));         // 8 pips (wild) → 22 pips (dead)
-//   double minATR_pips = 1.0 + (1.2 * (1.0 - atrNorm));         // 1.0 pips (wild) → 2.2 pips (dead)
-//
-//   Print("GATE:0 minATRpips: "+ minATR_pips);
-//
-//   double atrPips = atr / util.getPipValue(_Symbol);
-//   if(atrPips < minATR_pips)
-//      return SAN_SIGNAL::NOTRADE;
-//
-//   Print("GATE:1 ATR");
-//// =============================================================
-//// 2. ADX GATE
-//// =============================================================
-//   double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
-//   if(adx < 20.0)
-//      return SAN_SIGNAL::NOTRADE;
-//   Print("GATE:2 ADX: "+adx+" Min Slope close: "+stdDevClose.val1 + " Slope open "+stdDevOpen.val1);
-//// =============================================================
-//// 3. SLOPE NOISE FILTER
-//// =============================================================
-//   const double MIN_SLOPE = 0.00005;
-//   if(stdDevClose.val1 < MIN_SLOPE)
-//      return SAN_SIGNAL::NOTRADE;
-//   Print("GATE:3 SLOPE NOISE"+stdDevClose.val1);
-//// =============================================================
-//// 4. STRUCTURE GATE (decayed with strictness)
-//// =============================================================
-//   double denominator   = (stdOpen < MIN_SLOPE) ? MIN_SLOPE : stdOpen;
-//   double ratio         = stdCp / denominator;
-//   double requiredRatio = 0.95 * strictness;                     // Entry: 0.95, Management: ~0.70
-//
-//   bool structureValid = (ratio > requiredRatio);
-//
-//   Print("GATE:4 STRUCTURE: "+(ratio > requiredRatio));
-//// =============================================================
-//// 5. MOMENTUM GATE
-//// =============================================================
-//   bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1);
-//
-//   Print("GATE:5 MOMENTUM: "+(stdDevClose.val1 > stdDevOpen.val1));
-//// =============================================================
-//// 6. FINAL DECISION
-//// =============================================================
-//   if(structureValid && momentumValid)
+//// We only apply this gate during strict Entry Mode.
+//   if(strictness > 0.9)
 //     {
+//      double adxRaw = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
 //
-//      Print("GATE:6 STRICTNESS: "+(strictness < 0.99));
-//      if(strictness < 0.99)                    // Management mode
+//      // CRITICAL FIX: M15 scalps need a lower ADX threshold (15-18)
+//      // H1/H4 trends need a standard threshold (20-25)
+//      // We use a simple check: If Timeframe < H1, lower the bar.
+//      double adxThreshold = (Period() < PERIOD_H1) ? 15.0 : 20.0;
+//      Print("GATE:1: ADX "+ (adxRaw < adxThreshold)+ "adxRaw: "+adxRaw+" adxThreshold: "+adxThreshold);
+//      if(adxRaw < adxThreshold)
+//         return SAN_SIGNAL::NOTRADE;
+//     }
+//
+//// =============================================================
+//// 3. MOMENTUM GATE (Acceleration)
+//// =============================================================
+//// Close Slope > Open Slope (Speeding up)
+//   bool isAccelerating = (stdDevClose.val1 > stdDevOpen.val1);
+//// Slope > 0 (Expanding)
+//   bool isExpanding = (stdDevClose.val1 > 0);
+//
+//// =============================================================
+//// 4. STRUCTURE GATE (Efficiency)
+//// =============================================================
+//   double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
+//   double ratio = stdCp / denominator;
+//   double requiredRatio = 0.95 * strictness;
+//
+//
+//// =============================================================
+//// 5. DECISION MATRIX
+//// =============================================================
+//   bool foundationSteady = (stdOpen < (atr * 0.25));
+//
+//   Print("DECISION GATE: foundationSteady: "+ foundationSteady+" ratio: "+(ratio > requiredRatio)+" accelerating: "+isAccelerating+" expanding: "+isExpanding);
+//
+//      if((ratio > requiredRatio) && isAccelerating)
+//     {
+//      // Management Mode (Loose)
+//      if(strictness < 0.99)
 //         return SAN_SIGNAL::TRADE;
 //
-//      // Entry mode (strictness ≈ 1.0)
-//      bool foundationSteady = (stdOpen < atr * 0.25);
-//      Print("GATE:7 FOUNDATION: "+foundationSteady +" Ratio > 1.2: "+(ratio > 1.20)+" ratio: "+ratio + "  stdClose: "+stdCp+" stdOpen: "+stdOpen);
+//      // Entry Mode (Strict)
+//      if(isExpanding)
+//        {
+//         // A. Sniper (Quiet Start)
+//         if(foundationSteady)
+//            return SAN_SIGNAL::TRADE;
 //
-//      //double VOL_RATIO_THRESHOLD = 1.05 + (0.15 * atrNorm);
-//      //if(foundationSteady || ratio > VOL_RATIO_THRESHOLD)
-//      // Hard 1.25 value is better
-//      if(foundationSteady || ratio > 1.20)
-//         return SAN_SIGNAL::TRADE;
+//         // B. Bulldozer (Noisy Start) -> M15 adjusted ratio
+//         // We lower requirement slightly to 1.15 to catch fast M15 breakouts
+//         if(ratio > 1.15)
+//            return SAN_SIGNAL::TRADE;
+//        }
 //     }
 //
 //   return SAN_SIGNAL::NOTRADE;
 //  }
+
+
+
 
 //+------------------------------------------------------------------+
 //| volatilityMomentumDirectionSIG — Wrapper                         |
