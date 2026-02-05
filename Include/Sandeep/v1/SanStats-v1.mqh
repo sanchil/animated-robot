@@ -2109,7 +2109,7 @@ Stats stats(util);
 
 
 //+------------------------------------------------------------------+
-//| CLASS: MomentumStrength                                          |
+//| CLASS: MarketMetrics                                          |
 //| Purpose: Centralized library for Market Physics metrics.         |
 //| Contains: ATR (Vol), ADX (Trend), ER (Efficiency), vWCM (Force)  |
 //+------------------------------------------------------------------+
@@ -2129,34 +2129,95 @@ public:
    // GROUP 1: BASE METRICS (The Physics)
    // =================================================================
 
-   // 1. ATR Normalization (Volatility Proxy, 0-1 with TF scaling)
-   double            atrStrength(const double atr)
+
+   // =================================================================
+   // GROUP 1: THE ADX PHYSICS ENGINE (The Trinity)
+   // =================================================================
+
+   // 1. adxPotential (Formerly getTrendPower)
+   // CONCEPT: Potential Energy / Market State
+   // PURPOSE: Context. "Is the environment charged?"
+   // RETURNS: Open-ended Ratio (e.g., 1.5 = 1.5x Baseline).
+   //          < 0.75 is Dead. > 1.5 is Runaway.
+   double            adxPotential(int period = 14, int shift = 1)
      {
-      double pipValue = util.getPipValue(_Symbol);
-      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0;
-
-      // Dynamic scaling based on timeframe (Logarithmic scale)
-      double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
-      double atrCeiling = MathCeil(12.0 * tfScale);
-
-      double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
-      return (atrNorm*atrNorm); // Squared (Quadratic) to suppress noise
+      double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
+      // Baseline is ADX 20.
+      return (adx / 20.0);
      }
 
-   // 2. ADX Normalization (Trend Strength, 0-1)
-   double            adxStrength(const double scale=50.0, int period = 10, int shift = 1)
+   // 2. adxKinetic (Formerly adxStrength)
+   // CONCEPT: Kinetic Energy / Intensity
+   // PURPOSE: Weighting. "How much force is in this specific move?"
+   // RETURNS: 0.0 to 1.0 (Squared curve to suppress noise)
+   double            adxKinetic(const double scale=50.0, int period = 10, int shift = 1)
      {
       double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
       double normAdx = MathMin(adx / scale, 1.0);
-      return (normAdx*normAdx); // Squared to suppress weak trends
+      return (normAdx*normAdx);
      }
 
-   // 2.b HELPER: Universal Trend Power (The "New Standard")
-   // Returns: 1.0 if ADX is 20. 0.75 if ADX is 15.
-   double            getTrendPower(int period = 14, int shift = 1)
+   // 3. adxVector (Formerly adxAdvancedStrength)
+   // CONCEPT: Vector / Velocity
+   // PURPOSE: Signal. "Which direction and with what conviction?"
+   // RETURNS: -1.0 (Bearish) to +1.0 (Bullish)
+   double            adxVector(const double main, const double plus, const double minus)
      {
-      double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
-      return (adx / 20.0);
+      double direction = plus - minus;
+      double spread = MathMax(fabs(main - plus), fabs(main - minus));
+
+      // Weight by potential energy (main ADX)
+      // If ADX < 20, we dampen the vector (Low Potential).
+      double trendWeight = (main < 20) ? (main / 20.0) * 0.5 : (main / 20.0);
+
+      double rawSignal = direction * trendWeight * (spread * 0.01);
+      return stats.tanh(rawSignal);
+     }
+
+   // =================================================================
+   // GROUP 2: VOLATILITY METRICS
+   // =================================================================
+
+   // 4. atrStrength (Kinetic Volatility)
+   // Returns 0-1 based on how "loud" the current candle is vs expectation.
+   double            atrKinetic(const double atr)
+     {
+      double pipValue = util.getPipValue(_Symbol);
+      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0;
+      double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
+      double atrCeiling = MathCeil(12.0 * tfScale);
+      double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
+      return (atrNorm*atrNorm);
+     }
+
+   // 5. volatilityEfficiency (VE)
+   // Logic: Measures if current volatility expansion is "Holding" (Structure)
+   //        and "Moving" (Momentum).
+   // Returns: -1.0 (Sell Vol) to 1.0 (Buy Vol)
+   
+   double            volatilityEfficiency(const double stdOpen, const double stdCp,
+                               const double slopeOP, const double slopeCP)
+     {
+      // A. Structure & Momentum
+      double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
+      double structureRatio = stdCp / denominator;
+
+      double slopeDenom = (MathAbs(slopeOP) < 0.00005) ? 0.00005 : MathAbs(slopeOP);
+      double momentumRatio = MathAbs(slopeCP) / slopeDenom;
+
+      // C. Convergence
+      // Positive = Expansion. Negative = Contraction.
+      double rawScore = (structureRatio - 1.0) + (momentumRatio - 1.0);
+
+      // *** THE FIX ***
+      // If volatility is contracting (rawScore < 0), there is NO breakout energy.
+      // We clamp it to 0.0 to prevent "Double Negative" false signals.
+      if(rawScore <= 0)
+         return 0.0;
+
+      // D. Direction & Normalize
+      int direction = (slopeCP >= 0) ? 1 : -1;
+      return stats.tanh(rawScore * direction * 2.0);
      }
 
    // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
@@ -2252,37 +2313,9 @@ public:
       return stats.tanh(accel_in_points * k);
      }
 
-   //+------------------------------------------------------------------+
-   //| High-Order Signal: ADX + Volatility + Tanh                       |
-   //| Range: [-1 to 1]                                                 |
-   //+------------------------------------------------------------------+
-   double            adxAdvancedStrength(const double main, const double plus, const double minus)
-     {
-      // 1. Calculate Directional Power (The "Old Logic" Core)
-      // Positive result = Bullish Bias, Negative = Bearish Bias
-      double direction = plus - minus;
 
-      // 2. The "Spread" Factor (Replaces your CrossOver logic)
-      // How far is the dominant DI from the ADX and the other DI?
-      double spread = MathMax(fabs(main - plus), fabs(main - minus));
 
-      // 3. The Threshold Filter
-      // We dampen the signal if ADX is below 20 (Your ADXLIMIT)
-      double trendWeight = (main < 20) ? (main / 20.0) * 0.5 : (main / 20.0);
-
-      // 4. Combine and Normalize
-      // Raw Input = (Directional Difference) * (Trend Weight) * (Spread Factor)
-      // We scale by 0.01 to keep the input to tanh within a sensitive range (-2.0 to 2.0)
-      double rawSignal = direction * trendWeight * (spread * 0.01);
-
-      // 5. The Calculus Touch (Acceleration)
-      // If we wanted to integrate your IsTrendAccelerating here,
-      // we would multiply rawSignal by 1.2 if acceleration is true.
-
-      return stats.tanh(rawSignal);
-     }
-
-   double            GetStrength(string symbol, int tf, int period)
+   double  GetStrength(string symbol, int tf, int period)
      {
       // 1. Statistical Volatility (Standard Deviation)
       // We need a small buffer to calculate the average of the StdDev
@@ -2320,41 +2353,7 @@ public:
       // Scaling factor 0.1 adjusted for standard currency volatility
       return stats.tanh(finalSignal * 0.1);
      }
-
-   //+------------------------------------------------------------------+
-   //| Metric: Volatility Efficiency (VE)                               |
-   //| Range: [-1 to 1]                                                 |
-   //| Logic: Measures if current volatility expansion is "holding"     |
-   //+------------------------------------------------------------------+
-   double volatilityEfficiency(const double stdOpen, const double stdCp,
-                               const double slopeOP, const double slopeCP)
-     {
-      // 1. Structure Component (The "Body" of the Volatility)
-      // Core: (stdCp / stdOpen) > 0.95
-      double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
-      double structureRatio = stdCp / denominator;
-
-      // 2. Momentum Component (The "Thrust" of the Volatility)
-      // Core: (slopeCP / slopeOP) > 1.0
-      // We use fabs to handle absolute slope as requested
-      double slopeDenom = (MathAbs(slopeOP) < 0.00005) ? 0.00005 : MathAbs(slopeOP);
-      double momentumRatio = MathAbs(slopeCP) / slopeDenom;
-
-      // 3. The "Signal Convergence"
-      // We want a high score ONLY if both structure and momentum are expanding.
-      // If ratios are < 1.0, they subtract from the score.
-      double rawScore = (structureRatio - 1.0) + (momentumRatio - 1.0);
-
-      // 4. Directional Bias
-      // Since StdDev is always positive, we need to know the price direction
-      // to map it to [-1, 1]. We check the slope of price or slopeCP sign.
-      int direction = (slopeCP >= 0) ? 1 : -1;
-
-      // 5. Final Normalization
-      // We scale by 2.0 to make the 0.95 - 1.0 range the "active" part of the curve
-      return stats.tanh(rawScore * direction * 2.0);
-     }
-
+     
    // =================================================================
    // GROUP 2: FILTERS & SIGNALS
    // =================================================================
@@ -2398,7 +2397,7 @@ public:
       // --- Step 3: DYNAMIC ADX GATE (Unified Trend Power) ---
       // We reject anything below "Trend Power 0.75" (ADX 15).
       // This allows M15 scalps AND early H1 entries, but kills dead markets.
-      double power = getTrendPower(14, 1);
+      double power = adxPotential(14, 1);
 
       if(power < 0.75)
          return 0;
@@ -2444,7 +2443,8 @@ public:
    double            getVolAdaptiveRetention(double atr)
      {
       // 1. Get Normalized Volatility (0.0 to 1.0)
-      double volScore = atrStrength(atr);
+      //double volScore = atrStrength(atr);
+      double volScore = atrKinetic(atr);
 
       // 2. Trend Following Logic
       // Sqrt makes it loosen quickly as soon as volatility starts.
