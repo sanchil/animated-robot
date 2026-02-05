@@ -2113,16 +2113,17 @@ Stats stats(util);
 //| Purpose: Centralized library for Market Physics metrics.         |
 //| Contains: ATR (Vol), ADX (Trend), ER (Efficiency), vWCM (Force)  |
 //+------------------------------------------------------------------+
-class MomentumStrength
+class MarketMetrics
+
   {
 private:
    SanUtils          util;
    Stats             stats;
 
 public:
-                     MomentumStrength() { }
-                     MomentumStrength(SanUtils& ut) {util = ut;}
-                     MomentumStrength(SanUtils& ut,Stats& st) { util = ut; stats = st; }
+                     MarketMetrics() { }
+                     MarketMetrics(SanUtils& ut) {util = ut;}
+                     MarketMetrics(SanUtils& ut,Stats& st) { util = ut; stats = st; }
 
    // =================================================================
    // GROUP 1: BASE METRICS (The Physics)
@@ -2464,5 +2465,5 @@ public:
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-MomentumStrength ms(util,stats);
+MarketMetrics ms(util,stats);
 //+------------------------------------------------------------------+
