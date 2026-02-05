@@ -2194,9 +2194,9 @@ public:
    // Logic: Measures if current volatility expansion is "Holding" (Structure)
    //        and "Moving" (Momentum).
    // Returns: -1.0 (Sell Vol) to 1.0 (Buy Vol)
-   
+
    double            volatilityEfficiency(const double stdOpen, const double stdCp,
-                               const double slopeOP, const double slopeCP)
+                                          const double slopeOP, const double slopeCP)
      {
       // A. Structure & Momentum
       double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
@@ -2220,6 +2220,29 @@ public:
       return stats.tanh(rawScore * direction * 2.0);
      }
 
+   // 6. volatilityAnomaly (Relative Volatility)
+   // CONCEPT: Climate Check
+   // PURPOSE: Context. "Is today unusually quiet or unusually loud?"
+   // RETURNS: Ratio (1.0 = Normal).
+   //          > 1.5 = Stormy (High Vol). < 0.7 = Quiet (Low Vol).
+   double   volatilityAnomaly(string symbol, int tf, int period)
+     {
+      // 1. Get History
+      int bufferSize = period * 2;
+      double std_buffer[];
+      ArrayResize(std_buffer, bufferSize);
+      // ... fill buffer loop (same as GetStrength) ...
+      for(int i = 0; i < bufferSize; i++)
+        {
+         std_buffer[i] = iStdDev(symbol, tf, period, 0, MODE_SMA, PRICE_CLOSE, i + 1);
+        }
+
+      // 2. Compare Current vs Average
+      double stdCurrent = std_buffer[0];
+      double avgStd = iMAOnArray(std_buffer, 0, bufferSize, 0, MODE_SMA, 0);
+
+      return (avgStd > 0) ? (stdCurrent / avgStd) : 1.0;
+     }
    // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
    // 1.0 = Straight Line (Perfect Efficiency)
    // 0.0 = Random Chop (Zero Efficiency)
@@ -2314,46 +2337,46 @@ public:
      }
 
 
+//
+//   double            GetStrength(string symbol, int tf, int period)
+//     {
+//      // 1. Statistical Volatility (Standard Deviation)
+//      // We need a small buffer to calculate the average of the StdDev
+//      int bufferSize = period * 2;
+//      double std_buffer[];
+//      ArrayResize(std_buffer, bufferSize);
+//      ArraySetAsSeries(std_buffer, true);
+//
+//      // Fill the buffer with historical StdDev values
+//      for(int i = 0; i < bufferSize; i++)
+//        {
+//         std_buffer[i] = iStdDev(symbol, tf, period, 0, MODE_SMA, PRICE_CLOSE, i + 1);
+//        }
+//
+//      double stdCurrent = std_buffer[0];
+//      // Calculate Average StdDev (The "Baseline" Volatility)
+//      double avgStd = iMAOnArray(std_buffer, 0, bufferSize, 0, MODE_SMA, 0);
+//
+//      // 2. Trend Strength (ADX)
+//      double adx     = iADX(symbol, tf, period, PRICE_CLOSE, MODE_MAIN, 1);
+//      double plusDI  = iADX(symbol, tf, period, PRICE_CLOSE, MODE_PLUSDI, 1);
+//      double minusDI = iADX(symbol, tf, period, PRICE_CLOSE, MODE_MINUSDI, 1);
+//
+//      // 3. Normalize the raw force
+//      // Difference in DI scaled by the ADX magnitude (structural permission)
+//      double rawForce = (plusDI - minusDI) * (adx / 100.0);
+//
+//      // 4. Apply Volatility Weighting (The "Fuel" Check)
+//      // If current std is twice the average, volWeight = 2.0 (Amplify)
+//      // If current std is half the average, volWeight = 0.5 (Dampen)
+//      double volWeight = (avgStd > 0) ? (stdCurrent / avgStd) : 1.0;
+//      double finalSignal = rawForce * volWeight;
+//
+//      // 5. Squash with Tanh
+//      // Scaling factor 0.1 adjusted for standard currency volatility
+//      return stats.tanh(finalSignal * 0.1);
+//     }
 
-   double  GetStrength(string symbol, int tf, int period)
-     {
-      // 1. Statistical Volatility (Standard Deviation)
-      // We need a small buffer to calculate the average of the StdDev
-      int bufferSize = period * 2;
-      double std_buffer[];
-      ArrayResize(std_buffer, bufferSize);
-      ArraySetAsSeries(std_buffer, true);
-
-      // Fill the buffer with historical StdDev values
-      for(int i = 0; i < bufferSize; i++)
-        {
-         std_buffer[i] = iStdDev(symbol, tf, period, 0, MODE_SMA, PRICE_CLOSE, i + 1);
-        }
-
-      double stdCurrent = std_buffer[0];
-      // Calculate Average StdDev (The "Baseline" Volatility)
-      double avgStd = iMAOnArray(std_buffer, 0, bufferSize, 0, MODE_SMA, 0);
-
-      // 2. Trend Strength (ADX)
-      double adx     = iADX(symbol, tf, period, PRICE_CLOSE, MODE_MAIN, 1);
-      double plusDI  = iADX(symbol, tf, period, PRICE_CLOSE, MODE_PLUSDI, 1);
-      double minusDI = iADX(symbol, tf, period, PRICE_CLOSE, MODE_MINUSDI, 1);
-
-      // 3. Normalize the raw force
-      // Difference in DI scaled by the ADX magnitude (structural permission)
-      double rawForce = (plusDI - minusDI) * (adx / 100.0);
-
-      // 4. Apply Volatility Weighting (The "Fuel" Check)
-      // If current std is twice the average, volWeight = 2.0 (Amplify)
-      // If current std is half the average, volWeight = 0.5 (Dampen)
-      double volWeight = (avgStd > 0) ? (stdCurrent / avgStd) : 1.0;
-      double finalSignal = rawForce * volWeight;
-
-      // 5. Squash with Tanh
-      // Scaling factor 0.1 adjusted for standard currency volatility
-      return stats.tanh(finalSignal * 0.1);
-     }
-     
    // =================================================================
    // GROUP 2: FILTERS & SIGNALS
    // =================================================================
