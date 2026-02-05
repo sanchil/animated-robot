@@ -1210,28 +1210,6 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const
    double CLOSERATIO = closeRVal[regimeIdx];
 
 
-// B. Volatility Normalization (Market Mood) -> Determines PEAK_DROP
-//    Logic: Higher Volatility = Wider Stop (Trend Following)
-//           Lower Volatility  = Tighter Stop (Scalping)
-//   double pipValue = util.getPipValue(_Symbol);
-//   double atrPips  = (pipValue > 0) ? atr / pipValue : 0; // Safety div
-//
-//   // Dynamic scaling based on timeframe (Logarithmic scale)
-//   double tfScale   = (_Period > 1) ? MathLog(_Period) : 1.0;
-//   //double atrCeiling = MathCeil(5.0 * tfScale);
-//   // With this (10–15× is realistic):
-//   double atrCeiling = MathCeil(12.0 * tfScale);  // or 15.0 for more sensitivity
-//   double atrNorm    = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
-//
-//   double atrNorm    = ms.atrStrength(atr);
-//   double adxNorm    = ms.atrStrength(atr);
-
-//Print("ATR norm1: "+atrNorm+"ATR norm2: "+atrNorm1+ " Equal: "+(atrNorm==atrNorm1));
-
-//// The Masterpiece Formula: 0.82 (Tight) to ~0.98 (Loose)
-//   double PEAK_DROP = 0.82 + 0.16 * MathSqrt(atrNorm);
-
-//double atrSq = ms.atrStrength(atr); // Returns x^2 (0.0 to 1.0)
 
 // Since atrSq is already squared, taking Sqrt returns us to Linear.
 // Linear is actually good for Exits (Proportional Adaptation).
@@ -1643,7 +1621,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumDirectionSIG(
 // --- STEP 1: The "Gate" (Physics & Magnitude) ---
 // Does the market have enough energy to trade?
    SAN_SIGNAL volState = volatilityMomentumSIG_v4(stdDevOpen, stdDevClose, stdOpen, stdCp, atr, strictness);
-   Print("GATE 10: "+util.getSigString(volState)+" Price Slope: "+  priceSlope+ "buy: "+ (priceSlope > 1.0e-9)+"sell: "+(priceSlope < -1.0e-9));
+   //Print("GATE 10: "+util.getSigString(volState)+" Price Slope: "+  priceSlope+ "buy: "+ (priceSlope > 1.0e-9)+"sell: "+(priceSlope < -1.0e-9));
 // If the Gate is closed (Squeeze/Chop/Dead), we do not care about direction.
    if(volState == SAN_SIGNAL::NOTRADE)
       return SAN_SIGNAL::NOSIG;
