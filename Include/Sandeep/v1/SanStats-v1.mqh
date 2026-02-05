@@ -1995,7 +1995,7 @@ Stats stats(util);
 //         return 0;
 //      //Print("STAGE-4");
 //      // --- Step 3: ADX Gate (Market Awake?) ---
-//      
+//
 //      //double adx = iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1);
 //      ////Print("STAGE-4.1: ADX: "+adx);
 //      //if(adx < 20.0)
@@ -2114,78 +2114,245 @@ Stats stats(util);
 //| Contains: ATR (Vol), ADX (Trend), ER (Efficiency), vWCM (Force)  |
 //+------------------------------------------------------------------+
 class MomentumStrength
-{
+  {
 private:
-   SanUtils          util; 
-   Stats             stats; 
+   SanUtils          util;
+   Stats             stats;
 
 public:
-   MomentumStrength() { }
-   MomentumStrength(SanUtils& ut) {util = ut;}
-   MomentumStrength(SanUtils& ut,Stats& st) { util = ut; stats = st; }
+                     MomentumStrength() { }
+                     MomentumStrength(SanUtils& ut) {util = ut;}
+                     MomentumStrength(SanUtils& ut,Stats& st) { util = ut; stats = st; }
 
    // =================================================================
    // GROUP 1: BASE METRICS (The Physics)
    // =================================================================
 
    // 1. ATR Normalization (Volatility Proxy, 0-1 with TF scaling)
-   double atrStrength(const double atr)
-   {
+   double            atrStrength(const double atr)
+     {
       double pipValue = util.getPipValue(_Symbol);
-      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0; 
-      
+      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0;
+
       // Dynamic scaling based on timeframe (Logarithmic scale)
       double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
-      double atrCeiling = MathCeil(12.0 * tfScale); 
-      
+      double atrCeiling = MathCeil(12.0 * tfScale);
+
       double atrNorm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
       return (atrNorm*atrNorm); // Squared (Quadratic) to suppress noise
-   }
+     }
 
    // 2. ADX Normalization (Trend Strength, 0-1)
-   double adxStrength(const double scale=50.0, int period = 10, int shift = 1)
-   {
+   double            adxStrength(const double scale=50.0, int period = 10, int shift = 1)
+     {
       double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
       double normAdx = MathMin(adx / scale, 1.0);
       return (normAdx*normAdx); // Squared to suppress weak trends
-   }
+     }
 
    // 2.b HELPER: Universal Trend Power (The "New Standard")
    // Returns: 1.0 if ADX is 20. 0.75 if ADX is 15.
-   double getTrendPower(int period = 14, int shift = 1)
-   {
+   double            getTrendPower(int period = 14, int shift = 1)
+     {
       double adx = iADX(NULL, 0, period, PRICE_CLOSE, MODE_MAIN, shift);
       return (adx / 20.0);
-   }
+     }
 
    // 3. Kaufman's Efficiency Ratio (Directional Efficiency, 0-1)
    // 1.0 = Straight Line (Perfect Efficiency)
    // 0.0 = Random Chop (Zero Efficiency)
-   double efficiencyRatio(const double &price[], int period = 14, int shift = 0)
-   {
+   double            efficiencyRatio(const double &price[], int period = 14, int shift = 0)
+     {
       double net = MathAbs(price[shift] - price[shift + period]);
       double sumAbs = 0.0;
       for(int i = shift; i < shift + period; i++)
          sumAbs += MathAbs(price[i] - price[i+1]);
       return (sumAbs > 0) ? net / sumAbs : 0.0;
-   }
+     }
 
    // 4. vWCM (Volume-Weighted Candle Momentum, -1 to 1 normalized)
-   double vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1)
-   {
+   double            vWCM(const double &open[], const double &close[], const double &volume[], int N = 10, int SHIFT = 1)
+     {
       double sum_force = 0.0;
       double total_vol = 0.0;
       for(int i = SHIFT; i < N + SHIFT; i++)
-      {
+        {
          double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
          sum_force += body_pips * volume[i];
          total_vol += volume[i];
-      }
-      if(total_vol <= 0) return 0.0;
-      
+        }
+      if(total_vol <= 0)
+         return 0.0;
+
       double raw = sum_force / total_vol;
-      return stats.tanh(raw / 10.0); 
-   }
+      return stats.tanh(raw / 10.0);
+     }
+
+   //+------------------------------------------------------------------+
+   //| Function: Calculate MA Acceleration                              |
+   //| Returns:  True if acceleration is positive (gaining strength)    |
+   //+------------------------------------------------------------------+
+   //bool              isTrendAccelerating(string symbol, int timeframe, int ma_period)
+   bool              isTrendAccelerating(const double &sig[], int shift=1)
+
+     {
+      // 1. Get the MA values for the last 3 completed bars
+      //double ma0 = iMA(symbol, timeframe, ma_period, 0, MODE_SMA, PRICE_CLOSE, 1);
+      //double ma1 = iMA(symbol, timeframe, ma_period, 0, MODE_SMA, PRICE_CLOSE, 2);
+      //double ma2 = iMA(symbol, timeframe, ma_period, 0, MODE_SMA, PRICE_CLOSE, 3);
+
+      double ma0 = sig[shift];
+      double ma1 = sig[shift+1];
+      double ma2 = sig[shift+2];;
+
+
+      // 2. First Derivative: Velocity (Slope)
+      // How much did the MA change between bars?
+      double velocity_now  = ma0 - ma1; // Current slope
+      double velocity_prev = ma1 - ma2; // Previous slope
+
+      // 3. Second Derivative: Acceleration
+      // Is the slope getting steeper?
+      double acceleration = velocity_now - velocity_prev;
+
+      // Logic: If velocity is positive AND acceleration is positive,
+      // the bullish trend is gaining strength.
+      if(velocity_now > 0 && acceleration > 0)
+         return(true);
+
+      // Logic: If velocity is negative AND acceleration is negative,
+      // the bearish trend is gaining strength.
+      if(velocity_now < 0 && acceleration < 0)
+         return(true);
+
+      return(false);
+     }
+
+   double            trendAccelStrength(const double &sig[], int shift=1)
+     {
+      double v0 = sig[shift];
+      double v1 = sig[shift+1];
+      double v2 = sig[shift+2];
+
+      // 1. Calculate raw change in price units
+      double velocity_now  = v0 - v1;
+      double velocity_prev = v1 - v2;
+      double raw_accel     = velocity_now - velocity_prev;
+
+      // 2. Normalize using Point to get a "Sensitivity" score
+      // We convert the tiny decimal into "Points"
+      double accel_in_points = raw_accel / Point;
+
+      // 3. Sensitivity Adjustment
+      // Adjust this 'k' factor to decide how "twitchy" the signal is.
+      // k = 0.1 means it takes 10 points of acceleration to hit a strong signal.
+      double k = 0.1;
+
+      return stats.tanh(accel_in_points * k);
+     }
+
+   //+------------------------------------------------------------------+
+   //| High-Order Signal: ADX + Volatility + Tanh                       |
+   //| Range: [-1 to 1]                                                 |
+   //+------------------------------------------------------------------+
+   double            adxAdvancedStrength(const double main, const double plus, const double minus)
+     {
+      // 1. Calculate Directional Power (The "Old Logic" Core)
+      // Positive result = Bullish Bias, Negative = Bearish Bias
+      double direction = plus - minus;
+
+      // 2. The "Spread" Factor (Replaces your CrossOver logic)
+      // How far is the dominant DI from the ADX and the other DI?
+      double spread = MathMax(fabs(main - plus), fabs(main - minus));
+
+      // 3. The Threshold Filter
+      // We dampen the signal if ADX is below 20 (Your ADXLIMIT)
+      double trendWeight = (main < 20) ? (main / 20.0) * 0.5 : (main / 20.0);
+
+      // 4. Combine and Normalize
+      // Raw Input = (Directional Difference) * (Trend Weight) * (Spread Factor)
+      // We scale by 0.01 to keep the input to tanh within a sensitive range (-2.0 to 2.0)
+      double rawSignal = direction * trendWeight * (spread * 0.01);
+
+      // 5. The Calculus Touch (Acceleration)
+      // If we wanted to integrate your IsTrendAccelerating here,
+      // we would multiply rawSignal by 1.2 if acceleration is true.
+
+      return stats.tanh(rawSignal);
+     }
+
+   double            GetStrength(string symbol, int tf, int period)
+     {
+      // 1. Statistical Volatility (Standard Deviation)
+      // We need a small buffer to calculate the average of the StdDev
+      int bufferSize = period * 2;
+      double std_buffer[];
+      ArrayResize(std_buffer, bufferSize);
+      ArraySetAsSeries(std_buffer, true);
+
+      // Fill the buffer with historical StdDev values
+      for(int i = 0; i < bufferSize; i++)
+        {
+         std_buffer[i] = iStdDev(symbol, tf, period, 0, MODE_SMA, PRICE_CLOSE, i + 1);
+        }
+
+      double stdCurrent = std_buffer[0];
+      // Calculate Average StdDev (The "Baseline" Volatility)
+      double avgStd = iMAOnArray(std_buffer, 0, bufferSize, 0, MODE_SMA, 0);
+
+      // 2. Trend Strength (ADX)
+      double adx     = iADX(symbol, tf, period, PRICE_CLOSE, MODE_MAIN, 1);
+      double plusDI  = iADX(symbol, tf, period, PRICE_CLOSE, MODE_PLUSDI, 1);
+      double minusDI = iADX(symbol, tf, period, PRICE_CLOSE, MODE_MINUSDI, 1);
+
+      // 3. Normalize the raw force
+      // Difference in DI scaled by the ADX magnitude (structural permission)
+      double rawForce = (plusDI - minusDI) * (adx / 100.0);
+
+      // 4. Apply Volatility Weighting (The "Fuel" Check)
+      // If current std is twice the average, volWeight = 2.0 (Amplify)
+      // If current std is half the average, volWeight = 0.5 (Dampen)
+      double volWeight = (avgStd > 0) ? (stdCurrent / avgStd) : 1.0;
+      double finalSignal = rawForce * volWeight;
+
+      // 5. Squash with Tanh
+      // Scaling factor 0.1 adjusted for standard currency volatility
+      return stats.tanh(finalSignal * 0.1);
+     }
+
+   //+------------------------------------------------------------------+
+   //| Metric: Volatility Efficiency (VE)                               |
+   //| Range: [-1 to 1]                                                 |
+   //| Logic: Measures if current volatility expansion is "holding"     |
+   //+------------------------------------------------------------------+
+   double volatilityEfficiency(const double stdOpen, const double stdCp,
+                               const double slopeOP, const double slopeCP)
+     {
+      // 1. Structure Component (The "Body" of the Volatility)
+      // Core: (stdCp / stdOpen) > 0.95
+      double denominator = (stdOpen < 0.00005) ? 0.00005 : stdOpen;
+      double structureRatio = stdCp / denominator;
+
+      // 2. Momentum Component (The "Thrust" of the Volatility)
+      // Core: (slopeCP / slopeOP) > 1.0
+      // We use fabs to handle absolute slope as requested
+      double slopeDenom = (MathAbs(slopeOP) < 0.00005) ? 0.00005 : MathAbs(slopeOP);
+      double momentumRatio = MathAbs(slopeCP) / slopeDenom;
+
+      // 3. The "Signal Convergence"
+      // We want a high score ONLY if both structure and momentum are expanding.
+      // If ratios are < 1.0, they subtract from the score.
+      double rawScore = (structureRatio - 1.0) + (momentumRatio - 1.0);
+
+      // 4. Directional Bias
+      // Since StdDev is always positive, we need to know the price direction
+      // to map it to [-1, 1]. We check the slope of price or slopeCP sign.
+      int direction = (slopeCP >= 0) ? 1 : -1;
+
+      // 5. Final Normalization
+      // We scale by 2.0 to make the 0.95 - 1.0 range the "active" part of the curve
+      return stats.tanh(rawScore * direction * 2.0);
+     }
 
    // =================================================================
    // GROUP 2: FILTERS & SIGNALS
@@ -2195,90 +2362,104 @@ public:
    //| FUNCTION: layeredMomentumFilter                                  |
    //| REFACTORED: Now uses Universal Trend Power (No Timeframe Hacks)  |
    //+------------------------------------------------------------------+
-   double layeredMomentumFilter(const double &values[], int N = 20)
-   {
+   double            layeredMomentumFilter(const double &values[], int N = 20)
+     {
       // --- Step 1: Get Smoothed Slopes ---
       double slopes[];
-      if(!stats.slopeRange_v2(values, slopes, N, 3, 1)) return 0;
-      
+      if(!stats.slopeRange_v2(values, slopes, N, 3, 1))
+         return 0;
+
       int SIZE = ArraySize(slopes);
-      if(SIZE < N) return 0;
+      if(SIZE < N)
+         return 0;
 
       // --- Step 2: Directional Consensus (The 80% Rule) ---
       int slopeBuy = 0;
       int slopeSell = 0;
       for(int i=0; i<SIZE; i++)
-      {
-         if(slopes[i] > 0) slopeBuy++;
-         if(slopes[i] < 0) slopeSell++;
-      }
+        {
+         if(slopes[i] > 0)
+            slopeBuy++;
+         if(slopes[i] < 0)
+            slopeSell++;
+        }
 
       SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
-      if((double)slopeBuy >= 0.8 * SIZE) sig = SAN_SIGNAL::BUY;
-      else if((double)slopeSell >= 0.8 * SIZE) sig = SAN_SIGNAL::SELL;
+      if((double)slopeBuy >= 0.8 * SIZE)
+         sig = SAN_SIGNAL::BUY;
+      else
+         if((double)slopeSell >= 0.8 * SIZE)
+            sig = SAN_SIGNAL::SELL;
 
-      if(sig == SAN_SIGNAL::NOSIG) return 0;
+      if(sig == SAN_SIGNAL::NOSIG)
+         return 0;
 
       // --- Step 3: DYNAMIC ADX GATE (Unified Trend Power) ---
       // We reject anything below "Trend Power 0.75" (ADX 15).
       // This allows M15 scalps AND early H1 entries, but kills dead markets.
       double power = getTrendPower(14, 1);
-      
-      if(power < 0.75) 
+
+      if(power < 0.75)
          return 0;
 
       // --- Step 4: Histogram Gate (Momentum Conviction) ---
       int domBin = stats.histogram_Magnitude(slopes, N, 5, 0.2);
-      if(domBin == -1) return 0; 
-      if(domBin < 2) return 0;   
+      if(domBin == -1)
+         return 0;
+      if(domBin < 2)
+         return 0;
 
       // --- Step 5: Quality Gate (Statistical Stability) ---
       double skew = stats.skewness(slopes, N);
       double kurt = stats.kurtosis_v3(slopes, N);
 
       // Reject Parabolic Bubbles (High Skew > 0.5)
-      if(MathAbs(skew) > 0.5) return 0;
+      if(MathAbs(skew) > 0.5)
+         return 0;
       // Reject News Spikes (High Kurtosis > 2.0)
-      if(kurt > 2.0) return 0;
+      if(kurt > 2.0)
+         return 0;
 
       // --- Final Signal Trigger ---
-      if(sig == SAN_SIGNAL::BUY) return 1.0;
-      if(sig == SAN_SIGNAL::SELL) return -1.0;
+      if(sig == SAN_SIGNAL::BUY)
+         return 1.0;
+      if(sig == SAN_SIGNAL::SELL)
+         return -1.0;
       return 0.0;
-   }
-      
+     }
+
    // =================================================================
    // GROUP 3: DECAY & RETENTION STRATEGIES
    // =================================================================
 
    // 1. TIME DECAY (Linear)
-   double getLinearTimeRetention(int barsHeld, double decayRate = 0.05, double floor = 0.60)
-   {
+   double            getLinearTimeRetention(int barsHeld, double decayRate = 0.05, double floor = 0.60)
+     {
       double retention = 1.0 - (barsHeld * decayRate);
       return MathMax(retention, floor);
-   }
+     }
 
    // 2. VOLATILITY DECAY (Adaptive Trend Following)
-   double getVolAdaptiveRetention(double atr)
-   {
+   double            getVolAdaptiveRetention(double atr)
+     {
       // 1. Get Normalized Volatility (0.0 to 1.0)
-      double volScore = atrStrength(atr); 
-      
+      double volScore = atrStrength(atr);
+
       // 2. Trend Following Logic
       // Sqrt makes it loosen quickly as soon as volatility starts.
       double retention = 0.98 - (0.16 * MathSqrt(volScore));
-      
+
       return MathMax(retention, 0.70);
-   }
+     }
 
    // 3. HYBRID DECAY (Time + Volatility)
-   double getHybridRetention(int barsHeld, double atr)
-   {
-      double timeRet = getLinearTimeRetention(barsHeld, 0.02, 0.80); 
-      double volRet  = getVolAdaptiveRetention(atr);                 
+   double            getHybridRetention(int barsHeld, double atr)
+     {
+      double timeRet = getLinearTimeRetention(barsHeld, 0.02, 0.80);
+      double volRet  = getVolAdaptiveRetention(atr);
       return (timeRet * volRet);
-   }
-};
+     }
+  };
 
 //+------------------------------------------------------------------+
 //|                                                                  |
