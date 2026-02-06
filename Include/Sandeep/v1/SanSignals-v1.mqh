@@ -1563,7 +1563,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v4(
    // 2. CONTEXT: Check Potential Energy (Trend Power)
    // "Is the atmosphere charged?"
    double potential = ms.adxPotential();
-
+   Print("GATE 1: ADX Potential: "+ potential+ " potential<0.75*strict: "+(potential < (0.75 * strictness))); 
    // Gate: If potential is too low (< 0.75), the market is dead.
    if(potential < (0.75 * strictness)) 
       return SAN_SIGNAL::NOTRADE;
@@ -1585,6 +1585,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v4(
    // Safety: Clamp max discount to prevent trading on total collapse
    finalThreshold = MathMax(finalThreshold, -0.10);
 
+   Print("GATE 2: veScore: "+ veScore+" discount: "+discount+" finalThreshold: "+finalThreshold+" veScore > threshhold: "+(MathAbs(veScore) > finalThreshold));
    // 5. TRIGGER
    if(MathAbs(veScore) > finalThreshold)
       return SAN_SIGNAL::TRADE;
