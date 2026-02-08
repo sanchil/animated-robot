@@ -37,6 +37,7 @@ class SS: public SANSIGNALS
   {
 private:
    double            iSIg[];
+   double            probabilisticHold;
 public:
                      SS();
                      SS(SanSignals &sig, const INDDATA &indData, const int SHIFT);
@@ -59,6 +60,8 @@ SS::~SS() {}
 //|                                                                  |
 //+------------------------------------------------------------------+
 SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
+   :
+   probabilisticHold(-1)
   {
 //initBase();
 //Print("SS: ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21]);
@@ -101,6 +104,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
 //         //adxCovDivSIG = sig.adxCovDivSIG(indData.adx,indData.adxPlus,indData.adxMinus);
 //         rsiSIG = sig.rsiSIG(indData.rsi,21,1);
 //         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
+   probabilisticHold = sig.probabilisticSIG(indData.ima120,indData.close,indData.open,indData.tick_volume,indData.atr[1],21,1);
    atrSIG =  sig.atrSIG(indData.atr, 21);
    rsiSIG = sig.rsiSIG(indData.rsi[1], 40, 60);
    priceActionSIG =  sig.priceActionCandleSIG(indData.open, indData.high, indData.low, indData.close);
@@ -161,11 +165,11 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
    tradeSlopeSIG = sig.tradeSlopeSIG(imaSlope120Data, baseSlopeData,indData.atr[1], indData.magicnumber);
 // sig.tradeSlopeSIG_v2(imaSlope120Data, baseSlopeData,indData.atr[1], indData.magicnumber);
    slopeAnalyzerSIG = sig.slopeAnalyzerSIG(imaSlope120Data);
-   //momSIG = sig.layeredMomentumSIG(indData.ima60);
+//momSIG = sig.layeredMomentumSIG(indData.ima60);
    momSIG = sig.layeredMomentumSIG(indData.ima120);
 
-   //volatilitySIG = sig.volatilityMomentumSIG(stdOPSlope,stdCPSlope,indData.atr[1]);
-   volatilitySIG = sig.volatilityMomentumDirectionSIG(stdOPSlope,stdCPSlope,indData.stdOpen[1],indData.std[1],imaSlope30Data.val1,indData.atr[1]);
+//volatilitySIG = sig.volatilityMomentumSIG(stdOPSlope,stdCPSlope,indData.atr[1]);
+   volatilitySIG = sig.volatilityMomentumDirectionSIG(stdOPSlope,stdCPSlope,indData.stdOpen[1],indData.std[1],imaSlope30Data.val1,indData.atr[1],probabilisticHold);
 
    clusterData = sig.clusterData(indData.ima5[1], indData.ima14[1], indData.ima30[1]);
    slopeRatioData = sig.slopeRatioData(imaSlope5Data, imaSlope14Data, imaSlope30Data);
@@ -180,6 +184,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
 //   dftSIG = sig.dftSIG(indData.close,8);
    atrVolData = sig.atrVolDt(indData.atr, indData.tick_volume, 10, 1, 1);
    candleVolData = sig.candleVolDt(indData.open, indData.close, indData.tick_volume, 10, 1, 1);
+//   sig.probabilisticSIG(indData.ima120,indData.close,indData.open,indData.tick_volume,indData.atr[1]);
 //sig.openCloseDt(indData.open,indData.close,10,1,1);
   }
 //+------------------------------------------------------------------+

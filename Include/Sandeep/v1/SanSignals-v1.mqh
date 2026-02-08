@@ -9,7 +9,8 @@
 #property strict
 
 //#include <Sandeep/v1/SanUtils-v1.mqh>
-#include <Sandeep/v1/SanStats-v1.mqh>
+//#include <Sandeep/v1/SanStats-v1.mqh>
+#include <Sandeep/v1/MarketMetrics.mqh>
 #include <Sandeep/v1/SanHSIG-v1.mqh>
 
 
@@ -49,25 +50,25 @@ public:
       const double atr,
       double strictness = 1.0          // 1.0 = Entry mode, 0.75–0.85 = Management mode
    );
-   
-   //+------------------------------------------------------------------+
-//| volatilityMomentumSIG_v3 — The "Efficiency" Version              |
-//| Uses 'volatilityEfficiency' metric + Dynamic Trend Context       |
-//+------------------------------------------------------------------+
-SAN_SIGNAL volatilityMomentumSIG_v3(
-   const DTYPE &stdDevOpen,   // val0=Value, val1=Slope
-   const DTYPE &stdDevClose,  // val0=Value, val1=Slope
-   const double stdOpen,      // Raw StdDev Value
-   const double stdCp,        // Raw StdDev Value
-   const double atr,
-   double strictness = 1.0
-);
 
-SAN_SIGNAL volatilityMomentumSIG_v4(
-   const DTYPE &stdDevOpen, const DTYPE &stdDevClose,
-   const double stdOpen, const double stdCp,
-   const double atr, double strictness = 1.0
-);
+   //+------------------------------------------------------------------+
+   //| volatilityMomentumSIG_v3 — The "Efficiency" Version              |
+   //| Uses 'volatilityEfficiency' metric + Dynamic Trend Context       |
+   //+------------------------------------------------------------------+
+   SAN_SIGNAL        volatilityMomentumSIG_v3(
+      const DTYPE &stdDevOpen,   // val0=Value, val1=Slope
+      const DTYPE &stdDevClose,  // val0=Value, val1=Slope
+      const double stdOpen,      // Raw StdDev Value
+      const double stdCp,        // Raw StdDev Value
+      const double atr,
+      double strictness = 1.0
+   );
+
+   SAN_SIGNAL        volatilityMomentumSIG_v4(
+      const DTYPE &stdDevOpen, const DTYPE &stdDevClose,
+      const double stdOpen, const double stdCp,
+      const double atr, double strictness = 1.0
+   );
    SAN_SIGNAL        volatilityMomentumDirectionSIG(
       const DTYPE &stdDevOpen,
       const DTYPE &stdDevClose,
@@ -75,8 +76,20 @@ SAN_SIGNAL volatilityMomentumSIG_v4(
       const double stdCp,
       const double priceSlope,
       const double atr = 0,
+      const double probabilisticHold=-1,
       double strictness = 1.0
    );
+
+   double  probabilisticSIG(
+      const double &maArray[],
+      const double &closeArray[],   // renamed for clarity
+      const double &openArray[],    // ← add this
+      const double &volumeArray[],
+      double atr,
+      int period = 14,
+      int SHIFT = 1,
+      bool useOverallForce = true);
+
    SAN_SIGNAL        tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL);
    //SANTRENDSTRENGTH        atrSIG(const double &atr[], const int period=10);
    SAN_SIGNAL        atrSIG(const double &atr[], const int period = 10);
@@ -1314,6 +1327,9 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const
    return NOSIG;
   }
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::volatilityMomentumSIG_v1(
    const DTYPE &stdDevOpen,
    const DTYPE &stdDevClose,
@@ -1322,35 +1338,35 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v1(
    const double atr,
    double strictness = 1.0
 )
-{
-   // 1. Dynamic ATR Floor (8 → 22 pips)
+  {
+// 1. Dynamic ATR Floor (8 → 22 pips)
    double atrNorm     = ms.atrKinetic(atr);
    double minATR_pips = 8.0 + (14.0 * (1.0 - atrNorm));
    if(atr / util.getPipValue(_Symbol) < minATR_pips)
       return SAN_SIGNAL::NOTRADE;
 
-   // 2. ADX Gate
+// 2. ADX Gate
    if(iADX(NULL, 0, 14, PRICE_CLOSE, MODE_MAIN, 1) < 20.0)
       return SAN_SIGNAL::NOTRADE;
 
-   // 3. Slope Noise Filter
+// 3. Slope Noise Filter
    const double MIN_SLOPE = 0.00005;
    if(MathAbs(stdDevClose.val1) < MIN_SLOPE)
       return SAN_SIGNAL::NOTRADE;
 
-   // 4. Momentum Gate (Correct Signed Comparison)
+// 4. Momentum Gate (Correct Signed Comparison)
    bool momentumValid = (stdDevClose.val1 > stdDevOpen.val1);
 
-   // 5. Structure Gate (decayed by strictness)
+// 5. Structure Gate (decayed by strictness)
    double denominator   = (stdOpen < MIN_SLOPE) ? MIN_SLOPE : stdOpen;
    double ratio         = stdCp / denominator;
    double requiredRatio = 0.95 * strictness;
 
    bool structureValid = (ratio > requiredRatio);
 
-   // 6. Final Decision
+// 6. Final Decision
    if(structureValid && momentumValid)
-   {
+     {
       if(strictness < 0.99)                    // Management mode
          return SAN_SIGNAL::TRADE;
 
@@ -1358,10 +1374,10 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v1(
 
       if(foundationSteady || ratio > 1.20)
          return SAN_SIGNAL::TRADE;
-   }
+     }
 
    return SAN_SIGNAL::NOTRADE;
-}
+  }
 
 //+------------------------------------------------------------------+
 //| volatilityMomentumSIG — Pure Dynamic Physics Version             |
@@ -1479,13 +1495,13 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v3(
    const double atr,
    double strictness = 1.0
 )
-{
-   // =============================================================
-   // 1. DYNAMIC ATR FLOOR (Safety Gate)
-   // =============================================================
+  {
+// =============================================================
+// 1. DYNAMIC ATR FLOOR (Safety Gate)
+// =============================================================
    double atrNorm = ms.atrKinetic(atr);
    double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
-   
+
    double cushionDiv = 12.0 * strictness;
    double atrCeiling = 12.0 * tfScale;
    double cushion = (atrCeiling / cushionDiv) * (1.0 - atrNorm);
@@ -1493,105 +1509,109 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v3(
    if((atr / util.getPipValue(_Symbol)) < (2.0 + cushion))
       return SAN_SIGNAL::NOTRADE;
 
-   // =============================================================
-   // 2. TREND POWER (Context Engine)
-   // =============================================================
-   // We use the helper method we just added to MomentumStrength
-   // Power 1.0 = ADX 20. Power 1.5 = ADX 30.
-   double trendPower = ms.adxPotential(); 
+// =============================================================
+// 2. TREND POWER (Context Engine)
+// =============================================================
+// We use the helper method we just added to MomentumStrength
+// Power 1.0 = ADX 20. Power 1.5 = ADX 30.
+   double trendPower = ms.adxPotential();
 
-   // GATE: Minimum Viable Trend
-   // Entry (1.0) requires Power > 0.75 (ADX 15).
-   if(trendPower < (0.75 * strictness)) 
+// GATE: Minimum Viable Trend
+// Entry (1.0) requires Power > 0.75 (ADX 15).
+   if(trendPower < (0.75 * strictness))
       return SAN_SIGNAL::NOTRADE;
 
-   // =============================================================
-   // 3. CALCULATE VOLATILITY EFFICIENCY (The Metric)
-   // =============================================================
-   // We pass the slopes from the DTYPE structs
+// =============================================================
+// 3. CALCULATE VOLATILITY EFFICIENCY (The Metric)
+// =============================================================
+// We pass the slopes from the DTYPE structs
    double veScore = ms.volatilityEfficiency(stdOpen, stdCp, stdDevOpen.val1, stdDevClose.val1);
 
-   // =============================================================
-   // 4. DETERMINE DYNAMIC THRESHOLD (The Decision)
-   // =============================================================
-   
-   // BASELINE REQUIREMENT (VE > 0.40)
-   // A score of 0.40 typically means Structure > 1.10 AND Momentum > 1.10.
-   // This represents a "Fresh Breakout."
+// =============================================================
+// 4. DETERMINE DYNAMIC THRESHOLD (The Decision)
+// =============================================================
+
+// BASELINE REQUIREMENT (VE > 0.40)
+// A score of 0.40 typically means Structure > 1.10 AND Momentum > 1.10.
+// This represents a "Fresh Breakout."
    double baseThreshold = 0.40;
 
-   // TREND DISCOUNT (The "Runaway" Logic)
-   // Logic: If the Trend is powerful (Power > 1.0), we lower the bar.
-   // We accept "Holding" volatility (VE ~ 0.0) if the Trend is massive.
-   
-   // Formula: For every 0.1 Power above 1.0, reduce threshold by 0.05.
-   // - Power 1.0 (ADX 20) -> Discount 0.00 -> Req 0.40 (Breakout)
-   // - Power 1.5 (ADX 30) -> Discount 0.25 -> Req 0.15 (Continuation)
-   // - Power 2.0 (ADX 40) -> Discount 0.50 -> Req -0.10 (Holding/Slight Contraction OK)
+// TREND DISCOUNT (The "Runaway" Logic)
+// Logic: If the Trend is powerful (Power > 1.0), we lower the bar.
+// We accept "Holding" volatility (VE ~ 0.0) if the Trend is massive.
+
+// Formula: For every 0.1 Power above 1.0, reduce threshold by 0.05.
+// - Power 1.0 (ADX 20) -> Discount 0.00 -> Req 0.40 (Breakout)
+// - Power 1.5 (ADX 30) -> Discount 0.25 -> Req 0.15 (Continuation)
+// - Power 2.0 (ADX 40) -> Discount 0.50 -> Req -0.10 (Holding/Slight Contraction OK)
    double discount = 0.50 * (trendPower - 1.0);
-   
-   // Apply Strictness to the threshold (Stricter = Higher bar)
-   // strictness 1.0 -> 100% of threshold. strictness 0.8 -> 80% of threshold.
+
+// Apply Strictness to the threshold (Stricter = Higher bar)
+// strictness 1.0 -> 100% of threshold. strictness 0.8 -> 80% of threshold.
    double finalThreshold = (baseThreshold - discount) * strictness;
 
-   // =============================================================
-   // 5. FINAL TRIGGER
-   // =============================================================
+// =============================================================
+// 5. FINAL TRIGGER
+// =============================================================
    if(veScore > finalThreshold)
       return SAN_SIGNAL::TRADE;
 
    return SAN_SIGNAL::NOTRADE;
-}
+  }
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::volatilityMomentumSIG_v4(
    const DTYPE &stdDevOpen, const DTYPE &stdDevClose,
    const double stdOpen, const double stdCp,
    const double atr, double strictness = 1.0
 )
-{
-   // 1. SAFETY: Check Kinetic Volatility (ATR)
-   // We use the new name 'atrKinetic' (or atrStrength if you kept it)
-   double atrNorm = ms.atrKinetic(atr); 
-   
+  {
+// 1. SAFETY: Check Kinetic Volatility (ATR)
+// We use the new name 'atrKinetic' (or atrStrength if you kept it)
+   double atrNorm = ms.atrKinetic(atr);
+
    double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
-   double cushionDiv = 12.0 * strictness; 
+   double cushionDiv = 12.0 * strictness;
    double cushion = (12.0 * tfScale / cushionDiv) * (1.0 - atrNorm);
 
    if((atr / util.getPipValue(_Symbol)) < (2.0 + cushion))
       return SAN_SIGNAL::NOTRADE;
 
-   // 2. CONTEXT: Check Potential Energy (Trend Power)
-   // "Is the atmosphere charged?"
+// 2. CONTEXT: Check Potential Energy (Trend Power)
+// "Is the atmosphere charged?"
    double potential = ms.adxPotential();
-   Print("GATE 1: ADX Potential: "+ potential+ " potential<0.75*strict: "+(potential < (0.75 * strictness))); 
-   // Gate: If potential is too low (< 0.75), the market is dead.
-   if(potential < (0.75 * strictness)) 
+//Print("GATE 1: ADX Potential: "+ potential+ " potential<0.75*strict: "+(potential < (0.75 * strictness)));
+// Gate: If potential is too low (< 0.75), the market is dead.
+   if(potential < (0.75 * strictness))
       return SAN_SIGNAL::NOTRADE;
 
-   // 3. MEASURE: Get Volatility Efficiency (VE)
-   // "Is the move structurally sound?"
+// 3. MEASURE: Get Volatility Efficiency (VE)
+// "Is the move structurally sound?"
    double veScore = ms.volatilityEfficiency(stdOpen, stdCp, stdDevOpen.val1, stdDevClose.val1);
 
-   // 4. DECISION: Dynamic Physics Threshold
+// 4. DECISION: Dynamic Physics Threshold
    double baseThreshold = 0.40;
 
-   // Discount Logic: 
-   // High Potential Energy (Runaway Trend) reduces the Work Required.
-   // Formula: For every 0.1 Potential above 1.0, discount by 0.05.
+// Discount Logic:
+// High Potential Energy (Runaway Trend) reduces the Work Required.
+// Formula: For every 0.1 Potential above 1.0, discount by 0.05.
    double discount = 0.50 * (potential - 1.0);
-   
+
    double finalThreshold = (baseThreshold - discount) * strictness;
-   
-   // Safety: Clamp max discount to prevent trading on total collapse
+
+// Safety: Clamp max discount to prevent trading on total collapse
    finalThreshold = MathMax(finalThreshold, -0.10);
 
-   Print("GATE 2: veScore: "+ veScore+" discount: "+discount+" finalThreshold: "+finalThreshold+" veScore > threshhold: "+(MathAbs(veScore) > finalThreshold));
-   // 5. TRIGGER
+//Print("GATE 2: veScore: "+ veScore+" discount: "+discount+" finalThreshold: "+finalThreshold+" veScore > threshhold: "+(MathAbs(veScore) > finalThreshold));
+// 5. TRIGGER
    if(MathAbs(veScore) > finalThreshold)
       return SAN_SIGNAL::TRADE;
 
    return SAN_SIGNAL::NOTRADE;
-}
+  }
+
 
 //+------------------------------------------------------------------+
 //| volatilityMomentumDirectionSIG — Wrapper                         |
@@ -1616,13 +1636,15 @@ SAN_SIGNAL SanSignals::volatilityMomentumDirectionSIG(
    const double stdCp,
    const double priceSlope,   // Directional Component
    const double atr = 0,
+   const double probabilisticHold=-1,
    double strictness = 1.0
 )
   {
+  Print("volatilityMomDirection: Probability Hold: "+probabilisticHold);
 // --- STEP 1: The "Gate" (Physics & Magnitude) ---
 // Does the market have enough energy to trade?
    SAN_SIGNAL volState = volatilityMomentumSIG_v4(stdDevOpen, stdDevClose, stdOpen, stdCp, atr, strictness);
-   //Print("GATE 10: "+util.getSigString(volState)+" Price Slope: "+  priceSlope+ "buy: "+ (priceSlope > 1.0e-9)+"sell: "+(priceSlope < -1.0e-9));
+//Print("GATE 10: "+util.getSigString(volState)+" Price Slope: "+  priceSlope+ "buy: "+ (priceSlope > 1.0e-9)+"sell: "+(priceSlope < -1.0e-9));
 // If the Gate is closed (Squeeze/Chop/Dead), we do not care about direction.
    if(volState == SAN_SIGNAL::NOTRADE)
       return SAN_SIGNAL::NOSIG;
@@ -1644,6 +1666,28 @@ SAN_SIGNAL SanSignals::volatilityMomentumDirectionSIG(
    return SAN_SIGNAL::NOSIG;
   }
 
+
+//+------------------------------------------------------------------+
+//| FINAL Probabilistic Hold Score – FIXED & IMPROVED                |
+//+------------------------------------------------------------------+
+double SanSignals::probabilisticSIG(
+   const double &maArray[],
+   const double &closeArray[],   // renamed for clarity
+   const double &openArray[],    // ← add this
+   const double &volumeArray[],
+   double atr,
+   int period = 14,
+   int SHIFT = 1,
+   bool useOverallForce = true)
+  {
+   static double barsHeldCount = 0;
+   if(util.isNewBar())
+      barsHeldCount++;
+
+   double hold = ms.probabilisticHoldScore(maArray,closeArray,openArray,volumeArray,barsHeldCount,atr,period,SHIFT);
+   
+   return hold;
+  }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
