@@ -1640,7 +1640,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumDirectionSIG(
    double strictness = 1.0
 )
   {
-  Print("volatilityMomDirection: Probability Hold: "+probabilisticHold);
+  //Print("volatilityMomDirection: Probability Hold: "+probabilisticHold);
 // --- STEP 1: The "Gate" (Physics & Magnitude) ---
 // Does the market have enough energy to trade?
    SAN_SIGNAL volState = volatilityMomentumSIG_v4(stdDevOpen, stdDevClose, stdOpen, stdCp, atr, strictness);

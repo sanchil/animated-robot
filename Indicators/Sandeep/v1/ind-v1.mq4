@@ -25,10 +25,10 @@ input SAN_SIGNAL recordSignal; // This is the default signal recorded for vector
 input string dataFileName;// This is the default signal data file name recorded for vector database for a RAG AI application.
 input bool flipSig; // flips signals. BUY is SELL and SELL is BUY.
 
+input int BarsHeld; // no of bars held;
 // Lot size = 0.01. 
 // 1 Microlot = 1*0.01=0.01, 10 Microlots = 10*0.01 = 0.1, 100 Microlots = 1,
 input double microLots; // Micro Lots
-
 const int SHIFT = 1;
 
 //int recordFreq = _Period;
@@ -106,6 +106,7 @@ int OnCalculate(const int rates_total,
    indData.closeProfit = closeProfit;
    indData.maxProfit = maxProfit;
    indData.shift = SHIFT;
+   indData.BarsHeld = BarsHeld;
    indData.microLots = microLots;
    
    indData.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);

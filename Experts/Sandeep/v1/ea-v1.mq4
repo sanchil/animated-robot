@@ -42,7 +42,7 @@ double maxProfit; // The current profit is adjusted by subtracting the spread an
 double ciHandle; // buff1 : Comprehensive Buy Sell composite signals based on other signals.
 double ciClose; // buff2: Quick close signal based on candle close below ima5
 double ciStrategy; // buff3: The Signal strategy used to generate buy sell signals
-
+int BarsHeld = 0;   // per trade
 //double ciTradeSig; // buff4 : Trade NoTrade signal.
 //double ciMktType; // buff4 : Set Market type: Trending or Flat.
 
@@ -54,13 +54,13 @@ ORDERPARAMS op3;
 //double bottom[]= {10, 20, 90, 100, 200};
 
 
-double x[] = {10, 20, 30, 40, 50}; // std dev sample 15.81
-double matrix[] = {10, 20, 30, 40, 50, 60, 70, 80, 90}; //
-
-double matrix2x2[] = {1, 2, 3, 4};
-double matrix3x3[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-double matrix4x4[] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
-double matrix5x5[] = {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1};
+//double x[] = {10, 20, 30, 40, 50}; // std dev sample 15.81
+//double matrix[] = {10, 20, 30, 40, 50, 60, 70, 80, 90}; //
+//
+//double matrix2x2[] = {1, 2, 3, 4};
+//double matrix3x3[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+//double matrix4x4[] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+//double matrix5x5[] = {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1};
 
 
 
@@ -95,7 +95,8 @@ double matrix5x5[] = {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
-int OnInit() {
+int OnInit()
+  {
 //---
    EventSetTimer(1);
    op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
@@ -103,27 +104,30 @@ int OnInit() {
    stopLoss = op3.STOPLOSS;
    currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
    maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
+   BarsHeld = 0;
 //   ---
    return(INIT_SUCCEEDED);
-}
+  }
 //+------------------------------------------------------------------+
 //| Expert deinitialization function                                 |
 //+------------------------------------------------------------------+
-void OnDeinit(const int reason) {
+void OnDeinit(const int reason)
+  {
 //---
 //--- The first way to get the uninitialization reason code
    Print(__FUNCTION__, "_Uninitalization reason code = ", reason);
 //--- The second way to get the uninitialization reason code
    Print(__FUNCTION__, "_UninitReason = ", util.getUninitReasonText(_UninitReason));
    EventKillTimer();
-}
+  }
 
 
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
 //void OnTimer()
-void OnTick() {
+void OnTick()
+  {
 
 // ai.WebService_CodestralCall("https://codestral.mistral.ai/v1/chat/completions","9gFms2xwFyGDKci2kGfFQCpcj9FwSmdb","Get some coffee","GET");
 //---
@@ -170,66 +174,87 @@ void OnTick() {
    stopLoss = op3.STOPLOSS;
    currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
    maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
+
+   int totalOrders = OrdersTotal();
+   if((totalOrders > 0)
+      && (util.isNewBar()))
+     {
+      BarsHeld++;
+     }
+
 // Print("Empty value: "+ EMPTY_VALUE+" EMPTY: "+EMPTY);
 // Print("[TSTAT] Take Profit: "+closeProfit+" stopLoss: "+stopLoss+" currProfit: "+currProfit+" maxProfit: "+maxProfit + " Trade Vol: "+op3.SAN_TRADE_VOL+" TPROFIT: "+TAKE_PROFIT);
 //########
-   ciHandle = iCustom(_Symbol, PERIOD_CURRENT, "./Sandeep/v1/ind-v1", magicNumber, noOfCandles, stopLoss, closeProfit, currProfit, maxProfit, recordData, recordSignal, dataFileName, flipSig,microLots, 0, 0);
-   ciClose = iCustom(_Symbol, PERIOD_CURRENT, "./Sandeep/v1/ind-v1", magicNumber, noOfCandles,stopLoss, closeProfit, currProfit, maxProfit, recordData, recordSignal, dataFileName, flipSig,microLots, 1, 0);
-   ciStrategy =  iCustom(_Symbol, PERIOD_CURRENT, "./Sandeep/v1/ind-v1", magicNumber, noOfCandles, stopLoss, closeProfit, currProfit, maxProfit, recordData, recordSignal, dataFileName, flipSig,microLots, 2, 0);
-   //ciMktType = iCustom(_Symbol,PERIOD_CURRENT,"./Sandeep/v1/ind-v1",magicNumber,noOfCandles,stopLoss,closeProfit,currProfit,maxProfit,recordData,recordSignal,dataFileName,flipSig,3,0);
+   ciHandle = iCustom(_Symbol, PERIOD_CURRENT, "./Sandeep/v1/ind-v1", magicNumber, noOfCandles, stopLoss, closeProfit, currProfit, maxProfit, recordData, recordSignal, dataFileName, flipSig,BarsHeld,microLots, 0, 0);
+   ciClose = iCustom(_Symbol, PERIOD_CURRENT, "./Sandeep/v1/ind-v1", magicNumber, noOfCandles,stopLoss, closeProfit, currProfit, maxProfit, recordData, recordSignal, dataFileName, flipSig,BarsHeld,microLots, 1, 0);
+   ciStrategy =  iCustom(_Symbol, PERIOD_CURRENT, "./Sandeep/v1/ind-v1", magicNumber, noOfCandles, stopLoss, closeProfit, currProfit, maxProfit, recordData, recordSignal, dataFileName, flipSig,BarsHeld,microLots, 2, 0);
+//ciMktType = iCustom(_Symbol,PERIOD_CURRENT,"./Sandeep/v1/ind-v1",magicNumber,noOfCandles,stopLoss,closeProfit,currProfit,maxProfit,recordData,recordSignal,dataFileName,flipSig,3,0);
 //########
 //  Print(" Signal strategy: "+ ciStrategy + " ciTradeSig: "+ciTradeSig+" SIG: "+ ciHandle);
 //  Print(" Trade SIG: "+ util.getSigString(ciHandle)+" Market Type: "+ util.getSigString(ciMktType));
 //   if((ciHandle==EMPTY)&&(ciHandle==EMPTY_VALUE))
 //      Print(" Trade SIG: "+ util.getSigString(ciHandle)+" absolute value: "+ ciHandle);
-   int totalOrders = OrdersTotal();
+
 // Print("EMPTY:  "+ EMPTY+" EMPTY_VALUE: "+EMPTY_VALUE);
 // Print("[EA] Total orders: "+ totalOrders+" Signal: "+ (SAN_SIGNAL)ciHandle + " Sig str: "+ util.getSigString((SAN_SIGNAL)ciHandle)+ " Close sig: "+ (SAN_SIGNAL)ciClose+" close str: "+ util.getSigString((SAN_SIGNAL)ciClose)+" Point: "+Point+" Digits: "+_Digits);
 //########
 //##################################################################################################################
-   if((ciHandle != EMPTY) && (ciHandle != EMPTY_VALUE)) {
-      if((totalOrders > 0) && ((SAN_SIGNAL)ciClose == SAN_SIGNAL::CLOSE) && ((STRATEGYTYPE)ciStrategy == STRATEGYTYPE::CLOSEPOSITIONS)) {
+   if((ciHandle != EMPTY) && (ciHandle != EMPTY_VALUE))
+     {
+      if((totalOrders > 0) && ((SAN_SIGNAL)ciClose == SAN_SIGNAL::CLOSE) && ((STRATEGYTYPE)ciStrategy == STRATEGYTYPE::CLOSEPOSITIONS))
+        {
          Print(" Trying to close orders");
          if(TRADESWITCH)
+           {
+            BarsHeld = 0;
             util.closeOrders();
-      }
-//##################################################################################################################
-//##################################################################################################################
-// CLOSE trade on reverse for now
-//      if((totalOrders > 0) && ((SAN_SIGNAL)ciClose!=SAN_SIGNAL::CLOSE)&& ((STRATEGYTYPE)ciStrategy == STRATEGYTYPE::IMACLOSE)) {
-//         //  Print(" Trade position: "+ op3.TRADEPOSITION + "| Trade Profit: "+TRADEPROFIT+" |Max Trade Profit: "+MAXTRADEPROFIT+" | Opposing signals: "+util.oppSignal((SAN_SIGNAL)ciClose,op3.TRADEPOSITION)+" 20% profit fall:"+util.closeOnProfitPercentage(0.2));
-//         if(util.oppSignal((SAN_SIGNAL)ciClose,op3.TRADEPOSITION)) {
-//            Print(" Trying to reverse orders");
-//            if(TRADESWITCH)
-//               util.closeOrdersOnRevSignal((SAN_SIGNAL)ciClose,0);
-//         }
-//
-//      }
-//##################################################################################################################
-//##################################################################################################################
-      if(totalOrders == 0) {
-         if(((SAN_SIGNAL)ciHandle) == SAN_SIGNAL::BUY) {
+           }
+
+
+        }
+      //##################################################################################################################
+      //##################################################################################################################
+      // CLOSE trade on reverse for now
+      //      if((totalOrders > 0) && ((SAN_SIGNAL)ciClose!=SAN_SIGNAL::CLOSE)&& ((STRATEGYTYPE)ciStrategy == STRATEGYTYPE::IMACLOSE)) {
+      //         //  Print(" Trade position: "+ op3.TRADEPOSITION + "| Trade Profit: "+TRADEPROFIT+" |Max Trade Profit: "+MAXTRADEPROFIT+" | Opposing signals: "+util.oppSignal((SAN_SIGNAL)ciClose,op3.TRADEPOSITION)+" 20% profit fall:"+util.closeOnProfitPercentage(0.2));
+      //         if(util.oppSignal((SAN_SIGNAL)ciClose,op3.TRADEPOSITION)) {
+      //            Print(" Trying to reverse orders");
+      //            if(TRADESWITCH)
+      //               util.closeOrdersOnRevSignal((SAN_SIGNAL)ciClose,0);
+      //         }
+      //
+      //      }
+      //##################################################################################################################
+      //##################################################################################################################
+      if(totalOrders == 0)
+        {
+         BarsHeld = 0;
+         if(((SAN_SIGNAL)ciHandle) == SAN_SIGNAL::BUY)
+           {
             Print(" Placing a buy ! order: ");
-            if(TRADESWITCH) {
+            if(TRADESWITCH)
+              {
                orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_BUY, 3, 0, 0);
                //////orderMesg = OrderSend(_Symbol,OP_BUY,op3.SAN_TRADE_VOL,Ask,3,0,0,"My buy order",magicNumber,0,clrNONE);
-            }
-         }
-         if(((SAN_SIGNAL)ciHandle) == SAN_SIGNAL::SELL) {
+              }
+           }
+         if(((SAN_SIGNAL)ciHandle) == SAN_SIGNAL::SELL)
+           {
             Print(" Placing a sell ! order: ");
-            if(TRADESWITCH) {
+            if(TRADESWITCH)
+              {
                orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_SELL, 3, 0, 0);
                //////orderMesg = OrderSend(_Symbol,OP_SELL,op3.SAN_TRADE_VOL,Bid,3,0,0,"My sell order",magicNumber,0,clrNONE);
-            }
-         }
+              }
+           }
          //Print(" Order Ticket: "+ orderMesg);
          if(GetLastError() != ERR_NO_ERROR)
             Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
-      }
-//##################################################################################################################
-   }
+        }
+      //##################################################################################################################
+     }
 //########
-}
+  }
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+

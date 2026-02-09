@@ -43,6 +43,7 @@ public:
                      SS(SanSignals &sig, const INDDATA &indData, const int SHIFT);
                     ~SS();
    void              SS::printSignalStruct(SanUtils &util);
+   double            getProbabilities();
 
   };
 
@@ -203,4 +204,11 @@ void   SS::printSignalStruct(SanUtils &util)
    Print("fsig5: " + util.getSigString(fsig5) + " fsig14: " + util.getSigString(fsig14) + " fsig30: " + util.getSigString(fsig30) + " fastIma514SIG: " + util.getSigString(fastIma514SIG) + " fastIma1430SIG: " + util.getSigString(fastIma1430SIG) + " fastIma530SIG: " + util.getSigString(fastIma530SIG) + " fastIma30120SIG: " + util.getSigString(fastIma30120SIG));
    Print("Spread: " + currSpread + " openSIG: " + util.getSigString(openSIG) + " closeSIG: " + util.getSigString(closeSIG));
   }
+//+------------------------------------------------------------------+
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+double   SS::getProbabilities() { return probabilisticHold;}
 //+------------------------------------------------------------------+
