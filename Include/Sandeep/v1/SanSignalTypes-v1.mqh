@@ -37,7 +37,7 @@ class SS: public SANSIGNALS
   {
 private:
    double            iSIg[];
-   double            probabilisticHold;
+   double            holdScore;
 public:
                      SS();
                      SS(SanSignals &sig, const INDDATA &indData, const int SHIFT);
@@ -62,7 +62,7 @@ SS::~SS() {}
 //+------------------------------------------------------------------+
 SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
    :
-   probabilisticHold(-1)
+   holdScore(-1)
   {
 //initBase();
 //Print("SS: ima30 current 1: "+indData.ima30[1]+" :ima30 5: "+ indData.ima30[5]+" :ima30 10: "+ indData.ima30[10]+" :21:" + indData.ima30[21]);
@@ -105,7 +105,8 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
 //         //adxCovDivSIG = sig.adxCovDivSIG(indData.adx,indData.adxPlus,indData.adxMinus);
 //         rsiSIG = sig.rsiSIG(indData.rsi,21,1);
 //         imaSlopesData = sig.slopeFastMediumSlow(indData.ima30,indData.ima120,indData.ima240,5,10,1);
-   probabilisticHold = sig.probabilisticSIG(indData.ima120,indData.close,indData.open,indData.tick_volume,indData.atr[1],21,1);
+   //holdScore = sig.probabilisticSIG(indData.ima120,indData.close,indData.open,indData.tick_volume,indData.atr[0],21,1);
+      holdScore = indData.holdScore;
    atrSIG =  sig.atrSIG(indData.atr, 21);
    rsiSIG = sig.rsiSIG(indData.rsi[1], 40, 60);
    priceActionSIG =  sig.priceActionCandleSIG(indData.open, indData.high, indData.low, indData.close);
@@ -170,7 +171,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
    momSIG = sig.layeredMomentumSIG(indData.ima120);
 
 //volatilitySIG = sig.volatilityMomentumSIG(stdOPSlope,stdCPSlope,indData.atr[1]);
-   volatilitySIG = sig.volatilityMomentumDirectionSIG(stdOPSlope,stdCPSlope,indData.stdOpen[1],indData.std[1],imaSlope30Data.val1,indData.atr[1],probabilisticHold);
+   volatilitySIG = sig.volatilityMomentumDirectionSIG(stdOPSlope,stdCPSlope,indData.stdOpen[1],indData.std[1],imaSlope30Data.val1,indData.atr[1],holdScore);
 
    clusterData = sig.clusterData(indData.ima5[1], indData.ima14[1], indData.ima30[1]);
    slopeRatioData = sig.slopeRatioData(imaSlope5Data, imaSlope14Data, imaSlope30Data);
@@ -210,5 +211,5 @@ void   SS::printSignalStruct(SanUtils &util)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double   SS::getProbabilities() { return probabilisticHold;}
+double   SS::getProbabilities() { return holdScore;}
 //+------------------------------------------------------------------+

@@ -175,12 +175,19 @@ void OnTick()
    currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
    maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
 
-   int totalOrders = OrdersTotal();
-   if((totalOrders > 0)
-      && (util.isNewBar()))
-     {
+//int totalOrders = OrdersTotal();
+   int totalOrders = OrdersTotalByMagic(magicNumber);
+//if((totalOrders > 0)
+//   && (util.isNewBar()))
+//  {
+//   BarsHeld++;
+//  }
+
+   if(totalOrders > 0 && util.isNewBar())
       BarsHeld++;
-     }
+   else
+      if(totalOrders == 0)
+         BarsHeld = 0;
 
 // Print("Empty value: "+ EMPTY_VALUE+" EMPTY: "+EMPTY);
 // Print("[TSTAT] Take Profit: "+closeProfit+" stopLoss: "+stopLoss+" currProfit: "+currProfit+" maxProfit: "+maxProfit + " Trade Vol: "+op3.SAN_TRADE_VOL+" TPROFIT: "+TAKE_PROFIT);
@@ -257,4 +264,17 @@ void OnTick()
   }
 //+------------------------------------------------------------------+
 
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| Count only orders with our magic number                          |
+//+------------------------------------------------------------------+
+int OrdersTotalByMagic(ulong magic)
+  {
+   int cnt = 0;
+   for(int i = OrdersTotal()-1; i >= 0; i--)
+      if(OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magic)
+         cnt++;
+   return cnt;
+  }
 //+------------------------------------------------------------------+
