@@ -1559,8 +1559,62 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v3(
    return SAN_SIGNAL::NOTRADE;
   }
 
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::volatilityMomentumSIG_v4(
+//   const DTYPE &stdDevOpen, const DTYPE &stdDevClose,
+//   const double stdOpen, const double stdCp,
+//   const double atr, double strictness = 1.0
+//)
+//  {
+//// 1. SAFETY: Check Kinetic Volatility (ATR)
+//// We use the new name 'atrKinetic' (or atrStrength if you kept it)
+//   double atrNorm = ms.atrKinetic(atr);
+//
+//   double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
+//   double cushionDiv = 12.0 * strictness;
+//   double cushion = (12.0 * tfScale / cushionDiv) * (1.0 - atrNorm);
+//
+//   if((atr / util.getPipValue(_Symbol)) < (2.0 + cushion))
+//      return SAN_SIGNAL::NOTRADE;
+//
+//// 2. CONTEXT: Check Potential Energy (Trend Power)
+//// "Is the atmosphere charged?"
+//   double potential = ms.adxPotential();
+////Print("GATE 1: ADX Potential: "+ potential+ " potential<0.75*strict: "+(potential < (0.75 * strictness)));
+//// Gate: If potential is too low (< 0.75), the market is dead.
+//   if(potential < (0.75 * strictness))
+//      return SAN_SIGNAL::NOTRADE;
+//
+//// 3. MEASURE: Get Volatility Efficiency (VE)
+//// "Is the move structurally sound?"
+//   double veScore = ms.volatilityEfficiency(stdOpen, stdCp, stdDevOpen.val1, stdDevClose.val1);
+//
+//// 4. DECISION: Dynamic Physics Threshold
+//   double baseThreshold = 0.40;
+//
+//// Discount Logic:
+//// High Potential Energy (Runaway Trend) reduces the Work Required.
+//// Formula: For every 0.1 Potential above 1.0, discount by 0.05.
+//   double discount = 0.50 * (potential - 1.0);
+//
+//   double finalThreshold = (baseThreshold - discount) * strictness;
+//
+//// Safety: Clamp max discount to prevent trading on total collapse
+//   finalThreshold = MathMax(finalThreshold, -0.10);
+//
+////Print("GATE 2: veScore: "+ veScore+" discount: "+discount+" finalThreshold: "+finalThreshold+" veScore > threshhold: "+(MathAbs(veScore) > finalThreshold));
+//// 5. TRIGGER
+//   if(MathAbs(veScore) > finalThreshold)
+//      return SAN_SIGNAL::TRADE;
+//
+//   return SAN_SIGNAL::NOTRADE;
+//  }
+
 //+------------------------------------------------------------------+
-//|                                                                  |
+//| FUNCTION: volatilityMomentumSIG_v4                               |
+//| FIX: Prevents Negative Thresholds, Uses Universal Kinetic Energy |
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::volatilityMomentumSIG_v4(
    const DTYPE &stdDevOpen, const DTYPE &stdDevClose,
@@ -1568,51 +1622,45 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v4(
    const double atr, double strictness = 1.0
 )
   {
-// 1. SAFETY: Check Kinetic Volatility (ATR)
-// We use the new name 'atrKinetic' (or atrStrength if you kept it)
-   double atrNorm = ms.atrKinetic(atr);
-
-   double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
-   double cushionDiv = 12.0 * strictness;
-   double cushion = (12.0 * tfScale / cushionDiv) * (1.0 - atrNorm);
-
-   if((atr / util.getPipValue(_Symbol)) < (2.0 + cushion))
+   // 1. KINETIC GATE (Is the market physically moving?)
+   // Use your Universal Physics Engine. No more raw pip calculations.
+   double kineticEnergy = ms.atrKinetic(atr);
+   
+   // If Kinetic Energy is extremely low, the market is completely dead.
+   if(kineticEnergy < (0.10 * strictness)) 
       return SAN_SIGNAL::NOTRADE;
 
-// 2. CONTEXT: Check Potential Energy (Trend Power)
-// "Is the atmosphere charged?"
+   // 2. POTENTIAL GATE (Is there a trend context?)
+   // "Is the atmosphere charged?"
    double potential = ms.adxPotential();
-//Print("GATE 1: ADX Potential: "+ potential+ " potential<0.75*strict: "+(potential < (0.75 * strictness)));
-// Gate: If potential is too low (< 0.75), the market is dead.
+   
+   // Gate: If potential is too low (< 0.75 = ADX 15), the market is wandering.
    if(potential < (0.75 * strictness))
       return SAN_SIGNAL::NOTRADE;
 
-// 3. MEASURE: Get Volatility Efficiency (VE)
-// "Is the move structurally sound?"
+   // 3. MEASURE: Get Volatility Efficiency (VE)
+   // "Is the move structurally sound and expanding?"
    double veScore = ms.volatilityEfficiency(stdOpen, stdCp, stdDevOpen.val1, stdDevClose.val1);
 
-// 4. DECISION: Dynamic Physics Threshold
+   // 4. DECISION: Dynamic Physics Threshold
    double baseThreshold = 0.40;
 
-// Discount Logic:
-// High Potential Energy (Runaway Trend) reduces the Work Required.
-// Formula: For every 0.1 Potential above 1.0, discount by 0.05.
-   double discount = 0.50 * (potential - 1.0);
-
+   // Discount Logic: Strong trends reduce the work required.
+   // Lowered multiplier from 0.50 to 0.20 so we don't discount too aggressively.
+   double discount = 0.20 * (potential - 1.0);
    double finalThreshold = (baseThreshold - discount) * strictness;
 
-// Safety: Clamp max discount to prevent trading on total collapse
-   finalThreshold = MathMax(finalThreshold, -0.10);
+   // CRITICAL SAFETY FIX: 
+   // We MUST require at least *some* true volatility expansion (e.g., 0.15).
+   // If we let this drop to 0.0 or negative, MathAbs() will allow false signals.
+   finalThreshold = MathMax(finalThreshold, 0.15);
 
-//Print("GATE 2: veScore: "+ veScore+" discount: "+discount+" finalThreshold: "+finalThreshold+" veScore > threshhold: "+(MathAbs(veScore) > finalThreshold));
-// 5. TRIGGER
+   // 5. TRIGGER
    if(MathAbs(veScore) > finalThreshold)
       return SAN_SIGNAL::TRADE;
 
    return SAN_SIGNAL::NOTRADE;
   }
-
-
 //+------------------------------------------------------------------+
 //| volatilityMomentumDirectionSIG — Wrapper                         |
 //+------------------------------------------------------------------+
