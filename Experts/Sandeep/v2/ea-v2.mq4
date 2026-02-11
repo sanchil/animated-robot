@@ -67,8 +67,7 @@ ORDERPARAMS op3;
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int OnInit()
-  {
+int OnInit() {
    EventSetTimer(1);
    op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
    closeProfit = op3.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
@@ -77,32 +76,28 @@ int OnInit()
    maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
 // --- RECOVERY LOGIC ---
    BarsHeld = 0;
-   if(OrdersTotalByMagic(magicNumber) > 0)
-     {
-      for(int i = OrdersTotal()-1; i >= 0; i--)
-        {
-         if(OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magicNumber)
-           {
+   if(OrdersTotalByMagic(magicNumber) > 0) {
+      for(int i = OrdersTotal()-1; i >= 0; i--) {
+         if(OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magicNumber) {
             // Calculate bars elapsed since the order was opened
             BarsHeld = (int)((TimeCurrent() - OrderOpenTime()) / PeriodSeconds());
             break;
-           }
-        }
-     }
+         }
+      }
+   }
    return(INIT_SUCCEEDED);
-  }
+}
 //+------------------------------------------------------------------+
 //| Expert deinitialization function                                 |
 //+------------------------------------------------------------------+
-void OnDeinit(const int reason)
-  {
+void OnDeinit(const int reason) {
 //---
 //--- The first way to get the uninitialization reason code
    Print(__FUNCTION__, "_Uninitalization reason code = ", reason);
 //--- The second way to get the uninitialization reason code
    Print(__FUNCTION__, "_UninitReason = ", util.getUninitReasonText(_UninitReason));
    EventKillTimer();
-  }
+}
 
 
 //////+------------------------------------------------------------------+
@@ -252,22 +247,20 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 //| Count only orders with our magic number                          |
 //+------------------------------------------------------------------+
-int OrdersTotalByMagic(ulong magic)
-  {
+int OrdersTotalByMagic(ulong magic) {
    int cnt = 0;
    for(int i = OrdersTotal()-1; i >= 0; i--)
       if(OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magic)
          cnt++;
    return cnt;
-  }
+}
 //+------------------------------------------------------------------+
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void RefreshPhysicsData(INDDATA &data)
-  {
+void RefreshPhysicsData(INDDATA &data) {
    op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
    closeProfit = op3.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
    stopLoss = op3.STOPLOSS;
@@ -275,7 +268,7 @@ void RefreshPhysicsData(INDDATA &data)
    maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
 
 
-   //data.freeData(); // Vital: Clean the slate
+//data.freeData(); // Vital: Clean the slate
    data.magicnumber = magicNumber;
    data.stopLoss = stopLoss;
    data.currProfit = currProfit;
@@ -283,11 +276,12 @@ void RefreshPhysicsData(INDDATA &data)
    data.maxProfit = maxProfit;
    data.shift = SHIFT;
    data.microLots = microLots;
-
+// 2. Sync EA State
+   data.BarsHeld   = BarsHeld;
+   data.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);
 
 // 1. Fill the "Macro" perspective (last 240 bars)
-   for(int i = 0; i < 240; i++)
-     {
+   for(int i = 0; i < 240; i++) {
 
 
       data.open[i] = iOpen(_Symbol, PERIOD_CURRENT, i);
@@ -298,8 +292,7 @@ void RefreshPhysicsData(INDDATA &data)
       data.ima500[i] = iMA(_Symbol, PERIOD_CURRENT, 500, 0, MODE_SMMA, PRICE_CLOSE, i);
 
       // Heavy computation only for the "active" zone (last 31 bars)
-      if(i < 120)
-        {
+      if(i < 120) {
          data.high[i] = iHigh(_Symbol,PERIOD_CURRENT,i);
          data.low[i] = iLow(_Symbol,PERIOD_CURRENT,i);
          data.time[i] = iTime(_Symbol,PERIOD_CURRENT,i);
@@ -315,8 +308,8 @@ void RefreshPhysicsData(INDDATA &data)
          data.adx[i] = iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,MODE_MAIN,i);
          data.adxPlus[i] = iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,1,i);
          data.adxMinus[i] = iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,2,i);
-        }
-     }
+      }
+   }
 
 
 // 2. Compute the Physics Scores
@@ -327,26 +320,52 @@ void RefreshPhysicsData(INDDATA &data)
 // Update the snapshot so the Strategy (st1) can see the results
    data.bayesianHoldScore = bScore;
    data.neuronHoldScore = nScore;
-// 2. Sync EA State
-   data.BarsHeld   = BarsHeld;
-   data.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);
 
-  }
+
+// Inside RefreshPhysicsData in ea-v2.mq4
+   double fastSlope   = data.ima120[0] - data.ima120[3];   // Fast context
+   double medSlope    = data.ima240[0] - data.ima240[10];  // Medium context
+   double slowSlope   = data.ima500[0] - data.ima500[30];  // Slow context
+
+   double fMSR = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
+   double fMSR_norm = 0;
+
+   if(fMSR > 0.80)
+      fMSR_norm = 1.00; // Hyper-Expansion
+   else if(fMSR > 0.50)
+      fMSR_norm = 0.75; // Healthy
+   else if(fMSR > 0.10)
+      fMSR_norm = 0.30; // Dragging
+   else
+      fMSR_norm = 0.00; // Conflict/Whipsaw
+
+   data.fMSR = fMSR_norm; // Now normalized 0 to 1
+
+}
 //+------------------------------------------------------------------+
 
 //void OnTimer()
-void OnTick()
-  {
+void OnTick() {
 
-   //static double lastBid = 0;
-   //if(MathAbs(Bid - lastBid) < Point && !util.isNewBar())
-   //   return;
-   //lastBid = Bid;
+//static double lastBid = 0;
+//if(MathAbs(Bid - lastBid) < Point && !util.isNewBar())
+//   return;
+//lastBid = Bid;
 
-// 1. Supply the Engine with Data
+// 1. UPDATE STATE FIRST
+   int totalOrders = OrdersTotalByMagic(magicNumber);
+
+   if(totalOrders > 0 && util.isNewBar())
+      BarsHeld++;
+   else if(totalOrders == 0)
+      BarsHeld = 0;
+
+// 2. Supply the Engine with Data
    int orderMesg = NULL;
    INDDATA indData;
    RefreshPhysicsData(indData);
+
+
 
 // 3. The Steering (Where?)
    SIGBUFF signals = st1.imaSt1(indData);
@@ -358,40 +377,36 @@ void OnTick()
    int physicsAction = ms.getCombinedScore(indData.bayesianHoldScore, indData.neuronHoldScore);
 
 
-// 5. THE EXECUTION
-   int totalOrders = OrdersTotalByMagic(magicNumber);
 
-   if(totalOrders > 0 && util.isNewBar())
-      BarsHeld++;
-   else
-      if(totalOrders == 0)
-         BarsHeld = 0;
 
-   if((totalOrders > 0) && (closeSIG == SAN_SIGNAL::CLOSE) && (stgyType == STRATEGYTYPE::CLOSEPOSITIONS))
-     {
+// Log the 3D Vector for "Soundness" analysis
+   if(totalOrders > 0 || direction != SAN_SIGNAL::NOSIG) {
+      PrintFormat("[3D VECTOR] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f",
+                  indData.bayesianHoldScore, indData.neuronHoldScore, indData.fMSR);
+   }
+
+
+   if((totalOrders > 0) && (closeSIG == SAN_SIGNAL::CLOSE) && (stgyType == STRATEGYTYPE::CLOSEPOSITIONS)) {
       Print(" Trying to close orders");
       BarsHeld = 0;
       util.closeOrders();
-     }
+   }
 
 
-   if(totalOrders == 0)
-     {
+   if(totalOrders == 0) {
       BarsHeld = 0;
-      if(direction == SAN_SIGNAL::BUY)
-        {
+      if(direction == SAN_SIGNAL::BUY) {
          Print(" Placing a buy ! order: ");
          orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_BUY, 3, 0, 0);
-        }
-      if(direction == SAN_SIGNAL::SELL)
-        {
+      }
+      if(direction == SAN_SIGNAL::SELL) {
          Print(" Placing a sell ! order: ");
          orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_SELL, 3, 0, 0);
-        }
+      }
       //Print(" Order Ticket: "+ orderMesg);
       if(GetLastError() != ERR_NO_ERROR)
          Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
-     }
+   }
 
 //   if(totalOrders == 0)
 //     {
@@ -417,5 +432,5 @@ void OnTick()
 //      if(util.isNewBar())
 //         BarsHeld++;
 //     }
-  }
+}
 //+------------------------------------------------------------------+
