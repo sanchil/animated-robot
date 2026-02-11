@@ -1998,7 +1998,7 @@ SAN_SIGNAL SanSignals::volumeSIG_v2(const double & vol[], const int arrsize = 10
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::volScatterSlopeSIG(const double & vol[], const int arrsize = 10, const double SLOPELIMIT = 0.1, const int SHIFT = 1)
+SAN_SIGNAL SanSignals::volScatterSlopeSIG(const double &vol[], const int arrsize = 10, const double SLOPELIMIT = 0.1, const int SHIFT = 1)
   {
    SLOPETYPE st = stats.scatterPlot(vol, arrsize, SHIFT);
    if((st.slope > (-1 * SLOPELIMIT)) && (st.slope < (SLOPELIMIT)))

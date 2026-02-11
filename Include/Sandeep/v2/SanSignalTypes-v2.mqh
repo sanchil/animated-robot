@@ -28,7 +28,7 @@
 //+------------------------------------------------------------------+
 
 //#include <Sandeep/v1/SanTypes-v1.mqh>
-#include <Sandeep/v1/SanSignals-v1.mqh>
+#include <Sandeep/v2/SanSignals-v2.mqh>
 
 //+------------------------------------------------------------------+
 //|                                                                  |
