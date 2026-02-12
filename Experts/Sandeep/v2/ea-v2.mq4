@@ -198,6 +198,8 @@ void OnTick() {
 //   return;
 //lastBid = Bid;
 
+
+
 // 1. UPDATE STATE FIRST
    int totalOrders = OrdersTotalByMagic(magicNumber);
 
@@ -214,7 +216,7 @@ void OnTick() {
 
 
 // 3. The Steering (Where?)
-   SIGBUFF signals = st1.imaSt1(indData);
+   SIGBUFF signals = st1.imaSt2(indData);
    SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
    SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
    STRATEGYTYPE stgyType = (STRATEGYTYPE)signals.buff3[0];
@@ -223,10 +225,10 @@ void OnTick() {
    int physicsAction = ms.getCombinedScore(indData.bayesianHoldScore, indData.neuronHoldScore, indData.fMSR);
 
 // Log the 3D Vector for "Soundness" analysis
-   if(totalOrders > 0 || direction != SAN_SIGNAL::NOSIG) {
-      PrintFormat("[3D VECTOR] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f",
-                  indData.bayesianHoldScore, indData.neuronHoldScore, indData.fMSR);
-   }
+//   if(totalOrders > 0 || direction != SAN_SIGNAL::NOSIG) {
+   PrintFormat("[3D VECTOR] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f| CombinedScore: %.2f",
+               indData.bayesianHoldScore, indData.neuronHoldScore, indData.fMSR,physicsAction);
+//   }
 
    double convictionFactor = 1.0;
 
@@ -240,62 +242,67 @@ void OnTick() {
 // We multiply your input microLots by the conviction
    double dynamicLots = microLots * convictionFactor;
 
-////#####################################################################################################################
-////######################### BEGIN: code block 1 #######################################################################
-////#####################################################################################################################
-//
-//   if((totalOrders > 0) && (closeSIG == SAN_SIGNAL::CLOSE) && (stgyType == STRATEGYTYPE::CLOSEPOSITIONS)) {
-//      Print(" Trying to close orders");
-//      BarsHeld = 0;
-//      util.closeOrders();
-//   }
-//
-//
-//   if(totalOrders == 0) {
-//      BarsHeld = 0;
-//      if(direction == SAN_SIGNAL::BUY) {
-//         Print(" Placing a buy ! order: ");
-//         orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_BUY, 3, 0, 0);
-//      }
-//      if(direction == SAN_SIGNAL::SELL) {
-//         Print(" Placing a sell ! order: ");
-//         orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_SELL, 3, 0, 0);
-//      }
-//      //Print(" Order Ticket: "+ orderMesg);
-//      if(GetLastError() != ERR_NO_ERROR)
-//         Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
-//   }
-////#####################################################################################################################
-////######################### END: code block 1 #######################################################################
-////#####################################################################################################################
-
 //#####################################################################################################################
-//######################### BEGIN: code block 2 #######################################################################
+//######################### BEGIN: code block 1 (FINAL GOVERNANCE) ####################################################
 //#####################################################################################################################
 
-// 3. Final Sniper Execution
+// 3. LOGIC EXECUTION
 
+// --- A. ENTRY LOGIC (The Partnership) ---
+   if(totalOrders == 0) {
 
-   if(totalOrders == 0 && physicsAction == 1 && direction != SAN_SIGNAL::NOSIG) {
-      // ENTERING: Requires Physics (action=1) and Steering (direction)
-      PrintFormat("🎯 SNIPER: Entering with %.2fx Conviction (Lots: %.2f)", convictionFactor, dynamicLots);
-      Print("🎯 SNIPER: Physics(", indData.bayesianHoldScore, "/", indData.neuronHoldScore, ") aligned with Direction. Entering.");
-      orderMesg = util.placeOrder(magicNumber, dynamicLots, (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
-      BarsHeld = 0; // Reset for the new trade
-   } else {
-// EXITING: Bayesian/Neuron say the structure has collapsed
+      // SCENARIO 1: GREEN LIGHT
+      // Requires Consensus: Physics must be 1 (High Prob) AND Signal must give Direction.
+      if(physicsAction == 1 && direction != SAN_SIGNAL::NOSIG) {
+         PrintFormat("🎯 SNIPER: Entering with %.2fx Conviction (Lots: %.2f)", convictionFactor, dynamicLots);
+         Print("🎯 SNIPER: Physics(", indData.bayesianHoldScore, "/", indData.neuronHoldScore, ") aligned with Direction. Entering.");
+
+         orderMesg = util.placeOrder(magicNumber, dynamicLots, (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+         BarsHeld = 0; // Reset for the new trade
+      }
+
+      // SCENARIO 2: BLOCKED ENTRY (The Safety Valve)
+      // The Signal is firing, but the Physics Engine Vetoes it.
+      else if(direction != SAN_SIGNAL::NOSIG && physicsAction != 1) {
+         // Log it once per bar or just on the moment to verify the safety is working
+         // (Optional: Check isNewBar to prevent log spam, or just trust the visual logs)
+         if(util.isNewBar()) {
+            PrintFormat("⛔ ENTRY BLOCKED: Signal is %s but Physics Score is %d (Bayes: %.2f | fMSR: %.2f)",
+                        util.getSigString(direction), physicsAction, indData.bayesianHoldScore, indData.fMSR);
+         }
+      }
+   }
+
+// --- B. EXIT LOGIC (The Dictatorship) ---
+   else {
+
+      // RULE: "The market is the final arbiter."
+      // We ONLY exit if the Physics Engine detects a collapse (-1).
+      // We IGNORE the Signal's request to Close if the Physics are still valid (0 or 1).
+
       if(physicsAction == -1) {
-         Print("🚨 EMERGENCY: Physics collapsed. Closing positions.");
+         Print("🚨 GOVERNANCE: Market Physics Collapsed (Bayes/fMSR). Forcing Exit.");
          orderMesg = util.closeOrders();
-         BarsHeld = 0;      }
+         BarsHeld = 0;
+      } else if(closeSIG == SAN_SIGNAL::CLOSE) {
+         // Log the Override so you know the EA is "saving" you from a premature exit.
+         if(util.isNewBar()) {
+            Print("🛡️ GOVERNANCE: Signal requested CLOSE, but Market Physics is Stable. HOLDING Position.");
+         }
+      }
 
-// Update BarsHeld for the next tick
+      // Update BarsHeld for the next tick
       if(util.isNewBar())
          BarsHeld++;
    }
+
 //#####################################################################################################################
 //######################### END: code block 1 #######################################################################
 //#####################################################################################################################
 
+
+   if(recordData && util.isNewBarTime()) {
+      st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
+   }
 }
 //+------------------------------------------------------------------+

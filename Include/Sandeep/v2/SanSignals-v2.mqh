@@ -333,10 +333,10 @@ public:
       const uint SHIFT = 1
    );
 
-   SAN_SIGNAL        dominantTrendSIG(
-      const SANSIGNALS &ss,
-      const HSIG &hSIG
-   );
+   //SAN_SIGNAL        dominantTrendSIG(
+   //   const SANSIGNALS &ss,
+   //   const HSIG &hSIG
+   //);
 
    DTYPE             hilbertSIG(
       const double &close[],
@@ -3661,59 +3661,60 @@ SAN_SIGNAL SanSignals::cSIG(
    Print("[cSIG] cSIG: " + util.getSigString(sig) + " Slope stdCPSlope: " + stdCPSlope + " Slope30: " + slopeIMA30 + " fMSWR: " + fMSWR + " rFM: " + rFM + " rMS: " + rMS + " rFS: " + rFS);
    return sig;
   }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-SAN_SIGNAL  SanSignals::dominantTrendSIG(
-   const SANSIGNALS & ss,
-   const HSIG & hSIG
-)
-  {
-   SAN_SIGNAL dominantSIG = SAN_SIGNAL::NOSIG;
-   bool closeOnReverseBool = ((ss.volSIG == SAN_SIGNAL::REVERSETRADE) || (ss.volSIG == SAN_SIGNAL::NOTRADE) || (ss.volSIG == SAN_SIGNAL::CLOSE));
-   bool noReverseBool = ((ss.volSIG != SAN_SIGNAL::REVERSETRADE) && (ss.volSIG != SAN_SIGNAL::NOTRADE) && (ss.volSIG != SAN_SIGNAL::CLOSE));
-   bool sideWaysBool = (
-                          (ss.candleVolSIG == SAN_SIGNAL::SIDEWAYS)
-                          || (ss.slopeVarSIG == SAN_SIGNAL::SIDEWAYS)
-                       );
-   bool flatTrendRatioBool = ((ss.trendRatioSIG == SANTREND::FLAT) || (ss.trendRatioSIG == SANTREND::FLATUP) || (ss.trendRatioSIG == SANTREND::FLATDOWN));
-   bool flatCPBool = (
-                        (ss.cpScatterSIG == SANTREND::FLAT)
-                        || (ss.cpScatterSIG == SANTREND::FLATUP)
-                        || (ss.cpScatterSIG == SANTREND::FLATDOWN)
-                     );
-   bool flatBool = (
-                      (
-                         (hSIG.mktType == MKTTYP::MKTFLAT)
-                         || (hSIG.openSIG == SAN_SIGNAL::SIDEWAYS)
-                      )
-                   )
-                   ;
-   bool openBool = ((hSIG.mktType == MKTTYP::MKTTR) && ((hSIG.openSIG == SAN_SIGNAL::BUY) || (hSIG.openSIG == SAN_SIGNAL::SELL)));
-   bool closeBool = (
-                       (hSIG.mktType == MKTTYP::MKTCLOSE)
-                       || (hSIG.closeSIG == SAN_SIGNAL::CLOSE)
-//     ||(hSIG.fastSIG==SAN_SIGNAL::CLOSE)
-                    );
-
-//Print("Open bool: "+openBool+" flatBool: "+flatBool+" closeBool: "+closeBool);
-
-   if(flatBool)
-     {
-      dominantSIG = SAN_SIGNAL::SIDEWAYS;
-     }
-   else
-      if(closeBool)
-        {
-         dominantSIG = SAN_SIGNAL::CLOSE;
-        }
-      else
-         if(openBool)
-           {
-            dominantSIG = hSIG.openSIG;
-           }
-   return dominantSIG;
-  }
+  
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL  SanSignals::dominantTrendSIG(
+//   const SANSIGNALS & ss,
+//   const HSIG & hSIG
+//)
+//  {
+//   SAN_SIGNAL dominantSIG = SAN_SIGNAL::NOSIG;
+//   bool closeOnReverseBool = ((ss.volSIG == SAN_SIGNAL::REVERSETRADE) || (ss.volSIG == SAN_SIGNAL::NOTRADE) || (ss.volSIG == SAN_SIGNAL::CLOSE));
+//   bool noReverseBool = ((ss.volSIG != SAN_SIGNAL::REVERSETRADE) && (ss.volSIG != SAN_SIGNAL::NOTRADE) && (ss.volSIG != SAN_SIGNAL::CLOSE));
+//   bool sideWaysBool = (
+//                          (ss.candleVolSIG == SAN_SIGNAL::SIDEWAYS)
+//                          || (ss.slopeVarSIG == SAN_SIGNAL::SIDEWAYS)
+//                       );
+//   bool flatTrendRatioBool = ((ss.trendRatioSIG == SANTREND::FLAT) || (ss.trendRatioSIG == SANTREND::FLATUP) || (ss.trendRatioSIG == SANTREND::FLATDOWN));
+//   bool flatCPBool = (
+//                        (ss.cpScatterSIG == SANTREND::FLAT)
+//                        || (ss.cpScatterSIG == SANTREND::FLATUP)
+//                        || (ss.cpScatterSIG == SANTREND::FLATDOWN)
+//                     );
+//   bool flatBool = (
+//                      (
+//                         (hSIG.mktType == MKTTYP::MKTFLAT)
+//                         || (hSIG.openSIG == SAN_SIGNAL::SIDEWAYS)
+//                      )
+//                   )
+//                   ;
+//   bool openBool = ((hSIG.mktType == MKTTYP::MKTTR) && ((hSIG.openSIG == SAN_SIGNAL::BUY) || (hSIG.openSIG == SAN_SIGNAL::SELL)));
+//   bool closeBool = (
+//                       (hSIG.mktType == MKTTYP::MKTCLOSE)
+//                       || (hSIG.closeSIG == SAN_SIGNAL::CLOSE)
+////     ||(hSIG.fastSIG==SAN_SIGNAL::CLOSE)
+//                    );
+//
+//  Print("Open bool: "+openBool+" flatBool: "+flatBool+" closeBool: "+closeBool+" MKT YPYE: "+ util.getSigString(hSIG.mktType)+ " CLOSE: "+util.getSigString(hSIG.closeSIG));
+//
+//   if(flatBool)
+//     {
+//      dominantSIG = SAN_SIGNAL::SIDEWAYS;
+//     }
+//   else
+//      if(closeBool)
+//        {
+//         dominantSIG = SAN_SIGNAL::CLOSE;
+//        }
+//      else
+//         if(openBool)
+//           {
+//            dominantSIG = hSIG.openSIG;
+//           }
+//   return dominantSIG;
+//  }
 
 
 
