@@ -338,7 +338,7 @@ SAN_SIGNAL SanUtils::getTradePosition() {
    int totalOrders = OrdersTotal();
    SAN_SIGNAL tradePosition = SAN_SIGNAL::NOSIG;
    datetime tradeStartTime = 0;
-   
+
    if(totalOrders > 0) {
       for(int i = 0; i < totalOrders; i++) {
          if(OrderSelect(i, SELECT_BY_POS)) {

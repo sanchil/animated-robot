@@ -38,13 +38,12 @@
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-class Stats
-  {
-private:
+class Stats {
+ private:
    string            mesg;
    //   SanUtils*         ut;
    SanUtils          ut;
-public:
+ public:
                      Stats();
    //   Stats(SanUtils* utilPtr);
                      Stats(SanUtils& util);
@@ -123,7 +122,7 @@ public:
    DTYPE             extractHilbertAmpNPhase(const double &hilbertAmp[], const double &hilbertPhase[], double cutOff); //,const double &dftMag[],const double &dftPhase[],const double &dftPower[]);
    DTYPE             extractDftPowerNPhase(const double &dftMag[], const double &dftPhase[], const double &dftPower[]);
 
-  };
+};
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -140,27 +139,24 @@ Stats::Stats() {};
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-Stats::Stats(SanUtils& util)
-  {
+Stats::Stats(SanUtils& util) {
    ut = util;
-  };
+};
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-Stats::~Stats()
-  {
+Stats::~Stats() {
 // delete util;
-  };
+};
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void Stats::sayMesg1()
-  {
+void Stats::sayMesg1() {
    Print("Message from stats is : " + mesg);
-  };
+};
 //------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
@@ -168,25 +164,17 @@ void Stats::sayMesg1()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-long Stats::getDataSize(const double &data[], int n = 0, int shift = 0)
-  {
+long Stats::getDataSize(const double &data[], int n = 0, int shift = 0) {
    long SIZE = EMPTY_VALUE;
-   if(n <= 0)
-     {
+   if(n <= 0) {
       SIZE = (ArraySize(data) - shift);
-     }
-   else
-      if(((n - shift) > 0) && ((n - shift) < ArraySize(data)))
-        {
-         SIZE = (n - shift);
-        }
-      else
-         if((n - shift) >= ArraySize(data))
-           {
-            SIZE = ArraySize(data);
-           }
+   } else if(((n - shift) > 0) && ((n - shift) < ArraySize(data))) {
+      SIZE = (n - shift);
+   } else if((n - shift) >= ArraySize(data)) {
+      SIZE = ArraySize(data);
+   }
    return SIZE;
-  };
+};
 
 // double x[] =  { 10, 20, 30, 40, 50};
 //  //double y[] ={20, 40, 60, 80, 100};
@@ -197,20 +185,17 @@ long Stats::getDataSize(const double &data[], int n = 0, int shift = 0)
 ////+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double  Stats::mean(const double &data[], int n = 0, double shift = 0)
-  {
+double  Stats::mean(const double &data[], int n = 0, double shift = 0) {
    double sum = 0.0;
    double mean = EMPTY_VALUE;
    long SIZE = getDataSize(data, n, shift);
    int count = 0;
-   for(int i = 0; i < SIZE; i++)
-     {
-      if(data[i] != 0)
-        {
+   for(int i = 0; i < SIZE; i++) {
+      if(data[i] != 0) {
          sum += data[i];
          count++;
-        }
-     }
+      }
+   }
    mean = (count > 0) ? sum / count : 0.0;
 //for(int i = 0; i<SIZE; i++) {
 //   sum +=data[i];
@@ -218,28 +203,26 @@ double  Stats::mean(const double &data[], int n = 0, double shift = 0)
 //mean = sum/SIZE;
 //Print("N: "+SIZE+" mean: "+mean);
    return mean;
-  };
+};
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double Stats::Arctan2(double y, double x)
-  {
+double Stats::Arctan2(double y, double x) {
    if(x > 0)
       return MathArctan(y / x);
-   if(x < 0)
-     {
+   if(x < 0) {
       if(y >= 0)
          return MathArctan(y / x) + M_PI;
       return MathArctan(y / x) - M_PI;
-     }
+   }
    if(y > 0)
       return M_PI / 2;
    if(y < 0)
       return -M_PI / 2;
    return 0.0; // x=0, y=0
-  }
+}
 
 //+------------------------------------------------------------------+
 // Formula for auto correlation.
@@ -253,8 +236,7 @@ double Stats::Arctan2(double y, double x)
 // ACF(k) = (∑(Xt - μ)(Xt-k - μ) /(n-lag))/ (∑(Xt - μ)²/n)
 // double a[] = {3,5,2,8,7}; //acf(1): −0.115: Formula: ACF(k) = (∑(Xt - μ)(Xt-k - μ)) / (∑(Xt - μ)²                               |
 //+------------------------------------------------------------------+
-double  Stats::acf(const double &data[], int n = 0, int lag = 1)
-  {
+double  Stats::acf(const double &data[], int n = 0, int lag = 1) {
    long SIZE = getDataSize(data, n);
    double yk = 0;
    double y0 = 0;
@@ -262,67 +244,56 @@ double  Stats::acf(const double &data[], int n = 0, int lag = 1)
    double yn;
    double yn1;
 // Print("ACF Mean: "+mn+" SIZE: "+SIZE);
-   for(int i = 0; i < (SIZE - lag); ++i)
-     {
+   for(int i = 0; i < (SIZE - lag); ++i) {
       yk += (data[i] - mn) * (data[i + lag] - mn);
-     }
-   for(int i = 0; i < (SIZE); ++i)
-     {
+   }
+   for(int i = 0; i < (SIZE); ++i) {
       //yd[i] = (data[i]-mn)*(data[i]-mn);
       y0 += (data[i] - mn) * (data[i] - mn);
-     }
+   }
 //yk=yk/(SIZE-lag);
 //y0=y0/SIZE;
 //   Print("Arraysize: "+SIZE+"yk: "+yk+" y0: "+y0);
-   if(y0 == 0)
-     {
+   if(y0 == 0) {
       return 0;
-     }
-   if(yk == 0)
-     {
+   }
+   if(yk == 0) {
       return 0;
-     }
-   if((yk != 0) && (y0 != 0))
-     {
+   }
+   if((yk != 0) && (y0 != 0)) {
       return yk / y0;
-     }
+   }
    return EMPTY_VALUE;
-  };
+};
 
 //+------------------------------------------------------------------+
 //|             σ = √(Σ(xi - μ)² / N)
 //      if type is 0 it is calculated for sample else for population. default is for sample
 // double x[] =  { 10, 20, 30, 40, 50}; std value = 15.81                                               |
 //+------------------------------------------------------------------+
-double     Stats::stdDev(const double &data[], int type = 0, int n = 0, int shift = 0)
-  {
+double     Stats::stdDev(const double &data[], int type = 0, int n = 0, int shift = 0) {
    double summation = 0;
    double mn = mean(data, n);
    long SIZE = getDataSize(data, n, shift);
-   for(int i = shift; i < SIZE; i++)
-     {
+   for(int i = shift; i < SIZE; i++) {
       summation += (data[i] - mn) * (data[i] - mn);
-     }
+   }
 //  Print("Summation: "+summation+" Denominator:  "+SIZE);
-   if(type == 0)
-     {
+   if(type == 0) {
       return sqrt(summation / (SIZE - 1));
-     }
-   if(type == 1)
-     {
+   }
+   if(type == 1) {
       return sqrt(summation / SIZE);
-     }
-   if(type == 2)
-     {
+   }
+   if(type == 2) {
       return sqrt(summation / sqrt(SIZE));
-     }
+   }
    return EMPTY_VALUE;
-  };
+};
 
 
 // 4. Skewness & Kurtosis (Distribution Shape, skew -1 to 1, kurt excess)
-double Stats::skewness(const double &values[], int N, int shift = 0)
-  {
+double Stats::skewness(const double &values[], int N, int shift = 0) {
    if(N <= 1)
       return 0.0;
    double meanVal = 0.0;
@@ -330,24 +301,22 @@ double Stats::skewness(const double &values[], int N, int shift = 0)
       meanVal += values[i];
    meanVal /= N;
    double variance = 0.0, skew = 0.0;
-   for(int i = shift; i < N + shift; i++)
-     {
+   for(int i = shift; i < N + shift; i++) {
       double dev = values[i] - meanVal;
       variance += dev * dev;
       skew += dev * dev * dev;
-     }
+   }
    variance /= N;
    double stdDev = MathSqrt(variance);
    if(stdDev == 0)
       return 0.0;
    return (skew / N) / (stdDev * stdDev * stdDev);
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double Stats::kurtosis(const double &values[], int N, int shift = 0)
-  {
+double Stats::kurtosis(const double &values[], int N, int shift = 0) {
    if(N <= 1)
       return 0.0;
    double meanVal = 0.0;
@@ -355,12 +324,11 @@ double Stats::kurtosis(const double &values[], int N, int shift = 0)
       meanVal += values[i];
    meanVal /= N;
    double variance = 0.0, kurt = 0.0;
-   for(int i = shift; i < N + shift; i++)
-     {
+   for(int i = shift; i < N + shift; i++) {
       double dev = values[i] - meanVal;
       variance += dev * dev;
       kurt += dev * dev * dev * dev;
-     }
+   }
    variance /= N;
    if(variance < 0.00000001)
       return 0.0;
@@ -370,14 +338,13 @@ double Stats::kurtosis(const double &values[], int N, int shift = 0)
       return 0.0;
    double rawKurt = (kurt / N) / (variance * variance);
    return rawKurt - 3.0;  // excess kurtosis
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //| 3. Kurtosis: Measures "Spikiness"                                |
 //+------------------------------------------------------------------+
-double Stats::kurtosis_v2(const double &values[])
-  {
+double Stats::kurtosis_v2(const double &values[]) {
    int N = ArraySize(values);
    if(N < 4)
       return 0.0;
@@ -388,12 +355,11 @@ double Stats::kurtosis_v2(const double &values[])
    mean /= N;
 
    double s2 = 0, s4 = 0;
-   for(int i=0; i<N; i++)
-     {
+   for(int i=0; i<N; i++) {
       double dev = values[i] - mean;
       s2 += dev * dev;
       s4 += dev * dev * dev * dev;
-     }
+   }
    double variance = s2 / N;
 
    if(variance < 0.00000001)
@@ -401,13 +367,12 @@ double Stats::kurtosis_v2(const double &values[])
 
 // Excess Kurtosis (Normal dist = 0)
    return (s4 / N) / (variance * variance) - 3.0;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double Stats::kurtosis_v3(const double &values[], int N, int shift = 0)
-  {
+double Stats::kurtosis_v3(const double &values[], int N, int shift = 0) {
 
 //int N = ArraySize(values);
 //if(N < 4)
@@ -419,12 +384,11 @@ double Stats::kurtosis_v3(const double &values[], int N, int shift = 0)
    mean /= N;
 
    double s2 = 0, s4 = 0;
-   for(int i=0; i<N; i++)
-     {
+   for(int i=0; i<N; i++) {
       double dev = values[i] - mean;
       s2 += dev * dev;               // Variance part
       s4 += dev * dev * dev * dev;   // Kurtosis part
-     }
+   }
 
    double variance = s2 / N;
 
@@ -436,13 +400,12 @@ double Stats::kurtosis_v3(const double &values[], int N, int shift = 0)
    double rawKurt = (s4 / N) / (variance * variance);
 
    return rawKurt - 3.0; // Excess Kurtosis
-  }
+}
 
 //+------------------------------------------------------------------+
 //| histogram — Dominant Bin Finder with Dynamic Bins               |
 //+------------------------------------------------------------------+
-int Stats::histogram(const double &values[], int N = 20, int bins = 5, double binSize = 0.2)
-  {
+int Stats::histogram(const double &values[], int N = 20, int bins = 5, double binSize = 0.2) {
 
    if(bins < 1 || N < 1)
       return -1;  // Safety: invalid params → no dominance
@@ -454,36 +417,33 @@ int Stats::histogram(const double &values[], int N = 20, int bins = 5, double bi
    double atr = iATR(NULL, 0, 14, 1);
    binSize = binSize * (atr / util.getPipValue(_Symbol));  // adaptive size
 
-   for(int i = 0; i < N; i++)
-     {
+   for(int i = 0; i < N; i++) {
       // Safety for zero/NaN
       if(!MathIsValidNumber(values[i]))
          continue;
       int bin = (int)((values[i] + 1.0) / binSize);  // shift for negative
       if(bin >= 0 && bin < bins)
          counts[bin]++;
-     }
+   }
 
    int maxCount = 0, domBin = -1;
    for(int b = 0; b < bins; b++)
-      if(counts[b] > maxCount)
-        {
+      if(counts[b] > maxCount) {
          maxCount = counts[b];
          domBin = b;
-        }
+      }
 
    if(maxCount < N * 0.5)
       return -1;  // no dominance
 
    return domBin;  // e.g., 4 = strong positive
-  }
+}
 
 //+------------------------------------------------------------------+
 //| 2. Histogram: Centered & Dynamic                                 |
 //| Uses Min/Max normalization so it never crashes on negative values|
 //+------------------------------------------------------------------+
-int Stats::histogram_v2(const double &values[], int bins=5)
-  {
+int Stats::histogram_v2(const double &values[], int bins=5) {
    int N = ArraySize(values);
    if(N == 0)
       return -1;
@@ -491,13 +451,12 @@ int Stats::histogram_v2(const double &values[], int bins=5)
 // Find dynamic range to prevent index errors
    double maxVal = -DBL_MAX;
    double minVal = DBL_MAX;
-   for(int i=0; i<N; i++)
-     {
+   for(int i=0; i<N; i++) {
       if(values[i] > maxVal)
          maxVal = values[i];
       if(values[i] < minVal)
          minVal = values[i];
-     }
+   }
 
 // If flatline (no variance), return middle bin
    if(maxVal - minVal < 0.00001)
@@ -509,8 +468,7 @@ int Stats::histogram_v2(const double &values[], int bins=5)
 
    double step = (maxVal - minVal) / bins;
 
-   for(int i=0; i<N; i++)
-     {
+   for(int i=0; i<N; i++) {
       // Normalized mapping 0 to bins-1
       int binIdx = (int)((values[i] - minVal) / step);
       if(binIdx >= bins)
@@ -518,33 +476,30 @@ int Stats::histogram_v2(const double &values[], int bins=5)
       if(binIdx < 0)
          binIdx = 0;
       counts[binIdx]++;
-     }
+   }
 
    int maxCount = 0;
    int domBin = -1;
-   for(int b=0; b<bins; b++)
-     {
-      if(counts[b] > maxCount)
-        {
+   for(int b=0; b<bins; b++) {
+      if(counts[b] > maxCount) {
          maxCount = counts[b];
          domBin = b;
-        }
-     }
+      }
+   }
 
 // Require 40% dominance (statistical conviction)
    if(maxCount < N * 0.4)
       return -1;
 
    return domBin;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| 3. Histogram: Directional & Safe                                 |
 //| Bins are anchored to 0.                                          |
 //| Bin 0=Strong Sell, Bin 2=Neutral, Bin 4=Strong Buy               |
 //+------------------------------------------------------------------+
-int Stats::histogram_Direction(const double &values[], int N = 20, int bins=5, double threshold=0.2)
-  {
+int Stats::histogram_Direction(const double &values[], int N = 20, int bins=5, double threshold=0.2) {
 //int N = ArraySize(values);
    if(N == 0)
       return -1;
@@ -558,8 +513,7 @@ int Stats::histogram_Direction(const double &values[], int N = 20, int bins=5, d
 // We use a fixed threshold step to maintain absolute direction
 // Example: Each bin represents 'threshold' pips of slope
 
-   for(int i=0; i<N; i++)
-     {
+   for(int i=0; i<N; i++) {
       // Calculate offset from center (0)
       // If value is +0.0005 and thresh is 0.0002 -> +2.5 -> Bin 2+2 = 4
       int offset = (int)(values[i] / threshold);
@@ -573,46 +527,42 @@ int Stats::histogram_Direction(const double &values[], int N = 20, int bins=5, d
          binIdx = 0;
 
       counts[binIdx]++;
-     }
+   }
 
    int maxCount = 0;
    int domBin = -1;
 
-   for(int b=0; b<bins; b++)
-     {
-      if(counts[b] > maxCount)
-        {
+   for(int b=0; b<bins; b++) {
+      if(counts[b] > maxCount) {
          maxCount = counts[b];
          domBin = b;
-        }
-     }
+      }
+   }
 
 // Require 40% dominance for conviction
    if(maxCount < N * 0.4)
       return -1;
 
    return domBin;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| Histogram: Magnitude / Strength                                  |
 //| Left = Weak (Noise), Right = Strong (Momentum)                   |
 //| Enforces a 'floor' so tiny noise doesn't look like a trend.      |
 //+------------------------------------------------------------------+
-int Stats::histogram_Magnitude(const double &values[], int N = 20, int bins=5, double minThresh=0.2)
-  {
+int Stats::histogram_Magnitude(const double &values[], int N = 20, int bins=5, double minThresh=0.2) {
 // int N = ArraySize(values);
    if(N == 0)
       return -1;
 
    double maxVal = 0.0;
-   for(int i=0; i<N; i++)
-     {
+   for(int i=0; i<N; i++) {
       // We assume inputs are already Abs(), but safety first
       double v = MathAbs(values[i]);
       if(v > maxVal)
          maxVal = v;
-     }
+   }
 
 // CRITICAL: If the strongest move is weaker than our baseline noise,
 // force the range so everything falls into Bin 0 (Left).
@@ -628,8 +578,7 @@ int Stats::histogram_Magnitude(const double &values[], int N = 20, int bins=5, d
    if(step == 0)
       return 0; // All zero
 
-   for(int i=0; i<N; i++)
-     {
+   for(int i=0; i<N; i++) {
       double val = MathAbs(values[i]);
       int binIdx = (int)(val / step);
 
@@ -637,27 +586,25 @@ int Stats::histogram_Magnitude(const double &values[], int N = 20, int bins=5, d
          binIdx = bins - 1;
 
       counts[binIdx]++;
-     }
+   }
 
    int maxCount = 0;
    int domBin = -1;
 
 // Find dominant bin
-   for(int b=0; b<bins; b++)
-     {
-      if(counts[b] > maxCount)
-        {
+   for(int b=0; b<bins; b++) {
+      if(counts[b] > maxCount) {
          maxCount = counts[b];
          domBin = b;
-        }
-     }
+      }
+   }
 
 // Require dominance (clustering)
    if(maxCount < N * 0.4)
       return -1;
 
    return domBin;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| Scatter plot formula:   m = Σ(xi - xmean)(yi - ymean) / Σ(xi - xmean)²
@@ -779,8 +726,7 @@ int Stats::histogram_Magnitude(const double &values[], int N = 20, int bins=5, d
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SLOPETYPE Stats::scatterPlot(const double& sig[], int SIZE = 21, int SHIFT = 1)
-  {
+SLOPETYPE Stats::scatterPlot(const double& sig[], int SIZE = 21, int SHIFT = 1) {
 //DataTransport dt;
    SLOPETYPE st;
    double xy = 0;
@@ -794,13 +740,12 @@ SLOPETYPE Stats::scatterPlot(const double& sig[], int SIZE = 21, int SHIFT = 1)
 //double intercept = EMPTY_VALUE;
 //  double pipValue = ut.getPipValue(_Symbol);
 //   for(int i=SHIFT, j=N; i<SIZE; i++,j--) { // This maintains the slope value
-   for(int i = SHIFT, j = 0; i < SIZE; i++, j++)   // This flips slope value
-     {
+   for(int i = SHIFT, j = 0; i < SIZE; i++, j++) { // This flips slope value
       xy += sig[i] * j;
       sumx += j;
       sumy += sig[i];
       sumxsq += j * j;
-     }
+   }
    num = N * xy - (sumx * sumy);
    denom = N * sumxsq - (sumx * sumx);
    if(num == 0)
@@ -814,7 +759,7 @@ SLOPETYPE Stats::scatterPlot(const double& sig[], int SIZE = 21, int SHIFT = 1)
    st.slope = -1 * (num / denom);
    st.intercept = ((sumy - st.slope * sumx) / N);
    return st;
-  }
+}
 ////+------------------------------------------------------------------+
 ////|                                                                  |
 ////+------------------------------------------------------------------+
@@ -846,8 +791,7 @@ DTYPE Stats::slopeVal(
    const int SLOPEDENOM = 3,
    const int SLOPEDENOM_WIDE = 5,
    const int shift = 1
-)
-  {
+) {
    DTYPE dt;
    double pipValue = util.getPipValue(_Symbol);  // ← TRUE pip normalization
    if(pipValue <= 0)
@@ -863,7 +807,7 @@ DTYPE Stats::slopeVal(
    dt.val3 = dt.val1 - dt.val2;
 
    return dt;
-  }
+}
 
 
 
@@ -902,8 +846,7 @@ D20TYPE Stats::slopeRange(
    const int SLOPEDENOM = 3,
    const int range = 15,
    const int shift = 1
-)
-  {
+) {
    D20TYPE dt; // Created on stack, initialized to EMPTY_VALUE
 
 // SAFETY CHECK 1: Input Validation
@@ -913,11 +856,10 @@ D20TYPE Stats::slopeRange(
 // SAFETY CHECK 2: Max Limit Enforcement
 // If you ask for 70 items, we cap it at 60 to prevent array out of range
    int safeRange = range;
-   if(safeRange > 60)
-     {
+   if(safeRange > 60) {
       Print("Error: Range exceeds fixed struct limit of 60");
       safeRange = 60;
-     }
+   }
 
    double pipValue = util.getPipValue(_Symbol);
    if(pipValue <= 0)
@@ -925,21 +867,19 @@ D20TYPE Stats::slopeRange(
 
 // No ArrayResize needed (it's always 60)
 
-   for(int i = shift; i < shift + safeRange; i++)
-     {
+   for(int i = shift; i < shift + safeRange; i++) {
       // We must map 'i' back to 0-based index for the struct
       int structIdx = i - shift;
 
       dt.val[structIdx] = NormalizeDouble(
                              (sig[i] - sig[i + SLOPEDENOM]) / (SLOPEDENOM * pipValue), 4);
-     }
+   }
 
    return dt; // Returns a COPY of the struct
-  }
+}
 
 // Change return type to bool for error checking
-bool Stats::slopeRange_v2(const double &sig[], double &outputArr[], int range=15, int slopeDenom=3, int shift=1)
-  {
+bool Stats::slopeRange_v2(const double &sig[], double &outputArr[], int range=15, int slopeDenom=3, int shift=1) {
 
 // Safety Check: Not enough data in source
    if(ArraySize(sig) < range + shift + slopeDenom)
@@ -961,15 +901,14 @@ bool Stats::slopeRange_v2(const double &sig[], double &outputArr[], int range=15
    if(pipValue <= 0)
       pipValue = Point;
 
-   for(int i = 0; i < range; i++)
-     {
+   for(int i = 0; i < range; i++) {
       int idx = shift + i;
       // Slope logic
       double rawVal = (sig[idx] - sig[idx + slopeDenom]) / (double)slopeDenom;
       outputArr[i] = rawVal / pipValue;
-     }
+   }
    return true; // Success
-  }
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -980,8 +919,7 @@ DataTransport   Stats::slopeFastMediumSlow(
    const int SLOPEDENOM = 3,
    const int SLOPEDENOM_WIDE = 5,
    const int shift = 1
-)
-  {
+) {
    DataTransport dt;
    double tPoint = Point;
    dt.matrixD[0] = NormalizeDouble(((fast[shift] - fast[SLOPEDENOM]) / (SLOPEDENOM * tPoint)), 3);
@@ -989,14 +927,13 @@ DataTransport   Stats::slopeFastMediumSlow(
    dt.matrixD[2] = NormalizeDouble(((slow[shift] - slow[SLOPEDENOM]) / (SLOPEDENOM * tPoint)), 3);
    dt.matrixD[3] = NormalizeDouble(((slow[shift] - slow[SLOPEDENOM_WIDE]) / (SLOPEDENOM_WIDE * tPoint)), 3);
    return dt;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double Stats::cov(const double &x[], const double &y[], int n = 0, int shift = 0)
-  {
+double Stats::cov(const double &x[], const double &y[], int n = 0, int shift = 0) {
    double coeff = EMPTY_VALUE;
    double num = 0;
    double denomx = 0;
@@ -1006,32 +943,28 @@ double Stats::cov(const double &x[], const double &y[], int n = 0, int shift = 0
    double ym = mean(y);
    long SIZE = getDataSize(x);
 //  for(int i=0; i<(SIZE-shift); i++)
-   for(int i = shift; i < SIZE; i++)
-     {
+   for(int i = shift; i < SIZE; i++) {
       num += ((x[i] - xm) * (y[i] - ym));
-     }
+   }
 //denom =sqrt(denomx)*sqrt(denomy);
    denom = (SIZE - 1);
-   if(num == 0)
-     {
+   if(num == 0) {
       return 0;
-     }
-   if(denom == 0)
-     {
+   }
+   if(denom == 0) {
       denom = denom + 0.00000000001;
-     }
+   }
    coeff = num / denom;
 //  Print("yi:0 "+y[0]+" :1: "+y[1]+" :2: "+y[2]+" :3 "+y[3]+" :4 "+ y[4]);
 //   Print("Num: "+ num+" denomx: "+denomx+" denomy: "+denomy+" Denom: "+denom+" ym: "+ym+" xm: "+xm+" coeff: "+coeff);
    return coeff;
-  }
+}
 
 
 ////+------------------------------------------------------------------+
 ////|                                                                  |
 ////+------------------------------------------------------------------+
-double Stats::pearsonCoeff(const double &x[], const double &y[], int n = 0, int shift = 0)
-  {
+double Stats::pearsonCoeff(const double &x[], const double &y[], int n = 0, int shift = 0) {
 // coeff value: 1
 //Variable X: 10, 20, 30, 40, 50
 // Variable Y: 20, 40, 60, 80, 100
@@ -1047,34 +980,30 @@ double Stats::pearsonCoeff(const double &x[], const double &y[], int n = 0, int 
    double ym = mean(y);
    long SIZE = getDataSize(x);
 //  for(int i=0; i<(SIZE-shift); i++)
-   for(int i = shift; i < SIZE; i++)
-     {
+   for(int i = shift; i < SIZE; i++) {
       num += ((x[i] - xm) * (y[i] - ym));
       denomx += ((x[i] - xm) * (x[i] - xm));
       denomy += ((y[i] - ym) * (y[i] - ym));
-     }
+   }
    denom = sqrt(denomx) * sqrt(denomy);
 //if((num==0) || (denom==0))
 //   return 1000000.314;
-   if(num == 0)
-     {
+   if(num == 0) {
       return 0;
-     }
-   if(denom == 0)
-     {
+   }
+   if(denom == 0) {
       denom = denom + 0.00000000001;
-     }
+   }
    coeff = num / denom;
 //  Print("yi:0 "+y[0]+" :1: "+y[1]+" :2: "+y[2]+" :3 "+y[3]+" :4 "+ y[4]);
 //   Print("Num: "+ num+" denomx: "+denomx+" denomy: "+denomy+" Denom: "+denom+" ym: "+ym+" xm: "+xm+" coeff: "+coeff);
    return coeff;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SANTREND Stats::convDivTest(const double &top[], const double &bottom[], int n = 0, int shift = 0)
-  {
+SANTREND Stats::convDivTest(const double &top[], const double &bottom[], int n = 0, int shift = 0) {
    DataTransport d;
    int SIZE = (n == 0) ? (ArraySize(top) - shift) : (n - shift);
    double topr = -1000000.314;
@@ -1090,153 +1019,124 @@ SANTREND Stats::convDivTest(const double &top[], const double &bottom[], int n =
    int upflat = 0;
    int downflat = 0;
    int flatflat = 0;
-   for(int i = shift, j = 0; (i + 1) < (SIZE); i++, j++)
-     {
+   for(int i = shift, j = 0; (i + 1) < (SIZE); i++, j++) {
       topr = (top[i] / top[i + 1]);
       bottomr = (bottom[i] / bottom[i + 1]);
       // Print(" topr: "+topr+" bottomr: "+bottomr);
-      if((topr > 1) && (bottomr > 1) && (topr > bottomr))
-        {
+      if((topr > 1) && (bottomr > 1) && (topr > bottomr)) {
          updive++;
          d.matrixD[0]++;
-        }
-      if((topr > 1) && (bottomr > 1) && (topr < bottomr))
-        {
+      }
+      if((topr > 1) && (bottomr > 1) && (topr < bottomr)) {
          upconv++;
          d.matrixD[1]++;
-        }
-      if((topr > 1) && (bottomr > 1) && (topr == bottomr))
-        {
+      }
+      if((topr > 1) && (bottomr > 1) && (topr == bottomr)) {
          upflat++;
          d.matrixD[2]++;
-        }
-      if((topr < 1) && (bottomr < 1) && (topr > bottomr))
-        {
+      }
+      if((topr < 1) && (bottomr < 1) && (topr > bottomr)) {
          downdive++;
          d.matrixD[3]++;
-        }
-      if((topr < 1) && (bottomr < 1) && (topr < bottomr))
-        {
+      }
+      if((topr < 1) && (bottomr < 1) && (topr < bottomr)) {
          downconv++;
          d.matrixD[4]++;
-        }
-      if((topr < 1) && (bottomr < 1) && (topr == bottomr))
-        {
+      }
+      if((topr < 1) && (bottomr < 1) && (topr == bottomr)) {
          downflat++;
          d.matrixD[5]++;
-        }
-      if((topr == 1) && (bottomr > 1))
-        {
+      }
+      if((topr == 1) && (bottomr > 1)) {
          upperflatconv++;
          d.matrixD[6]++;
-        }
-      if((topr == 1) && (bottomr < 1))
-        {
+      }
+      if((topr == 1) && (bottomr < 1)) {
          upperflatdive++;
          d.matrixD[7]++;
-        }
-      if((topr > 1) && (bottomr == 1))
-        {
+      }
+      if((topr > 1) && (bottomr == 1)) {
          lowerflatdive++;
          d.matrixD[8]++;
-        }
-      if((topr < 1) && (bottomr == 1))
-        {
+      }
+      if((topr < 1) && (bottomr == 1)) {
          lowerflatconv++;
          d.matrixD[9]++;
-        }
-      if((topr == 1) && (bottomr == 1))
-        {
+      }
+      if((topr == 1) && (bottomr == 1)) {
          flatflat++;
          d.matrixD[10]++;
-        }
-     }
+      }
+   }
    int firstVal = d.matrixD[ArrayMaximum(d.matrixD)];
    int first = ArrayMaximum(d.matrixD);
    int secondVal = -1000314;
    int second = -1000314;
    int thirdVal = -1000314;
    int third = -1000314;
-   for(int i = 0; i < 12; i++)
-     {
-      if((i != first) && (second == -1000314))
-        {
+   for(int i = 0; i < 12; i++) {
+      if((i != first) && (second == -1000314)) {
          secondVal = d.matrixD[i];
          second = i;
-        }
-      if((i != first) && (second != -1000314) && (d.matrixD[i] > secondVal))
-        {
+      }
+      if((i != first) && (second != -1000314) && (d.matrixD[i] > secondVal)) {
          secondVal = d.matrixD[i];
          second = i;
-        }
-      if((i != first) && (i != second) && (third == -1000314))
-        {
+      }
+      if((i != first) && (i != second) && (third == -1000314)) {
          thirdVal = d.matrixD[i];
          third = i;
-        }
-      if((i != first) && (i != second) && (third != -1000314) && (d.matrixD[i] > thirdVal))
-        {
+      }
+      if((i != first) && (i != second) && (third != -1000314) && (d.matrixD[i] > thirdVal)) {
          thirdVal = d.matrixD[i];
          third = i;
-        }
-     }
-   if(first == 0)
-     {
+      }
+   }
+   if(first == 0) {
       return SANTREND::DIVUP;
-     }
-   if(first == 1)
-     {
+   }
+   if(first == 1) {
       return SANTREND::CONVUP;
-     }
-   if(first == 2)
-     {
+   }
+   if(first == 2) {
       return SANTREND::DIVDOWN;
-     }
-   if(first == 3)
-     {
+   }
+   if(first == 3) {
       return SANTREND::CONVDOWN;
-     }
-   if(first == 4)
-     {
+   }
+   if(first == 4) {
       return SANTREND::DIVFLAT;
-     }
-   if(first == 5)
-     {
+   }
+   if(first == 5) {
       return SANTREND::CONVFLAT;
-     }
-   if(first == 6)
-     {
+   }
+   if(first == 6) {
       return SANTREND::DIVFLAT;
-     }
-   if(first == 7)
-     {
+   }
+   if(first == 7) {
       return SANTREND::CONVFLAT;
-     }
-   if(first == 8)
-     {
+   }
+   if(first == 8) {
       return SANTREND::FLATUP;
-     }
-   if(first == 9)
-     {
+   }
+   if(first == 9) {
       return SANTREND::FLATDOWN;
-     }
-   if(first == 10)
-     {
+   }
+   if(first == 10) {
       return SANTREND::FLATFLAT;
-     }
+   }
 //   if((first==0)||(first==1)||(first==2)){ return SANTREND::UP; }
 //   if((first==3)||(first==4)||(first==5)){ return SANTREND::DOWN; }
 //   if((first==6)||(first==7)||(first==8)||(first==9)||(first==10)||(first==11)){ return SANTREND::FLAT; }
 //
 //   Print("Max array Val:"+ArrayMaximum(d.matrixD)+" first: "+first+" updive: "+updive+" upconv: "+upconv +" downdive: "+ downdive+" downconv: "+downconv+" upperflatconv: "+upperflatconv+" upperflatdive: "+upperflatdive+" lowerflatdive: "+lowerflatdive+" lowerflatconv: "+lowerflatconv+" flatflat: "+flatflat);
    return SANTREND::NOTREND;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double   Stats::zScore(double inpVal, double mean, double std)
-  {
+double   Stats::zScore(double inpVal, double mean, double std) {
    return ((inpVal - mean) / (std + 0.000000001));
 // Print("Std: "+std+" std+error: "+ (std+0.00001));
 //if(std!=0)
@@ -1244,11 +1144,10 @@ double   Stats::zScore(double inpVal, double mean, double std)
 //if(std==0)
 //   return 0;
 //return 0;
-  }
+}
 
 // Get element from a single-array matrix
-double Stats::getElement(const double &matrix[], const int i, const int j, const int DIM, const int rowSize)
-  {
+double Stats::getElement(const double &matrix[], const int i, const int j, const int DIM, const int rowSize) {
    if(i < 0 || j < 0 || i >= DIM || j >= DIM)
       return EMPTY_VALUE;
    int elemPosition = (i * rowSize) + j;
@@ -1257,47 +1156,40 @@ double Stats::getElement(const double &matrix[], const int i, const int j, const
    if(!MathIsValidNumber(matrix[elemPosition]))
       return EMPTY_VALUE;
    return matrix[elemPosition];
-  }
+}
 
 // Helper function to create a submatrix excluding specified row and column
-void Stats::createSubmatrix(const double &matrix[], double &submatrix[], const int excludeRow, const int excludeCol, const int DIM, const int rowSize)
-  {
+void Stats::createSubmatrix(const double &matrix[], double &submatrix[], const int excludeRow, const int excludeCol, const int DIM, const int rowSize) {
    int subDim = DIM - 1;
    ArrayResize(submatrix, subDim * subDim);
-   for(int i = 0, k = 0; i < DIM; i++)
-     {
+   for(int i = 0, k = 0; i < DIM; i++) {
       if(i == excludeRow)
          continue;
-      for(int j = 0; j < DIM; j++)
-        {
+      for(int j = 0; j < DIM; j++) {
          if(j == excludeCol)
             continue;
          submatrix[k++] = getElement(matrix, i, j, DIM, rowSize);
-        }
-     }
-  }
+      }
+   }
+}
 
 // Calculate determinant of a square matrix
-double Stats::det(const double &matrix[], const int DIM = 2)
-  {
+double Stats::det(const double &matrix[], const int DIM = 2) {
    if(DIM <= 0 || DIM > 5)
       return EMPTY_VALUE;
    if(ArraySize(matrix) != (DIM * DIM))
       return EMPTY_VALUE;
-   for(int i = 0; i < ArraySize(matrix); i++)
-     {
+   for(int i = 0; i < ArraySize(matrix); i++) {
       if(!MathIsValidNumber(matrix[i]))
          return EMPTY_VALUE;
-     }
+   }
    int rowSize = ArraySize(matrix) / DIM;
 // 2x2 matrix determinant: ad - bc
-   if(DIM == 2)
-     {
+   if(DIM == 2) {
       return matrix[0] * matrix[3] - matrix[1] * matrix[2];
-     }
+   }
 // 3x3 matrix determinant: a(ei - fh) - b(di - fg) + c(dh - eg)
-   if(DIM == 3)
-     {
+   if(DIM == 3) {
       double coFactor1[4];
       double coFactor2[4];
       double coFactor3[4];
@@ -1308,218 +1200,188 @@ double Stats::det(const double &matrix[], const int DIM = 2)
       double det2 = coFactor2[0] * coFactor2[3] - coFactor2[1] * coFactor2[2];
       double det3 = coFactor3[0] * coFactor3[3] - coFactor3[1] * coFactor3[2];
       return matrix[0] * det1 - matrix[1] * det2 + matrix[2] * det3;
-     }
+   }
 // 4x4 and 5x5: Use LU decomposition
-   if(DIM == 4 || DIM == 5)
-     {
+   if(DIM == 4 || DIM == 5) {
       // Copy matrix to avoid modifying input
       double A[];
       ArrayCopy(A, matrix);
       int n = DIM;
       int permutations = 0; // Track row swaps for determinant sign
       // LU decomposition with partial pivoting
-      for(int i = 0; i < n - 1; i++)
-        {
+      for(int i = 0; i < n - 1; i++) {
          // Find pivot
          int pivotRow = i;
          double pivot = MathAbs(A[i * rowSize + i]);
-         for(int k = i + 1; k < n; k++)
-           {
+         for(int k = i + 1; k < n; k++) {
             double value = MathAbs(A[k * rowSize + i]);
-            if(value > pivot)
-              {
+            if(value > pivot) {
                pivot = value;
                pivotRow = k;
-              }
-           }
+            }
+         }
          // Check for singular matrix
          if(pivot < 1e-10)
             return 0.0; // Near-zero pivot indicates singular matrix
          // Swap rows if needed
-         if(pivotRow != i)
-           {
-            for(int j = 0; j < n; j++)
-              {
+         if(pivotRow != i) {
+            for(int j = 0; j < n; j++) {
                double temp = A[i * rowSize + j];
                A[i * rowSize + j] = A[pivotRow * rowSize + j];
                A[pivotRow * rowSize + j] = temp;
-              }
+            }
             permutations++;
-           }
+         }
          // Eliminate below pivot
-         for(int k = i + 1; k < n; k++)
-           {
+         for(int k = i + 1; k < n; k++) {
             double factor = A[k * rowSize + i] / A[i * rowSize + i];
-            for(int j = i; j < n; j++)
-              {
+            for(int j = i; j < n; j++) {
                A[k * rowSize + j] -= factor * A[i * rowSize + j];
-              }
+            }
             A[k * rowSize + i] = factor; // Store L factor
-           }
-        }
+         }
+      }
       // Compute determinant as product of U's diagonal elements
       double result = 1.0;
-      for(int i = 0; i < n; i++)
-        {
+      for(int i = 0; i < n; i++) {
          result *= A[i * rowSize + i];
-        }
+      }
       // Adjust sign based on number of row swaps
       return (permutations % 2 == 0 ? 1 : -1) * result;
-     }
+   }
    return EMPTY_VALUE;
-  }
+}
 
 // Custom tanh function in MQL4
-double Stats::tanh(const double x)
-  {
+double Stats::tanh(const double x) {
    if(x > 20.0)
       return 1.0;  // Asymptote for large positive x
    if(x < -20.0)
       return -1.0;  // Asymptote for large negative x
    return (2.0 / (1.0 + MathExp(-2.0 * x))) - 1.0;
-  }
+}
 
 // Custom sigmoid function in MQL4
-double Stats::sigmoid(const double x)
-  {
+double Stats::sigmoid(const double x) {
    if(x > 20.0)
       return 1.0;  // Asymptote for large positive x
    return (1.0 / (1.0 + MathExp(-1.0 * x)));
-  }
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void Stats::swap(double &a, double &b)
-  {
+void Stats::swap(double &a, double &b) {
    double temp = a;
    a = b;
    b = temp;
-  }
+}
 // Simplified 4x4 determinant using LU (add to your script)
-double Stats::det4(double &mat[][4])
-  {
+double Stats::det4(double &mat[][4]) {
    double A[4][4];
    for(int i = 0; i < 4; i++)
       for(int j = 0; j < 4; j++)
          A[i][j] = mat[i][j];
    int permutations = 0;
-   for(int i = 0; i < 3; i++)
-     {
+   for(int i = 0; i < 3; i++) {
       int pivotRow = i;
       double pivot = MathAbs(A[i][i]);
-      for(int k = i + 1; k < 4; k++)
-        {
-         if(MathAbs(A[k][i]) > pivot)
-           {
+      for(int k = i + 1; k < 4; k++) {
+         if(MathAbs(A[k][i]) > pivot) {
             pivot = MathAbs(A[k][i]);
             pivotRow = k;
-           }
-        }
+         }
+      }
       if(pivot < 1e-10)
          return 0.0;
-      if(pivotRow != i)
-        {
+      if(pivotRow != i) {
          for(int j = 0; j < 4; j++)
             swap(A[i][j], A[pivotRow][j]);
          permutations++;
-        }
-      for(int k = i + 1; k < 4; k++)
-        {
+      }
+      for(int k = i + 1; k < 4; k++) {
          double factor = A[k][i] / A[i][i];
          for(int j = i; j < 4; j++)
             A[k][j] -= factor * A[i][j];
-        }
-     }
+      }
+   }
    double result = 1.0;
    for(int i = 0; i < 4; i++)
       result *= A[i][i];
    return (permutations % 2 == 0 ? 1 : -1) * result;
-  }
+}
 
 // Simplified determinant using LU decomposition
-double Stats::detLU(const double &matrix[], const int rowSize)
-  {
+double Stats::detLU(const double &matrix[], const int rowSize) {
    if(rowSize > 7)
       return EMPTY_VALUE;
    if(ArraySize(matrix) != (rowSize * rowSize))
       return EMPTY_VALUE; // Not 5x5
    if(ArraySize(matrix) < (rowSize * rowSize))
       return EMPTY_VALUE;
-   for(int i = 0; i < (rowSize * rowSize); i++)
-     {
+   for(int i = 0; i < (rowSize * rowSize); i++) {
       if(!MathIsValidNumber(matrix[i]))
          return EMPTY_VALUE;  // NaN/INF
-     }
+   }
 // Copy matrix to avoid modifying input
    double A[];
    ArrayResize(A, (rowSize * rowSize));
 //ArrayCopy(A, matrix);
    ArrayCopy(A, matrix, 0, 0, (rowSize * rowSize));
    string str = "";
-   for(int i = 0; i < ArraySize(A); i++)
-     {
+   for(int i = 0; i < ArraySize(A); i++) {
       str += A[i] + " :: ";
-     }
+   }
    Print("ARRSIZE: " + ArraySize(A) + " Vals: " + str);
 //int n = 5;
    int n = rowSize;
 //int rowSize = 5;  // For row-major indexing
    int permutations = 0;  // Track row swaps for sign
 // LU decomposition with partial pivoting
-   for(int i = 0; i < n - 1; i++)
-     {
+   for(int i = 0; i < n - 1; i++) {
       // Find pivot
       int pivotRow = i;
       double pivot = MathAbs(A[i * rowSize + i]);
-      for(int k = i + 1; k < n; k++)
-        {
+      for(int k = i + 1; k < n; k++) {
          double value = MathAbs(A[k * rowSize + i]);
-         if(value > pivot)
-           {
+         if(value > pivot) {
             pivot = value;
             pivotRow = k;
-           }
-        }
+         }
+      }
       // Singular matrix check
       if(pivot < 1e-10)
          return 0.0;
       // Swap rows if needed
-      if(pivotRow != i)
-        {
-         for(int j = 0; j < n; j++)
-           {
+      if(pivotRow != i) {
+         for(int j = 0; j < n; j++) {
             double temp = A[i * rowSize + j];
             A[i * rowSize + j] = A[pivotRow * rowSize + j];
             A[pivotRow * rowSize + j] = temp;
-           }
+         }
          permutations++;
-        }
+      }
       // Eliminate below pivot
-      for(int k = i + 1; k < n; k++)
-        {
+      for(int k = i + 1; k < n; k++) {
          double factor = A[k * rowSize + i] / A[i * rowSize + i];
-         for(int j = i; j < n; j++)
-           {
+         for(int j = i; j < n; j++) {
             A[k * rowSize + j] -= factor * A[i * rowSize + j];
-           }
+         }
          // Note: Factor stored in L (below diagonal), but not needed for det
-        }
-     }
+      }
+   }
 // Determinant = product of U's diagonal elements, adjusted by permutations
    double result = 1.0;
-   for(int i = 0; i < n; i++)
-     {
+   for(int i = 0; i < n; i++) {
       result *= A[i * rowSize + i];
-     }
+   }
    return (permutations % 2 == 0 ? 1 : -1) * result;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //| Mean Detrending                                                  |
 //+------------------------------------------------------------------+
-void Stats::sigMeanDeTrend(const double &inputSig[], double &outputSignal[], int SIZE = 21)
-  {
+void Stats::sigMeanDeTrend(const double &inputSig[], double &outputSignal[], int SIZE = 21) {
    double pipVal = ut.getPipValue(_Symbol); // 0.01
    ArrayResize(outputSignal, SIZE);
    ut.transformAndCopyArraySlice(inputSig, outputSignal, 0, SIZE - 1, pipVal); // Output in pips
@@ -1536,16 +1398,14 @@ void Stats::sigMeanDeTrend(const double &inputSig[], double &outputSignal[], int
 //
    double meanVal = mean(outputSignal);
 //Print("[MEAN]: " + DoubleToString(meanVal, 6));
-   for(int i = 0; i < SIZE; i++)
-     {
+   for(int i = 0; i < SIZE; i++) {
       outputSignal[i] = (outputSignal[i] != 0) ? (outputSignal[i] - meanVal) : 0.0; // Zero-mean in pips
-     }
-  }
+   }
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void Stats::sigLinearDeTrend(const double &inputSig[], double &outputSignal[], int SIZE = 21)
-  {
+void Stats::sigLinearDeTrend(const double &inputSig[], double &outputSignal[], int SIZE = 21) {
    double pipVal = ut.getPipValue(_Symbol); // 0.01
    ArrayResize(outputSignal, SIZE);
    ut.copyArraySlice(inputSig, outputSignal, 0, SIZE - 1);
@@ -1559,17 +1419,15 @@ void Stats::sigLinearDeTrend(const double &inputSig[], double &outputSignal[], i
    if(slope == EMPTY_VALUE || intercept == EMPTY_VALUE)
       return;
 //  double pipVal = ut.getPipValue(_Symbol); // 0.01 for USDJPY
-   for(int i = 0; i < SIZE; i++)
-     {
+   for(int i = 0; i < SIZE; i++) {
       outputSignal[i] = (outputSignal[i] != 0) ? ((outputSignal[i] - (slope * i + intercept))) : 0.0;
-     }
-  }
+   }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-RITYPE   Stats::dftFormula(const double timeSeriesVal, const int k, const int n, const int SIZE)
-  {
+RITYPE   Stats::dftFormula(const double timeSeriesVal, const int k, const int n, const int SIZE) {
    RITYPE ri;
    ri.r = 0.0;
    ri.i = 0.0;
@@ -1577,7 +1435,7 @@ RITYPE   Stats::dftFormula(const double timeSeriesVal, const int k, const int n,
    ri.r += timeSeriesVal * MathCos(angle);
    ri.i -= timeSeriesVal * MathSin(angle);
    return ri;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| DFT (FFT Approximation) for USDJPY Signal Analysis                |
@@ -1586,8 +1444,7 @@ RITYPE   Stats::dftFormula(const double timeSeriesVal, const int k, const int n,
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void Stats::dftTransform(const double &inputSig[], double &magnitude[], double &phase[], double &power[], int SIZE = 8)
-  {
+void Stats::dftTransform(const double &inputSig[], double &magnitude[], double &phase[], double &power[], int SIZE = 8) {
    double detrended[];
    sigMeanDeTrend(inputSig, detrended, SIZE);
    int N = (int)MathPow(2, MathCeil(MathLog(SIZE) / MathLog(2)));
@@ -1605,29 +1462,26 @@ void Stats::dftTransform(const double &inputSig[], double &magnitude[], double &
    ArrayResize(magnitude, N);
    ArrayResize(phase, N);
    ArrayResize(power, N);
-   for(int k = 0; k < N; k++)
-     {
+   for(int k = 0; k < N; k++) {
       double real = 0.0;
       double imag = 0.0;
-      for(int n = 0; n < N; n++)
-        {
+      for(int n = 0; n < N; n++) {
          double angle = 2 * M_PI * k * n / N;
          real += paddedSig[n] * MathCos(angle);
          imag -= paddedSig[n] * MathSin(angle);
-        }
+      }
       magnitude[k] = sqrt(real * real + imag * imag); // No extra normalization
       phase[k] = Arctan2(imag, real);
       power[k] = (magnitude[k] * magnitude[k]) / N;
-     }
-  }
+   }
+}
 
 
 
 //+------------------------------------------------------------------+
 //| Hilbert Transform for USDJPY Trading Signals                      |
 //+------------------------------------------------------------------+
-void Stats::hilbertTransform(const double &inputSig[], double &amplitude[], double &phase[], int SIZE = 8, int FILTER_LENGTH = 3)
-  {
+void Stats::hilbertTransform(const double &inputSig[], double &amplitude[], double &phase[], int SIZE = 8, int FILTER_LENGTH = 3) {
 // Step 1: Detrend (returns pips)
    double detrended[];
    sigMeanDeTrend(inputSig, detrended, SIZE); // Outputs pips
@@ -1650,10 +1504,9 @@ void Stats::hilbertTransform(const double &inputSig[], double &amplitude[], doub
    double kernel[];
    int M = FILTER_LENGTH;
    ArrayResize(kernel, 2 * M + 1);
-   for(int m = -M; m <= M; m++)
-     {
+   for(int m = -M; m <= M; m++) {
       kernel[m + M] = (m != 0 && m % 2 != 0) ? 2.0 / (M_PI * m) : 0.0;
-     }
+   }
 //string ker = "";
 //for(int i = 0; i < (2*M + 1); i++) ker += " "+i+":" + DoubleToString(kernel[i], 6)+(((SIZE%8)==0)?'\n':"");
 //Print("[KERNEL]: " + ker);
@@ -1663,19 +1516,17 @@ void Stats::hilbertTransform(const double &inputSig[], double &amplitude[], doub
 //string ssp="";
 //string kkp="";
 //string ppp="";
-   for(int n = M; n < N - M; n++)
-     {
+   for(int n = M; n < N - M; n++) {
       double sum = 0.0;
-      for(int m = -M; m <= M; m++)
-        {
+      for(int m = -M; m <= M; m++) {
          if(n - m >= 0 && n - m < N)
             sum += kernel[m + M] * paddedSig[n - m];
          //ssp+=" "+m+":"+sum;
          //kkp+=" "+m+":"+kernel[m + M];
          //ppp+=" "+m+":"+paddedSig[n - m];
-        }
+      }
       hat_x[n] = sum;
-     }
+   }
 //Print("[KERNEL]: "+kkp);
 //Print("[PADDEDSIG]: "+ppp);
 //Print("[SUM]: "+ssp);
@@ -1683,117 +1534,101 @@ void Stats::hilbertTransform(const double &inputSig[], double &amplitude[], doub
 //for(int i = 0; i < N; i++) hatx += " "+i+":" + DoubleToString(hat_x[i], 6);
 //Print("[HAT_X]: " + hatx);
 // Step 5: Compute amplitude and phase
-   for(int i = 0; i < N; i++)
-     {
-      if(i < M || i >= N - M)
-        {
+   for(int i = 0; i < N; i++) {
+      if(i < M || i >= N - M) {
          amplitude[i] = 0.0;
          phase[i] = 0.0;
-        }
-      else
-        {
+      } else {
          amplitude[i] = MathSqrt(paddedSig[i] * paddedSig[i] + hat_x[i] * hat_x[i]); // Pips, no normalization
          phase[i] = Arctan2(hat_x[i], paddedSig[i]);
-        }
-     }
-  }
+      }
+   }
+}
 
 //+------------------------------------------------------------------+
 //| Max Value Template                                               |
 //+------------------------------------------------------------------+
 template<typename T>
-T Stats::maxVal(const T v1, const T v2)
-  {
+T Stats::maxVal(const T v1, const T v2) {
    if(v1 > v2)
       return v1;
    if(v2 > v1)
       return v2;
    return v1; // If equal
-  }
+}
 
 //+------------------------------------------------------------------+
 //| Extract Hilbert Amp and Phase                                    |
 //+------------------------------------------------------------------+
-DTYPE Stats::extractHilbertAmpNPhase(const double &hilbertAmp[], const double &hilbertPhase[], double cutOff)
-  {
+DTYPE Stats::extractHilbertAmpNPhase(const double &hilbertAmp[], const double &hilbertPhase[], double cutOff) {
    DTYPE dt;
    int SIZE = ArraySize(hilbertAmp);
    dt.val1 = EMPTY; // Index
    dt.val2 = EMPTY_VALUE; // Amp
    dt.val3 = EMPTY_VALUE; // Phase
-   for(int i = 0; i < SIZE; i++)
-     {
-      if(hilbertAmp[i] > cutOff)
-        {
+   for(int i = 0; i < SIZE; i++) {
+      if(hilbertAmp[i] > cutOff) {
          dt.val1 = i;
          dt.val2 = hilbertAmp[i];
          dt.val3 = hilbertPhase[i];
          break; // Most recent (smallest i) above cutoff
-        }
-     }
+      }
+   }
    return dt;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| Extract DFT Power and Phase                                      |
 //+------------------------------------------------------------------+
-DTYPE Stats::extractDftPowerNPhase(const double &dftMag[], const double &dftPhase[], const double &dftPower[])
-  {
+DTYPE Stats::extractDftPowerNPhase(const double &dftMag[], const double &dftPhase[], const double &dftPower[]) {
    DTYPE dt;
    int max_power_k = 1;
    double max_power = dftPower[1];
    int SIZE = ArraySize(dftMag) / 2; // k=1 to SIZE/2
-   for(int k = 2; k <= (SIZE / 2); k++)   // Limit to 4 for stability
-     {
-      if(dftPower[k] > max_power)
-        {
+   for(int k = 2; k <= (SIZE / 2); k++) { // Limit to 4 for stability
+      if(dftPower[k] > max_power) {
          max_power = dftPower[k];
          max_power_k = k;
-        }
-     }
+      }
+   }
    dt.val1 = max_power_k;
    dt.val2 = dftMag[max_power_k];
    dt.val3 = dftPhase[max_power_k];
    dt.val4 = max_power;
    return dt;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double  Stats::dotProd(const double &series1[], const double &series2[], const int SIZE = 10, const int interval = 0, int SHIFT = 1)
-  {
+double  Stats::dotProd(const double &series1[], const double &series2[], const int SIZE = 10, const int interval = 0, int SHIFT = 1) {
    double dp = EMPTY_VALUE;
-   for(int i = SHIFT; i < SIZE; i = (i + interval))
-     {
+   for(int i = SHIFT; i < SIZE; i = (i + interval)) {
       if(dp == EMPTY_VALUE)
          dp = 0;
       dp += series1[i] * series2[i];
-     }
+   }
    return dp;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double  Stats::arraySum(const double &arr[], const int SIZE = 10, int SHIFT = 0)
-  {
+double  Stats::arraySum(const double &arr[], const int SIZE = 10, int SHIFT = 0) {
    double sum = EMPTY_VALUE;
-   for(int i = SHIFT; i < SIZE; i = i++)
-     {
+   for(int i = SHIFT; i < SIZE; i = i++) {
       if(sum == EMPTY_VALUE)
          sum = 0;
       sum += arr[i];
-     }
+   }
    return sum;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| vWCM_Score - Volume-Weighted Candle Momentum                     |
 //+------------------------------------------------------------------+
 double Stats::vWCM_Score(const double &open[], const double &close[],
-                         const double &volume[], int N = 10, const int interval = 0, int SHIFT = 1)
-  {
+                         const double &volume[], int N = 10, const int interval = 0, int SHIFT = 1) {
    double total_vol = 0.0;
    for(int i = 0; i < N; i++)
       total_vol += volume[i];
@@ -1802,34 +1637,31 @@ double Stats::vWCM_Score(const double &open[], const double &close[],
       return 0.0;
 
    double score = 0.0;
-   for(int i = SHIFT; i < N; i = (i + interval))   // ← skip incomplete bars
-     {
+   for(int i = SHIFT; i < N; i = (i + interval)) { // ← skip incomplete bars
       double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
       double vol_weight = volume[i] / total_vol;
       score += body_pips * vol_weight;
-     }
+   }
    return score;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| vWCM_Score v2 - Normalized & Safe                                |
 //+------------------------------------------------------------------+
 double Stats::vWCM_Score_v2(const double &open[], const double &close[],
-                            const double &volume[], int N = 10, int SHIFT = 1)
-  {
+                            const double &volume[], int N = 10, int SHIFT = 1) {
    double sum_force = 0.0;
    double total_vol = 0.0;
 
 // Single Loop: Safer and more efficient
-   for(int i = SHIFT; i < (N + SHIFT); i++)
-     {
+   for(int i = SHIFT; i < (N + SHIFT); i++) {
       double vol = volume[i];
       double body_pips = (close[i] - open[i]) / util.getPipValue(_Symbol);
 
       // Force = Direction * Volume
       sum_force += (body_pips * vol);
       total_vol += vol;
-     }
+   }
 
    if(total_vol <= 0)
       return 0.0;
@@ -1837,33 +1669,25 @@ double Stats::vWCM_Score_v2(const double &open[], const double &close[],
 // Result is "Weighted Average Pips per Candle"
 // This makes it comparable to ATR or average candle size.
    return sum_force / total_vol;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-DTYPE Stats::getDecimalVal(const double num, const double denom)
-  {
+DTYPE Stats::getDecimalVal(const double num, const double denom) {
    DTYPE dt;
-   if((int)num == (int)denom)
-     {
+   if((int)num == (int)denom) {
       dt.val1 = (num - (int)num);
       dt.val2 = (denom - (int)denom);
-     }
-   else
-      if((int)num < (int)denom)
-        {
-         dt.val1 = (num - (int)num);
-         dt.val2 = (denom - (int)num);
-        }
-      else
-         if((int)num > (int)denom)
-           {
-            dt.val1 = (num - (int)denom);
-            dt.val2 = (denom - (int)denom);
-           }
+   } else if((int)num < (int)denom) {
+      dt.val1 = (num - (int)num);
+      dt.val2 = (denom - (int)num);
+   } else if((int)num > (int)denom) {
+      dt.val1 = (num - (int)denom);
+      dt.val2 = (denom - (int)denom);
+   }
    return dt;
-  }
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+

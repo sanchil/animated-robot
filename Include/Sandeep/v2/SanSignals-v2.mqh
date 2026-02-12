@@ -17,12 +17,11 @@
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-class SanSignals
-  {
-private:
+class SanSignals {
+ private:
    int               ticket;
    double            m_peakRatio;  // class member
-public:
+ public:
                      SanSignals();
                     ~SanSignals();
    void              sayMesg();
@@ -80,7 +79,7 @@ public:
       double strictness = 1.0
    );
 
-   double  probabilisticSIG(
+   double            probabilisticSIG(
       const double &maArray[],
       const double &closeArray[],   // renamed for clarity
       const double &openArray[],    // ← add this
@@ -361,30 +360,27 @@ public:
       const int FILTER = 3
    );
 
-  };
+};
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SanSignals::SanSignals(): m_peakRatio(0)
-  {
-  }
+SanSignals::SanSignals(): m_peakRatio(0) {
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SanSignals::~SanSignals()
-  {
-  }
+SanSignals::~SanSignals() {
+}
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void SanSignals::sayMesg()
-  {
+void SanSignals::sayMesg() {
    ticket = 100;
 // Print("CURRENT Ticket is :"+ticket);
-  }
+}
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
@@ -394,66 +390,60 @@ void SanSignals::sayMesg()
 //| • Output: double 0.82–0.98 (tight to loose)                     |
 //| • Use in signals: PEAK_DROP = getPeakDecay(STRAT_ATR, atr);     |
 //+------------------------------------------------------------------+
-double SanSignals::getPeakDecay(double atr = 0,DECAY_STRATEGY strat = STRAT_ATR, double period = 14, int shift = 1)
-  {
+double SanSignals::getPeakDecay(double atr = 0,DECAY_STRATEGY strat = STRAT_ATR, double period = 14, int shift = 1) {
    double base = 0.82;  // Min decay (tight in weak regimes)
    double scale = 0.16; // Max addition (loose in strong regimes)
    double norm = 0.0;   // Normalized strength (0–1)
 
-   switch(strat)
-     {
-      case STRAT_ATR:
-        {
-         // Your ATR norm (volatility fuel)
-         double pipValue = util.getPipValue(_Symbol);
-         double atrPips = (pipValue > 0) ? atr / pipValue : 0.0;
-         double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
-         double atrCeiling = MathCeil(12.0 * tfScale);
-         norm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
-         break;
-        }
+   switch(strat) {
+   case STRAT_ATR: {
+      // Your ATR norm (volatility fuel)
+      double pipValue = util.getPipValue(_Symbol);
+      double atrPips = (pipValue > 0) ? atr / pipValue : 0.0;
+      double tfScale = (_Period > 1) ? MathLog(_Period) : 1.0;
+      double atrCeiling = MathCeil(12.0 * tfScale);
+      norm = MathMin(MathMax(atrPips / atrCeiling, 0.0), 1.0);
+      break;
+   }
 
-      case STRAT_ADX:
-        {
-         // ADX norm (trend quality)
-         double adx = iADX(NULL, 0, (int)period, PRICE_CLOSE, MODE_MAIN, shift);
-         norm = MathMin(adx / 50.0, 1.0);  // 0–1 (ADX>50 rare)
-         break;
-        }
-      //case STRAT_ER:
-      //  {
-      //   // ER norm (efficiency)
-      //   double net = MathAbs(close[shift] - close[shift + (int)period]);
-      //   double sumAbs = 0.0;
-      //   for(int i = shift; i < shift + (int)period; i++)
-      //      sumAbs += MathAbs(close[i] - close[i+1]);
-      //   norm = (sumAbs > 0) ? net / sumAbs : 0.0;
-      //   break;
-      //  }
-      case STRAT_MIX:
-        {
-         // Weighted mix (0.5 ATR + 0.3 ADX + 0.2 ER)
-         double atrNorm = getPeakDecay(atr,STRAT_ATR,  period, shift);
-         double adxNorm = getPeakDecay(atr,STRAT_ADX, period, shift);
-         double erNorm = getPeakDecay(atr, STRAT_ER, period, shift);
-         norm = 0.5 * atrNorm + 0.3 * adxNorm + 0.2 * erNorm;
-         break;
-        }
-     }
+   case STRAT_ADX: {
+      // ADX norm (trend quality)
+      double adx = iADX(NULL, 0, (int)period, PRICE_CLOSE, MODE_MAIN, shift);
+      norm = MathMin(adx / 50.0, 1.0);  // 0–1 (ADX>50 rare)
+      break;
+   }
+//case STRAT_ER:
+//  {
+//   // ER norm (efficiency)
+//   double net = MathAbs(close[shift] - close[shift + (int)period]);
+//   double sumAbs = 0.0;
+//   for(int i = shift; i < shift + (int)period; i++)
+//      sumAbs += MathAbs(close[i] - close[i+1]);
+//   norm = (sumAbs > 0) ? net / sumAbs : 0.0;
+//   break;
+//  }
+   case STRAT_MIX: {
+      // Weighted mix (0.5 ATR + 0.3 ADX + 0.2 ER)
+      double atrNorm = getPeakDecay(atr,STRAT_ATR,  period, shift);
+      double adxNorm = getPeakDecay(atr,STRAT_ADX, period, shift);
+      double erNorm = getPeakDecay(atr, STRAT_ER, period, shift);
+      norm = 0.5 * atrNorm + 0.3 * adxNorm + 0.2 * erNorm;
+      break;
+   }
+   }
 
 // Your square-root curve (looser in strong regimes)
    double PEAK_DROP = base + scale * MathSqrt(norm);
    PEAK_DROP = MathMax(MathMin(PEAK_DROP, 0.99), 0.70);  // Clamp
 
    return PEAK_DROP;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::adxSIG(const double ciAdxMain, const double ciAdxPlus, const double ciAdxMinus)
-  {
+SAN_SIGNAL SanSignals::adxSIG(const double ciAdxMain, const double ciAdxPlus, const double ciAdxMinus) {
    /***********************
    //Strategy:
    //Use ADX along with +DI and -DI (Directional Movement Indicators) to identify:
@@ -481,7 +471,7 @@ SAN_SIGNAL SanSignals::adxSIG(const double ciAdxMain, const double ciAdxPlus, co
    if(crossOver2 || sideways1)
       return SAN_SIGNAL::SIDEWAYS;
    return SAN_SIGNAL::NOSIG;
-  }
+}
 //+------------------------------------------------------------------+
 
 
@@ -494,8 +484,7 @@ SAN_SIGNAL SanSignals::fastSlowSIG(
    const double fastSig,
    const double slowSig,
    const int factor = 10
-)
-  {
+) {
    const double upperFACTOR = 1 + (factor / 100);
    const double lowerFACTOR = 1 - (factor / 100);
    if((fastSig >= (lowerFACTOR * slowSig)) && (fastSig <= (upperFACTOR * slowSig)))
@@ -505,7 +494,7 @@ SAN_SIGNAL SanSignals::fastSlowSIG(
    if(fastSig < (lowerFACTOR * slowSig))
       return SAN_SIGNAL::SELL;
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -516,30 +505,21 @@ SAN_SIGNAL  SanSignals::fastSlowTrendSIG(
    const double &slow[],
    const int period = 5,
    const int shift = 1
-)
-  {
+) {
    int above = 0;
    int flat = 0;
    int below = 0;
    if(shift >= period)
       return SAN_SIGNAL::NOSIG;
-   for(int i = shift; i <= period; i++)
-     {
-      if(fast[i] == slow[i])
-        {
+   for(int i = shift; i <= period; i++) {
+      if(fast[i] == slow[i]) {
          ++flat;
-        }
-      else
-         if(fast[i] > slow[i])
-           {
-            ++above;
-           }
-         else
-            if(fast[i] < slow[i])
-              {
-               ++below;
-              }
-     }
+      } else if(fast[i] > slow[i]) {
+         ++above;
+      } else if(fast[i] < slow[i]) {
+         ++below;
+      }
+   }
 //  Print("Cross overs: Above: "+above+" Below: "+below+" Flat: "+flat);
    bool preBool1 = ((flat > 0) && (above == 0) && (below == 0));
    bool preBool2 = ((flat > 0) && (above > 0) && (below == 0));
@@ -564,29 +544,21 @@ SAN_SIGNAL  SanSignals::fastSlowTrendSIG(
    bool flatBool = (preBool1 || flatBool9 || flatBool10 || flatBool11);
    bool buyBool = (preBool5 || buyBool3 || buyBool4);
    bool sellBool = (preBool6 || sellBool3 || sellBool4);
-   if(flatBool)
-     {
+   if(flatBool) {
       //return SAN_SIGNAL::NOSIG;
       return SAN_SIGNAL::SIDEWAYS;
-     }
-   else
-      if(buyBool)
-        {
-         return SAN_SIGNAL::BUY;
-        }
-      else
-         if(sellBool)
-           {
-            return SAN_SIGNAL::SELL;
-           }
+   } else if(buyBool) {
+      return SAN_SIGNAL::BUY;
+   } else if(sellBool) {
+      return SAN_SIGNAL::SELL;
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-DataTransport SanSignals::clusterData(const double fast, const double medium, const double slow = 0)
-  {
+DataTransport SanSignals::clusterData(const double fast, const double medium, const double slow = 0) {
    DataTransport dt;
    int fastInt = fast;
    int mediumInt = medium;
@@ -597,50 +569,29 @@ DataTransport SanSignals::clusterData(const double fast, const double medium, co
    double rDFM = fabs(fast - medium) / fabs((fast + medium) / 2);
    double rDMS = fabs(medium - slow) / fabs((medium + slow) / 2);
    double rDFS = fabs(fast - slow) / fabs((fast + slow) / 2);
-   if(fastInt == mediumInt)
-     {
+   if(fastInt == mediumInt) {
       rFM = ((fast - fastInt) / (medium - mediumInt));
-     }
-   else
-      if(fastInt > mediumInt)
-        {
-         rFM = ((fast - mediumInt) / (medium - mediumInt));
-        }
-      else
-         if(fastInt < mediumInt)
-           {
-            //rFM = ((fast-fastInt)/(medium-fastInt));
-            rFM = -1 * ((medium - fastInt) / (fast - fastInt));
-           }
-   if(mediumInt == slowInt)
-     {
+   } else if(fastInt > mediumInt) {
+      rFM = ((fast - mediumInt) / (medium - mediumInt));
+   } else if(fastInt < mediumInt) {
+      //rFM = ((fast-fastInt)/(medium-fastInt));
+      rFM = -1 * ((medium - fastInt) / (fast - fastInt));
+   }
+   if(mediumInt == slowInt) {
       rMS = ((medium - mediumInt) / (slow - slowInt));
-     }
-   else
-      if(mediumInt > slowInt)
-        {
-         rMS = ((medium - slowInt) / (slow - slowInt));
-        }
-      else
-         if(mediumInt < slowInt)
-           {
-            // rMS = ((medium-mediumInt)/(slow-mediumInt));
-            rMS = -1 * ((slow - mediumInt) / (medium - mediumInt));
-           }
-   if(fastInt == slowInt)
-     {
+   } else if(mediumInt > slowInt) {
+      rMS = ((medium - slowInt) / (slow - slowInt));
+   } else if(mediumInt < slowInt) {
+      // rMS = ((medium-mediumInt)/(slow-mediumInt));
+      rMS = -1 * ((slow - mediumInt) / (medium - mediumInt));
+   }
+   if(fastInt == slowInt) {
       rFS = ((fast - fastInt) / (slow - slowInt));
-     }
-   else
-      if(fastInt > slowInt)
-        {
-         rFS = ((fast - slowInt) / (slow - slowInt));
-        }
-      else
-         if(fastInt < slowInt)
-           {
-            rFS = -1 * ((slow - fastInt) / (fast - fastInt));
-           }
+   } else if(fastInt > slowInt) {
+      rFS = ((fast - slowInt) / (slow - slowInt));
+   } else if(fastInt < slowInt) {
+      rFS = -1 * ((slow - fastInt) / (fast - fastInt));
+   }
 //   double gt=EMPTY_VALUE;
 //   gt = (rFM>rMS)?rFM:rMS;
 //   gt = (gt>rFS)?gt:rFS;
@@ -657,13 +608,12 @@ DataTransport SanSignals::clusterData(const double fast, const double medium, co
    dt.matrixD[2] =  NormalizeDouble(rFS, 6);
 //return NormalizeDouble(rFM,6);
    return dt;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-DataTransport   SanSignals::varSIG(const SIGMAVARIABILITY fast, const SIGMAVARIABILITY medium, const SIGMAVARIABILITY slow)
-  {
+DataTransport   SanSignals::varSIG(const SIGMAVARIABILITY fast, const SIGMAVARIABILITY medium, const SIGMAVARIABILITY slow) {
    DataTransport dt;
 //   double var30Val = util.getSigVarBool(fast);
    double var30Val = util.getSigVariabilityBool(fast, "FAST");
@@ -692,7 +642,7 @@ DataTransport   SanSignals::varSIG(const SIGMAVARIABILITY fast, const SIGMAVARIA
    dt.matrixBool[2] = varFlatBool;
    dt.matrixBool[3] = varBool;
    return dt;
-  }
+}
 
 ////+------------------------------------------------------------------+
 ////|                                                                  |
@@ -727,13 +677,12 @@ DTYPE   SanSignals::slopeSIGData(
    const int SLOPEDENOM = 3,
    const int SLOPEDENOM_WIDE = 5,
    const int shift = 1
-)
-  {
+) {
 //   DataTransport dt;
    DTYPE dt;
    dt = stats.slopeVal(sig, SLOPEDENOM, SLOPEDENOM_WIDE, shift);
    return dt;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -744,8 +693,7 @@ SAN_SIGNAL  SanSignals::obvCPSIG(
    const int SLOPEDENOM = 3,
    const int SLOPEDENOM_WIDE = 5,
    const int shift = 1
-)
-  {
+) {
 //   DataTransport dt;
    DTYPE dt;
    double obvSlope = 0.0;
@@ -758,15 +706,13 @@ SAN_SIGNAL  SanSignals::obvCPSIG(
       return SAN_SIGNAL::SELL;
 
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::slopeSIG(const DTYPE& signalDt, const int signalType = 0)
-  {
-   if(signalType == 0)
-     {
+SAN_SIGNAL SanSignals::slopeSIG(const DTYPE& signalDt, const int signalType = 0) {
+   if(signalType == 0) {
       if((signalDt.val1 >= -0.3) && (signalDt.val1 <= 0.3))
          return SAN_SIGNAL::CLOSE;
       if((signalDt.val1 >= -0.4) && (signalDt.val1 <= 0.4))
@@ -775,33 +721,27 @@ SAN_SIGNAL SanSignals::slopeSIG(const DTYPE& signalDt, const int signalType = 0)
          return SAN_SIGNAL::BUY;
       if(signalDt.val1 < -0.4)
          return SAN_SIGNAL::SELL;
-     }
-   else
-      if(signalType == 1)
-        {
-         if((signalDt.val1 >= -0.2) && (signalDt.val1 <= 0.2))
-            return SAN_SIGNAL::CLOSE;
-         if((signalDt.val1 >= -0.3) && (signalDt.val1 <= 0.3))
-            return SAN_SIGNAL::SIDEWAYS;
-         if(signalDt.val1 > 0.3)
-            return SAN_SIGNAL::BUY;
-         if(signalDt.val1 < -0.3)
-            return SAN_SIGNAL::SELL;
-        }
-      else
-         if(signalType == 2)
-           {
-            if((signalDt.val1 >= -0.1) && (signalDt.val1 <= 0.1))
-               return SAN_SIGNAL::CLOSE;
-            if((signalDt.val1 >= -0.2) && (signalDt.val1 <= 0.2))
-               return SAN_SIGNAL::SIDEWAYS;
-            if(signalDt.val1 > 0.2)
-               return SAN_SIGNAL::BUY;
-            if(signalDt.val1 < -0.2)
-               return SAN_SIGNAL::SELL;
-           }
+   } else if(signalType == 1) {
+      if((signalDt.val1 >= -0.2) && (signalDt.val1 <= 0.2))
+         return SAN_SIGNAL::CLOSE;
+      if((signalDt.val1 >= -0.3) && (signalDt.val1 <= 0.3))
+         return SAN_SIGNAL::SIDEWAYS;
+      if(signalDt.val1 > 0.3)
+         return SAN_SIGNAL::BUY;
+      if(signalDt.val1 < -0.3)
+         return SAN_SIGNAL::SELL;
+   } else if(signalType == 2) {
+      if((signalDt.val1 >= -0.1) && (signalDt.val1 <= 0.1))
+         return SAN_SIGNAL::CLOSE;
+      if((signalDt.val1 >= -0.2) && (signalDt.val1 <= 0.2))
+         return SAN_SIGNAL::SIDEWAYS;
+      if(signalDt.val1 > 0.2)
+         return SAN_SIGNAL::BUY;
+      if(signalDt.val1 < -0.2)
+         return SAN_SIGNAL::SELL;
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -813,12 +753,11 @@ DataTransport   SanSignals::slopeFastMediumSlow(
    const int SLOPEDENOM = 3,
    const int SLOPEDENOM_WIDE = 5,
    const int shift = 1
-)
-  {
+) {
    DataTransport dt;
    dt = stats.slopeFastMediumSlow(fast, medium, slow, SLOPEDENOM, SLOPEDENOM_WIDE, shift);
    return dt;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -831,8 +770,7 @@ SAN_SIGNAL   SanSignals::slopeVarSIG(
    const int SLOPEDENOM = 3,
    const int SLOPEDENOM_WIDE = 5,
    const int shift = 1
-)
-  {
+) {
    double fastSlope = 0;
    double mediumSlope = 0;
    double slowSlope = 0;
@@ -876,7 +814,7 @@ SAN_SIGNAL   SanSignals::slopeVarSIG(
 //   if(closeSlow1 || closeSlow2 || closeFast1 || closeFast2)
 //      return SAN_SIGNAL::CLOSE;
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 
 
@@ -887,8 +825,7 @@ DataTransport SanSignals::slopeRatioData(
    const DTYPE &fast,
    const DTYPE &medium,
    const DTYPE &slow
-)
-  {
+) {
    double fastSlope = 0;
    double mediumSlope = 0;
    double slowSlope = 0;
@@ -922,7 +859,7 @@ DataTransport SanSignals::slopeRatioData(
    dt.matrixD[3] = mSR;
    dt.matrixD[4] = mSWR;
    return dt;
-  }
+}
 
 ////+------------------------------------------------------------------+
 ////|                                                                  |
@@ -1042,8 +979,7 @@ DataTransport SanSignals::slopeRatioData(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
-  {
+SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope) {
 // --- 1. Cache Fix: Do not cache continuously if using Shift 0 data ---
 // Only use Time[0] cache if you are strictly analyzing closed bars (Shift 1).
 // If analyzing live price (Shift 0), we must re-evaluate every tick
@@ -1080,63 +1016,56 @@ SAN_SIGNAL SanSignals::slopeAnalyzerSIG(const DTYPE &slope)
    double buyThreshold = (peakPositive > 0) ? (peakPositive * adaptedDecay) : MIN_SLOPE;
 
 // Check for NEW Peak
-   if(s > buyThreshold)
-     {
+   if(s > buyThreshold) {
       peakPositive = MathMax(peakPositive, s); // Update Peak
       currentIdx = SAN_SIGNAL::BUY;
       return SAN_SIGNAL::BUY;
-     }
+   }
 
 // C. SELL LOGIC
    double sellThreshold = (peakNegative < 0) ? (peakNegative * adaptedDecay) : -MIN_SLOPE;
 
-   if(s < sellThreshold) // Note: sellThreshold is negative, so s must be lower (more negative)
-     {
+   if(s < sellThreshold) { // Note: sellThreshold is negative, so s must be lower (more negative)
       peakNegative = MathMin(peakNegative, s); // Update Peak
       currentIdx = SAN_SIGNAL::SELL;
       return SAN_SIGNAL::SELL;
-     }
+   }
 
 // D. EXIT LOGIC with HYSTERESIS
 // We only exit if slope drops significantly below the threshold that got us in.
 // This creates a "Deadband" where no action is taken (holding the trade).
 
-   if(currentIdx == SAN_SIGNAL::BUY)
-     {
+   if(currentIdx == SAN_SIGNAL::BUY) {
       // Exit strictly if slope drops below (Threshold * Hysteresis)
       // Example: If Peak is 10, Decay is 0.8 -> Threshold is 8.0.
       // We only exit if slope drops below 7.2 (8.0 * 0.9).
       double exitLevel = (peakPositive * adaptedDecay) * HYSTERESIS;
 
-      if(s < exitLevel)
-        {
+      if(s < exitLevel) {
          currentIdx = SAN_SIGNAL::NOSIG; // Reset State
          // Do NOT degrade peakPositive here. Let it stand as resistance.
          // If price wants to buy again, it must beat the 'real' trend line or wait for full reset.
          return SAN_SIGNAL::CLOSE;
-        }
+      }
       return SAN_SIGNAL::BUY; // HOLD
-     }
+   }
 
-   if(currentIdx == SAN_SIGNAL::SELL)
-     {
+   if(currentIdx == SAN_SIGNAL::SELL) {
       double exitLevel = (peakNegative * adaptedDecay) * HYSTERESIS;
 
-      if(s > exitLevel)
-        {
+      if(s > exitLevel) {
          currentIdx = SAN_SIGNAL::NOSIG;
          return SAN_SIGNAL::CLOSE;
-        }
+      }
       return SAN_SIGNAL::SELL; // HOLD
-     }
+   }
 
    return SAN_SIGNAL::NOSIG;
-  }
+}
 //+------------------------------------------------------------------+
 //| Layered Filter: ADX → Histogram for Momentum Strength            |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::layeredMomentumSIG(const double &signal[], int N = 20)
-  {
+SAN_SIGNAL SanSignals::layeredMomentumSIG(const double &signal[], int N = 20) {
 
    double gate = ms.layeredMomentumFilter(signal,N);
    if(gate == 0)
@@ -1146,7 +1075,7 @@ SAN_SIGNAL SanSignals::layeredMomentumSIG(const double &signal[], int N = 20)
    if(gate == -1)
       return SAN_SIGNAL::SELL;
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 
 
@@ -1191,8 +1120,7 @@ SAN_SIGNAL SanSignals::layeredMomentumSIG(const double &signal[], int N = 20)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1)
-  {
+SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1) {
 // --- 1. BAR OPENING CHECK ---
 // Ensure we only calculate once per bar to preserve signal stability
    static datetime last_bar = 0;
@@ -1242,20 +1170,17 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const
 // BRANCH A: The "Flat" Market (Singularity Avoidance)
 // If the slow trend is dead flat, Ratio is undefined (infinity).
 // We fall back to raw Fast Slope but MUST initialize state.
-   if(absSlow < MIN_SLOW_THRESHOLD)
-     {
+   if(absSlow < MIN_SLOW_THRESHOLD) {
       // If signal flips opposite to current active trade, Close immediately
       if((cached == BUY && fastSlope < -FLAT_REGIME_ENTRY) ||
-         (cached == SELL && fastSlope > FLAT_REGIME_ENTRY))
-        {
+            (cached == SELL && fastSlope > FLAT_REGIME_ENTRY)) {
          m_peakRatio = 0;
          cached = CLOSE;
          return CLOSE;
-        }
+      }
 
       // Entry Logic for Flat Market
-      if(MathAbs(fastSlope) > FLAT_REGIME_ENTRY)
-        {
+      if(MathAbs(fastSlope) > FLAT_REGIME_ENTRY) {
          // IMPROVEMENT: Initialize PeakRatio with a synthetic value
          // to allow the adaptive exit to work if volatility picks up later.
          // We use CLOSERATIO * 1.05 as a seed.
@@ -1264,13 +1189,13 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const
 
          cached = (fastSlope > 0) ? BUY : SELL;
          return cached;
-        }
+      }
 
       // No signal in flat market
       m_peakRatio = 0;
       cached = NOSIG;
       return NOSIG;
-     }
+   }
 
 // BRANCH B: The Standard Adaptive Engine
    double ratio = fastSlope / slowSlope;
@@ -1283,36 +1208,32 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const
 
 // 1. INSTANT REVERSAL (Divergence Check)
 // If slopes disagree (Ratio < 0), the trend is broken.
-   if(ratio <= 0)
-     {
+   if(ratio <= 0) {
       m_peakRatio = 0;
       cached = CLOSE;
       return CLOSE;
-     }
+   }
 
 // 2. MOMENTUM DECAY EXIT (The Adaptive Stop)
 // Only checks if we are actually tracking a trade (m_peakRatio > 0)
 // Logic: If current ratio drops below X% of the peak ratio, get out.
-   if(m_peakRatio > 0 && ratio < (PEAK_DROP * m_peakRatio))
-     {
+   if(m_peakRatio > 0 && ratio < (PEAK_DROP * m_peakRatio)) {
       m_peakRatio = 0;
       cached = CLOSE;
       return CLOSE;
-     }
+   }
 
 // 3. WEAK ALIGNMENT EXIT (Hard Floor)
 // Even if momentum hasn't dropped from peak, if it's below the entry
 // threshold, the trade is invalid.
-   if(ratio <= CLOSERATIO)
-     {
+   if(ratio <= CLOSERATIO) {
       m_peakRatio = 0;
       cached = CLOSE;
       return CLOSE;
-     }
+   }
 
 // 4. ENTRY & CONTINUATION (New Peak Tracking)
-   if(ratio > CLOSERATIO)
-     {
+   if(ratio > CLOSERATIO) {
       // Track the new High Water Mark
       if(ratio > m_peakRatio)
          m_peakRatio = ratio;
@@ -1320,12 +1241,12 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow, const
       // Define direction based on Fast Slope (since Ratio > 0, signs match)
       cached = (fastSlope > 0) ? BUY : SELL;
       return cached;
-     }
+   }
 
 // Fallback
    cached = NOSIG;
    return NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1337,8 +1258,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v1(
    const double stdCp,
    const double atr,
    double strictness = 1.0
-)
-  {
+) {
 // 1. Dynamic ATR Floor (8 → 22 pips)
    double atrNorm     = ms.atrKinetic(atr);
    double minATR_pips = 8.0 + (14.0 * (1.0 - atrNorm));
@@ -1365,8 +1285,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v1(
    bool structureValid = (ratio > requiredRatio);
 
 // 6. Final Decision
-   if(structureValid && momentumValid)
-     {
+   if(structureValid && momentumValid) {
       if(strictness < 0.99)                    // Management mode
          return SAN_SIGNAL::TRADE;
 
@@ -1374,10 +1293,10 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v1(
 
       if(foundationSteady || ratio > 1.20)
          return SAN_SIGNAL::TRADE;
-     }
+   }
 
    return SAN_SIGNAL::NOTRADE;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| volatilityMomentumSIG — Pure Dynamic Physics Version             |
@@ -1390,8 +1309,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v2(
    const double stdCp,
    const double atr,
    double strictness = 1.0
-)
-  {
+) {
 // =============================================================
 // 1. DYNAMIC ATR FLOOR (Pip Value Physics)
 // =============================================================
@@ -1455,15 +1373,13 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v2(
    bool foundationSteady = (stdOpen < (atr * 0.25));
    bool hasMomentum = (isAccelerating || isRunaway);
 //Print("GATE 3: hasMomentum: "+hasMomentum+" foundationSteady: "+foundationSteady + "dynamicThreshold:"+dynamicThreshold+" dynamicThreshold: "+dynamicThreshold);
-   if((ratio > (0.95 * strictness)) && hasMomentum)
-     {
+   if((ratio > (0.95 * strictness)) && hasMomentum) {
       //Print("GATE 4: hasMomentum: "+hasMomentum);
       if(strictness < 0.99)
          return SAN_SIGNAL::TRADE;
 
       //Print("GATE 5: hasMomentum: "+hasMomentum);
-      if(isExpanding || isRunaway)
-        {
+      if(isExpanding || isRunaway) {
          //Print("GATE 6:");
          // A. Sniper
          if(foundationSteady)
@@ -1473,14 +1389,14 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v2(
          // Now uses the auto-calculated threshold
          if(ratio > dynamicThreshold)
             return SAN_SIGNAL::TRADE;
-        }
-     }
+      }
+   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+-----------------'-------------------------------------------------+
 //Print("GATE 8:");
    return SAN_SIGNAL::NOTRADE;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -1494,8 +1410,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v3(
    const double stdCp,        // Raw StdDev Value
    const double atr,
    double strictness = 1.0
-)
-  {
+) {
 // =============================================================
 // 1. DYNAMIC ATR FLOOR (Safety Gate)
 // =============================================================
@@ -1557,7 +1472,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v3(
       return SAN_SIGNAL::TRADE;
 
    return SAN_SIGNAL::NOTRADE;
-  }
+}
 
 ////+------------------------------------------------------------------+
 ////|                                                                  |
@@ -1620,47 +1535,46 @@ SAN_SIGNAL SanSignals::volatilityMomentumSIG_v4(
    const DTYPE &stdDevOpen, const DTYPE &stdDevClose,
    const double stdOpen, const double stdCp,
    const double atr, double strictness = 1.0
-)
-  {
-   // 1. KINETIC GATE (Is the market physically moving?)
-   // Use your Universal Physics Engine. No more raw pip calculations.
+) {
+// 1. KINETIC GATE (Is the market physically moving?)
+// Use your Universal Physics Engine. No more raw pip calculations.
    double kineticEnergy = ms.atrKinetic(atr);
-   
-   // If Kinetic Energy is extremely low, the market is completely dead.
-   if(kineticEnergy < (0.10 * strictness)) 
+
+// If Kinetic Energy is extremely low, the market is completely dead.
+   if(kineticEnergy < (0.10 * strictness))
       return SAN_SIGNAL::NOTRADE;
 
-   // 2. POTENTIAL GATE (Is there a trend context?)
-   // "Is the atmosphere charged?"
+// 2. POTENTIAL GATE (Is there a trend context?)
+// "Is the atmosphere charged?"
    double potential = ms.adxPotential();
-   
-   // Gate: If potential is too low (< 0.75 = ADX 15), the market is wandering.
+
+// Gate: If potential is too low (< 0.75 = ADX 15), the market is wandering.
    if(potential < (0.75 * strictness))
       return SAN_SIGNAL::NOTRADE;
 
-   // 3. MEASURE: Get Volatility Efficiency (VE)
-   // "Is the move structurally sound and expanding?"
+// 3. MEASURE: Get Volatility Efficiency (VE)
+// "Is the move structurally sound and expanding?"
    double veScore = ms.volatilityEfficiency(stdOpen, stdCp, stdDevOpen.val1, stdDevClose.val1);
 
-   // 4. DECISION: Dynamic Physics Threshold
+// 4. DECISION: Dynamic Physics Threshold
    double baseThreshold = 0.40;
 
-   // Discount Logic: Strong trends reduce the work required.
-   // Lowered multiplier from 0.50 to 0.20 so we don't discount too aggressively.
+// Discount Logic: Strong trends reduce the work required.
+// Lowered multiplier from 0.50 to 0.20 so we don't discount too aggressively.
    double discount = 0.20 * (potential - 1.0);
    double finalThreshold = (baseThreshold - discount) * strictness;
 
-   // CRITICAL SAFETY FIX: 
-   // We MUST require at least *some* true volatility expansion (e.g., 0.15).
-   // If we let this drop to 0.0 or negative, MathAbs() will allow false signals.
+// CRITICAL SAFETY FIX:
+// We MUST require at least *some* true volatility expansion (e.g., 0.15).
+// If we let this drop to 0.0 or negative, MathAbs() will allow false signals.
    finalThreshold = MathMax(finalThreshold, 0.15);
 
-   // 5. TRIGGER
+// 5. TRIGGER
    if(MathAbs(veScore) > finalThreshold)
       return SAN_SIGNAL::TRADE;
 
    return SAN_SIGNAL::NOTRADE;
-  }
+}
 //+------------------------------------------------------------------+
 //| volatilityMomentumDirectionSIG — Wrapper                         |
 //+------------------------------------------------------------------+
@@ -1686,9 +1600,8 @@ SAN_SIGNAL SanSignals::volatilityMomentumDirectionSIG(
    const double atr = 0,
    const double probabilisticHold=-1,
    double strictness = 1.0
-)
-  {
-  //Print("volatilityMomDirection: Probability Hold: "+probabilisticHold);
+) {
+//Print("volatilityMomDirection: Probability Hold: "+probabilisticHold);
 // --- STEP 1: The "Gate" (Physics & Magnitude) ---
 // Does the market have enough energy to trade?
    SAN_SIGNAL volState = volatilityMomentumSIG_v4(stdDevOpen, stdDevClose, stdOpen, stdCp, atr, strictness);
@@ -1712,7 +1625,7 @@ SAN_SIGNAL SanSignals::volatilityMomentumDirectionSIG(
 
 // Rare edge case: Perfect zero slope despite high volatility (e.g., massive Doji)
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -1726,16 +1639,15 @@ double SanSignals::probabilisticSIG(
    double atr,
    int period = 14,
    int SHIFT = 1,
-   bool useOverallForce = true)
-  {
+   bool useOverallForce = true) {
    static double barsHeldCount = 0;
    if(util.isNewBar())
       barsHeldCount++;
 
    double hold = ms.probabilisticHoldScore(maArray,closeArray,openArray,volumeArray,barsHeldCount,atr,period,SHIFT);
-   
+
    return hold;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1745,77 +1657,48 @@ CROSSOVER  SanSignals::signalCrossOver(
    const double & slow[],
    const int period = 5,
    const int shift = 1
-)
-  {
+) {
    int above = 0;
    int below = 0;
    int multiple = 0;
    int crossOverBelowToAbove = 0;
    int crossOverAboveToBelow = 0;
    int crossOverMultiple = 0;
-   for(int i = shift; i <= period; i++)
-     {
-      if((fast[i] < slow[i]) && (above == 0) && (multiple == 0))
-        {
+   for(int i = shift; i <= period; i++) {
+      if((fast[i] < slow[i]) && (above == 0) && (multiple == 0)) {
          below++;
-        }
-      else
-         if((fast[i] > slow[i]) && (below > 0) && (above == 0) && (multiple == 0))
-           {
-            crossOverBelowToAbove++;
-            above++;
-           }
-         else
-            if((fast[i] > slow[i]) && (below > 0) && (above > 0) && (below > above))
-              {
-               crossOverMultiple++;
-               crossOverBelowToAbove++;
-              }
-            else
-               if((fast[i] > slow[i]) && (below > 0) && (above > 0) && (above > below))
-                 {
-                  crossOverMultiple++;
-                  crossOverAboveToBelow++;
-                 }
-      if((fast[i] > slow[i]) && (below == 0) && (multiple == 0))
-        {
+      } else if((fast[i] > slow[i]) && (below > 0) && (above == 0) && (multiple == 0)) {
+         crossOverBelowToAbove++;
          above++;
-        }
-      else
-         if((fast[i] < slow[i]) && (above > 0) && (below == 0) && (multiple == 0))
-           {
-            crossOverAboveToBelow++;
-            below++;
-           }
-         else
-            if((fast[i] < slow[i]) && (above > 0) && (below > 0) && (above > below))
-              {
-               crossOverMultiple++;
-               crossOverAboveToBelow++;
-              }
-            else
-               if((fast[i] < slow[i]) && (above > 0) && (below > 0) && (below > above))
-                 {
-                  crossOverMultiple++;
-                  crossOverBelowToAbove++;
-                 }
-     }
-   if((crossOverMultiple > 0) && (crossOverBelowToAbove > 1) && (crossOverAboveToBelow > 1))
-     {
+      } else if((fast[i] > slow[i]) && (below > 0) && (above > 0) && (below > above)) {
+         crossOverMultiple++;
+         crossOverBelowToAbove++;
+      } else if((fast[i] > slow[i]) && (below > 0) && (above > 0) && (above > below)) {
+         crossOverMultiple++;
+         crossOverAboveToBelow++;
+      }
+      if((fast[i] > slow[i]) && (below == 0) && (multiple == 0)) {
+         above++;
+      } else if((fast[i] < slow[i]) && (above > 0) && (below == 0) && (multiple == 0)) {
+         crossOverAboveToBelow++;
+         below++;
+      } else if((fast[i] < slow[i]) && (above > 0) && (below > 0) && (above > below)) {
+         crossOverMultiple++;
+         crossOverAboveToBelow++;
+      } else if((fast[i] < slow[i]) && (above > 0) && (below > 0) && (below > above)) {
+         crossOverMultiple++;
+         crossOverBelowToAbove++;
+      }
+   }
+   if((crossOverMultiple > 0) && (crossOverBelowToAbove > 1) && (crossOverAboveToBelow > 1)) {
       return CROSSOVER::MULTIPLE;
-     }
-   else
-      if((crossOverMultiple == 0) && (crossOverBelowToAbove == 1) && (crossOverAboveToBelow == 0))
-        {
-         return CROSSOVER::BELOWTOABOVE;
-        }
-      else
-         if((crossOverMultiple > 0) && (crossOverBelowToAbove == 0) && (crossOverAboveToBelow == 1))
-           {
-            return CROSSOVER::ABOVETOBELOW;
-           }
+   } else if((crossOverMultiple == 0) && (crossOverBelowToAbove == 1) && (crossOverAboveToBelow == 0)) {
+      return CROSSOVER::BELOWTOABOVE;
+   } else if((crossOverMultiple > 0) && (crossOverBelowToAbove == 0) && (crossOverAboveToBelow == 1)) {
+      return CROSSOVER::ABOVETOBELOW;
+   }
    return CROSSOVER::NOCROSS;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| ATR Signal                                                                  |
@@ -1823,8 +1706,7 @@ CROSSOVER  SanSignals::signalCrossOver(
 SAN_SIGNAL SanSignals::atrSIG(
    const double & atr[],
    const int period = 10
-)
-  {
+) {
    SAN_SIGNAL atrSIG = SAN_SIGNAL::NOSIG;
    double atrPips = NormalizeDouble((atr[1] / util.getPipValue(_Symbol)), 3);
    DTYPE atrSlope = slopeSIGData(atr, 5, 21, 1);
@@ -1852,7 +1734,7 @@ SAN_SIGNAL SanSignals::atrSIG(
       atrSIG = SAN_SIGNAL::TRADE;
 //Print("[ATR]: " + NormalizeDouble(atr[1], 3) + " LowerBound: " + ATR_LOWERBOUND + " UpperBound: " + ATR_UPPERBOUND + " Atr in pips: " + atrPips + " atrSlope: " + NormalizeDouble(atrSlope.val1, 3) + " atrSIG: " + util.getSigString(atrSIG));
    return atrSIG;
-  }
+}
 
 ////+------------------------------------------------------------------+
 ////|                                                                  |
@@ -1910,16 +1792,14 @@ SAN_SIGNAL SanSignals::atrSIG(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::volumeSIG(const double & vol[], const int arrsize = 10, const int shift = 1)
-  {
+SAN_SIGNAL SanSignals::volumeSIG(const double & vol[], const int arrsize = 10, const int shift = 1) {
    double sum = 0;
    double avg = 0;
    double volPercentage = 0;
    int count = (arrsize + shift);
-   for(int i = shift; i < count; i++)
-     {
+   for(int i = shift; i < count; i++) {
       sum += vol[i];
-     }
+   }
    avg = sum / count;
    volPercentage = vol[shift] / avg;
 //  Print("Volume shift 1: "+vol[shift]+" Average: "+avg+" Percentage: "+ volPercentage);
@@ -1928,14 +1808,13 @@ SAN_SIGNAL SanSignals::volumeSIG(const double & vol[], const int arrsize = 10, c
    if(volPercentage >= 0.9)
       return SAN_SIGNAL::OPEN;
    return SAN_SIGNAL::CLOSE;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::volumeSIG_v2(const double & vol[], const int arrsize = 10, const int VOLMIN = 11, const int shift = 1)
-  {
+SAN_SIGNAL SanSignals::volumeSIG_v2(const double & vol[], const int arrsize = 10, const int VOLMIN = 11, const int shift = 1) {
    double sum1 = 0;
    double avg1 = 0;
    double sum2 = 0;
@@ -1944,15 +1823,13 @@ SAN_SIGNAL SanSignals::volumeSIG_v2(const double & vol[], const int arrsize = 10
    double volPercentage = 0;
    double volPercentage2 = 0;
    int count = (arrsize);
-   for(int i = shift; i < floor(count / 2); i++)
-     {
+   for(int i = shift; i < floor(count / 2); i++) {
       sum1 += vol[i];
-     }
+   }
    avg1 = sum1 / floor(count / 2);
-   for(int i = floor(count / 2); i < count; i++)
-     {
+   for(int i = floor(count / 2); i < count; i++) {
       sum2 += vol[i];
-     }
+   }
    avg2 = sum2 / floor(count / 2);
    volPercentage = avg1 / avg2;
    double volPerMin = (sum1 + sum2) / ArraySize(vol);
@@ -1974,48 +1851,42 @@ SAN_SIGNAL SanSignals::volumeSIG_v2(const double & vol[], const int arrsize = 10
    volPerMin = volPerMin / denom;
    bool volPerMinBool = (volPerMin > VOLMIN);
 //Print("New tick vol avg: "+NormalizeDouble(avg1,2)+" old avg: "+NormalizeDouble(avg2,2)+" volPercentage: "+ NormalizeDouble(volPercentage,2)+" Vol per min: "+ NormalizeDouble(volPerMin,2)+" Denom: "+denom);
-   if(!volPerMinBool)
-     {
+   if(!volPerMinBool) {
       if((volPercentage <= 0.4))
          return SAN_SIGNAL::REVERSETRADE;
       if((volPercentage > 0.4) && (volPercentage <= 0.6))
          return SAN_SIGNAL::NOTRADE;
-     }
-   if(volPerMinBool)
-     {
+   }
+   if(volPerMinBool) {
       if((volPercentage >= 0.4))
          return SAN_SIGNAL::TRADE;
       if((volPercentage < 0.4))
          return SAN_SIGNAL::NOTRADE;
       if((volPercentage <= 0.2))
          return SAN_SIGNAL::REVERSETRADE;
-     }
+   }
 //  Print("Volume shift 1: "+vol[shift]+" Average: "+avg+" Percentage: "+ volPercentage);
    return SAN_SIGNAL::CLOSE;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::volScatterSlopeSIG(const double &vol[], const int arrsize = 10, const double SLOPELIMIT = 0.1, const int SHIFT = 1)
-  {
+SAN_SIGNAL SanSignals::volScatterSlopeSIG(const double &vol[], const int arrsize = 10, const double SLOPELIMIT = 0.1, const int SHIFT = 1) {
    SLOPETYPE st = stats.scatterPlot(vol, arrsize, SHIFT);
-   if((st.slope > (-1 * SLOPELIMIT)) && (st.slope < (SLOPELIMIT)))
-     {
+   if((st.slope > (-1 * SLOPELIMIT)) && (st.slope < (SLOPELIMIT))) {
       return SAN_SIGNAL::SIDEWAYS;
-     }
-   if(st.slope <= (-1 * SLOPELIMIT))
-     {
+   }
+   if(st.slope <= (-1 * SLOPELIMIT)) {
       return SAN_SIGNAL::NOTRADE;
-     }
-   if(st.slope >= (SLOPELIMIT))
-     {
+   }
+   if(st.slope >= (SLOPELIMIT)) {
       return SAN_SIGNAL::TRADE;
-     }
+   }
    Print("VOLSLOPE: " + st.slope);
    return SAN_SIGNAL::CLOSE;
-  }
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -2024,8 +1895,7 @@ SAN_SIGNAL SanSignals::priceActionCandleSIG(
    const double & high[],
    const double & low[],
    const double & close[],
-   const uint shift = 1)
-  {
+   const uint shift = 1) {
    double upperTail = NULL;
    double lowerTail = NULL;
    bool redCandle = (open[shift] > close[shift]);
@@ -2040,17 +1910,13 @@ SAN_SIGNAL SanSignals::priceActionCandleSIG(
    bool fullBodyCandle = (fullBodyRedCandle || fullBodyGreenCandle);
 //double upperTail = ((redCandle||noBodyTailCandle) && !fullBodyCandle && !noBodyCandle)?(high[1]-open[1]):(high[1]-close[1]);
 //double lowerTail = ((redCandle||noBodyTailCandle) && !fullBodyCandle && !noBodyCandle)?(close[1]-low[1]):(open[1]-low[1]);
-   if((redCandle || noBodyTailCandle) && !fullBodyCandle && !noBodyCandle)
-     {
+   if((redCandle || noBodyTailCandle) && !fullBodyCandle && !noBodyCandle) {
       upperTail = (high[shift] - open[shift]);
       lowerTail = (close[shift] - low[shift]);
-     }
-   else
-      if((greenCandle || noBodyTailCandle) && !fullBodyCandle && !noBodyCandle)
-        {
-         upperTail = (high[shift] - close[shift]);
-         lowerTail = (open[shift] - low[shift]);
-        }
+   } else if((greenCandle || noBodyTailCandle) && !fullBodyCandle && !noBodyCandle) {
+      upperTail = (high[shift] - close[shift]);
+      lowerTail = (open[shift] - low[shift]);
+   }
    double body =  NormalizeDouble(fabs(open[shift] - close[shift]), _Digits);
    double candleRange =  NormalizeDouble(fabs(high[shift] - low[shift]), _Digits);
    double bodyRatio = (!noBodyTailCandle && !fullBodyCandle && !noBodyCandle && (body > 0) && (candleRange > 0)) ? NormalizeDouble((body / candleRange), 2) : NULL;
@@ -2058,19 +1924,15 @@ SAN_SIGNAL SanSignals::priceActionCandleSIG(
    bool bodyDominates = (fullBodyCandle || (bodyRatio > 0.35)) ;
 //   bool bodyDominates = (fullBodyCandle ||(bodyRatio > 0.65)) ;
 //   Print("tailDominates: "+tailDominates+" bodyDominates: "+ bodyDominates+" body ratio: "+bodyRatio+" Candle range: "+candleRange);
-   if(bodyDominates)
-     {
-      if(redCandle)
-        {
+   if(bodyDominates) {
+      if(redCandle) {
          return SAN_SIGNAL::SELL;
-        }
-      if(greenCandle)
-        {
+      }
+      if(greenCandle) {
          return SAN_SIGNAL::BUY;
-        }
-     }
-   if(tailDominates)
-     {
+      }
+   }
+   if(tailDominates) {
       if((upperTail == 0) && (lowerTail > 0))
          return SAN_SIGNAL::BUY;
       if((lowerTail == 0) && (upperTail > 0))
@@ -2080,9 +1942,9 @@ SAN_SIGNAL SanSignals::priceActionCandleSIG(
       if((upperTail != 0) && (lowerTail != 0) && (NormalizeDouble((fabs(lowerTail) / fabs(upperTail)), 2) <= 0.35))
          //  if((upperTail!=0)&&(lowerTail!=0)&&(NormalizeDouble((fabs(upperTail)/fabs(lowerTail)),2)>0.65))
          return SAN_SIGNAL::SELL;
-     }
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 //+------------------------------------------------------------------+
 
 
@@ -2090,8 +1952,7 @@ SAN_SIGNAL SanSignals::priceActionCandleSIG(
 //|                                                                  |
 //+------------------------------------------------------------------+
 //const SAN_SIGNAL SanSignals::stdDevSIG(const double &param[],const double stdLimit, const int shift=1,const int period=10, string label="")
-const SIGMAVARIABILITY SanSignals::stdDevSIG(const double & data[], string label = "", const int period = 10, const int shift = 1)
-  {
+const SIGMAVARIABILITY SanSignals::stdDevSIG(const double & data[], string label = "", const int period = 10, const int shift = 1) {
    double cpStdDev = 0;
    double mean = EMPTY_VALUE;
    double zScore = EMPTY_VALUE;
@@ -2168,14 +2029,13 @@ const SIGMAVARIABILITY SanSignals::stdDevSIG(const double & data[], string label
    if(zScore > ZRESTSIGMA)
       return SIGMAVARIABILITY::SIGMAPOS_REST;
    return SIGMAVARIABILITY::SIGMA_NULL;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                    NEW ONE                                              |
 //+------------------------------------------------------------------+
-TRENDSTRUCT SanSignals::acfStdSIG(const double & sig[], const int period = 10, const int shift = 1)
-  {
+TRENDSTRUCT SanSignals::acfStdSIG(const double & sig[], const int period = 10, const int shift = 1) {
    TRENDSTRUCT ts;
    const double tPoint = Point();
    double acf = 0;
@@ -2226,94 +2086,66 @@ TRENDSTRUCT SanSignals::acfStdSIG(const double & sig[], const int period = 10, c
    bool spikeDownTrend = (aboveAcfLimit && ((zScore >= LOWER_SSPIKE_ZSCORE) && (zScore < LOWER_CONSERVATIVE_ZSCORE)));
    bool superSpikeUpTrend = (aboveAcfLimit && (zScore > UPPER_SSPIKE_ZSCORE));
    bool superSpikeDownTrend = (aboveAcfLimit && (zScore < LOWER_SSPIKE_ZSCORE));
-   if(flatSuperHighTrend)
-     {
+   if(flatSuperHighTrend) {
       ts.closeTrendSIG = SANTREND::FLAT;
       ts.trendStrengthSIG = SANTRENDSTRENGTH::SUPERHIGH;
       return ts;
-     }
-   else
-      if(flatHighTrend)
-        {
-         ts.closeTrendSIG = SANTREND::FLAT;
-         ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
-         return ts;
-        }
-      else
-         if(flatNormalTrend)
-           {
-            ts.closeTrendSIG = SANTREND::FLAT;
-            ts.trendStrengthSIG = SANTRENDSTRENGTH::NORMAL;
-            return ts;
-           }
-         else
-            if(superSpikeUpTrend)
-              {
-               ts.closeTrendSIG = SANTREND::UP;
-               ts.trendStrengthSIG = SANTRENDSTRENGTH::SUPERHIGH;
-               return ts;
-              }
-            else
-               if(superSpikeDownTrend)
-                 {
-                  ts.closeTrendSIG = SANTREND::DOWN;
-                  ts.trendStrengthSIG = SANTRENDSTRENGTH::SUPERHIGH;
-                  return ts;
-                 }
-               else
-                  if(spikeUpTrend)
-                    {
-                     ts.closeTrendSIG = SANTREND::UP;
-                     ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
-                     return ts;
-                    }
-                  else
-                     if(spikeDownTrend)
-                       {
-                        ts.closeTrendSIG = SANTREND::DOWN;
-                        ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
-                        return ts;
-                       }
-                     else
-                        if(conservativeUpTrend)
-                          {
-                           ts.closeTrendSIG = SANTREND::UP;
-                           ts.trendStrengthSIG = SANTRENDSTRENGTH::NORMAL;
-                           return ts;
-                          }
-                        else
-                           if(conservativeDownTrend)
-                             {
-                              ts.closeTrendSIG = SANTREND::DOWN;
-                              ts.trendStrengthSIG = SANTRENDSTRENGTH::NORMAL;
-                              return ts;
-                             }
+   } else if(flatHighTrend) {
+      ts.closeTrendSIG = SANTREND::FLAT;
+      ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
+      return ts;
+   } else if(flatNormalTrend) {
+      ts.closeTrendSIG = SANTREND::FLAT;
+      ts.trendStrengthSIG = SANTRENDSTRENGTH::NORMAL;
+      return ts;
+   } else if(superSpikeUpTrend) {
+      ts.closeTrendSIG = SANTREND::UP;
+      ts.trendStrengthSIG = SANTRENDSTRENGTH::SUPERHIGH;
+      return ts;
+   } else if(superSpikeDownTrend) {
+      ts.closeTrendSIG = SANTREND::DOWN;
+      ts.trendStrengthSIG = SANTRENDSTRENGTH::SUPERHIGH;
+      return ts;
+   } else if(spikeUpTrend) {
+      ts.closeTrendSIG = SANTREND::UP;
+      ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
+      return ts;
+   } else if(spikeDownTrend) {
+      ts.closeTrendSIG = SANTREND::DOWN;
+      ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
+      return ts;
+   } else if(conservativeUpTrend) {
+      ts.closeTrendSIG = SANTREND::UP;
+      ts.trendStrengthSIG = SANTRENDSTRENGTH::NORMAL;
+      return ts;
+   } else if(conservativeDownTrend) {
+      ts.closeTrendSIG = SANTREND::DOWN;
+      ts.trendStrengthSIG = SANTRENDSTRENGTH::NORMAL;
+      return ts;
+   }
    return ts;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL       SanSignals::closeOnLossSIG(const double lossAmt = 1.0, const int orderPos = 0)
-  {
+SAN_SIGNAL       SanSignals::closeOnLossSIG(const double lossAmt = 1.0, const int orderPos = 0) {
    double currspread = (int)MarketInfo(_Symbol, MODE_SPREAD);
    const double tPoint = Point();
    double adjustedLossAmt = NormalizeDouble((lossAmt + ((tl.spreadLimit * 5) * tPoint)), 2);
    adjustedLossAmt *= -1;
-   if(OrderSelect(orderPos, SELECT_BY_POS) && (currspread < tl.spreadLimit) && (OrderProfit() < adjustedLossAmt))
-     {
+   if(OrderSelect(orderPos, SELECT_BY_POS) && (currspread < tl.spreadLimit) && (OrderProfit() < adjustedLossAmt)) {
       return SAN_SIGNAL::CLOSE;
-     }
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 //
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::closeOnProfitPercentageSIG(const double currProfit, const double maxProfit, const double closeProfit, const double percentage = 0.05)
-  {
+SAN_SIGNAL SanSignals::closeOnProfitPercentageSIG(const double currProfit, const double maxProfit, const double closeProfit, const double percentage = 0.05) {
 //Print("[TAKEPROFIT] Take Profit: "+ closeProfit);
    const double tPoint = Point();
    double currspread = (int)MarketInfo(_Symbol, MODE_SPREAD);
@@ -2325,26 +2157,24 @@ SAN_SIGNAL SanSignals::closeOnProfitPercentageSIG(const double currProfit, const
    bool profitLimitChk = ((adjustedMaxProfitPercentage > (1.2 * closeProfit)) && (currProfit < adjustedMaxProfitPercentage));
 //  bool profitLimitChk = ((adjustedMaxProfitPercentage>closeProfit) && (currProfit<adjustedMaxProfitPercentage));
 //Print("Current Profit: "+currProfit+" Max profit: "+maxProfit+" Adjusted profit: "+adjustedMaxProfit+" Percentage : "+ percentage+" of Adjusted profit: "+adjustedMaxProfitPercentage+" 1.2*closeProfit "+(1.2*closeProfit));
-   if(orderAndSpreadChk && profitLimitChk)
-     {
+   if(orderAndSpreadChk && profitLimitChk) {
       return SAN_SIGNAL::CLOSE;
-     }
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::closeOnProfitSIG(const double currProfit, const double closeProfit = 0.02, const int pos = 0)
-  {
+SAN_SIGNAL SanSignals::closeOnProfitSIG(const double currProfit, const double closeProfit = 0.02, const int pos = 0) {
 //Print("Close profit value: "+ closeProfit);
    double currspread = (int)MarketInfo(_Symbol, MODE_SPREAD);
    bool orderAndSpreadChk = ((OrdersTotal() > 0) && (currProfit > closeProfit) && (currspread < tl.spreadLimit));
    if(OrderSelect(pos, SELECT_BY_POS) && (OrderProfit() > closeProfit) && (currspread < tl.spreadLimit))
       return SAN_SIGNAL::CLOSE;
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -2357,8 +2187,7 @@ SAN_SIGNAL SanSignals::candleImaSIG(
    const double & imaHandle30[],
    const int period = 5,
    const int shift = 1
-)
-  {
+) {
    int buyCount = 0;
    int sellCount = 0;
    int flatCount = 0;
@@ -2368,51 +2197,42 @@ SAN_SIGNAL SanSignals::candleImaSIG(
    int buyTripleCount = 0;
    int sellTripleCount = 0;
    int flatTripleCount = 0;
-   for(int i = shift; i < period; i++)
-     {
+   for(int i = shift; i < period; i++) {
       if((open[i] == close[i]) && (open[i + 2] == close[i + 2]))
          flatTripleCount++;
-      if((close[i] > open[i]) && (close[i + 2] > open[i + 2]))
-        {
+      if((close[i] > open[i]) && (close[i + 2] > open[i + 2])) {
          if(((imaHandle5[i + 2] >= open[i + 2]) && (imaHandle5[i] <= close[i])) && ((imaHandle14[i + 2] >= open[i + 2]) && (imaHandle14[i] <= close[i])) && ((imaHandle30[i + 2] >= open[i + 2]) && (imaHandle30[i] <= close[i])))
             buyTripleCount++;
-        }
-      if((close[i] < open[i]) && (close[i + 2] < open[i + 2]))
-        {
+      }
+      if((close[i] < open[i]) && (close[i + 2] < open[i + 2])) {
          if(((imaHandle5[i + 2] <= open[i + 2]) && (imaHandle5[i] >= close[i])) && ((imaHandle14[i + 2] <= open[i + 2]) && (imaHandle14[i] >= close[i])) && ((imaHandle30[i + 2] <= open[i + 2]) && (imaHandle30[i] >= close[i])))
             sellTripleCount++;
-        }
-     }
-   for(int i = shift; i < period; i++)
-     {
+      }
+   }
+   for(int i = shift; i < period; i++) {
       if((open[i] == close[i]) && (open[i + 1] == close[i + 1]))
          flatDoubleCount++;
-      if((close[i] > open[i]) && (close[i + 1] > open[i + 1]))
-        {
+      if((close[i] > open[i]) && (close[i + 1] > open[i + 1])) {
          if(((imaHandle5[i + 1] >= open[i + 1]) && (imaHandle5[i] <= close[i])) && ((imaHandle14[i + 1] >= open[i + 1]) && (imaHandle14[i] <= close[i])) && ((imaHandle30[i + 1] >= open[i + 1]) && (imaHandle30[i] <= close[i])))
             buyDoubleCount++;
-        }
-      if((close[i] < open[i]) && (close[i + 1] < open[i + 1]))
-        {
+      }
+      if((close[i] < open[i]) && (close[i + 1] < open[i + 1])) {
          if(((imaHandle5[i + 1] <= open[i + 1]) && (imaHandle5[i] >= close[i])) && ((imaHandle14[i + 1] <= open[i + 1]) && (imaHandle14[i] >= close[i])) && ((imaHandle30[i + 1] <= open[i + 1]) && (imaHandle30[i] >= close[i])))
             sellDoubleCount++;
-        }
-     }
-   for(int i = shift; i < period; i++)
-     {
+      }
+   }
+   for(int i = shift; i < period; i++) {
       if(open[i] == close[i])
          flatCount++;
-      if(close[i] > open[i])
-        {
+      if(close[i] > open[i]) {
          if(((imaHandle5[i] >= open[i]) && (imaHandle5[i] <= close[i])) && ((imaHandle14[i] >= open[i]) && (imaHandle14[i] <= close[i])) && ((imaHandle30[i] >= open[i]) && (imaHandle30[i] <= close[i])))
             buyCount++;
-        }
-      if(close[i] < open[i])
-        {
+      }
+      if(close[i] < open[i]) {
          if(((imaHandle5[i] <= open[i]) && (imaHandle5[i] >= close[i])) && ((imaHandle14[i] <= open[i]) && (imaHandle14[i] >= close[i])) && ((imaHandle30[i] <= open[i]) && (imaHandle30[i] >= close[i])))
             sellCount++;
-        }
-     }
+      }
+   }
    bool buyTripleBool = ((buyTripleCount == 1) && (sellTripleCount == 0) && (flatTripleCount == 0));
    bool buyDoubleBool = ((buyDoubleCount == 1) && (sellDoubleCount == 0) && (flatDoubleCount == 0));
    bool buySingleBool = ((buyCount == 1) && (sellCount == 0) && (flatCount == 0));
@@ -2432,7 +2252,7 @@ SAN_SIGNAL SanSignals::candleImaSIG(
    if(sellBool)
       return SAN_SIGNAL::SELL;
    return SAN_SIGNAL::NOSIG;
-  }
+}
 //
 ////+------------------------------------------------------------------+
 ////|                                                                  |
@@ -2642,8 +2462,7 @@ SAN_SIGNAL SanSignals::singleCandleVolSIG(
    const double &close[],
    const double &volume[],
    const double atr,
-   int period = 30, int SHIFT = 1)
-  {
+   int period = 30, int SHIFT = 1) {
 
 
    static datetime last_bar = 0;
@@ -2677,7 +2496,7 @@ SAN_SIGNAL SanSignals::singleCandleVolSIG(
 //            cached==BUY?"BUY":cached==SELL?"SELL":"NOSIG");
 
    return cached;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| Ultra-fast, hang-proof candleVolSIG_v2 using your vWCM_Score     |
@@ -2690,8 +2509,7 @@ SAN_SIGNAL SanSignals::candleVolSIG(
    const double &close[],
    const double &volume[],
    const double atr,
-   int period = 30, int SHIFT = 1)
-  {
+   int period = 30, int SHIFT = 1) {
    static datetime last_bar = 0;
    static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
 
@@ -2725,7 +2543,7 @@ SAN_SIGNAL SanSignals::candleVolSIG(
                cached==BUY?"BUY":cached==SELL?"SELL":"NOSIG");
 
    return cached;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -2738,22 +2556,20 @@ DTYPE SanSignals::candleVolDt(
    const int period = 10,
    const int interval = 1,
    const int shift = 1
-)
-  {
+) {
    DTYPE candleDt;
    double candleBody[];
    ArrayResize(candleBody, period);
-   for(int i = 0; i < period; i++)
-     {
+   for(int i = 0; i < period; i++) {
       candleBody[i] = ((close[i] - open[i])/util.getPipValue(_Symbol));
       //candleBody[i] = (close[i] - open[i]);
-     }
+   }
    candleDt.val1 = stats.dotProd(candleBody, vol, period, interval, shift);
 
 //candleDt.val1 = stats.vWCM_Score(open, close, vol, period, interval, shift);
 //   Print("[DOT candle-vol: ]: "+ NormalizeDouble(candleDt.val1,3));
    return candleDt;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -2764,13 +2580,12 @@ DTYPE SanSignals::atrVolDt(
    const int period = 10,
    const int interval = 1,
    const int shift = 1
-)
-  {
+) {
    DTYPE atrvolDt;
    atrvolDt.val1 = stats.dotProd(atr, vol, period, interval, shift);
 //  Print("[DOT atr-vol: ]: "+ NormalizeDouble(atrvolDt.val1,3));
    return atrvolDt;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -2781,14 +2596,13 @@ DTYPE SanSignals::openCloseDt(
    const int period = 10,
    const int interval = 1,
    const int shift = 1
-)
-  {
+) {
    DTYPE openCloseDt;
    openCloseDt.val1 = stats.dotProd(open, close, period, interval, shift);
    openCloseDt.val1 = NormalizeDouble((openCloseDt.val1 * util.getPipValue(_Symbol)), 3);
    Print("[DOT OpenClose: ]: " + NormalizeDouble(openCloseDt.val1, 3));
    return openCloseDt;
-  }
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -2798,35 +2612,27 @@ SAN_SIGNAL   SanSignals::pVElastSIG(
    const double & vol[],
    const int period = 10,
    const int shift = 1
-)
-  {
+) {
    double elast[];
    ArrayResize(elast, (period + 1));
-   for(int i = shift, j = 0; i <= period; i++, j++)
-     {
-      if(vol[i + 1] > 0)
-        {
-         if(((vol[i] - vol[i + 1]) / vol[i + 1]) == 0)
-           {
+   for(int i = shift, j = 0; i <= period; i++, j++) {
+      if(vol[i + 1] > 0) {
+         if(((vol[i] - vol[i + 1]) / vol[i + 1]) == 0) {
             elast[j] = ((close[i] - close[i + 1]) / close[i + 1]);
-           }
-         if(((close[i] - close[i + 1]) / close[i + 1]) == 0)
-           {
+         }
+         if(((close[i] - close[i + 1]) / close[i + 1]) == 0) {
             elast[j] = 0;
-           }
-         if(((vol[i] - vol[i + 1]) / vol[i + 1]) > 0)
-           {
+         }
+         if(((vol[i] - vol[i + 1]) / vol[i + 1]) > 0) {
             elast[j] = (((close[i] - close[i + 1]) / close[i + 1]) / ((vol[i] - vol[i + 1]) / vol[i + 1]));
-           }
-        }
-      else
-        {
+         }
+      } else {
          elast[j] = 0;
-        }
-     }
+      }
+   }
    Print("Elasticity 0 : " + NormalizeDouble(elast[0], 8) + " 1: " + (NormalizeDouble(elast[1], 8) / Point()) + " 2: " + (NormalizeDouble(elast[1], 8) / Point()) + " 10: " + (NormalizeDouble(elast[9], 8) / Point()) + " Mean: " + (NormalizeDouble((stats.mean(elast)), 8) / Point()));
    return SAN_SIGNAL::NOSIG;
-  };
+};
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -2837,8 +2643,7 @@ SAN_SIGNAL  SanSignals::determinantVarSIG(
    const double & low[],
    const double & close[],
    const int DIM
-)
-  {
+) {
    double A[];
    const int ARRSIZE = (DIM * DIM);
    ArrayResize(A, ARRSIZE);
@@ -2853,11 +2658,10 @@ SAN_SIGNAL  SanSignals::determinantVarSIG(
 //   u = close[i];
 //   A[i+3]=NormalizeDouble((u-close[i])*1000,2);
 //}
-   for(int i = 0; i < ARRSIZE; i)
-     {
+   for(int i = 0; i < ARRSIZE; i) {
       u = close[i];
       A[i] = NormalizeDouble((u - close[i]) * 1000, 2);
-     }
+   }
 //ArrayCopy(A,data,0,0,ARRSIZE);
    double matrix2x2[] = {1, 2, 3, 4};
    double matrix3x3[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -2867,7 +2671,7 @@ SAN_SIGNAL  SanSignals::determinantVarSIG(
 //double variability = stats.detLU(data,DIM);
    Print("DETERMINANT VAR: " + (variability / 10000) + " sigmoid(x): " + (stats.sigmoid(variability / 10000)) + " tanh var: " + (stats.tanh(variability / 10000)));
    return SAN_SIGNAL::NOSIG;
-  }
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -2880,8 +2684,7 @@ SAN_SIGNAL SanSignals::candleStar(
    const double slope = 0.6,
    const int period = 10,
    const int shift = 1
-)
-  {
+) {
    SAN_SIGNAL trendSig = SAN_SIGNAL::NOSIG;
    double cpSlope = EMPTY_VALUE;
    if(shift >= period)
@@ -2894,21 +2697,18 @@ SAN_SIGNAL SanSignals::candleStar(
    int lowPriceCount = 0;
    int hiPriceCount = 0;
    int hiCount = 0;
-   for(int i = shift; i <= period; i++)
-     {
+   for(int i = shift; i <= period; i++) {
       if(low[shift] < low[i])
          ++lowCount;
       if(high[shift] > high[i])
          ++hiCount;
-      if(cc.redCandle && (((open[i] > close[i]) && (close[shift] < close[i])) || ((open[i] < close[i]) && (close[shift] < open[i]))))
-        {
+      if(cc.redCandle && (((open[i] > close[i]) && (close[shift] < close[i])) || ((open[i] < close[i]) && (close[shift] < open[i])))) {
          ++lowPriceCount;
-        }
-      if(cc.greenCandle && (((open[i] < close[i]) && (close[shift] > close[i])) || ((open[i] > close[i]) && (close[shift] > open[i]))))
-        {
+      }
+      if(cc.greenCandle && (((open[i] < close[i]) && (close[shift] > close[i])) || ((open[i] > close[i]) && (close[shift] > open[i])))) {
          ++hiPriceCount;
-        }
-     }
+      }
+   }
 //   cpSlope = dt.matrixD[0];
    cpSlope = st.slope;
    bool starCandle = (cc.noBodyTailCandle || cc.noBodyCandle);
@@ -2923,42 +2723,33 @@ SAN_SIGNAL SanSignals::candleStar(
       return SAN_SIGNAL::BUY;
 //return SAN_SIGNAL::REVERSETRADE;
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SANTREND SanSignals::trendScatterPlotSIG(const double & data[], string label = "", const double slope = 0.3, const int period = 10, const int shift = 1)
-  {
+SANTREND SanSignals::trendScatterPlotSIG(const double & data[], string label = "", const double slope = 0.3, const int period = 10, const int shift = 1) {
 //DataTransport d = stats.scatterPlot(data,period,1);
 //double dataSlope = d.matrixD[0];
    SLOPETYPE s = stats.scatterPlot(data, period, 1);
    double dataSlope = (s.slope / util.getPipValue(_Symbol));
 //Print("[SCATTERPLOT SLOPE: ]: "+ dataSlope);
 // Print("["+label+"]: "+dataSlope);
-   if((dataSlope > (-1 * slope)) && (dataSlope < (slope)))
-     {
+   if((dataSlope > (-1 * slope)) && (dataSlope < (slope))) {
       return SANTREND::FLAT;
-     }
-   else
-      if(dataSlope >= slope)
-        {
-         return SANTREND::UP;
-        }
-      else
-         if(dataSlope <= (-1 * slope))
-           {
-            return SANTREND::DOWN;
-           }
+   } else if(dataSlope >= slope) {
+      return SANTREND::UP;
+   } else if(dataSlope <= (-1 * slope)) {
+      return SANTREND::DOWN;
+   }
    return SANTREND::NOTREND;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SANTREND SanSignals::trendRatioSIG(const double & sig[], string label = "", const double slopeRatio = 2, const int period = 10, const int shift = 1)
-  {
+SANTREND SanSignals::trendRatioSIG(const double & sig[], string label = "", const double slopeRatio = 2, const int period = 10, const int shift = 1) {
    SANTREND trendSig = SANTREND::NOTREND;
 //   Print("trendRatioSIG: ima30 current 1: "+sig[1]+" :ima30 5: "+ sig[5]+" :ima30 10: "+ sig[10]+" :21:" + sig[21] );
    double up = 0;
@@ -2966,8 +2757,7 @@ SANTREND SanSignals::trendRatioSIG(const double & sig[], string label = "", cons
    double down = 0;
    double ratio = 0;
    double ratioDown = 0;
-   for(int i = shift; i <= period; i++)
-     {
+   for(int i = shift; i <= period; i++) {
       // Print("Sig[i]: "+ sig[i]+" sig[period]: "+ sig[period]+" (i>period): "+(sig[i]>sig[period])+" period>i: "+(sig[i]<sig[period]));
       if(sig[i] > sig[period])
          up++;
@@ -2975,30 +2765,20 @@ SANTREND SanSignals::trendRatioSIG(const double & sig[], string label = "", cons
          down++;
       if(sig[i] == sig[period])
          flat++;
-     }
-   if((up > 0) && (down > 0))
-     {
+   }
+   if((up > 0) && (down > 0)) {
       ratio = (up / down);
       ratioDown = (down / up);
-     }
-   else
-      if((up == 0) && (down > 0))
-        {
-         ratio = 0;
-         ratioDown = period;
-        }
-      else
-         if((up > 0) && (down == 0))
-           {
-            ratio = period;
-            ratioDown = 0;
-           }
-         else
-            if((up == 0) && (down == 0))
-              {
-               ratio = 0;
-               ratioDown = 0;
-              }
+   } else if((up == 0) && (down > 0)) {
+      ratio = 0;
+      ratioDown = period;
+   } else if((up > 0) && (down == 0)) {
+      ratio = period;
+      ratioDown = 0;
+   } else if((up == 0) && (down == 0)) {
+      ratio = 0;
+      ratioDown = 0;
+   }
    SIGMAVARIABILITY s1 = stdDevSIG(sig, "", period, shift);
 //bool variabilityBool1 = ((s1!=SIGMAVARIABILITY::SIGMA_MEAN)&&(s1!=SIGMAVARIABILITY::SIGMA_HALF)&&(s1!=SIGMAVARIABILITY::SIGMA_1));
 //bool variabilityBool2 = ((s1>SIGMAVARIABILITY::SIGMA_1)&&(s1<=SIGMAVARIABILITY::SIGMA_REST));
@@ -3015,68 +2795,42 @@ SANTREND SanSignals::trendRatioSIG(const double & sig[], string label = "", cons
    bool noVarBool = (variabilityVal == 0);
 //Print("Up: "+up+" Down: "+down+" ratio: "+ratio+" Ratioup: "+ratioUp+" ratioDown: "+ratioDown + " STD of signal: " + util.getSigString(s1));
 //   Print("["+label+"] up: "+up+" down: "+down+" ratio: "+ratio+" ratioDown: "+ratioDown+" sig[shift]"+sig[shift]+" sig[period]"+sig[period]+ " variabilityBool: "+variabilityBool);
-   if(flatBool)
-     {
+   if(flatBool) {
       trendSig = SANTREND::FLAT;
       return trendSig;
-     }
-   else
-      if((variabilityBool) && (((ratio < slopeRatio) && (ratioDown < slopeRatio)) || flatBool))
-        {
-         trendSig = SANTREND::FLAT;
-         return trendSig;
-        }
-      else
-         if(variabilityPosBool && (ratio >= slopeRatio))
-           {
-            trendSig = SANTREND::UP;
-            return trendSig;
-           }
-         else
-            if(variabilityNegBool && (ratioDown >= slopeRatio))
-              {
-               trendSig = SANTREND::DOWN;
-               return trendSig;
-              }
-            else
-               if((noVarBool)  && (ratioDown >= slopeRatio))
-                 {
-                  trendSig = SANTREND::DOWN;
-                  return trendSig;
-                 }
-               else
-                  if((noVarBool) && (ratio >= slopeRatio))
-                    {
-                     trendSig = SANTREND::UP;
-                     return trendSig;
-                    }
-                  else
-                     if((noVarBool) && ((ratio >= 0.7) && (ratio <= 1.3)))
-                       {
-                        trendSig = SANTREND::FLAT;
-                        return trendSig;
-                       }
-                     else
-                        if((noVarBool) && (ratio < slopeRatio) && (ratio > ratioDown) && !flatBool)
-                          {
-                           trendSig = SANTREND::FLATUP;
-                           return trendSig;
-                          }
-                        else
-                           if((noVarBool) && (ratioDown < slopeRatio) && (ratioDown > ratio) && !flatBool)
-                             {
-                              trendSig = SANTREND::FLATDOWN;
-                              return trendSig;
-                             }
+   } else if((variabilityBool) && (((ratio < slopeRatio) && (ratioDown < slopeRatio)) || flatBool)) {
+      trendSig = SANTREND::FLAT;
+      return trendSig;
+   } else if(variabilityPosBool && (ratio >= slopeRatio)) {
+      trendSig = SANTREND::UP;
+      return trendSig;
+   } else if(variabilityNegBool && (ratioDown >= slopeRatio)) {
+      trendSig = SANTREND::DOWN;
+      return trendSig;
+   } else if((noVarBool)  && (ratioDown >= slopeRatio)) {
+      trendSig = SANTREND::DOWN;
+      return trendSig;
+   } else if((noVarBool) && (ratio >= slopeRatio)) {
+      trendSig = SANTREND::UP;
+      return trendSig;
+   } else if((noVarBool) && ((ratio >= 0.7) && (ratio <= 1.3))) {
+      trendSig = SANTREND::FLAT;
+      return trendSig;
+   } else if((noVarBool) && (ratio < slopeRatio) && (ratio > ratioDown) && !flatBool) {
+      trendSig = SANTREND::FLATUP;
+      return trendSig;
+   } else if((noVarBool) && (ratioDown < slopeRatio) && (ratioDown > ratio) && !flatBool) {
+      trendSig = SANTREND::FLATDOWN;
+      return trendSig;
+   }
    return trendSig;
-  };
+};
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-TRENDSTRUCT SanSignals::trendVolRatioSIG(const double & sig[], const double & vol[], const int period = 10, const int shift = 1)
-  {
+TRENDSTRUCT SanSignals::trendVolRatioSIG(const double & sig[], const double & vol[], const int period = 10, const int shift = 1) {
    TRENDSTRUCT ts;
    double up = 0;
    double flat = 0;
@@ -3084,109 +2838,76 @@ TRENDSTRUCT SanSignals::trendVolRatioSIG(const double & sig[], const double & vo
    double ratio = 0;
    double ratioUp = 0;
    double ratioDown = 0;
-   for(int i = shift; i <= period; i++)
-     {
+   for(int i = shift; i <= period; i++) {
       if((sig[i]*vol[i]) > (sig[period]*vol[period]))
          up++;
       if((sig[i]*vol[i]) < (sig[period]*vol[period]))
          down++;
       if((sig[i]*vol[i]) == (sig[period]*vol[period]))
          flat++;
-     }
-   if((up > 0) && (down > 0))
-     {
+   }
+   if((up > 0) && (down > 0)) {
       ratio = (up / down);
       ratioUp = (up / down);
       ratioDown = (down / up);
-     }
-   else
-      if((up == 0) && (down > 0))
-        {
-         ratio = 0;
-         ratioUp = 0;
-         ratioDown = period;
-        }
-      else
-         if((up > 0) && (down == 0))
-           {
-            ratio = period;
-            ratioUp = period;
-            ratioDown = 0;
-           }
-         else
-            if((up == 0) && (down == 0))
-              {
-               ratio = 0;
-               ratioUp = 0;
-               ratioDown = 0;
-              }
+   } else if((up == 0) && (down > 0)) {
+      ratio = 0;
+      ratioUp = 0;
+      ratioDown = period;
+   } else if((up > 0) && (down == 0)) {
+      ratio = period;
+      ratioUp = period;
+      ratioDown = 0;
+   } else if((up == 0) && (down == 0)) {
+      ratio = 0;
+      ratioUp = 0;
+      ratioDown = 0;
+   }
    SIGMAVARIABILITY s1 = stdDevSIG(sig, "", period, shift);
    bool validSigmaRange = ((s1 != SIGMAVARIABILITY::SIGMA_NULL) && (s1 != SIGMAVARIABILITY::SIGMA_MEAN) && (s1 != SIGMAVARIABILITY::SIGMAPOS_MEAN) && (s1 != SIGMAVARIABILITY::SIGMANEG_MEAN) && (s1 != SIGMAVARIABILITY::SIGMAPOS_HALF) && (s1 != SIGMAVARIABILITY::SIGMANEG_HALF));
 //Print("Up: "+up+" Down: "+down+" ratio: "+ratio+" Ratioup: "+ratioUp+" ratioDown: "+ratioDown + " STD of signal: " + util.getSigString(s1));
-   if(validSigmaRange)
-     {
-      if((ratioUp >= 3))
-        {
+   if(validSigmaRange) {
+      if((ratioUp >= 3)) {
          ts.closeTrendSIG = SANTREND::UP;
          ts.trendStrengthSIG = SANTRENDSTRENGTH::SUPERHIGH;
          return ts;
-        }
-      else
-         if(ratioDown >= 3)
-           {
-            ts.closeTrendSIG = SANTREND::DOWN;
-            ts.trendStrengthSIG = SANTRENDSTRENGTH::SUPERHIGH;
-            return ts;
-           }
-         else
-            if(ratioUp >= 2)
-              {
-               ts.closeTrendSIG = SANTREND::UP;
-               ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
-               return ts;
-              }
-            else
-               if(ratioDown >= 2)
-                 {
-                  ts.closeTrendSIG = SANTREND::DOWN;
-                  ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
-                  return ts;
-                 }
-     }
-   else
-      if((s1 == SIGMAVARIABILITY::SIGMAPOS_HALF) || (s1 == SIGMAVARIABILITY::SIGMANEG_HALF) || (s1 == SIGMAVARIABILITY::SIGMA_MEAN) || (s1 == SIGMAVARIABILITY::SIGMAPOS_MEAN) || (s1 == SIGMAVARIABILITY::SIGMANEG_MEAN))
-        {
-         if((ratio >= 0.9) && (ratio <= 1.1))
-           {
-            ts.closeTrendSIG = SANTREND::FLAT;
-            ts.trendStrengthSIG = SANTRENDSTRENGTH::SUPERHIGH;
-            return ts;
-           }
-         else
-            if((ratio >= 0.8) && (ratio <= 1.2))
-              {
-               ts.closeTrendSIG = SANTREND::FLAT;
-               ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
-               return ts;
-              }
-            else
-               if((ratio >= 0.7) && (ratio <= 1.3))
-                 {
-                  ts.closeTrendSIG = SANTREND::FLAT;
-                  ts.trendStrengthSIG = SANTRENDSTRENGTH::NORMAL;
-                  return ts;
-                 }
-        }
+      } else if(ratioDown >= 3) {
+         ts.closeTrendSIG = SANTREND::DOWN;
+         ts.trendStrengthSIG = SANTRENDSTRENGTH::SUPERHIGH;
+         return ts;
+      } else if(ratioUp >= 2) {
+         ts.closeTrendSIG = SANTREND::UP;
+         ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
+         return ts;
+      } else if(ratioDown >= 2) {
+         ts.closeTrendSIG = SANTREND::DOWN;
+         ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
+         return ts;
+      }
+   } else if((s1 == SIGMAVARIABILITY::SIGMAPOS_HALF) || (s1 == SIGMAVARIABILITY::SIGMANEG_HALF) || (s1 == SIGMAVARIABILITY::SIGMA_MEAN) || (s1 == SIGMAVARIABILITY::SIGMAPOS_MEAN) || (s1 == SIGMAVARIABILITY::SIGMANEG_MEAN)) {
+      if((ratio >= 0.9) && (ratio <= 1.1)) {
+         ts.closeTrendSIG = SANTREND::FLAT;
+         ts.trendStrengthSIG = SANTRENDSTRENGTH::SUPERHIGH;
+         return ts;
+      } else if((ratio >= 0.8) && (ratio <= 1.2)) {
+         ts.closeTrendSIG = SANTREND::FLAT;
+         ts.trendStrengthSIG = SANTRENDSTRENGTH::HIGH;
+         return ts;
+      } else if((ratio >= 0.7) && (ratio <= 1.3)) {
+         ts.closeTrendSIG = SANTREND::FLAT;
+         ts.trendStrengthSIG = SANTRENDSTRENGTH::NORMAL;
+         return ts;
+      }
+   }
    return ts;
-  };
+};
 
 
 
 //+------------------------------------------------------------------+
 //|                          NEW ONE                                        |
 //+------------------------------------------------------------------+
-SANTREND SanSignals::trendSlopeSIG(const double & data[], string label = "", const int period = 10, const int shift = 1)
-  {
+SANTREND SanSignals::trendSlopeSIG(const double & data[], string label = "", const int period = 10, const int shift = 1) {
    double slope[];
    double x[];
    ArrayResize(slope, (period + 1));
@@ -3201,14 +2922,12 @@ SANTREND SanSignals::trendSlopeSIG(const double & data[], string label = "", con
    double mean = EMPTY_VALUE;
    double zScore = EMPTY_VALUE;
    double range = data[ArrayMaximum(data)] - data[ArrayMinimum(data)];
-   for(int k = (period + 1), i = 0; k >= shift; k--, i++)
-     {
+   for(int k = (period + 1), i = 0; k >= shift; k--, i++) {
       x[i] = k;
-     }
-   for(int i = shift, j = 0; i <= period; i++, j++)
-     {
+   }
+   for(int i = shift, j = 0; i <= period; i++, j++) {
       slope[j] = ((x[i] - shift) != 0) ? ((data[i] - data[period]) / (x[i] - shift)) : 0;
-     }
+   }
    stdDev = stats.stdDev(slope);
    mean = stats.mean(slope);
    zScore = stats.zScore(slope[0], mean, stdDev);
@@ -3230,27 +2949,20 @@ SANTREND SanSignals::trendSlopeSIG(const double & data[], string label = "", con
 //Print("Slope Trend: "+label+": " +slope[0]+" SLOPE MEAN: "+mean+" scatterplot slope: "+dt.matrixD[0]+" zScore: "+zScore+" zFlat: "+zScoreFlatRange+" zTrade: "+zScoreTradeRange+" up: "+up+" down: "+down);
    if(flat3)
       //   if(flat1 || flat2)
-     {
+   {
       return SANTREND::FLAT;
-     }
-   else
-      if(up)
-        {
-         return SANTREND::UP;
-        }
-      else
-         if(down)
-           {
-            return SANTREND::DOWN;
-           }
+   } else if(up) {
+      return SANTREND::UP;
+   } else if(down) {
+      return SANTREND::DOWN;
+   }
    return SANTREND::NOTREND;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL)
-  {
+SAN_SIGNAL SanSignals::tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL) {
    SAN_SIGNAL trade = SAN_SIGNAL::NOTRADE;
    double varFastVal = util.getSigVarBool(varFast);
    bool varFastBool = ((varFastVal != 0) && ((varFastVal == 1.314) || (varFastVal == -1.314)));
@@ -3269,13 +2981,12 @@ SAN_SIGNAL SanSignals::tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVAR
    bool varBool = (varFastBool && varMediumBool && varSlowBool);
    bool varPosBool = (varBool && (varFastPosBool && varMediumPosBool && varSlowPosBool));
    bool varNegBool = (varBool && (varFastNegBool && varMediumNegBool && varSlowNegBool));
-   if(varVerySlow != SIGMAVARIABILITY::SIGMA_NULL)
-     {
+   if(varVerySlow != SIGMAVARIABILITY::SIGMA_NULL) {
       flatBool = (util.getSigVarBool(varVerySlow) == 0);
       varBool = (varBool && ((util.getSigVarBool(varVerySlow) != 0) && ((util.getSigVarBool(varVerySlow) == 1.314) || (util.getSigVarBool(varVerySlow) == -1.314))));
       varPosBool = (varPosBool && ((util.getSigVarBool(varVerySlow) != 0) && (util.getSigVarBool(varVerySlow) == 1.314)));
       varNegBool = (varNegBool && ((util.getSigVarBool(varVerySlow) != 0) && (util.getSigVarBool(varVerySlow) == -1.314)));
-     }
+   }
    if((volSIG == SAN_SIGNAL::NOTRADE) || (volSIG == SAN_SIGNAL::REVERSETRADE) || (volSIG == SAN_SIGNAL::CLOSE))
       return volSIG;
    if(flatBool)
@@ -3285,25 +2996,23 @@ SAN_SIGNAL SanSignals::tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVAR
    if((volSIG == SAN_SIGNAL::TRADE) && varBool && varNegBool)
       return SAN_SIGNAL::SELL;
    return trade;
-  }
+}
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL        trendSIG(SANTREND tr1, SANTREND tr2, SANTREND tr3, SANTREND tr4 = EMPTY, SANTREND tr5 = EMPTY, SANTREND tr6 = EMPTY)
-  {
+SAN_SIGNAL        trendSIG(SANTREND tr1, SANTREND tr2, SANTREND tr3, SANTREND tr4 = EMPTY, SANTREND tr5 = EMPTY, SANTREND tr6 = EMPTY) {
 //Print("[TRSIGIN] tr1: "+util.getSigString(tr1)+" tr2: "+util.getSigString(tr2)+" tr3: "+util.getSigString(tr3)+" tr4: "+util.getSigString(tr4)+" tr5: "+util.getSigString(tr5)+" tr6: "+util.getSigString(tr6));
    if((tr1 == SANTREND::NOTREND)
-      || (tr2 == SANTREND::NOTREND)
-      || (tr3 == SANTREND::NOTREND)
-      || (tr4 == SANTREND::NOTREND)
-      || (tr5 == SANTREND::NOTREND)
-      || (tr6 == SANTREND::NOTREND)
-     )
-     {
+         || (tr2 == SANTREND::NOTREND)
+         || (tr3 == SANTREND::NOTREND)
+         || (tr4 == SANTREND::NOTREND)
+         || (tr5 == SANTREND::NOTREND)
+         || (tr6 == SANTREND::NOTREND)
+     ) {
       return SAN_SIGNAL::NOSIG;
-     }
+   }
    if(
       (
          ((tr1 == SANTREND::FLAT) || (tr1 == SANTREND::FLATUP) || (tr1 == SANTREND::FLATDOWN))
@@ -3313,84 +3022,68 @@ SAN_SIGNAL        trendSIG(SANTREND tr1, SANTREND tr2, SANTREND tr3, SANTREND tr
       || ((tr4 == SANTREND::FLAT) || (tr4 == SANTREND::FLATUP) || (tr4 == SANTREND::FLATDOWN))
       || ((tr5 == SANTREND::FLAT) || (tr5 == SANTREND::FLATUP) || (tr5 == SANTREND::FLATDOWN))
       || ((tr6 == SANTREND::FLAT) || (tr6 == SANTREND::FLATUP) || (tr6 == SANTREND::FLATDOWN))
-   )
-     {
+   ) {
       return SAN_SIGNAL::SIDEWAYS;
-     }
+   }
    if(
       ((tr6 != EMPTY) && (tr6 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
       && (
          (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr6)))
          || (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr6)))
       )
-   )
-     {
+   ) {
       return SAN_SIGNAL::CLOSE;
-     }
-   else
-      if(
-         ((tr5 != EMPTY) && (tr5 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
-         && (
-            (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr5)))
-            || (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr5)))
-         )
-      )
-        {
-         return SAN_SIGNAL::CLOSE;
-        }
-      else
-         if(
-            ((tr4 != EMPTY) && (tr4 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
-            && (
-               (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr4)))
-               || (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr4)))
-            )
-         )
-           {
-            return SAN_SIGNAL::CLOSE;
-           }
-         else
-            if(
-               ((tr3 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
-               && (
-                  (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr3)))
-                  && (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr3)))
-               )
-            )
-              {
-               return SAN_SIGNAL::CLOSE;
-              }
-            else
-               if(
-                  ((tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
-                  && (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr2)))
-               )
-                 {
-                  return SAN_SIGNAL::CLOSE;
-                 }
-   if((tr1 != SANTREND::NOTREND)
+   } else if(
+      ((tr5 != EMPTY) && (tr5 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
       && (
-         ((tr6 != EMPTY) && (tr5 != EMPTY) && (tr4 != EMPTY) && (tr1 == tr2) && (tr2 == tr3) && (tr3 == tr4) && (tr4 == tr5) && (tr5 == tr6))
-         || ((tr6 == EMPTY) && (tr5 != EMPTY) && (tr4 != EMPTY) && (tr1 == tr2) && (tr2 == tr3) && (tr3 == tr4) && (tr4 == tr5))
-         || ((tr5 == EMPTY) && (tr4 != EMPTY) && (tr1 == tr2) && (tr2 == tr3) && (tr3 == tr4))
-         || ((tr5 == EMPTY) && (tr4 == EMPTY) && (tr1 == tr2) && (tr2 == tr3))
+         (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr5)))
+         || (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr5)))
       )
-     )
-     {
+   ) {
+      return SAN_SIGNAL::CLOSE;
+   } else if(
+      ((tr4 != EMPTY) && (tr4 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
+      && (
+         (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr4)))
+         || (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr4)))
+      )
+   ) {
+      return SAN_SIGNAL::CLOSE;
+   } else if(
+      ((tr3 != SANTREND::NOTREND) && (tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
+      && (
+         (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr3)))
+         && (util.oppSignal(util.convTrendToSig(tr2), util.convTrendToSig(tr3)))
+      )
+   ) {
+      return SAN_SIGNAL::CLOSE;
+   } else if(
+      ((tr1 != SANTREND::NOTREND) && (tr2 != SANTREND::NOTREND))
+      && (util.oppSignal(util.convTrendToSig(tr1), util.convTrendToSig(tr2)))
+   ) {
+      return SAN_SIGNAL::CLOSE;
+   }
+   if((tr1 != SANTREND::NOTREND)
+         && (
+            ((tr6 != EMPTY) && (tr5 != EMPTY) && (tr4 != EMPTY) && (tr1 == tr2) && (tr2 == tr3) && (tr3 == tr4) && (tr4 == tr5) && (tr5 == tr6))
+            || ((tr6 == EMPTY) && (tr5 != EMPTY) && (tr4 != EMPTY) && (tr1 == tr2) && (tr2 == tr3) && (tr3 == tr4) && (tr4 == tr5))
+            || ((tr5 == EMPTY) && (tr4 != EMPTY) && (tr1 == tr2) && (tr2 == tr3) && (tr3 == tr4))
+            || ((tr5 == EMPTY) && (tr4 == EMPTY) && (tr1 == tr2) && (tr2 == tr3))
+         )
+     ) {
       return util.convTrendToSig(tr1);
-     }
+   }
 //else
 //  {
 //   return SAN_SIGNAL::CLOSE;
 //  }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::tradeSignal(const double ciStd, const double ciMfi, const double & atr[], const double ciAdxMain, const double ciAdxPlus, const double ciAdxMinus)
-  {
+SAN_SIGNAL SanSignals::tradeSignal(const double ciStd, const double ciMfi, const double & atr[], const double ciAdxMain, const double ciAdxPlus, const double ciAdxMinus) {
    double currspread = (int)MarketInfo(_Symbol, MODE_SPREAD);
    SAN_SIGNAL trade = SAN_SIGNAL::NOTRADE;
    SAN_SIGNAL adxsig = SAN_SIGNAL::NOSIG;
@@ -3409,13 +3102,12 @@ SAN_SIGNAL SanSignals::tradeSignal(const double ciStd, const double ciMfi, const
    if(indicatorBool)
       trade = SAN_SIGNAL::TRADE;
    return trade;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::mfiSIG(const double & sig[], SANTREND tradeTrend = SANTREND::NOTREND, const int period = 10, const int shift = 1)
-  {
+SAN_SIGNAL SanSignals::mfiSIG(const double & sig[], SANTREND tradeTrend = SANTREND::NOTREND, const int period = 10, const int shift = 1) {
    SANTREND mfiTrend = SANTREND::NOTREND;
    SANTREND scatterMfiTrend = SANTREND::NOTREND;
    SAN_SIGNAL mfiTrendSIG = SAN_SIGNAL::NOSIG;
@@ -3451,37 +3143,29 @@ SAN_SIGNAL SanSignals::mfiSIG(const double & sig[], SANTREND tradeTrend = SANTRE
    bool buyBool = (buyBool7);
    bool sellBool = (sellBool7);
    bool flatBool = (notMfiRegion && mfiFlatBool);
-   if(flatBool)
-     {
+   if(flatBool) {
       mfISIG = SAN_SIGNAL::SIDEWAYS;
-     }
-   else
-      if(buyBool)
-        {
-         mfISIG = SAN_SIGNAL::BUY;
-        }
-      else
-         if(sellBool)
-           {
-            mfISIG = SAN_SIGNAL::SELL;
-           }
+   } else if(buyBool) {
+      mfISIG = SAN_SIGNAL::BUY;
+   } else if(sellBool) {
+      mfISIG = SAN_SIGNAL::SELL;
+   }
 //   Print("Mfi Trend : "+util.getSigString(mfiTrend)+" scatter: "+util.getSigString(scatterMfiTrend)+" tradeTrend: "+util.getSigString(util.convTrendToSig(tradeTrend))+" Mfi Sig: "+util.getSigString(mfISIG)+" BUY:"+buyBool+" SELL:"+sellBool);
 //Print("BUY: 1: "+buyBool1+" 2: "+ buyBool2+" 3: "+buyBool3+" 4: "+ buyBool4+" 5: "+buyBool5+" 6: "+buyBool6+" 7: "+buyBool7+" buyBool: "+ buyBool);
 //Print("SELL: 1: "+sellBool1+" 2: "+ sellBool2+" 3: "+sellBool3+" 4: "+ sellBool4+" 5: "+sellBool5+" 6: "+sellBool6+" 7: "+sellBool7+" sellBool: "+ sellBool);
    return mfISIG;
-  };
+};
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL  SanSignals::rsiSIG(const double rsiVal, const int BUYLEVEL = 40, const int SELLLEVEL = 60)
-  {
+SAN_SIGNAL  SanSignals::rsiSIG(const double rsiVal, const int BUYLEVEL = 40, const int SELLLEVEL = 60) {
    if(rsiVal > SELLLEVEL)
       return SAN_SIGNAL::SELL;
    if(rsiVal < BUYLEVEL)
       return SAN_SIGNAL::BUY;
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -3489,22 +3173,16 @@ SAN_SIGNAL  SanSignals::rsiSIG(const double rsiVal, const int BUYLEVEL = 40, con
 SAN_SIGNAL  SanSignals::fastSigSlowTrendSIG(
    const SAN_SIGNAL & fastSig,
    const SANTREND & baseTrend
-)
-  {
-   if((fastSig != SAN_SIGNAL::NOSIG) && (fastSig != SAN_SIGNAL::SIDEWAYS))
-     {
-      if(fastSig == util.convTrendToSig(baseTrend))
-        {
+) {
+   if((fastSig != SAN_SIGNAL::NOSIG) && (fastSig != SAN_SIGNAL::SIDEWAYS)) {
+      if(fastSig == util.convTrendToSig(baseTrend)) {
          return fastSig;
-        }
-      else
-         if((util.oppSignal(fastSig, util.convTrendToSig(baseTrend))) || (baseTrend == SANTREND::FLAT))
-           {
-            return SAN_SIGNAL::CLOSE;
-           }
-     }
+      } else if((util.oppSignal(fastSig, util.convTrendToSig(baseTrend))) || (baseTrend == SANTREND::FLAT)) {
+         return SAN_SIGNAL::CLOSE;
+      }
+   }
    return SAN_SIGNAL::NOSIG;
-  }
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -3513,8 +3191,7 @@ SAN_SIGNAL SanSignals::cSIG(
    const INDDATA & indData,
    SanUtils & util,
    const uint SHIFT = 1
-)
-  {
+) {
    datetime timeCurrent = indData.time[SHIFT];
    int spread = indData.currSpread;
    SAN_SIGNAL tradeSIG = SAN_SIGNAL::NOSIG;
@@ -3594,74 +3271,40 @@ SAN_SIGNAL SanSignals::cSIG(
    bool buyTradeBool = (trendStdCP && trendSlopeRatioBool && trendBuyClusterBool);
    bool sellTradeBool = (trendStdCP && trendSlopeRatioBool && trendSellClusterBool);
    bool tradeBool = (trendStdCP && trendSlopeRatioBool);
-   if(noTradeBoo11)
-     {
+   if(noTradeBoo11) {
       tradeSIG = SAN_SIGNAL::NOTRADE;
-     }
-   else
-      if(noTradeBoo12)
-        {
-         tradeSIG = SAN_SIGNAL::NOTRADE;
-        }
-      else
-         if(noSigBool)
-           {
-            tradeSIG = SAN_SIGNAL::NOSIG;
-           }
-         else
-            if(buyTradeBool)
-              {
-               tradeSIG = SAN_SIGNAL::TRADEBUY;
-              }
-            else
-               if(sellTradeBool)
-                 {
-                  tradeSIG = SAN_SIGNAL::TRADESELL;
-                 }
-               else
-                  if(tradeBool)
-                    {
-                     tradeSIG = SAN_SIGNAL::TRADE;
-                    }
-                  else
-                    {
-                     tradeSIG = SAN_SIGNAL::NOTRADE;
-                    }
+   } else if(noTradeBoo12) {
+      tradeSIG = SAN_SIGNAL::NOTRADE;
+   } else if(noSigBool) {
+      tradeSIG = SAN_SIGNAL::NOSIG;
+   } else if(buyTradeBool) {
+      tradeSIG = SAN_SIGNAL::TRADEBUY;
+   } else if(sellTradeBool) {
+      tradeSIG = SAN_SIGNAL::TRADESELL;
+   } else if(tradeBool) {
+      tradeSIG = SAN_SIGNAL::TRADE;
+   } else {
+      tradeSIG = SAN_SIGNAL::NOTRADE;
+   }
    SAN_SIGNAL slopesig = slopeSIG(dt30, 0);
    SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
-   if(trendStdCP && (fabs(slopeIMA30) > SLOPE30LIMIT))
-     {
+   if(trendStdCP && (fabs(slopeIMA30) > SLOPE30LIMIT)) {
       sig = slopesig;
-     }
-   else
-      if((tradeSIG == SAN_SIGNAL::TRADEBUY) && (slopesig == SAN_SIGNAL::BUY))
-        {
-         sig = slopesig;
-        }
-      else
-         if((tradeSIG == SAN_SIGNAL::TRADESELL) && (slopesig == SAN_SIGNAL::SELL))
-           {
-            sig = slopesig;
-           }
-         else
-            if(trendStdCP && ((trendBuyOBVBool && (slopesig == SAN_SIGNAL::BUY)) || (trendSellOBVBool && (slopesig == SAN_SIGNAL::SELL))))
-              {
-               sig = slopesig;
-              }
-            else
-               if((tradeSIG == SAN_SIGNAL::TRADE))
-                 {
-                  sig = slopesig;
-                 }
-               else
-                  if(((tradeSIG == SAN_SIGNAL::NOTRADE) || (tradeSIG == SAN_SIGNAL::NOSIG)) && (slopesig == SAN_SIGNAL::CLOSE))
-                    {
-                     sig = slopesig;
-                    }
+   } else if((tradeSIG == SAN_SIGNAL::TRADEBUY) && (slopesig == SAN_SIGNAL::BUY)) {
+      sig = slopesig;
+   } else if((tradeSIG == SAN_SIGNAL::TRADESELL) && (slopesig == SAN_SIGNAL::SELL)) {
+      sig = slopesig;
+   } else if(trendStdCP && ((trendBuyOBVBool && (slopesig == SAN_SIGNAL::BUY)) || (trendSellOBVBool && (slopesig == SAN_SIGNAL::SELL)))) {
+      sig = slopesig;
+   } else if((tradeSIG == SAN_SIGNAL::TRADE)) {
+      sig = slopesig;
+   } else if(((tradeSIG == SAN_SIGNAL::NOTRADE) || (tradeSIG == SAN_SIGNAL::NOSIG)) && (slopesig == SAN_SIGNAL::CLOSE)) {
+      sig = slopesig;
+   }
    Print("[cSIG] cSIG: " + util.getSigString(sig) + " Slope stdCPSlope: " + stdCPSlope + " Slope30: " + slopeIMA30 + " fMSWR: " + fMSWR + " rFM: " + rFM + " rMS: " + rMS + " rFS: " + rFS);
    return sig;
-  }
-  
+}
+
 ////+------------------------------------------------------------------+
 ////|                                                                  |
 ////+------------------------------------------------------------------+
@@ -3727,30 +3370,27 @@ DTYPE SanSignals::hilbertSIG(
    const int stdDevPips,
    const int SIZE = 8,
    const int FILTER = 3
-)
-  {
+) {
    static SAN_SIGNAL hilbert_signal = SAN_SIGNAL::NOSIG;
    double hilbertAmp[], hilbertPhase[];
    stats.hilbertTransform(close, hilbertAmp, hilbertPhase, SIZE, FILTER);
    double cutOff = stats.maxVal<double>(spread, (0.5 * stdDevPips));
    DTYPE ht = stats.extractHilbertAmpNPhase(hilbertAmp, hilbertPhase, cutOff);
    ht.val5 = cutOff;
-   if(ht.val2 == EMPTY_VALUE)
-     {
+   if(ht.val2 == EMPTY_VALUE) {
       ht.val4 = hilbert_signal;
       return ht;
-     }
+   }
    double hilbert_phase_deg = ht.val3 * 180 / M_PI;
    if(hilbert_phase_deg < 0)
       hilbert_phase_deg += 360;
    if(hilbert_phase_deg >= 315 || hilbert_phase_deg < 45)
       hilbert_signal = SAN_SIGNAL::SELL;
-   else
-      if(hilbert_phase_deg >= 135 && hilbert_phase_deg < 225)
-         hilbert_signal = SAN_SIGNAL::BUY;
+   else if(hilbert_phase_deg >= 135 && hilbert_phase_deg < 225)
+      hilbert_signal = SAN_SIGNAL::BUY;
    ht.val4 = hilbert_signal;
    return ht;
-  }
+}
 
 
 //+------------------------------------------------------------------+
@@ -3759,28 +3399,25 @@ DTYPE SanSignals::hilbertSIG(
 DTYPE SanSignals::dftSIG(
    const double & close[],
    const int SIZE = 8
-)
-  {
+) {
    static SAN_SIGNAL dft_signal = SAN_SIGNAL::NOSIG;
    double dftMag[], dftPhase[], dftPower[];
    stats.dftTransform(close, dftMag, dftPhase, dftPower, SIZE);
    DTYPE dft = stats.extractDftPowerNPhase(dftMag, dftPhase, dftPower);
-   if(dft.val2 == EMPTY_VALUE)
-     {
+   if(dft.val2 == EMPTY_VALUE) {
       dft.val5 = dft_signal;
       return dft;
-     }
+   }
    double dft_phase_deg = dft.val3 * 180 / M_PI;
    if(dft_phase_deg < 0)
       dft_phase_deg += 360;
    if(dft_phase_deg >= 315 || dft_phase_deg < 45)
       dft_signal = SAN_SIGNAL::SELL;
-   else
-      if(dft_phase_deg >= 135 && dft_phase_deg < 225)
-         dft_signal =  SAN_SIGNAL::BUY;
+   else if(dft_phase_deg >= 135 && dft_phase_deg < 225)
+      dft_signal =  SAN_SIGNAL::BUY;
    dft.val5 = dft_signal;
    return dft;
-  }
+}
 
 //+------------------------------------------------------------------+
 //| Hilbert-DFT Conflation Signal                                    |
@@ -3796,8 +3433,7 @@ D20TYPE SanSignals::hilbertDftSIG(
    const int stdDevPips,
    const int SIZE = 8,
    const int FILTER = 3
-)
-  {
+) {
    DTYPE dft;
    DTYPE ht;
    D20TYPE d20;
@@ -3831,21 +3467,19 @@ D20TYPE SanSignals::hilbertDftSIG(
    d20.val[14] = dft_signal;
    d20.val[15] = SIZE;
    d20.val[16] = FILTER;
-   if((hilbert_signal == SAN_SIGNAL::SELL) && (dft_signal == SAN_SIGNAL::SELL))    // && (rsiSig ==SAN_SIGNAL::SELL)) {
-     {
+   if((hilbert_signal == SAN_SIGNAL::SELL) && (dft_signal == SAN_SIGNAL::SELL)) {  // && (rsiSig ==SAN_SIGNAL::SELL)) {
       //d20.val[0] = SAN_SIGNAL::SELL;
       hibertdftSIG = SAN_SIGNAL::SELL;
       //return d20;
-     }
-   if((hilbert_signal == SAN_SIGNAL::BUY) && (dft_signal == SAN_SIGNAL::BUY))   //  && (rsiSig ==SAN_SIGNAL::BUY)) {
-     {
+   }
+   if((hilbert_signal == SAN_SIGNAL::BUY) && (dft_signal == SAN_SIGNAL::BUY)) { //  && (rsiSig ==SAN_SIGNAL::BUY)) {
       //d20.val[0] = SAN_SIGNAL::BUY;
       hibertdftSIG = SAN_SIGNAL::BUY;
       //return d20;
-     }
+   }
    d20.val[0] = hibertdftSIG;
    return d20;
-  }
+}
 
 
 SanSignals sig;
