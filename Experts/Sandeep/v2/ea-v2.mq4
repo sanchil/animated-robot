@@ -28,7 +28,11 @@ input SAN_SIGNAL recordSignal = SAN_SIGNAL::NOTRADE;
 input bool flipSig = false; // Flip Signal
 // Lot size = 0.01.
 // 1 Microlot = 1*0.01=0.01, 10 Microlots = 10*0.01 = 0.1, 100 Microlots = 1,
+
+input double maxMultiplier = 2.0; // Maximum risk for elite setups
+input double minLots = 0.01;      // Terminal minimum
 input double microLots = 1; // Micro Lots
+
 const int SHIFT = 1;
 
 double closeProfit;// Profit at which a trade is considered for closing. Also used for takeProfit.
@@ -50,19 +54,6 @@ ORDERPARAMS op3;
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
-//int OnInit()
-//  {
-////---
-//   EventSetTimer(1);
-//   op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
-//   closeProfit = op3.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
-//   stopLoss = op3.STOPLOSS;
-//   currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
-//   maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
-//   BarsHeld = 0;
-////   ---
-//   return(INIT_SUCCEEDED);
-//  }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -98,151 +89,6 @@ void OnDeinit(const int reason) {
    Print(__FUNCTION__, "_UninitReason = ", util.getUninitReasonText(_UninitReason));
    EventKillTimer();
 }
-
-
-//////+------------------------------------------------------------------+
-//////| Expert tick function                                             |
-//////+------------------------------------------------------------------+
-//////void OnTimer()
-//void _OnTick()
-//  {
-//
-//// ai.WebService_CodestralCall("https://codestral.mistral.ai/v1/chat/completions","9gFms2xwFyGDKci2kGfFQCpcj9FwSmdb","Get some coffee","GET");
-////---
-////Print("ELEMENT [0,0]: "+stats.getElement(matrix,0,0,3));
-////Print("ELEMENT [0,1]: "+stats.getElement(matrix,0,1,3));
-////Print("ELEMENT [0,2]: "+stats.getElement(matrix,0,2,3));
-////
-////Print("ELEMENT [1,0]: "+stats.getElement(matrix,1,0,3));
-////Print("ELEMENT [1,1]: "+stats.getElement(matrix,1,1,3));
-////Print("ELEMENT [1,2]: "+stats.getElement(matrix,1,2,3));
-////
-////Print("ELEMENT [2,0]: "+stats.getElement(matrix,2,0,3));
-////Print("ELEMENT [2,1]: "+stats.getElement(matrix,2,1,3));
-////Print("ELEMENT [2,2]: "+stats.getElement(matrix,2,2,3));
-//// Print("[DETERMINANT] 2x2 Determinant: ", stats.detLU(matrix2x2, 2)); // Expected: -2
-////
-////// 3x3: [1, 2, 3; 4, 5, 6; 7, 8, 9]
-//// Print("[DETERMINANT] 3x3 Determinant: ", stats.detLU(matrix3x3, 3)); // Expected: 0
-////
-////// 4x4 identity
-//// Print("[DETERMINANT] 4x4 Determinant: ", stats.detLU(matrix4x4, 4)); // Expected: 1
-////
-////// 5x5 identity
-//// Print("[DETERMINANT] 5x5 Determinant: ", stats.detLU(matrix5x5, 5)); // Expected: 1
-////   ResetLastError();
-////Print("standard dev: "+stats.stdDev(x));
-////Print("Pearson Coeff: "+stats.pearsonCoeff(x,y));
-//// Print("ACF(1): "+stats.acf(a,0,1));
-//// Print(" Mean: "+ stats.mean(a));
-//// Print("STD(1): "+stats.stdDev(x)+" Mean: "+ stats.mean(x)+" z Score: "+ stats.zScore(20,stats.mean(x),stats.stdDev(x)));
-//// DataTransport t = stats.scatterPlotSlope(y,x);
-//// Print(" Slope1 : "+ t.matrixD[0]+" intercept1: "+t.matrixD[1]+" slope2: "+t.matrixD[2]+" intercept2: "+t.matrixD[3]);
-////Print("Convergence Divergence test: "+stats.convDivTest(top,bottom,5));
-//// Print(" The slope: "+stats.scatterPlotSlope(y,x).matrixD[0]+" intercept: "+stats.scatterPlotSlope(y,x).matrixD[1]);
-//// Print(" Hello from VPS !!!");
-//   int orderMesg = NULL;
-////util.initTrade();
-////closeProfit = SAN_TAKEPROFIT; // Profit at which a trade is condsidered for closing.
-////stopLoss = SAN_STOPLOSS;
-////currProfit = TRADEPROFIT; // The profit of the currently held trade
-////maxProfit = MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
-//   op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
-//   closeProfit = op3.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
-//   stopLoss = op3.STOPLOSS;
-//   currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
-//   maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
-//
-////int totalOrders = OrdersTotal();
-//   int totalOrders = OrdersTotalByMagic(magicNumber);
-////if((totalOrders > 0)
-////   && (util.isNewBar()))
-////  {
-////   BarsHeld++;
-////  }
-//
-//   if(totalOrders > 0 && util.isNewBar())
-//      BarsHeld++;
-//   else
-//      if(totalOrders == 0)
-//         BarsHeld = 0;
-//
-//// Print("Empty value: "+ EMPTY_VALUE+" EMPTY: "+EMPTY);
-//// Print("[TSTAT] Take Profit: "+closeProfit+" stopLoss: "+stopLoss+" currProfit: "+currProfit+" maxProfit: "+maxProfit + " Trade Vol: "+op3.SAN_TRADE_VOL+" TPROFIT: "+TAKE_PROFIT);
-////########
-//   ciHandle = iCustom(_Symbol, PERIOD_CURRENT, "./Sandeep/v1/ind-v1", magicNumber, noOfCandles, stopLoss, closeProfit, currProfit, maxProfit, recordData, recordSignal, dataFileName, flipSig,BarsHeld,microLots, 0, 0);
-//   ciClose = iCustom(_Symbol, PERIOD_CURRENT, "./Sandeep/v1/ind-v1", magicNumber, noOfCandles,stopLoss, closeProfit, currProfit, maxProfit, recordData, recordSignal, dataFileName, flipSig,BarsHeld,microLots, 1, 0);
-//   ciStrategy =  iCustom(_Symbol, PERIOD_CURRENT, "./Sandeep/v1/ind-v1", magicNumber, noOfCandles, stopLoss, closeProfit, currProfit, maxProfit, recordData, recordSignal, dataFileName, flipSig,BarsHeld,microLots, 2, 0);
-////ciMktType = iCustom(_Symbol,PERIOD_CURRENT,"./Sandeep/v1/ind-v1",magicNumber,noOfCandles,stopLoss,closeProfit,currProfit,maxProfit,recordData,recordSignal,dataFileName,flipSig,3,0);
-////########
-////  Print(" Signal strategy: "+ ciStrategy + " ciTradeSig: "+ciTradeSig+" SIG: "+ ciHandle);
-////  Print(" Trade SIG: "+ util.getSigString(ciHandle)+" Market Type: "+ util.getSigString(ciMktType));
-////   if((ciHandle==EMPTY)&&(ciHandle==EMPTY_VALUE))
-////      Print(" Trade SIG: "+ util.getSigString(ciHandle)+" absolute value: "+ ciHandle);
-//
-//// Print("EMPTY:  "+ EMPTY+" EMPTY_VALUE: "+EMPTY_VALUE);
-//// Print("[EA] Total orders: "+ totalOrders+" Signal: "+ (SAN_SIGNAL)ciHandle + " Sig str: "+ util.getSigString((SAN_SIGNAL)ciHandle)+ " Close sig: "+ (SAN_SIGNAL)ciClose+" close str: "+ util.getSigString((SAN_SIGNAL)ciClose)+" Point: "+Point+" Digits: "+_Digits);
-////########
-////##################################################################################################################
-//   if((ciHandle != EMPTY) && (ciHandle != EMPTY_VALUE))
-//     {
-//      if((totalOrders > 0) && ((SAN_SIGNAL)ciClose == SAN_SIGNAL::CLOSE) && ((STRATEGYTYPE)ciStrategy == STRATEGYTYPE::CLOSEPOSITIONS))
-//        {
-//         Print(" Trying to close orders");
-//         if(TRADESWITCH)
-//           {
-//            BarsHeld = 0;
-//            util.closeOrders();
-//           }
-//
-//
-//        }
-//      //##################################################################################################################
-//      //##################################################################################################################
-//      // CLOSE trade on reverse for now
-//      //      if((totalOrders > 0) && ((SAN_SIGNAL)ciClose!=SAN_SIGNAL::CLOSE)&& ((STRATEGYTYPE)ciStrategy == STRATEGYTYPE::IMACLOSE)) {
-//      //         //  Print(" Trade position: "+ op3.TRADEPOSITION + "| Trade Profit: "+TRADEPROFIT+" |Max Trade Profit: "+MAXTRADEPROFIT+" | Opposing signals: "+util.oppSignal((SAN_SIGNAL)ciClose,op3.TRADEPOSITION)+" 20% profit fall:"+util.closeOnProfitPercentage(0.2));
-//      //         if(util.oppSignal((SAN_SIGNAL)ciClose,op3.TRADEPOSITION)) {
-//      //            Print(" Trying to reverse orders");
-//      //            if(TRADESWITCH)
-//      //               util.closeOrdersOnRevSignal((SAN_SIGNAL)ciClose,0);
-//      //         }
-//      //
-//      //      }
-//      //##################################################################################################################
-//      //##################################################################################################################
-//      if(totalOrders == 0)
-//        {
-//         BarsHeld = 0;
-//         if(((SAN_SIGNAL)ciHandle) == SAN_SIGNAL::BUY)
-//           {
-//            Print(" Placing a buy ! order: ");
-//            if(TRADESWITCH)
-//              {
-//               orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_BUY, 3, 0, 0);
-//               //////orderMesg = OrderSend(_Symbol,OP_BUY,op3.SAN_TRADE_VOL,Ask,3,0,0,"My buy order",magicNumber,0,clrNONE);
-//              }
-//           }
-//         if(((SAN_SIGNAL)ciHandle) == SAN_SIGNAL::SELL)
-//           {
-//            Print(" Placing a sell ! order: ");
-//            if(TRADESWITCH)
-//              {
-//               orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_SELL, 3, 0, 0);
-//               //////orderMesg = OrderSend(_Symbol,OP_SELL,op3.SAN_TRADE_VOL,Bid,3,0,0,"My sell order",magicNumber,0,clrNONE);
-//              }
-//           }
-//         //Print(" Order Ticket: "+ orderMesg);
-//         if(GetLastError() != ERR_NO_ERROR)
-//            Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
-//        }
-//      //##################################################################################################################
-//     }
-////########
-//  }
-//+------------------------------------------------------------------+
-
-//+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
 //| Count only orders with our magic number                          |
@@ -374,10 +220,7 @@ void OnTick() {
    STRATEGYTYPE stgyType = (STRATEGYTYPE)signals.buff3[0];
 
 // 4. The Decision (1=Trade, 0=Hold, -1=Exit)
-   int physicsAction = ms.getCombinedScore(indData.bayesianHoldScore, indData.neuronHoldScore);
-
-
-
+   int physicsAction = ms.getCombinedScore(indData.bayesianHoldScore, indData.neuronHoldScore, indData.fMSR);
 
 // Log the 3D Vector for "Soundness" analysis
    if(totalOrders > 0 || direction != SAN_SIGNAL::NOSIG) {
@@ -385,52 +228,74 @@ void OnTick() {
                   indData.bayesianHoldScore, indData.neuronHoldScore, indData.fMSR);
    }
 
+   double convictionFactor = 1.0;
 
-   if((totalOrders > 0) && (closeSIG == SAN_SIGNAL::CLOSE) && (stgyType == STRATEGYTYPE::CLOSEPOSITIONS)) {
-      Print(" Trying to close orders");
-      BarsHeld = 0;
-      util.closeOrders();
+   if(indData.bayesianHoldScore > 0.80 && indData.neuronHoldScore > 0.80 && indData.fMSR >= 1.0) {
+      convictionFactor = maxMultiplier;
+   } else if(indData.bayesianHoldScore > 0.70 && indData.neuronHoldScore > 0.70 && indData.fMSR >= 0.75) {
+      convictionFactor = 1.5;
    }
 
+// 2. Scale the Volume
+// We multiply your input microLots by the conviction
+   double dynamicLots = microLots * convictionFactor;
 
-   if(totalOrders == 0) {
-      BarsHeld = 0;
-      if(direction == SAN_SIGNAL::BUY) {
-         Print(" Placing a buy ! order: ");
-         orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_BUY, 3, 0, 0);
-      }
-      if(direction == SAN_SIGNAL::SELL) {
-         Print(" Placing a sell ! order: ");
-         orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_SELL, 3, 0, 0);
-      }
-      //Print(" Order Ticket: "+ orderMesg);
-      if(GetLastError() != ERR_NO_ERROR)
-         Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
-   }
-
-//   if(totalOrders == 0)
-//     {
-//      // ENTERING: Requires Physics (action=1) and Steering (direction)
-//      if(physicsAction == 1 && direction != SAN_SIGNAL::NOSIG)
-//        {
-//         Print("🎯 SNIPER: Physics(", indData.bayesianHoldScore, "/", indData.neuronHoldScore, ") aligned with Direction. Entering.");
-//         util.placeOrder(magicNumber, microLots, (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
-//         BarsHeld = 0; // Reset for the new trade
-//        }
-//     }
-//   else
-//     {
-//      // EXITING: Bayesian/Neuron say the structure has collapsed
-//      if(physicsAction == -1)
-//        {
-//         Print("🚨 EMERGENCY: Physics collapsed. Closing positions.");
-//         util.closeOrders();
-//         BarsHeld = 0;
-//        }
+////#####################################################################################################################
+////######################### BEGIN: code block 1 #######################################################################
+////#####################################################################################################################
 //
-//      // Update BarsHeld for the next tick
-//      if(util.isNewBar())
-//         BarsHeld++;
-//     }
+//   if((totalOrders > 0) && (closeSIG == SAN_SIGNAL::CLOSE) && (stgyType == STRATEGYTYPE::CLOSEPOSITIONS)) {
+//      Print(" Trying to close orders");
+//      BarsHeld = 0;
+//      util.closeOrders();
+//   }
+//
+//
+//   if(totalOrders == 0) {
+//      BarsHeld = 0;
+//      if(direction == SAN_SIGNAL::BUY) {
+//         Print(" Placing a buy ! order: ");
+//         orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_BUY, 3, 0, 0);
+//      }
+//      if(direction == SAN_SIGNAL::SELL) {
+//         Print(" Placing a sell ! order: ");
+//         orderMesg = util.placeOrder(magicNumber, op3.SAN_TRADE_VOL, ENUM_ORDER_TYPE::ORDER_TYPE_SELL, 3, 0, 0);
+//      }
+//      //Print(" Order Ticket: "+ orderMesg);
+//      if(GetLastError() != ERR_NO_ERROR)
+//         Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
+//   }
+////#####################################################################################################################
+////######################### END: code block 1 #######################################################################
+////#####################################################################################################################
+
+//#####################################################################################################################
+//######################### BEGIN: code block 2 #######################################################################
+//#####################################################################################################################
+
+// 3. Final Sniper Execution
+
+
+   if(totalOrders == 0 && physicsAction == 1 && direction != SAN_SIGNAL::NOSIG) {
+      // ENTERING: Requires Physics (action=1) and Steering (direction)
+      PrintFormat("🎯 SNIPER: Entering with %.2fx Conviction (Lots: %.2f)", convictionFactor, dynamicLots);
+      Print("🎯 SNIPER: Physics(", indData.bayesianHoldScore, "/", indData.neuronHoldScore, ") aligned with Direction. Entering.");
+      orderMesg = util.placeOrder(magicNumber, dynamicLots, (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+      BarsHeld = 0; // Reset for the new trade
+   } else {
+// EXITING: Bayesian/Neuron say the structure has collapsed
+      if(physicsAction == -1) {
+         Print("🚨 EMERGENCY: Physics collapsed. Closing positions.");
+         orderMesg = util.closeOrders();
+         BarsHeld = 0;      }
+
+// Update BarsHeld for the next tick
+      if(util.isNewBar())
+         BarsHeld++;
+   }
+//#####################################################################################################################
+//######################### END: code block 1 #######################################################################
+//#####################################################################################################################
+
 }
 //+------------------------------------------------------------------+
