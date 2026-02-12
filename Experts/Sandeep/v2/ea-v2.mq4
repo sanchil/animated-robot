@@ -30,7 +30,7 @@ input bool flipSig = false; // Flip Signal
 // 1 Microlot = 1*0.01=0.01, 10 Microlots = 10*0.01 = 0.1, 100 Microlots = 1,
 
 input double maxMultiplier = 2.0; // Maximum risk for elite setups
-input double minLots = 0.01;      // Terminal minimum
+double minLotSize = 0.01;      // Terminal minimum
 input double microLots = 1; // Micro Lots
 
 const int SHIFT = 1;
@@ -221,6 +221,7 @@ void OnTick() {
    SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
    STRATEGYTYPE stgyType = (STRATEGYTYPE)signals.buff3[0];
 
+
 // 4. The Decision (1=Trade, 0=Hold, -1=Exit)
    int physicsAction = ms.getCombinedScore(indData.bayesianHoldScore, indData.neuronHoldScore, indData.fMSR);
 
@@ -238,9 +239,21 @@ void OnTick() {
       convictionFactor = 1.5;
    }
 
+
 // 2. Scale the Volume
-// We multiply your input microLots by the conviction
-   double dynamicLots = microLots * convictionFactor;
+// Convert the raw input to actual MT4 Lot units (Microlots)
+   double baseLots = microLots * minLotSize;
+
+// Apply the Conviction Multiplier
+   double dynamicLots = baseLots * convictionFactor;
+
+// Safety Guard: Ensure we never go below the broker's minimum (usually 0.01)
+   dynamicLots = MathMax(dynamicLots, minLotSize);
+
+// Round to broker's lot step (prevents "Invalid Volume" errors)
+   double lotStep = MarketInfo(_Symbol, MODE_LOTSTEP);
+   dynamicLots = MathFloor(dynamicLots / lotStep) * lotStep;
+
 
 //#####################################################################################################################
 //######################### BEGIN: code block 1 (FINAL GOVERNANCE) ####################################################
@@ -254,8 +267,12 @@ void OnTick() {
       // SCENARIO 1: GREEN LIGHT
       // Requires Consensus: Physics must be 1 (High Prob) AND Signal must give Direction.
       if(physicsAction == 1 && direction != SAN_SIGNAL::NOSIG) {
-         PrintFormat("🎯 SNIPER: Entering with %.2fx Conviction (Lots: %.2f)", convictionFactor, dynamicLots);
-         Print("🎯 SNIPER: Physics(", indData.bayesianHoldScore, "/", indData.neuronHoldScore, ") aligned with Direction. Entering.");
+         PrintFormat("SNIPER: Entering with %.2fx Conviction (Lots: %.2f) Physics (%.2f/%.2f) aligned with Direction. Entering.",
+                     convictionFactor,
+                     dynamicLots,
+                     NormalizeDouble(indData.bayesianHoldScore,3),
+                     NormalizeDouble(indData.neuronHoldScore,3));
+         //Print("SNIPER: Physics(", NormalizeDouble(indData.bayesianHoldScore,3), "/", NormalizeDouble(indData.neuronHoldScore,3), ") aligned with Direction. Entering.");
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots, (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
          BarsHeld = 0; // Reset for the new trade
@@ -267,7 +284,7 @@ void OnTick() {
          // Log it once per bar or just on the moment to verify the safety is working
          // (Optional: Check isNewBar to prevent log spam, or just trust the visual logs)
          if(util.isNewBar()) {
-            PrintFormat("⛔ ENTRY BLOCKED: Signal is %s but Physics Score is %d (Bayes: %.2f | fMSR: %.2f)",
+            PrintFormat("ENTRY BLOCKED: Signal is %s but Physics Score is %d (Bayes: %.2f | fMSR: %.2f)",
                         util.getSigString(direction), physicsAction, indData.bayesianHoldScore, indData.fMSR);
          }
       }
@@ -290,10 +307,13 @@ void OnTick() {
             Print("🛡️ GOVERNANCE: Signal requested CLOSE, but Market Physics is Stable. HOLDING Position.");
          }
       }
+      Print("Order message: ",orderMesg);
 
       // Update BarsHeld for the next tick
       if(util.isNewBar())
          BarsHeld++;
+      if(GetLastError() != ERR_NO_ERROR)
+         Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
    }
 
 //#####################################################################################################################
