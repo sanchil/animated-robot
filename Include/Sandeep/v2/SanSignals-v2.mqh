@@ -33,7 +33,7 @@ class SanSignals {
    SAN_SIGNAL        tradeSignal(const double ciStd, const double ciMfi, const double &atr[], const double ciAdxMain, const double ciAdxPlus, const double ciAdxMinus);
    SAN_SIGNAL        tradeSlopeSIG_v1(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
-
+   SAN_SIGNAL        tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1);
    SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope);
    SAN_SIGNAL        layeredMomentumSIG(const double &signal[], int N = 20);
 
@@ -1134,25 +1134,43 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v1(const DTYPE &fast, const DTYPE &slow, co
       return cached;
    last_bar = Time[0];
 
-// --- 2. CONSTANTS & INPUTS ---
+// --- 2. DYNAMIC CONSTANTS & INPUTS ---
    const double MIN_SLOW_THRESHOLD = 0.0001; // Avoid division by zero
-   const double FLAT_REGIME_ENTRY  = 0.2;    // Raw slope threshold for flat markets
+//const double FLAT_REGIME_ENTRY  = 0.2;    // Raw slope threshold for flat markets
+
+// The Elastic Ruler: We define slope thresholds as fractions of the ATR.
+// Example: If ATR is 10 pips, FLAT is anything moving less than 0.5 pips/bar.
+   double FLAT_REGIME_ENTRY  = atr * 0.05;  // 5% of ATR
+   double WEAK_TREND_BOUND   = atr * 0.10;  // 10% of ATR
+   double MID_TREND_BOUND    = atr * 0.20;  // 20% of ATR
+   double STRONG_TREND_BOUND = atr * 0.35;  // 35% of ATR
+   double TURBO_TREND_BOUND  = atr * 0.50;  // 50% of ATR
 
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
    double absSlow   = MathAbs(slowSlope);
 
-// --- 3. ADAPTIVE PARAMETER CALCULATION (Pre-calculated for all paths) ---
-
-// A. Regime Selection (Trend Strength) -> Determines CLOSERATIO
-//    Logic: Stronger Slow Trend = Lower Barrier to Entry
-   int regimeIdx = (absSlow <= 0.35) ? 0 :
-                   (absSlow <= 0.80) ? 1 :
-                   (absSlow <= 1.50) ? 2 :
-                   (absSlow <= 2.50) ? 3 : 4;
+// --- 3. ADAPTIVE REGIME SELECTION ---
+// We replace your static 0.35, 0.80, 1.50 guesses with the ATR boundaries.
+   int regimeIdx = (absSlow <= WEAK_TREND_BOUND)   ? 0 :
+                   (absSlow <= MID_TREND_BOUND)    ? 1 :
+                   (absSlow <= STRONG_TREND_BOUND) ? 2 :
+                   (absSlow <= TURBO_TREND_BOUND)  ? 3 : 4;
 
    const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
    double CLOSERATIO = closeRVal[regimeIdx];
+
+//// --- 3. ADAPTIVE PARAMETER CALCULATION (Pre-calculated for all paths) ---
+//
+//// A. Regime Selection (Trend Strength) -> Determines CLOSERATIO
+////    Logic: Stronger Slow Trend = Lower Barrier to Entry
+//   int regimeIdx = (absSlow <= 0.35) ? 0 :
+//                   (absSlow <= 0.80) ? 1 :
+//                   (absSlow <= 1.50) ? 2 :
+//                   (absSlow <= 2.50) ? 3 : 4;
+//
+//   const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
+//   double CLOSERATIO = closeRVal[regimeIdx];
 
 
 
@@ -1263,19 +1281,45 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
 
    m_last_bar = Time[0];
 
-// --- 2. CONSTANTS & INPUTS ---
-   const double MIN_SLOW_THRESHOLD = 0.0001;
-   const double FLAT_REGIME_ENTRY  = 0.2;
+//// --- 2. CONSTANTS & INPUTS ---
+//   const double MIN_SLOW_THRESHOLD = 0.0001;
+//   const double FLAT_REGIME_ENTRY  = 0.2;
+//
+//   double fastSlope = fast.val1;
+//   double slowSlope = slow.val1;
+//   double absSlow   = MathAbs(slowSlope);
+//
+//// --- 3. ADAPTIVE PARAMETER CALCULATION ---
+//   int regimeIdx = (absSlow <= 0.35) ? 0 :
+//                   (absSlow <= 0.80) ? 1 :
+//                   (absSlow <= 1.50) ? 2 :
+//                   (absSlow <= 2.50) ? 3 : 4;
+//
+//   const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
+//   double CLOSERATIO = closeRVal[regimeIdx];
+
+
+// --- 2. DYNAMIC CONSTANTS & INPUTS ---
+   const double MIN_SLOW_THRESHOLD = 0.0001; // Avoid division by zero
+
+// The Elastic Ruler: We define slope thresholds as fractions of the ATR.
+// Example: If ATR is 10 pips, FLAT is anything moving less than 0.5 pips/bar.
+   double FLAT_REGIME_ENTRY  = atr * 0.05;  // 5% of ATR
+   double WEAK_TREND_BOUND   = atr * 0.10;  // 10% of ATR
+   double MID_TREND_BOUND    = atr * 0.20;  // 20% of ATR
+   double STRONG_TREND_BOUND = atr * 0.35;  // 35% of ATR
+   double TURBO_TREND_BOUND  = atr * 0.50;  // 50% of ATR
 
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
    double absSlow   = MathAbs(slowSlope);
 
-// --- 3. ADAPTIVE PARAMETER CALCULATION ---
-   int regimeIdx = (absSlow <= 0.35) ? 0 :
-                   (absSlow <= 0.80) ? 1 :
-                   (absSlow <= 1.50) ? 2 :
-                   (absSlow <= 2.50) ? 3 : 4;
+// --- 3. ADAPTIVE REGIME SELECTION ---
+// We replace your static 0.35, 0.80, 1.50 guesses with the ATR boundaries.
+   int regimeIdx = (absSlow <= WEAK_TREND_BOUND)   ? 0 :
+                   (absSlow <= MID_TREND_BOUND)    ? 1 :
+                   (absSlow <= STRONG_TREND_BOUND) ? 2 :
+                   (absSlow <= TURBO_TREND_BOUND)  ? 3 : 4;
 
    const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
    double CLOSERATIO = closeRVal[regimeIdx];
@@ -1351,6 +1395,59 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
 
    m_cached = NOSIG;
    return NOSIG;
+}
+
+//+------------------------------------------------------------------+
+//| STATIC REGIME ALGORITHM: Ratio-based, No Decay                   |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1) {
+
+// 1. CONSTANTS
+   const double MIN_SLOW_THRESHOLD  = 0.0001; // Division by zero protection
+   const double STRONG_MACRO_TREND  = 0.50;   // The "Fixed Value" for slow slope
+   const double RATIO_LOWER_BOUND   = 0.80;   // The tolerance for momentum loss
+
+   double fastSlope = fast.val1;
+   double slowSlope = slow.val1;
+
+// 2. SINGULARITY / FLAT MARKET CHECK
+   double absSlow = MathAbs(slowSlope);
+   if(absSlow < MIN_SLOW_THRESHOLD) {
+      // If the slow trend is completely dead, we don't trade the ratio.
+      return NOSIG;
+   }
+
+// 3. DIVERGENCE CHECK (Directional Alignment)
+// Even if the absolute ratio is 1.5, if Fast is UP and Slow is DOWN, it's a reversal.
+   if(fastSlope * slowSlope < 0) {
+      return CLOSE; // They disagree. Exit immediately.
+   }
+
+// 4. THE RATIO CALCULATION
+// Since we already checked directional alignment, we can use absolute values safely.
+   double ratio = MathAbs(fastSlope) / absSlow;
+
+// 5. THE DECISION TREE (Your Logic)
+   SAN_SIGNAL direction = (slowSlope > 0) ? BUY : SELL;
+// RULE 1: Fast is outpacing Slow (Expansion)
+   if(ratio >= 1.0) {
+      return direction;
+   }
+
+// RULE 2 & 3: Fast is lagging Slow (Contraction / Consolidation)
+   if(ratio >= RATIO_LOWER_BOUND && ratio < 1.0) {
+
+      if(absSlow > STRONG_MACRO_TREND) {
+         // RULE 2: The macro trend is strong enough to carry us through this minor dip.
+         return direction;
+      } else {
+         // RULE 3: The macro trend is weak, and fast momentum is dying. Get out.
+         return CLOSE;
+      }
+   }
+
+// RULE 4: Ratio is below 0.80. Total momentum collapse.
+   return CLOSE;
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
