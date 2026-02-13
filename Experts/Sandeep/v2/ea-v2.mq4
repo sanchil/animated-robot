@@ -245,28 +245,63 @@ void OnTick() {
    PrintFormat("[HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f| CombinedScore: %.2f",b, n, f);
 //   }
 
-   double convictionFactor = 1.0;
-
-   if(b > 0.80 && n > 0.80 && f >= 1.0) {
-      convictionFactor = maxMultiplier;
-   } else if(b > 0.70 && n > 0.70 && f >= 0.75) {
-      convictionFactor = 1.5;
-   }
+//   double convictionFactor = 1.0;
+//
+//   if(b > 0.80 && n > 0.80 && f >= 1.0) {
+//      convictionFactor = maxMultiplier;
+//   } else if(b > 0.70 && n > 0.70 && f >= 0.75) {
+//      convictionFactor = 1.5;
+//   }
 
 
 // 2. Scale the Volume
-// Convert the raw input to actual MT4 Lot units (Microlots)
-   double baseLots = microLots * minLotSize;
+//// Convert the raw input to actual MT4 Lot units (Microlots)
+//   double baseLots = microLots * minLotSize;
+//
+//// Apply the Conviction Multiplier
+//   double dynamicLots = baseLots * convictionFactor;
+//
+//// Safety Guard: Ensure we never go below the broker's minimum (usually 0.01)
+//   dynamicLots = MathMax(dynamicLots, minLotSize);
+//
+//// Round to broker's lot step (prevents "Invalid Volume" errors)
+//   double lotStep = MarketInfo(_Symbol, MODE_LOTSTEP);
+//   dynamicLots = MathFloor(dynamicLots / lotStep) * lotStep;
 
-// Apply the Conviction Multiplier
+
+// --- 5. THE CONSENSUS CONVICTION FACTOR ---
+   double convictionFactor = 1.0;
+
+// CONSENSUS RULE: We only pull the trigger if BOTH engines agree on a SNIPE (1).
+   bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1);
+
+   if(hasConsensus) {
+      // Dynamic Scaling: We map the Cobb-Douglas totalConf (0.185 to ~0.30)
+      // to a multiplier range (1.0 to maxMultiplier).
+      double entryFloor = 0.185;
+      double eliteCeiling = 0.300;
+
+      // Calculate the "Depth" of conviction beyond the threshold
+      double depth = (totalConf - entryFloor) / (eliteCeiling - entryFloor);
+      depth = MathMax(0.0, MathMin(1.0, depth)); // Clamp between 0 and 1
+
+      convictionFactor = 1.0 + (depth * (maxMultiplier - 1.0));
+
+      PrintFormat("CONSENSUS REACHED: Confidence %.4f | Conviction Multiplier: %.2fx",
+                  totalConf, convictionFactor);
+   } else if (direction != SAN_SIGNAL::NOSIG) {
+      // One of them vetoed.
+      if(util.isNewBar()) {
+         PrintFormat("CONSENSUS FAILED: Hyperbolic:%d | CobbDouglas:%d | Conf:%.4f",
+                     physicsAction, cobbsDouglasAction, totalConf);
+      }
+   }
+
+// 6. Scale the Volume
+   double baseLots = microLots * minLotSize;
    double dynamicLots = baseLots * convictionFactor;
 
-// Safety Guard: Ensure we never go below the broker's minimum (usually 0.01)
-   dynamicLots = MathMax(dynamicLots, minLotSize);
 
-// Round to broker's lot step (prevents "Invalid Volume" errors)
-   double lotStep = MarketInfo(_Symbol, MODE_LOTSTEP);
-   dynamicLots = MathFloor(dynamicLots / lotStep) * lotStep;
 
 
 //#####################################################################################################################
