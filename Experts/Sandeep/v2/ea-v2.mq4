@@ -199,7 +199,6 @@ void OnTick() {
 //lastBid = Bid;
 
 
-
 // 1. UPDATE STATE FIRST
    int totalOrders = OrdersTotalByMagic(magicNumber);
 
