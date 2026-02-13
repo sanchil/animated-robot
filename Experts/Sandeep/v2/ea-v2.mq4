@@ -222,20 +222,34 @@ void OnTick() {
    STRATEGYTYPE stgyType = (STRATEGYTYPE)signals.buff3[0];
 
 
+// 4. The Decision (Cobb-Douglas Version)
+   double b = indData.bayesianHoldScore;
+   double n = indData.neuronHoldScore;
+   double f = indData.fMSR;
+
+// Calculate confidence for logging (Mirroring the Cobb-Douglas Math)
+   double totalConf = MathPow(f+0.01, 1.0) * MathPow(n+0.01, 1.2) * MathPow(b+0.01, 1.5);
+   int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n, f);
+
+// --- THE DECISION DASHBOARD ---
+   string actionStr = (cobbsDouglasAction == 1 ? "SNIPE" : (cobbsDouglasAction == -1 ? "COLLAPSE" : "HOLD"));
+
+   PrintFormat("== CobbDouglas DASHBOARD == | Status: %s | Confidence: %.4f | Vector: [B:%.2f, N:%.2f, F:%.2f]",
+               actionStr, totalConf, b, n, f);
+
 // 4. The Decision (1=Trade, 0=Hold, -1=Exit)
-   int physicsAction = ms.getCombinedScore(indData.bayesianHoldScore, indData.neuronHoldScore, indData.fMSR);
+   int physicsAction = ms.getHyperbolicCombinedScore(b, n, f);
 
 // Log the 3D Vector for "Soundness" analysis
 //   if(totalOrders > 0 || direction != SAN_SIGNAL::NOSIG) {
-   PrintFormat("[3D VECTOR] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f| CombinedScore: %.2f",
-               indData.bayesianHoldScore, indData.neuronHoldScore, indData.fMSR,physicsAction);
+   PrintFormat("[3D VECTOR HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f| CombinedScore: %.2f",b, n, f);
 //   }
 
    double convictionFactor = 1.0;
 
-   if(indData.bayesianHoldScore > 0.80 && indData.neuronHoldScore > 0.80 && indData.fMSR >= 1.0) {
+   if(b > 0.80 && n > 0.80 && f >= 1.0) {
       convictionFactor = maxMultiplier;
-   } else if(indData.bayesianHoldScore > 0.70 && indData.neuronHoldScore > 0.70 && indData.fMSR >= 0.75) {
+   } else if(b > 0.70 && n > 0.70 && f >= 0.75) {
       convictionFactor = 1.5;
    }
 
