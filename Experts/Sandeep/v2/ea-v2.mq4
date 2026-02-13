@@ -234,7 +234,7 @@ void OnTick() {
 // --- THE DECISION DASHBOARD ---
    string actionStr = (cobbsDouglasAction == 1 ? "SNIPE" : (cobbsDouglasAction == -1 ? "COLLAPSE" : "HOLD"));
 
-   PrintFormat("== CobbDouglas DASHBOARD == | Status: %s | Confidence: %.4f | Vector: [B:%.2f, N:%.2f, F:%.2f]",
+   PrintFormat("[COBBDOUGLAS DASHBOARD] | Status: %s | Confidence: %.4f | Vector: [B:%.2f, N:%.2f, F:%.2f]",
                actionStr, totalConf, b, n, f);
 
 // 4. The Decision (1=Trade, 0=Hold, -1=Exit)
@@ -242,7 +242,7 @@ void OnTick() {
 
 // Log the 3D Vector for "Soundness" analysis
 //   if(totalOrders > 0 || direction != SAN_SIGNAL::NOSIG) {
-   PrintFormat("[3D VECTOR HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f| CombinedScore: %.2f",b, n, f);
+   PrintFormat("[3D HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f| CombinedScore: %.2f",b, n, f);
 //   }
 
    double convictionFactor = 1.0;
