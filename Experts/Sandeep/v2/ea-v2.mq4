@@ -187,6 +187,9 @@ void RefreshPhysicsData(INDDATA &data) {
 
    data.fMSR = fMSR_norm; // Now normalized 0 to 1
 
+   double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope,data.atr[0]);
+   data.fractalAlignment = fractal;
+
 }
 //+------------------------------------------------------------------+
 
@@ -225,10 +228,11 @@ void OnTick() {
    double b = indData.bayesianHoldScore;
    double n = indData.neuronHoldScore;
    double f = indData.fMSR;
+   double fra = indData.fractalAlignment;
 
 // Calculate confidence for logging (Mirroring the Cobb-Douglas Math)
    double totalConf = MathPow(f+0.01, 1.0) * MathPow(n+0.01, 1.2) * MathPow(b+0.01, 1.5);
-   int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n, f);
+   int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n, f, fra);
 
 // --- THE DECISION DASHBOARD ---
    string actionStr = (cobbsDouglasAction == 1 ? "SNIPE" : (cobbsDouglasAction == -1 ? "COLLAPSE" : "HOLD"));
@@ -239,7 +243,7 @@ void OnTick() {
                b, n, f,totalConf,actionStr,cobbsDouglasAction);
 
 // 4. The Decision (1=Trade, 0=Hold, -1=Exit)
-   int physicsAction = ms.getHyperbolicCombinedScore(b, n, f);
+   int physicsAction = ms.getHyperbolicCombinedScore(b, n, f,fra);
 
 // Log the 3D Vector for "Soundness" analysis
 //   if(totalOrders > 0 || direction != SAN_SIGNAL::NOSIG) {
@@ -273,8 +277,10 @@ void OnTick() {
 // --- 5. THE CONSENSUS CONVICTION FACTOR ---
    double convictionFactor = 1.0;
 
-// CONSENSUS RULE: We only pull the trigger if BOTH engines agree on a SNIPE (1).
+//// CONSENSUS RULE: We only pull the trigger if BOTH engines agree on a SNIPE (1).
    bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1);
+// NEW: Consensus now requires Fractal Alignment (1.0) to pull the trigger.
+   //bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && fra >= 1.0);
 
    if(hasConsensus) {
       // Dynamic Scaling: We map the Cobb-Douglas totalConf (0.185 to ~0.30)

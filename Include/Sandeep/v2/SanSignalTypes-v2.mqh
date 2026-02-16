@@ -171,7 +171,7 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
    obvCPSlope = sig.slopeSIGData(indData.obv, 5, 21, 1);
    obvCPSIG = sig.obvCPSIG(indData.obv, 5, 21, 1);
    tradeSlopeSIG = sig.tradeSlopeSIG_v2(imaSlope120Data, baseSlopeData,indData.atr[1], indData.magicnumber);
-   tradeSlope_StaticSIG = sig.tradeSlopeSIG_Static(imaSlope30Data, imaSlope60Data, indData.magicnumber);
+   tradeSlope_StaticSIG = sig.tradeSlopeSIG_Static(imaSlope30Data, imaSlope60Data,indData.atr[1], indData.magicnumber);
 // sig.tradeSlopeSIG_v2(imaSlope120Data, baseSlopeData,indData.atr[1], indData.magicnumber);
    slopeAnalyzerSIG = sig.slopeAnalyzerSIG(imaSlope120Data);
 //momSIG = sig.layeredMomentumSIG(indData.ima60);

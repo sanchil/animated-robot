@@ -33,7 +33,7 @@ class SanSignals {
    SAN_SIGNAL        tradeSignal(const double ciStd, const double ciMfi, const double &atr[], const double ciAdxMain, const double ciAdxPlus, const double ciAdxMinus);
    SAN_SIGNAL        tradeSlopeSIG_v1(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
-   SAN_SIGNAL        tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1);
+   SAN_SIGNAL        tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope);
    SAN_SIGNAL        layeredMomentumSIG(const double &signal[], int N = 20);
 
@@ -1397,58 +1397,104 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
    return NOSIG;
 }
 
-//+------------------------------------------------------------------+
-//| STATIC REGIME ALGORITHM: Ratio-based, No Decay                   |
-//+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, ulong magicnumber = -1) {
+////+------------------------------------------------------------------+
+////| STATIC REGIME ALGORITHM: Ratio-based, No Decay                   |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1) {
+//
+//// 1. CONSTANTS
+//   const double MIN_SLOW_THRESHOLD  = 0.0001; // Division by zero protection
+//   const double STRONG_MACRO_TREND  = 0.50;   // The "Fixed Value" for slow slope
+//   const double RATIO_LOWER_BOUND   = 0.80;   // The tolerance for momentum loss
+//
+//   double fastSlope = fast.val1;
+//   double slowSlope = slow.val1;
+//
+//// 2. SINGULARITY / FLAT MARKET CHECK
+//   double absSlow = MathAbs(slowSlope);
+//   if(absSlow < MIN_SLOW_THRESHOLD) {
+//      // If the slow trend is completely dead, we don't trade the ratio.
+//      return NOSIG;
+//   }
+//
+//// 3. DIVERGENCE CHECK (Directional Alignment)
+//// Even if the absolute ratio is 1.5, if Fast is UP and Slow is DOWN, it's a reversal.
+//   if(fastSlope * slowSlope < 0) {
+//      return CLOSE; // They disagree. Exit immediately.
+//   }
+//
+//// 4. THE RATIO CALCULATION
+//// Since we already checked directional alignment, we can use absolute values safely.
+//   double ratio = MathAbs(fastSlope) / absSlow;
+//
+//// 5. THE DECISION TREE (Your Logic)
+//   SAN_SIGNAL direction = (slowSlope > 0) ? BUY : SELL;
+//// RULE 1: Fast is outpacing Slow (Expansion)
+//   if(ratio >= 1.0) {
+//      return direction;
+//   }
+//
+//// RULE 2 & 3: Fast is lagging Slow (Contraction / Consolidation)
+//   if(ratio >= RATIO_LOWER_BOUND && ratio < 1.0) {
+//
+//      if(absSlow > STRONG_MACRO_TREND) {
+//         // RULE 2: The macro trend is strong enough to carry us through this minor dip.
+//         return direction;
+//      } else {
+//         // RULE 3: The macro trend is weak, and fast momentum is dying. Get out.
+//         return CLOSE;
+//      }
+//   }
+//
+//// RULE 4: Ratio is below 0.80. Total momentum collapse.
+//   return CLOSE;
+//}
 
-// 1. CONSTANTS
-   const double MIN_SLOW_THRESHOLD  = 0.0001; // Division by zero protection
-   const double STRONG_MACRO_TREND  = 0.50;   // The "Fixed Value" for slow slope
-   const double RATIO_LOWER_BOUND   = 0.80;   // The tolerance for momentum loss
+SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, double atr, ulong magicnumber = -1) {
 
-   double fastSlope = fast.val1;
-   double slowSlope = slow.val1;
+   // 1. DEFINE THE STRUCTURAL FLOOR
+   // Instead of a hard 0.6 (which changes per pair), we use a Volatility Floor.
+   // 0.3 * ATR is usually the "sweet spot" for a valid macro-structure floor.
+   double STRUCTURAL_FLOOR = atr * 0.30; 
 
-// 2. SINGULARITY / FLAT MARKET CHECK
-   double absSlow = MathAbs(slowSlope);
-   if(absSlow < MIN_SLOW_THRESHOLD) {
-      // If the slow trend is completely dead, we don't trade the ratio.
-      return NOSIG;
+   double fSlope = fast.val1;
+   double sSlope = slow.val1;
+   double absSlow = MathAbs(sSlope);
+
+   // 2. DIRECTIONAL ALIGNMENT (The first "No Sense" check)
+   // If slopes are against each other, the result is negative. Exit/Stay out.
+   if(fSlope * sSlope <= 0) {
+      return CLOSE; 
    }
 
-// 3. DIVERGENCE CHECK (Directional Alignment)
-// Even if the absolute ratio is 1.5, if Fast is UP and Slow is DOWN, it's a reversal.
-   if(fastSlope * slowSlope < 0) {
-      return CLOSE; // They disagree. Exit immediately.
-   }
+   // 3. THE RATIO (Expansion Check)
+   double ratio = MathAbs(fSlope) / absSlow;
 
-// 4. THE RATIO CALCULATION
-// Since we already checked directional alignment, we can use absolute values safely.
-   double ratio = MathAbs(fastSlope) / absSlow;
+   // 4. THE DECISION ENGINE
+   SAN_SIGNAL direction = (sSlope > 0) ? BUY : SELL;
 
-// 5. THE DECISION TREE (Your Logic)
-   SAN_SIGNAL direction = (slowSlope > 0) ? BUY : SELL;
-// RULE 1: Fast is outpacing Slow (Expansion)
+   // CASE A: Perfect Expansion (Fast is leading the Slow)
    if(ratio >= 1.0) {
-      return direction;
-   }
-
-// RULE 2 & 3: Fast is lagging Slow (Contraction / Consolidation)
-   if(ratio >= RATIO_LOWER_BOUND && ratio < 1.0) {
-
-      if(absSlow > STRONG_MACRO_TREND) {
-         // RULE 2: The macro trend is strong enough to carry us through this minor dip.
+      // Even in expansion, the "Tide" (Slow Slope) must be strong enough.
+      if(absSlow >= STRUCTURAL_FLOOR) {
          return direction;
       } else {
-         // RULE 3: The macro trend is weak, and fast momentum is dying. Get out.
-         return CLOSE;
+         // Good ratio, but the market structure is too weak/flat.
+         return NOSIG; 
       }
    }
 
-// RULE 4: Ratio is below 0.80. Total momentum collapse.
+   // CASE B: Compression (Fast is lagging the Slow)
+   // Even if ratio is 0.8-0.9, we only stay in if the macro trend is very powerful.
+   double POWER_TREND = STRUCTURAL_FLOOR * 1.5; // Demand extra tide speed
+   if(ratio >= 0.8 && absSlow >= POWER_TREND) {
+      return direction;
+   }
+
+   // CASE C: Everything else (Inefficient Geometry)
    return CLOSE;
 }
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
