@@ -239,15 +239,15 @@ void OnTick() {
 
 //PrintFormat("[COBBDOUGLAS] | Status: %s | Confidence: %.4f | Vector: [B:%.2f, N:%.2f, F:%.2f]",
 //            actionStr, totalConf, b, n, f);
-   PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f|  Confidence: %.4f | Status: %s | CombinedScore: %.2f",
-               b, n, f,totalConf,actionStr,cobbsDouglasAction);
+   PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f|  Fractal: %.2f | Confidence: %.4f | Status: %s | CombinedScore: %.2f",
+               b, n, f,fra,totalConf,actionStr,cobbsDouglasAction);
 
 // 4. The Decision (1=Trade, 0=Hold, -1=Exit)
    int physicsAction = ms.getHyperbolicCombinedScore(b, n, f,fra);
 
 // Log the 3D Vector for "Soundness" analysis
 //   if(totalOrders > 0 || direction != SAN_SIGNAL::NOSIG) {
-   PrintFormat("[HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f| CombinedScore: %.2f",b, n, f,physicsAction);
+   PrintFormat("[HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f|  Fractal: %.2f| CombinedScore: %.2f",b, n, f,fra,physicsAction);
 //   }
 
 //   double convictionFactor = 1.0;
