@@ -146,6 +146,7 @@ void RefreshPhysicsData(INDDATA &data) {
          data.stdOpen[i] = iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_OPEN, i);
          data.obv[i] = iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, i);
          data.rsi[i] = iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, i);
+         data.mfi[i] = iMFI(_Symbol, PERIOD_CURRENT,noOfCandles,i);
          data.ima5[i] = iMA(_Symbol, PERIOD_CURRENT, 5, 0, MODE_SMMA, PRICE_CLOSE, i);
          data.ima14[i] = iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, i);
          data.ima30[i] = iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, i);
@@ -223,6 +224,10 @@ void OnTick() {
    SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
    STRATEGYTYPE stgyType = (STRATEGYTYPE)signals.buff3[0];
 
+   SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
+   double mktIntensity = marketIntensity.buff3[0];
+   double regimeMagnitude = marketIntensity.buff3[1];
+   PrintFormat("Market: %.2f | Regime: %.2f: ",mktIntensity,regimeMagnitude );
 
 // 4. The Decision (Cobb-Douglas Version)
    double b = indData.bayesianHoldScore;
@@ -280,7 +285,7 @@ void OnTick() {
 //// CONSENSUS RULE: We only pull the trigger if BOTH engines agree on a SNIPE (1).
    bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1);
 // NEW: Consensus now requires Fractal Alignment (1.0) to pull the trigger.
-   //bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && fra >= 1.0);
+//bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && fra >= 1.0);
 
    if(hasConsensus) {
       // Dynamic Scaling: We map the Cobb-Douglas totalConf (0.185 to ~0.30)

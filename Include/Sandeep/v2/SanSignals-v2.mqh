@@ -33,7 +33,9 @@ class SanSignals {
    SAN_SIGNAL        tradeSignal(const double ciStd, const double ciMfi, const double &atr[], const double ciAdxMain, const double ciAdxPlus, const double ciAdxMinus);
    SAN_SIGNAL        tradeSlopeSIG_v1(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
+   SAN_SIGNAL        microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr);
    SAN_SIGNAL        tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
+   SAN_SIGNAL        waveTideSIG(const DTYPE &fast, const DTYPE &medium, const DTYPE &slow, double atr);
    SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope);
    SAN_SIGNAL        layeredMomentumSIG(const double &signal[], int N = 20);
 
@@ -1450,51 +1452,127 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
 //   return CLOSE;
 //}
 
-SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, double atr, ulong magicnumber = -1) {
+//SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, double atr, ulong magicnumber = -1) {
+//
+//   // 1. DEFINE THE STRUCTURAL FLOOR
+//   // Instead of a hard 0.6 (which changes per pair), we use a Volatility Floor.
+//   // 0.3 * ATR is usually the "sweet spot" for a valid macro-structure floor.
+//   double STRUCTURAL_FLOOR = atr * 0.30;
+//
+//   double fSlope = fast.val1;
+//   double sSlope = slow.val1;
+//   double absSlow = MathAbs(sSlope);
+//
+//   // 2. DIRECTIONAL ALIGNMENT (The first "No Sense" check)
+//   // If slopes are against each other, the result is negative. Exit/Stay out.
+//   if(fSlope * sSlope <= 0) {
+//      return CLOSE;
+//   }
+//
+//   // 3. THE RATIO (Expansion Check)
+//   double ratio = MathAbs(fSlope) / absSlow;
+//
+//   // 4. THE DECISION ENGINE
+//   SAN_SIGNAL direction = (sSlope > 0) ? BUY : SELL;
+//
+//   // CASE A: Perfect Expansion (Fast is leading the Slow)
+//   if(ratio >= 1.0) {
+//      // Even in expansion, the "Tide" (Slow Slope) must be strong enough.
+//      if(absSlow >= STRUCTURAL_FLOOR) {
+//         return direction;
+//      } else {
+//         // Good ratio, but the market structure is too weak/flat.
+//         return NOSIG;
+//      }
+//   }
+//
+//   // CASE B: Compression (Fast is lagging the Slow)
+//   // Even if ratio is 0.8-0.9, we only stay in if the macro trend is very powerful.
+//   double POWER_TREND = STRUCTURAL_FLOOR * 1.5; // Demand extra tide speed
+//   if(ratio >= 0.8 && absSlow >= POWER_TREND) {
+//      return direction;
+//   }
+//
+//   // CASE C: Everything else (Inefficient Geometry)
+//   return CLOSE;
+//}
 
-   // 1. DEFINE THE STRUCTURAL FLOOR
-   // Instead of a hard 0.6 (which changes per pair), we use a Volatility Floor.
-   // 0.3 * ATR is usually the "sweet spot" for a valid macro-structure floor.
-   double STRUCTURAL_FLOOR = atr * 0.30; 
+SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr) {
+   
+   // 1. THE MICRO-FLOOR (Aggressive)
+   // We lower the barrier to entry. We only need 10% of ATR to consider it "Active."
+   double MICRO_FLOOR = atr * 0.10; 
+   
+   double fS = fast.val1;
+   double mS = med.val1;
+   SAN_SIGNAL dir = (fS > 0) ? BUY : SELL;
 
-   double fSlope = fast.val1;
-   double sSlope = slow.val1;
-   double absSlow = MathAbs(sSlope);
+   // 2. THE VELOCITY CHECK (The "Explosion" Gate)
+   // We use slopeRatio but we pass our lower MICRO_FLOOR.
+   // We want to see the Wave pulling away from the Current.
+   double vScore = ms.expansionCompressionRatio(fS, mS, MICRO_FLOOR);
 
-   // 2. DIRECTIONAL ALIGNMENT (The first "No Sense" check)
-   // If slopes are against each other, the result is negative. Exit/Stay out.
-   if(fSlope * sSlope <= 0) {
-      return CLOSE; 
+   // 3. THE MICRO-POLICY
+   // We ONLY enter if the expansion is nearly perfect (>= 0.95)
+   // This ensures we are catching the "Meat" of the micro-move.
+   if(vScore >= 0.95) {
+      return dir;
    }
 
-   // 3. THE RATIO (Expansion Check)
-   double ratio = MathAbs(fSlope) / absSlow;
+   // 4. THE LIGHTNING EXIT
+   // If the velocity score drops even slightly (e.g., below 0.70), 
+   // we BAIL. There is no macro structure to save us here.
+   if(vScore < 0.70) return CLOSE;
 
-   // 4. THE DECISION ENGINE
-   SAN_SIGNAL direction = (sSlope > 0) ? BUY : SELL;
-
-   // CASE A: Perfect Expansion (Fast is leading the Slow)
-   if(ratio >= 1.0) {
-      // Even in expansion, the "Tide" (Slow Slope) must be strong enough.
-      if(absSlow >= STRUCTURAL_FLOOR) {
-         return direction;
-      } else {
-         // Good ratio, but the market structure is too weak/flat.
-         return NOSIG; 
-      }
-   }
-
-   // CASE B: Compression (Fast is lagging the Slow)
-   // Even if ratio is 0.8-0.9, we only stay in if the macro trend is very powerful.
-   double POWER_TREND = STRUCTURAL_FLOOR * 1.5; // Demand extra tide speed
-   if(ratio >= 0.8 && absSlow >= POWER_TREND) {
-      return direction;
-   }
-
-   // CASE C: Everything else (Inefficient Geometry)
-   return CLOSE;
+   return NOSIG;
 }
 
+SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, double atr, ulong magicnumber = -1) {
+
+   double floor    = atr * 0.30;
+
+   double fS       = fast.val1;
+   double sS       = slow.val1;
+   double absSlow  = MathAbs(sS);
+
+
+   SAN_SIGNAL dir  = (sS > 0) ? BUY : SELL;
+//const double SLOPERANGELIMIT = 0.3;
+
+// 1. CALL THE PHYSICS ENGINE
+// This one call handles Directional Alignment AND the Structural Floor.
+//double mScore = ms.slopeRatio(fS, sS, SLOPERANGELIMIT);
+// To this:
+   double mScore = ms.expansionCompressionRatio(fS, sS, floor);
+
+
+// 2. THE LEAN POLICY
+// If mScore is 1.0, the Metric has already verified Direction, Floor, and Expansion.
+   if(mScore >= 1.0) return dir;
+
+// For Case B (Compression), we check for the "Power Trend" extra requirement.
+   if(mScore >= 0.8 && absSlow >= (floor * 1.5)) return dir;
+
+   if(mScore == 0) return SAN_SIGNAL::CLOSE;
+
+// If the Metric returned 0.0 (Veto) or a weak ratio, we bail.
+   return SAN_SIGNAL::CLOSE;
+}
+
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::waveTideSIG(const DTYPE &fast, const DTYPE &med, const DTYPE &slow, double atr) {
+// THE TRIPLE-GEOMETRY CHAIN
+   SAN_SIGNAL waveSignal = tradeSlopeSIG_Static(fast, med, atr);  // Micro-Expansion
+   SAN_SIGNAL tideSignal = tradeSlopeSIG_Static(med, slow, atr);  // Macro-Expansion
+
+   if(waveSignal == BUY && tideSignal == BUY) return SAN_SIGNAL::BUY;
+   if(waveSignal == SELL && tideSignal == SELL) return SAN_SIGNAL::SELL;
+   return SAN_SIGNAL::NOSIG;
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+

@@ -1,3 +1,8 @@
+//+------------------------------------------------------------------+
+//|                                                      ProjectName |
+//|                                      Copyright 2018, CompanyName |
+//|                                       http://www.companyname.net |
+//+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
 //|                                               SanSignalTypes.mqh |
@@ -172,6 +177,8 @@ SS::SS(SanSignals &sig, const INDDATA &indData, const int SHIFT)
    obvCPSIG = sig.obvCPSIG(indData.obv, 5, 21, 1);
    tradeSlopeSIG = sig.tradeSlopeSIG_v2(imaSlope120Data, baseSlopeData,indData.atr[1], indData.magicnumber);
    tradeSlope_StaticSIG = sig.tradeSlopeSIG_Static(imaSlope30Data, imaSlope60Data,indData.atr[1], indData.magicnumber);
+   mWaveSIG = sig.microWaveSIG(imaSlope30Data, imaSlope60Data,indData.atr[1]);
+   waveTideSIG = sig.waveTideSIG(imaSlope30Data, imaSlope60Data,imaSlope120Data,indData.atr[1]);
 // sig.tradeSlopeSIG_v2(imaSlope120Data, baseSlopeData,indData.atr[1], indData.magicnumber);
    slopeAnalyzerSIG = sig.slopeAnalyzerSIG(imaSlope120Data);
 //momSIG = sig.layeredMomentumSIG(indData.ima60);
@@ -226,4 +233,5 @@ double   SS::getBayesianProb() {
 double   SS::getNeuronProb() {
    return neuronHoldScore;
 }
+//+------------------------------------------------------------------+
 //+------------------------------------------------------------------+

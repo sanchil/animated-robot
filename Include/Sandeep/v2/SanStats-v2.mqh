@@ -55,6 +55,7 @@ class Stats {
    double            Arctan2(double y, double x);
    double            mean(const double &data[], int n = 0, double shift = 0);
    double            stdDev(const double &data[], int n = 0, int type = 0, int shift = 0);
+   double            norm(const double &data[], int n = 0);
    double            skewness(const double &values[], int N, int shift = 0);
    double            kurtosis(const double &values[], int N, int shift = 0);
    double            kurtosis_v2(const double &values[]);
@@ -291,6 +292,24 @@ double     Stats::stdDev(const double &data[], int type = 0, int n = 0, int shif
    return EMPTY_VALUE;
 };
 
+//+------------------------------------------------------------------+
+//| NORM: Euclidean Magnitude (The Vector Length)                    |
+//| Works for any N-dimensional vector (3D, 16D, etc.)               |
+//+------------------------------------------------------------------+
+double Stats::norm(const double &data[], int n = 0) {
+   int SIZE = (n <= 0) ? ArraySize(data) : n;
+   if(SIZE <= 0) return 0.0;
+   
+   double sumSq = 0;
+   for(int i = 0; i < SIZE; i++) {
+      // Safety: Only square valid numbers to prevent INF results
+      if(MathIsValidNumber(data[i])) {
+         sumSq += (data[i] * data[i]);
+      }
+   }
+   
+   return MathSqrt(sumSq);
+}
 
 // 4. Skewness & Kurtosis (Distribution Shape, skew -1 to 1, kurt excess)
 double Stats::skewness(const double &values[], int N, int shift = 0) {
