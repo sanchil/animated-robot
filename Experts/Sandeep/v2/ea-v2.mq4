@@ -50,7 +50,7 @@ int BarsHeld = 0;   // per trade
 
 bool TRADESWITCH = true;
 ORDERPARAMS op3;
-
+double pipValue;
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -65,6 +65,7 @@ int OnInit() {
    stopLoss = op3.STOPLOSS;
    currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
    maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
+   pipValue = util.getPipValue(_Symbol);
 // --- RECOVERY LOGIC ---
    BarsHeld = 0;
    if(OrdersTotalByMagic(magicNumber) > 0) {
@@ -168,11 +169,11 @@ void RefreshPhysicsData(INDDATA &data) {
    data.bayesianHoldScore = bScore;
    data.neuronHoldScore = nScore;
 
-
+   
 // Inside RefreshPhysicsData in ea-v2.mq4
-   double fastSlope   = data.ima120[0] - data.ima120[3];   // Fast context
-   double medSlope    = data.ima240[0] - data.ima240[10];  // Medium context
-   double slowSlope   = data.ima500[0] - data.ima500[30];  // Slow context
+   double fastSlope   = (data.ima120[0] - data.ima120[3])/(3*pipValue);   // Fast context
+   double medSlope    = (data.ima240[0] - data.ima240[10])/(10*pipValue);  // Medium context
+   double slowSlope   = (data.ima500[0] - data.ima500[30])/(30*pipValue);  // Slow context
 
    double fMSR = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
    double fMSR_norm = 0;
@@ -188,7 +189,7 @@ void RefreshPhysicsData(INDDATA &data) {
 
    data.fMSR = fMSR_norm; // Now normalized 0 to 1
 
-   double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope,data.atr[0]);
+   double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope,data.atr[0],pipValue);
    data.fractalAlignment = fractal;
 
 }
@@ -227,7 +228,8 @@ void OnTick() {
    SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
    double mktIntensity = marketIntensity.buff3[0];
    double regimeMagnitude = marketIntensity.buff3[1];
-   PrintFormat("Market: %.2f | Regime: %.2f: ",mktIntensity,regimeMagnitude );
+   string marketState = ((bool)marketIntensity.buff4[0])?"DORMANT":(((bool)marketIntensity.buff4[1])?"AWAKE":(((bool)marketIntensity.buff4[2])?"CLIMAX":"NOSTATE"));
+   PrintFormat("Market: %.2f | Regime: %.2f: | Market State: %s",mktIntensity,regimeMagnitude,marketState );
 
 // 4. The Decision (Cobb-Douglas Version)
    double b = indData.bayesianHoldScore;
