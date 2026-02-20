@@ -169,11 +169,15 @@ void RefreshPhysicsData(INDDATA &data) {
    data.bayesianHoldScore = bScore;
    data.neuronHoldScore = nScore;
 
-   
+
+//// Inside RefreshPhysicsData in ea-v2.mq4
+//   double fastSlope   = (data.ima120[0] - data.ima120[3])/(3*pipValue);   // Fast context
+//   double medSlope    = (data.ima240[0] - data.ima240[10])/(10*pipValue);  // Medium context
+//   double slowSlope   = (data.ima500[0] - data.ima500[30])/(30*pipValue);  // Slow context
 // Inside RefreshPhysicsData in ea-v2.mq4
-   double fastSlope   = (data.ima120[0] - data.ima120[3])/(3*pipValue);   // Fast context
-   double medSlope    = (data.ima240[0] - data.ima240[10])/(10*pipValue);  // Medium context
-   double slowSlope   = (data.ima500[0] - data.ima500[30])/(30*pipValue);  // Slow context
+   double fastSlope   = (data.ima30[0] - data.ima30[3])/(3*pipValue);   // Fast context
+   double medSlope    = (data.ima60[0] - data.ima60[10])/(10*pipValue);  // Medium context
+   double slowSlope   = (data.ima120[0] - data.ima120[30])/(30*pipValue);  // Slow context
 
    double fMSR = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
    double fMSR_norm = 0;
@@ -228,8 +232,18 @@ void OnTick() {
    SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
    double mktIntensity = marketIntensity.buff3[0];
    double regimeMagnitude = marketIntensity.buff3[1];
-   string marketState = ((bool)marketIntensity.buff4[0])?"DORMANT":(((bool)marketIntensity.buff4[1])?"AWAKE":(((bool)marketIntensity.buff4[2])?"CLIMAX":"NOSTATE"));
-   PrintFormat("Market: %.2f | Regime: %.2f: | Market State: %s",mktIntensity,regimeMagnitude,marketState );
+   string marketState = ((bool)marketIntensity.buff4[0])
+                        ?"DORMANT":(((bool)marketIntensity.buff4[1])
+                                    ?"AWAKE":(((bool)marketIntensity.buff4[2])
+                                          ?"STRETCH":(((bool)marketIntensity.buff4[3])
+                                                ?"CLIMAX":"NOSTATE")));
+
+   int marketAction = (((bool)marketIntensity.buff4[1]) || ((bool)marketIntensity.buff4[2]))
+                      ? 1:(((bool)marketIntensity.buff4[0])
+                           ?0:-1);
+
+
+   PrintFormat("[MARKETREGIME]: %.2f | Regime: %.2f: | Market State: %s | Market Action: %d",mktIntensity,regimeMagnitude,marketState,marketAction);
 
 // 4. The Decision (Cobb-Douglas Version)
    double b = indData.bayesianHoldScore;
@@ -288,6 +302,7 @@ void OnTick() {
    bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1);
 // NEW: Consensus now requires Fractal Alignment (1.0) to pull the trigger.
 //bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && fra >= 1.0);
+   PrintFormat("[physicsAction: %d | cobbsDouglasAction: %d | marketAction: %d]",physicsAction,cobbsDouglasAction,marketAction);
 
    if(hasConsensus) {
       // Dynamic Scaling: We map the Cobb-Douglas totalConf (0.185 to ~0.30)
@@ -370,7 +385,7 @@ void OnTick() {
             Print("🛡️ GOVERNANCE: Signal requested CLOSE, but Market Physics is Stable. HOLDING Position.");
          }
       }
-      Print("Order message: ",orderMesg);
+      //Print("Order message: ",orderMesg);
 
       // Update BarsHeld for the next tick
       if(util.isNewBar())

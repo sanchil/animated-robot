@@ -53,7 +53,7 @@ class Stats {
    void              sayMesg1();
    long              getDataSize(const double &data[], int n = 0, int shift = 0);
    double            Arctan2(double y, double x);
-   double            mean(const double &data[], int n = 0, double shift = 0);
+   double            mean(const double &data[], int n = 0, int shift = 0);
    double            stdDev(const double &data[], int n = 0, int type = 0, int shift = 0);
    double            norm(const double &data[], int n = 0);
    double            skewness(const double &values[], int N, int shift = 0);
@@ -160,52 +160,125 @@ void Stats::sayMesg1() {
 };
 //------------------------------------------------------------------+
 
-//+------------------------------------------------------------------+
+////+------------------------------------------------------------------+
+//
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//long Stats::getDataSize(const double &data[], int n = 0, int shift = 0) {
+//   long SIZE = EMPTY_VALUE;
+//   if(n <= 0) {
+//      SIZE = (ArraySize(data) - shift);
+//   } else if(((n - shift) > 0) && ((n - shift) < ArraySize(data))) {
+//      SIZE = (n - shift);
+//   } else if((n - shift) >= ArraySize(data)) {
+//      SIZE = ArraySize(data);
+//   }
+//   return SIZE;
+//};
+//
+//// double x[] =  { 10, 20, 30, 40, 50};
+////  //double y[] ={20, 40, 60, 80, 100};
+////  double y[]= {50, 40, 30, 20, 10};
+////  double z[]= {2, 4, 6, 8, 10};
+////  double m[] = {10, 12, 15, 18, 20, 22, 25, 28, 30, 32}; // acf for lag 1 is The ACF for lag 1 is 0.136. ACF(0) is always 1.
+////  double m1[] = {4,8,6,5,3,7,9,8,6,5}; acf(1) is 0.14
+//////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//double  Stats::mean(const double &data[], int n = 0, int shift = 0) {
+//   double sum = 0.0;
+//   double mean = EMPTY_VALUE;
+//   long SIZE = getDataSize(data, n, shift);
+//   int count = 0;
+//   for(int i = 0; i < SIZE; i++) {
+//      if(data[i] != 0) {
+//         sum += data[i];
+//         count++;
+//      }
+//   }
+//   mean = (count > 0) ? sum / count : 0.0;
+////for(int i = 0; i<SIZE; i++) {
+////   sum +=data[i];
+////}
+////mean = sum/SIZE;
+////Print("N: "+SIZE+" mean: "+mean);
+//   return mean;
+//};
+//
+//
+////+------------------------------------------------------------------+
+////|             σ = √(Σ(xi - μ)² / N)
+////      if type is 0 it is calculated for sample else for population. default is for sample
+//// double x[] =  { 10, 20, 30, 40, 50}; std value = 15.81                                               |
+////+------------------------------------------------------------------+
+//double     Stats::stdDev(const double &data[], int type = 0, int n = 0, int shift = 0) {
+//   double summation = 0;
+//   double mn = mean(data, n, shift);
+//   long SIZE = getDataSize(data, n, shift);
+//   for(int i = shift; i < SIZE; i++) {
+//      summation += (data[i] - mn) * (data[i] - mn);
+//   }
+////  Print("Summation: "+summation+" Denominator:  "+SIZE);
+//   if(type == 0) {
+//      return sqrt(summation / (SIZE - 1));
+//   }
+//   if(type == 1) {
+//      return sqrt(summation / SIZE);
+//   }
+//   if(type == 2) {
+//      return sqrt(summation / sqrt(SIZE));
+//   }
+//   return EMPTY_VALUE;
+//};
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+
 long Stats::getDataSize(const double &data[], int n = 0, int shift = 0) {
    long SIZE = EMPTY_VALUE;
+   long arraySize = ArraySize(data);
    if(n <= 0) {
-      SIZE = (ArraySize(data) - shift);
-   } else if(((n - shift) > 0) && ((n - shift) < ArraySize(data))) {
-      SIZE = (n - shift);
-   } else if((n - shift) >= ArraySize(data)) {
-      SIZE = ArraySize(data);
+      SIZE = arraySize - shift;
+   } else {
+      long endIndex = shift + n - 1;
+      if(endIndex >= arraySize) {
+         endIndex = arraySize - 1;
+      }
+      SIZE = endIndex - shift + 1;
+   }
+   if(SIZE <= 0) {
+      SIZE = 0;
    }
    return SIZE;
-};
+}
 
-// double x[] =  { 10, 20, 30, 40, 50};
-//  //double y[] ={20, 40, 60, 80, 100};
-//  double y[]= {50, 40, 30, 20, 10};
-//  double z[]= {2, 4, 6, 8, 10};
-//  double m[] = {10, 12, 15, 18, 20, 22, 25, 28, 30, 32}; // acf for lag 1 is The ACF for lag 1 is 0.136. ACF(0) is always 1.
-//  double m1[] = {4,8,6,5,3,7,9,8,6,5}; acf(1) is 0.14
-////+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-double  Stats::mean(const double &data[], int n = 0, double shift = 0) {
+double Stats::mean(const double &data[], int n = 0, int shift = 0) {
    double sum = 0.0;
-   double mean = EMPTY_VALUE;
    long SIZE = getDataSize(data, n, shift);
    int count = 0;
-   for(int i = 0; i < SIZE; i++) {
-      if(data[i] != 0) {
+   for(long i = shift; i < shift + SIZE; i++) {
+      if((data[i] != EMPTY) && (data[i] != EMPTY_VALUE)) {
          sum += data[i];
          count++;
       }
    }
-   mean = (count > 0) ? sum / count : 0.0;
-//for(int i = 0; i<SIZE; i++) {
-//   sum +=data[i];
-//}
-//mean = sum/SIZE;
-//Print("N: "+SIZE+" mean: "+mean);
-   return mean;
-};
+   return (count > 0) ? sum / count : 0.0;
+}
 
+double Stats::stdDev(const double &data[], int type = 0, int n = 0, int shift = 0) {
+   double summation = 0.0;
+   double mn = mean(data, n, shift);
+   long SIZE = getDataSize(data, n, shift);
+   int count = 0;
+   for(long i = shift; i < shift + SIZE; i++) {
+      if((data[i] != EMPTY) && (data[i] != EMPTY_VALUE)) {
+         summation += (data[i] - mn) * (data[i] - mn);
+         count++;
+      }
+   }
+   if(count <= 1) return 0.0; // Avoid division by zero or negative
+   double denom = (type == 0) ? (count - 1) : count; // Sample vs population
+   return MathSqrt(summation / denom);
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -267,30 +340,7 @@ double  Stats::acf(const double &data[], int n = 0, int lag = 1) {
    return EMPTY_VALUE;
 };
 
-//+------------------------------------------------------------------+
-//|             σ = √(Σ(xi - μ)² / N)
-//      if type is 0 it is calculated for sample else for population. default is for sample
-// double x[] =  { 10, 20, 30, 40, 50}; std value = 15.81                                               |
-//+------------------------------------------------------------------+
-double     Stats::stdDev(const double &data[], int type = 0, int n = 0, int shift = 0) {
-   double summation = 0;
-   double mn = mean(data, n);
-   long SIZE = getDataSize(data, n, shift);
-   for(int i = shift; i < SIZE; i++) {
-      summation += (data[i] - mn) * (data[i] - mn);
-   }
-//  Print("Summation: "+summation+" Denominator:  "+SIZE);
-   if(type == 0) {
-      return sqrt(summation / (SIZE - 1));
-   }
-   if(type == 1) {
-      return sqrt(summation / SIZE);
-   }
-   if(type == 2) {
-      return sqrt(summation / sqrt(SIZE));
-   }
-   return EMPTY_VALUE;
-};
+
 
 //+------------------------------------------------------------------+
 //| NORM: Euclidean Magnitude (The Vector Length)                    |
