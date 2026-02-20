@@ -232,6 +232,8 @@ void OnTick() {
    SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
    double mktIntensity = marketIntensity.buff3[0];
    double regimeMagnitude = marketIntensity.buff3[1];
+   double mktIntensity1 = marketIntensity.buff3[2];
+   double regimeMagnitude1 = marketIntensity.buff3[3];
    string marketState = ((bool)marketIntensity.buff4[0])
                         ?"DORMANT":(((bool)marketIntensity.buff4[1])
                                     ?"AWAKE":(((bool)marketIntensity.buff4[2])
@@ -243,7 +245,7 @@ void OnTick() {
                            ?0:-1);
 
 
-   PrintFormat("[MARKETREGIME]: %.2f | Regime: %.2f: | Market State: %s | Market Action: %d",mktIntensity,regimeMagnitude,marketState,marketAction);
+   PrintFormat("[MARKET] Intensity: %.2f | Regime: %.2f: |Intensity1: %.2f | Regime1: %.2f: | Market State: %s | Market Action: %d",mktIntensity,regimeMagnitude,mktIntensity1,regimeMagnitude1,marketState,marketAction);
 
 // 4. The Decision (Cobb-Douglas Version)
    double b = indData.bayesianHoldScore;
