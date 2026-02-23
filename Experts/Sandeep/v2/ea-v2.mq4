@@ -232,7 +232,7 @@ void OnTick() {
    SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
    double mktIntensity = marketIntensity.buff3[0];
    double regimeMagnitude = marketIntensity.buff3[1];
-    string marketState = ((bool)marketIntensity.buff4[0])
+   string marketState = ((bool)marketIntensity.buff4[0])
                         ?"DORMANT":(((bool)marketIntensity.buff4[1])
                                     ?"AWAKE":(((bool)marketIntensity.buff4[2])
                                           ?"STRETCH":(((bool)marketIntensity.buff4[3])
@@ -304,7 +304,29 @@ void OnTick() {
 //bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && fra >= 1.0);
    PrintFormat("[physicsAction: %d | cobbsDouglasAction: %d | marketAction: %d]",physicsAction,cobbsDouglasAction,marketAction);
 
-   if(hasConsensus) {
+
+// --- CONSENSUS ENGINE (Improved) ---
+   int finalAction = 0;
+
+// Weighted average (adjust weights to your preference)
+   double consensusScore = (physicsAction * 0.45) +
+                           (cobbsDouglasAction * 0.35) +
+                           (marketAction * 0.20);
+
+   if(consensusScore > 0.6)  finalAction = 1;   // Strong SNIPE
+   else if(consensusScore < -0.4) finalAction = -1; // Clear COLLAPSE
+   else finalAction = 0;                        // HOLD / DORMANT
+
+// Use finalAction for entry/exit instead of raw physicsAction
+   if(totalOrders == 0 && finalAction == 1 && direction != SAN_SIGNAL::NOSIG) {
+      // enter
+   }
+
+
+//// Use finalAction for entry/exit instead of raw physicsAction
+//   if(totalOrders == 0 && finalAction == 1 && direction != SAN_SIGNAL::NOSIG) {
+   if(finalAction ==1) {
+      //if(hasConsensus) {
       // Dynamic Scaling: We map the Cobb-Douglas totalConf (0.185 to ~0.30)
       // to a multiplier range (1.0 to maxMultiplier).
       double entryFloor = 0.185;
@@ -344,63 +366,64 @@ void OnTick() {
 
       // SCENARIO 1: GREEN LIGHT
       // Requires Consensus: Physics must be 1 (High Prob) AND Signal must give Direction.
-      if(physicsAction == 1 && direction != SAN_SIGNAL::NOSIG) {
+      //if(physicsAction == 1 && direction != SAN_SIGNAL::NOSIG) {
+      if(finalAction == 1 && direction != SAN_SIGNAL::NOSIG){
          PrintFormat("SNIPER: Entering with %.2fx Conviction (Lots: %.2f) Physics (%.2f/%.2f) aligned with Direction. Entering.",
                      convictionFactor,
                      dynamicLots,
                      NormalizeDouble(indData.bayesianHoldScore,3),
                      NormalizeDouble(indData.neuronHoldScore,3));
-         //Print("SNIPER: Physics(", NormalizeDouble(indData.bayesianHoldScore,3), "/", NormalizeDouble(indData.neuronHoldScore,3), ") aligned with Direction. Entering.");
+      //Print("SNIPER: Physics(", NormalizeDouble(indData.bayesianHoldScore,3), "/", NormalizeDouble(indData.neuronHoldScore,3), ") aligned with Direction. Entering.");
 
-         orderMesg = util.placeOrder(magicNumber, dynamicLots, (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
-         BarsHeld = 0; // Reset for the new trade
-      }
+      orderMesg = util.placeOrder(magicNumber, dynamicLots, (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+      BarsHeld = 0; // Reset for the new trade
+   }
 
-      // SCENARIO 2: BLOCKED ENTRY (The Safety Valve)
-      // The Signal is firing, but the Physics Engine Vetoes it.
-      else if(direction != SAN_SIGNAL::NOSIG && physicsAction != 1) {
-         // Log it once per bar or just on the moment to verify the safety is working
-         // (Optional: Check isNewBar to prevent log spam, or just trust the visual logs)
-         if(util.isNewBar()) {
-            PrintFormat("ENTRY BLOCKED: Signal is %s but Physics Score is %d (Bayes: %.2f | fMSR: %.2f)",
-                        util.getSigString(direction), physicsAction, indData.bayesianHoldScore, indData.fMSR);
-         }
+// SCENARIO 2: BLOCKED ENTRY (The Safety Valve)
+// The Signal is firing, but the Physics Engine Vetoes it.
+   else if(direction != SAN_SIGNAL::NOSIG && physicsAction != 1) {
+      // Log it once per bar or just on the moment to verify the safety is working
+      // (Optional: Check isNewBar to prevent log spam, or just trust the visual logs)
+      if(util.isNewBar()) {
+         PrintFormat("ENTRY BLOCKED: Signal is %s but Physics Score is %d (Bayes: %.2f | fMSR: %.2f)",
+                     util.getSigString(direction), physicsAction, indData.bayesianHoldScore, indData.fMSR);
       }
    }
+}
 
 // --- B. EXIT LOGIC (The Dictatorship) ---
-   else {
+else {
 
-      // RULE: "The market is the final arbiter."
-      // We ONLY exit if the Physics Engine detects a collapse (-1).
-      // We IGNORE the Signal's request to Close if the Physics are still valid (0 or 1).
+// RULE: "The market is the final arbiter."
+// We ONLY exit if the Physics Engine detects a collapse (-1).
+// We IGNORE the Signal's request to Close if the Physics are still valid (0 or 1).
 
-      if(physicsAction == -1) {
-         Print("🚨 GOVERNANCE: Market Physics Collapsed (Bayes/fMSR). Forcing Exit.");
-         orderMesg = util.closeOrders();
-         BarsHeld = 0;
-      } else if(closeSIG == SAN_SIGNAL::CLOSE) {
-         // Log the Override so you know the EA is "saving" you from a premature exit.
-         if(util.isNewBar()) {
-            Print("🛡️ GOVERNANCE: Signal requested CLOSE, but Market Physics is Stable. HOLDING Position.");
-         }
+   if(physicsAction == -1) {
+      Print("🚨 GOVERNANCE: Market Physics Collapsed (Bayes/fMSR). Forcing Exit.");
+      orderMesg = util.closeOrders();
+      BarsHeld = 0;
+   } else if(closeSIG == SAN_SIGNAL::CLOSE) {
+      // Log the Override so you know the EA is "saving" you from a premature exit.
+      if(util.isNewBar()) {
+         Print("🛡️ GOVERNANCE: Signal requested CLOSE, but Market Physics is Stable. HOLDING Position.");
       }
-      //Print("Order message: ",orderMesg);
-
-      // Update BarsHeld for the next tick
-      if(util.isNewBar())
-         BarsHeld++;
-      if(GetLastError() != ERR_NO_ERROR)
-         Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
    }
+//Print("Order message: ",orderMesg);
+
+// Update BarsHeld for the next tick
+   if(util.isNewBar())
+      BarsHeld++;
+   if(GetLastError() != ERR_NO_ERROR)
+      Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
+}
 
 //#####################################################################################################################
 //######################### END: code block 1 #######################################################################
 //#####################################################################################################################
 
 
-   if(recordData && util.isNewBarTime()) {
-      st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
-   }
+if(recordData && util.isNewBarTime()) {
+   st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
+}
 }
 //+------------------------------------------------------------------+
