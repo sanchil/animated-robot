@@ -184,25 +184,37 @@ void RefreshPhysicsData(INDDATA &data) {
 //   double medSlope    = (data.ima240[0] - data.ima240[10])/(10*pipValue);  // Medium context
 //   double slowSlope   = (data.ima500[0] - data.ima500[30])/(30*pipValue);  // Slow context
 // Inside RefreshPhysicsData in ea-v2.mq4
-   double fastSlope   = (data.ima30[0] - data.ima30[3])/(3*pipValue);   // Fast context
-   double medSlope    = (data.ima60[0] - data.ima60[10])/(10*pipValue);  // Medium context
-   double slowSlope   = (data.ima120[0] - data.ima120[30])/(30*pipValue);  // Slow context
+//   double fastSlope   = (data.ima30[0] - data.ima30[3])/(3*pipValue);   // Fast context
+//   double medSlope    = (data.ima60[0] - data.ima60[10])/(10*pipValue);  // Medium context
+//   double slowSlope   = (data.ima120[0] - data.ima120[30])/(30*pipValue);  // Slow context
+//
+//   double fMSR = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
+//   double fMSR_norm = 0;
+//
+//   if(fMSR > 0.80)
+//      fMSR_norm = 1.00; // Hyper-Expansion
+//   else if(fMSR > 0.50)
+//      fMSR_norm = 0.75; // Healthy
+//   else if(fMSR > 0.10)
+//      fMSR_norm = 0.30; // Dragging
+//   else
+//      fMSR_norm = 0.00; // Conflict/Whipsaw
+//
+//   data.fMSR = fMSR_norm; // Now normalized 0 to 1
 
-   double fMSR = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
-   double fMSR_norm = 0;
 
-   if(fMSR > 0.80)
-      fMSR_norm = 1.00; // Hyper-Expansion
-   else if(fMSR > 0.50)
-      fMSR_norm = 0.75; // Healthy
-   else if(fMSR > 0.10)
-      fMSR_norm = 0.30; // Dragging
-   else
-      fMSR_norm = 0.00; // Conflict/Whipsaw
+   double fastSlope = (data.ima30[0] - data.ima30[3]) / (3 * pipValue);
+   double medSlope  = (data.ima60[0] - data.ima60[10]) / (10 * pipValue);
+   double slowSlope = (data.ima120[0] - data.ima120[30]) / (30 * pipValue);
 
-   data.fMSR = fMSR_norm; // Now normalized 0 to 1
+   double fMSR_raw = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
 
-   //double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope,data.atr[0],pipValue);
+// Continuous linear version — Option 1 (smooth 0.0 to 1.0)
+   double fMSR_norm = MathMax(0.0, MathMin(1.0, (fMSR_raw - 0.5) / 1.5));
+
+   data.fMSR = fMSR_norm;
+
+//double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope,data.atr[0],pipValue);
    double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
 
    data.fractalAlignment = fractal;
