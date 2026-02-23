@@ -2853,8 +2853,8 @@ SAN_SIGNAL SanSignals::candleVolSIG(
 
 //double slow = stats.vWCM_Score(open, close, volume, period,0,SHIFT);
 //double fast = stats.vWCM_Score(open, close, volume, fast_n,0,SHIFT);
-   double slow = ms.vWCM(open, close, volume, period,SHIFT);
-   double fast = ms.vWCM(open, close, volume, fast_n,SHIFT);
+   double slow = ms.vWCM_Raw(open, close, volume, period,SHIFT);
+   double fast = ms.vWCM_Raw(open, close, volume, fast_n,SHIFT);
 
    bool agree_dir  = (slow > 0 && fast > 0) || (slow < 0 && fast < 0);
    bool agree_str  = MathAbs(slow / (fast + 1e-10)) > 0.75;
