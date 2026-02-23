@@ -202,7 +202,9 @@ void RefreshPhysicsData(INDDATA &data) {
 
    data.fMSR = fMSR_norm; // Now normalized 0 to 1
 
-   double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope,data.atr[0],pipValue);
+   //double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope,data.atr[0],pipValue);
+   double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
+
    data.fractalAlignment = fractal;
 
 }
