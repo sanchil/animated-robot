@@ -29,6 +29,15 @@ input bool flipSig = false; // Flip Signal
 // Lot size = 0.01.
 // 1 Microlot = 1*0.01=0.01, 10 Microlots = 10*0.01 = 0.1, 100 Microlots = 1,
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+input double physicsWeight      = 0.45;   // Hyperbolic weight (optimistic on structure)
+input double cobbWeight         = 0.35;   // Cobb-Douglas weight (balanced)
+input double cloudWeight        = 0.20;   // Market Cloud weight (conservative)
+input double consensusThreshold = 0.40;   // 0.3 = more trades, 0.6 = very safe
+
+
 input double maxMultiplier = 2.0; // Maximum risk for elite setups
 double minLotSize = 0.01;      // Terminal minimum
 input double microLots = 1; // Micro Lots
@@ -295,32 +304,32 @@ void OnTick() {
 //   dynamicLots = MathFloor(dynamicLots / lotStep) * lotStep;
 
 
+//PrintFormat("[physicsAction: %d | cobbsDouglasAction: %d | marketAction: %d]",physicsAction,cobbsDouglasAction,marketAction);
+
+
 // --- 5. THE CONSENSUS CONVICTION FACTOR ---
    double convictionFactor = 1.0;
 
 //// CONSENSUS RULE: We only pull the trigger if BOTH engines agree on a SNIPE (1).
-   bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1);
+//bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1);
 // NEW: Consensus now requires Fractal Alignment (1.0) to pull the trigger.
 //bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && fra >= 1.0);
-   PrintFormat("[physicsAction: %d | cobbsDouglasAction: %d | marketAction: %d]",physicsAction,cobbsDouglasAction,marketAction);
 
+// ===============================================
+//  CONSENSUS ENGINE — SINGLE SOURCE OF TRUTH
+// ===============================================
+   double consensusScore = (physicsAction * physicsWeight) +
+                           (cobbsDouglasAction * cobbWeight) +
+                           (marketAction * cloudWeight);
 
-// --- CONSENSUS ENGINE (Improved) ---
    int finalAction = 0;
+   if(consensusScore > consensusThreshold)      finalAction = 1;   // SNIPE
+   else if(consensusScore < -consensusThreshold) finalAction = -1; // COLLAPSE
+   else finalAction = 0;                                           // HOLD
 
-// Weighted average (adjust weights to your preference)
-   double consensusScore = (physicsAction * 0.45) +
-                           (cobbsDouglasAction * 0.35) +
-                           (marketAction * 0.20);
-
-   if(consensusScore > 0.6)  finalAction = 1;   // Strong SNIPE
-   else if(consensusScore < -0.4) finalAction = -1; // Clear COLLAPSE
-   else finalAction = 0;                        // HOLD / DORMANT
-
-// Use finalAction for entry/exit instead of raw physicsAction
-   if(totalOrders == 0 && finalAction == 1 && direction != SAN_SIGNAL::NOSIG) {
-      // enter
-   }
+// Log for visual confirmation in MT4 Journal / Experts tab
+   PrintFormat("[CONSENSUS] Score: %.3f | FinalAction: %d | Physics:%d | Cobb:%d | Cloud:%d",
+               consensusScore, finalAction, physicsAction, cobbsDouglasAction, marketAction);
 
 
 //// Use finalAction for entry/exit instead of raw physicsAction
@@ -361,69 +370,104 @@ void OnTick() {
 
 // 3. LOGIC EXECUTION
 
-// --- A. ENTRY LOGIC (The Partnership) ---
+
+
+// --- A. ENTRY LOGIC ---
    if(totalOrders == 0) {
-
-      // SCENARIO 1: GREEN LIGHT
-      // Requires Consensus: Physics must be 1 (High Prob) AND Signal must give Direction.
-      //if(physicsAction == 1 && direction != SAN_SIGNAL::NOSIG) {
-      if(finalAction == 1 && direction != SAN_SIGNAL::NOSIG){
-         PrintFormat("SNIPER: Entering with %.2fx Conviction (Lots: %.2f) Physics (%.2f/%.2f) aligned with Direction. Entering.",
-                     convictionFactor,
-                     dynamicLots,
-                     NormalizeDouble(indData.bayesianHoldScore,3),
-                     NormalizeDouble(indData.neuronHoldScore,3));
-      //Print("SNIPER: Physics(", NormalizeDouble(indData.bayesianHoldScore,3), "/", NormalizeDouble(indData.neuronHoldScore,3), ") aligned with Direction. Entering.");
-
-      orderMesg = util.placeOrder(magicNumber, dynamicLots, (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
-      BarsHeld = 0; // Reset for the new trade
-   }
-
-// SCENARIO 2: BLOCKED ENTRY (The Safety Valve)
-// The Signal is firing, but the Physics Engine Vetoes it.
-   else if(direction != SAN_SIGNAL::NOSIG && physicsAction != 1) {
-      // Log it once per bar or just on the moment to verify the safety is working
-      // (Optional: Check isNewBar to prevent log spam, or just trust the visual logs)
-      if(util.isNewBar()) {
-         PrintFormat("ENTRY BLOCKED: Signal is %s but Physics Score is %d (Bayes: %.2f | fMSR: %.2f)",
-                     util.getSigString(direction), physicsAction, indData.bayesianHoldScore, indData.fMSR);
+      if(finalAction == 1 && direction != SAN_SIGNAL::NOSIG) {
+         PrintFormat("SNIPER: Entering with %.2fx Conviction (Lots: %.2f) | Final Consensus: %d",
+                     convictionFactor, dynamicLots, finalAction);
+         orderMesg = util.placeOrder(magicNumber, dynamicLots,
+                                     (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+         BarsHeld = 0;
+      } else if(direction != SAN_SIGNAL::NOSIG && finalAction != 1) {
+         if(util.isNewBar())
+            PrintFormat("ENTRY BLOCKED by Consensus: Signal %s but FinalAction %d",
+                        util.getSigString(direction), finalAction);
       }
    }
-}
 
-// --- B. EXIT LOGIC (The Dictatorship) ---
-else {
-
-// RULE: "The market is the final arbiter."
-// We ONLY exit if the Physics Engine detects a collapse (-1).
-// We IGNORE the Signal's request to Close if the Physics are still valid (0 or 1).
-
-   if(physicsAction == -1) {
-      Print("🚨 GOVERNANCE: Market Physics Collapsed (Bayes/fMSR). Forcing Exit.");
-      orderMesg = util.closeOrders();
-      BarsHeld = 0;
-   } else if(closeSIG == SAN_SIGNAL::CLOSE) {
-      // Log the Override so you know the EA is "saving" you from a premature exit.
-      if(util.isNewBar()) {
-         Print("🛡️ GOVERNANCE: Signal requested CLOSE, but Market Physics is Stable. HOLDING Position.");
+// --- B. EXIT LOGIC ---
+   else {
+      if(finalAction == -1) { // now uses consensus, not raw physics
+         Print("🚨 GOVERNANCE: Consensus Collapsed → Forcing Exit");
+         orderMesg = util.closeOrders();
+         BarsHeld = 0;
+      } else if(closeSIG == SAN_SIGNAL::CLOSE) {
+         if(util.isNewBar())
+            Print("🛡️ Signal wants CLOSE but Consensus is stable → HOLDING");
       }
+      if(util.isNewBar())
+         BarsHeld++;
+      if(GetLastError() != ERR_NO_ERROR)
+         Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
    }
-//Print("Order message: ",orderMesg);
 
-// Update BarsHeld for the next tick
-   if(util.isNewBar())
-      BarsHeld++;
-   if(GetLastError() != ERR_NO_ERROR)
-      Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
-}
+
+//
+//// --- A. ENTRY LOGIC (The Partnership) ---
+//   if(totalOrders == 0) {
+//
+//      // SCENARIO 1: GREEN LIGHT
+//      // Requires Consensus: Physics must be 1 (High Prob) AND Signal must give Direction.
+//      //if(physicsAction == 1 && direction != SAN_SIGNAL::NOSIG) {
+//      if(finalAction == 1 && direction != SAN_SIGNAL::NOSIG) {
+//         PrintFormat("SNIPER: Entering with %.2fx Conviction (Lots: %.2f) Physics (%.2f/%.2f) aligned with Direction. Entering.",
+//                     convictionFactor,
+//                     dynamicLots,
+//                     NormalizeDouble(indData.bayesianHoldScore,3),
+//                     NormalizeDouble(indData.neuronHoldScore,3));
+//         //Print("SNIPER: Physics(", NormalizeDouble(indData.bayesianHoldScore,3), "/", NormalizeDouble(indData.neuronHoldScore,3), ") aligned with Direction. Entering.");
+//
+//         orderMesg = util.placeOrder(magicNumber, dynamicLots, (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+//         BarsHeld = 0; // Reset for the new trade
+//      }
+//
+//// SCENARIO 2: BLOCKED ENTRY (The Safety Valve)
+//// The Signal is firing, but the Physics Engine Vetoes it.
+//      else if(direction != SAN_SIGNAL::NOSIG && physicsAction != 1) {
+//         // Log it once per bar or just on the moment to verify the safety is working
+//         // (Optional: Check isNewBar to prevent log spam, or just trust the visual logs)
+//         if(util.isNewBar()) {
+//            PrintFormat("ENTRY BLOCKED: Signal is %s but Physics Score is %d (Bayes: %.2f | fMSR: %.2f)",
+//                        util.getSigString(direction), physicsAction, indData.bayesianHoldScore, indData.fMSR);
+//         }
+//      }
+//   }
+//
+//// --- B. EXIT LOGIC (The Dictatorship) ---
+//   else {
+//
+//// RULE: "The market is the final arbiter."
+//// We ONLY exit if the Physics Engine detects a collapse (-1).
+//// We IGNORE the Signal's request to Close if the Physics are still valid (0 or 1).
+//
+//      if(physicsAction == -1) {
+//         Print("🚨 GOVERNANCE: Market Physics Collapsed (Bayes/fMSR). Forcing Exit.");
+//         orderMesg = util.closeOrders();
+//         BarsHeld = 0;
+//      } else if(closeSIG == SAN_SIGNAL::CLOSE) {
+//         // Log the Override so you know the EA is "saving" you from a premature exit.
+//         if(util.isNewBar()) {
+//            Print("🛡️ GOVERNANCE: Signal requested CLOSE, but Market Physics is Stable. HOLDING Position.");
+//         }
+//      }
+////Print("Order message: ",orderMesg);
+//
+//// Update BarsHeld for the next tick
+//      if(util.isNewBar())
+//         BarsHeld++;
+//      if(GetLastError() != ERR_NO_ERROR)
+//         Print(" Order result: " + orderMesg + " :: Last Error Message: " + (util.getUninitReasonText(GetLastError())));
+//   }
 
 //#####################################################################################################################
 //######################### END: code block 1 #######################################################################
 //#####################################################################################################################
 
 
-if(recordData && util.isNewBarTime()) {
-   st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
-}
+   if(recordData && util.isNewBarTime()) {
+      st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
+   }
 }
 //+------------------------------------------------------------------+
