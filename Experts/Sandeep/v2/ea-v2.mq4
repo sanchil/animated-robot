@@ -263,8 +263,8 @@ void OnTick() {
    double fra = indData.fractalAlignment;
 
    double totalConf = MathPow(f+0.01, 1.0) * MathPow(n+0.01, 1.2) * MathPow(b+0.01, 1.5);
-   int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n, f, fra);
-   int physicsAction = ms.getHyperbolicCombinedScore(b, n, f, fra);
+   int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n);//, f, fra);
+   int physicsAction = ms.getHyperbolicCombinedScore(b, n);//, f, fra);
 
    PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %.2f",
                b, n, f, fra, totalConf, cobbsDouglasAction);
