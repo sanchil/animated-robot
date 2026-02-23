@@ -1498,30 +1498,30 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
 //}
 
 SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr) {
-   
-   // 1. THE MICRO-FLOOR (Aggressive)
-   // We lower the barrier to entry. We only need 10% of ATR to consider it "Active."
-   double MICRO_FLOOR = atr * 0.10; 
-   
+
+// 1. THE MICRO-FLOOR (Aggressive)
+// We lower the barrier to entry. We only need 10% of ATR to consider it "Active."
+   double MICRO_FLOOR = atr * 0.10;
+
    double fS = fast.val1;
    double mS = med.val1;
    SAN_SIGNAL dir = (fS > 0) ? BUY : SELL;
 
-   // 2. THE VELOCITY CHECK (The "Explosion" Gate)
-   // We use slopeRatio but we pass our lower MICRO_FLOOR.
-   // We want to see the Wave pulling away from the Current.
+// 2. THE VELOCITY CHECK (The "Explosion" Gate)
+// We use slopeRatio but we pass our lower MICRO_FLOOR.
+// We want to see the Wave pulling away from the Current.
    double vScore = ms.expansionCompressionRatio(fS, mS, MICRO_FLOOR);
 
-   // 3. THE MICRO-POLICY
-   // We ONLY enter if the expansion is nearly perfect (>= 0.95)
-   // This ensures we are catching the "Meat" of the micro-move.
+// 3. THE MICRO-POLICY
+// We ONLY enter if the expansion is nearly perfect (>= 0.95)
+// This ensures we are catching the "Meat" of the micro-move.
    if(vScore >= 0.95) {
       return dir;
    }
 
-   // 4. THE LIGHTNING EXIT
-   // If the velocity score drops even slightly (e.g., below 0.70), 
-   // we BAIL. There is no macro structure to save us here.
+// 4. THE LIGHTNING EXIT
+// If the velocity score drops even slightly (e.g., below 0.70),
+// we BAIL. There is no macro structure to save us here.
    if(vScore < 0.70) return CLOSE;
 
    return NOSIG;
@@ -2879,38 +2879,49 @@ SAN_SIGNAL SanSignals::singleCandleVolSIG(
 //| candleVolSIG_v2 - Final, bulletproof version                     |
 //+------------------------------------------------------------------+
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::candleVolSIG(
    const double &open[],
    const double &close[],
    const double &volume[],
    const double atr,
    int period = 30, int SHIFT = 1) {
-   
+
    double atr_pips = atr / _Point;
 
-   // 1. DYNAMIC WINDOWS (Guaranteed to be distinct)
-   int fast_n = (int)(period * 0.5); 
+   double atr_floor = atr_pips * 0.05;
+
+// 1. DYNAMIC WINDOWS (Guaranteed to be distinct)
+//int fast_n = (int)(period * 0.5);
+   int fast_n = MathMax(5, (int)(period * 0.4));  // 40% instead of 50% — faster response
+
    if(fast_n < 5) fast_n = 5; // Minimum 5 candles to avoid noise
 
-   // 2. RAW KINEMATICS
+// 2. RAW KINEMATICS
    double slow = ms.vWCM_Raw(open, close, volume, period, SHIFT);
    double fast = ms.vWCM_Raw(open, close, volume, fast_n, SHIFT);
 
-   // 3. DIRECTIONAL AGREEMENT
-   bool agree_dir = (slow > 0 && fast > 0) || (slow < 0 && fast < 0);
-   
-   // 4. MOMENTUM RATIO (Fast must maintain at least 75% of Slow's power)
-   // We use MathAbs to safely compare the force regardless of direction
-   bool agree_str = (MathAbs(fast) / (MathAbs(slow) + DBL_EPSILON)) > 0.75;
+   if(MathAbs(slow) < atr_floor) return SAN_SIGNAL::NOSIG;  // veto very flat volume
 
-   // 5. THE VERDICT
+
+// 3. DIRECTIONAL AGREEMENT
+   bool agree_dir = (slow > 0 && fast > 0) || (slow < 0 && fast < 0);
+
+// 4. MOMENTUM RATIO (Fast must maintain at least 75% of Slow's power)
+// We use MathAbs to safely compare the force regardless of direction
+//bool agree_str = (MathAbs(fast) / (MathAbs(slow) + DBL_EPSILON)) > 0.75;
+   bool agree_str = (MathAbs(fast) / (MathAbs(slow) + DBL_EPSILON)) > 0.6;
+
+// 5. THE VERDICT
    SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
    if(agree_dir && agree_str) {
       sig = (slow > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
    }
 
-   // [Optional Debugging Log]
-   // PrintFormat("vWCM | Slow:%.4f Fast:%.4f → %s", slow, fast, util.getSigString(sig));
+// [Optional Debugging Log]
+// PrintFormat("vWCM | Slow:%.4f Fast:%.4f → %s", slow, fast, util.getSigString(sig));
 
    return sig;
 }
