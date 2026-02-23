@@ -2823,53 +2823,97 @@ SAN_SIGNAL SanSignals::singleCandleVolSIG(
    return cached;
 }
 
+////+------------------------------------------------------------------+
+////| Ultra-fast, hang-proof candleVolSIG_v2 using your vWCM_Score     |
+////+------------------------------------------------------------------+
+////+------------------------------------------------------------------+
+////| candleVolSIG_v2 - Final, bulletproof version                     |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::candleVolSIG(
+//   const double &open[],
+//   const double &close[],
+//   const double &volume[],
+//   const double atr,
+//   int period = 30, int SHIFT = 1) {
+//   static datetime last_bar = 0;
+//   static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
+//
+//   if(Time[0] == last_bar)
+//      return cached;
+//
+//   last_bar = Time[0];
+//
+//   double atr_pips = atr / _Point;
+////if(atr_pips < 8.0) {
+////   cached = SAN_SIGNAL::NOSIG;
+////   return cached;
+////}
+//
+//   int fast_n = (int)MathMax(10, period * 0.7);
+//
+////double slow = stats.vWCM_Score(open, close, volume, period,0,SHIFT);
+////double fast = stats.vWCM_Score(open, close, volume, fast_n,0,SHIFT);
+//   double slow = ms.vWCM_Raw(open, close, volume, period,SHIFT);
+//   double fast = ms.vWCM_Raw(open, close, volume, fast_n,SHIFT);
+//
+//   bool agree_dir  = (slow > 0 && fast > 0) || (slow < 0 && fast < 0);
+//   //bool agree_str  = MathAbs(slow / (fast + 1e-10)) > 0.75;
+//   bool agree_str = (MathAbs(fast) / (MathAbs(slow) + DBL_EPSILON)) > 0.75;
+//
+//   cached = (agree_dir && agree_str) ?
+//            (slow > 0 ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL) :
+//            SAN_SIGNAL::NOSIG;
+//
+//   PrintFormat("vWCM | ATR:%.1f pips | Slow:%.4f Fast:%.4f → %s",
+//               atr_pips, slow, fast,
+//               cached==BUY?"BUY":cached==SELL?"SELL":"NOSIG");
+//
+//   return cached;
+//}
+
+
 //+------------------------------------------------------------------+
 //| Ultra-fast, hang-proof candleVolSIG_v2 using your vWCM_Score     |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 //| candleVolSIG_v2 - Final, bulletproof version                     |
 //+------------------------------------------------------------------+
+
 SAN_SIGNAL SanSignals::candleVolSIG(
    const double &open[],
    const double &close[],
    const double &volume[],
    const double atr,
    int period = 30, int SHIFT = 1) {
-   static datetime last_bar = 0;
-   static SAN_SIGNAL cached = SAN_SIGNAL::NOSIG;
-
-   if(Time[0] == last_bar)
-      return cached;
-
-   last_bar = Time[0];
-
+   
    double atr_pips = atr / _Point;
-//if(atr_pips < 8.0) {
-//   cached = SAN_SIGNAL::NOSIG;
-//   return cached;
-//}
 
-   int fast_n = (int)MathMax(10, period * 0.7);
+   // 1. DYNAMIC WINDOWS (Guaranteed to be distinct)
+   int fast_n = (int)(period * 0.5); 
+   if(fast_n < 5) fast_n = 5; // Minimum 5 candles to avoid noise
 
-//double slow = stats.vWCM_Score(open, close, volume, period,0,SHIFT);
-//double fast = stats.vWCM_Score(open, close, volume, fast_n,0,SHIFT);
-   double slow = ms.vWCM_Raw(open, close, volume, period,SHIFT);
-   double fast = ms.vWCM_Raw(open, close, volume, fast_n,SHIFT);
+   // 2. RAW KINEMATICS
+   double slow = ms.vWCM_Raw(open, close, volume, period, SHIFT);
+   double fast = ms.vWCM_Raw(open, close, volume, fast_n, SHIFT);
 
-   bool agree_dir  = (slow > 0 && fast > 0) || (slow < 0 && fast < 0);
-   bool agree_str  = MathAbs(slow / (fast + 1e-10)) > 0.75;
+   // 3. DIRECTIONAL AGREEMENT
+   bool agree_dir = (slow > 0 && fast > 0) || (slow < 0 && fast < 0);
+   
+   // 4. MOMENTUM RATIO (Fast must maintain at least 75% of Slow's power)
+   // We use MathAbs to safely compare the force regardless of direction
+   bool agree_str = (MathAbs(fast) / (MathAbs(slow) + DBL_EPSILON)) > 0.75;
 
-   cached = (agree_dir && agree_str) ?
-            (slow > 0 ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL) :
-            SAN_SIGNAL::NOSIG;
+   // 5. THE VERDICT
+   SAN_SIGNAL sig = SAN_SIGNAL::NOSIG;
+   if(agree_dir && agree_str) {
+      sig = (slow > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
+   }
 
-   PrintFormat("vWCM | ATR:%.1f pips | Slow:%.4f Fast:%.4f → %s",
-               atr_pips, slow, fast,
-               cached==BUY?"BUY":cached==SELL?"SELL":"NOSIG");
+   // [Optional Debugging Log]
+   // PrintFormat("vWCM | Slow:%.4f Fast:%.4f → %s", slow, fast, util.getSigString(sig));
 
-   return cached;
+   return sig;
 }
-
 
 //+------------------------------------------------------------------+
 //|                                                                  |
