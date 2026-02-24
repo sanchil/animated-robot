@@ -284,7 +284,7 @@ void OnTick() {
    else if(consensusScore < -consensusThreshold) finalAction = -1; // COLLAPSE
    else finalAction = 0;                                           // HOLD
 
-   PrintFormat("[CONSENSUS] Score: %.3f | FinalAction: %d | Physics:%d | Cobb:%d | Cloud:%d",
+   PrintFormat("[CONSENSUS] Score: %.3f | FinalAction: %d | Physics:%d | Cobb:%d | Market:%d",
                consensusScore, finalAction, physicsAction, cobbsDouglasAction, marketAction);
 
 // Conviction scaling (only when consensus is strong)
