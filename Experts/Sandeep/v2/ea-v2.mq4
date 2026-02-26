@@ -275,13 +275,31 @@ void OnTick() {
 // ===============================================
 // CONSENSUS ENGINE — SINGLE SOURCE OF TRUTH
 // ===============================================
+
+//// 1. Calculate democratic entry score
+//   double finalScore = (physicsAction * physicsWeight) + (cobbsDouglasAction * cobbWeight) + (marketAction * cloudWeight);
+//
+//   int FinalAction = 0;
+//
+//// 2. Democratic Entry
+//   if (finalScore >= consensusThreshold) {
+//      FinalAction = 1;
+//   }
+
+// 3. DICTATORIAL EXIT (The Veto)
+// If ANY of the three sages detect a structural collapse, override the vote and exit immediately.
+//if (physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1) {
+//   FinalAction = -1;
+//}
+
    double consensusScore = (physicsAction * physicsWeight) +
                            (cobbsDouglasAction * cobbWeight) +
                            (marketAction * cloudWeight);
 
    int finalAction = 0;
-   if(consensusScore > consensusThreshold)      finalAction = 1;   // SNIPE
-   else if(consensusScore < -consensusThreshold) finalAction = -1; // COLLAPSE
+   if(consensusScore >= consensusThreshold)      finalAction = 1;   // SNIPE
+//else if(consensusScore < -consensusThreshold) finalAction = -1; // COLLAPSE
+   else if(physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1) finalAction = -1; // COLLAPSE
    else finalAction = 0;                                           // HOLD
 
    PrintFormat("[CONSENSUS] Score: %.3f | FinalAction: %d | Physics:%d | Cobb:%d | Market:%d",
@@ -340,5 +358,60 @@ void OnTick() {
       st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
 }
 
+
+void onTask1() {
+
+// =========================================================================
+// 1. EXTRACT THE TACTICAL "VANGUARD" SIGNAL
+// =========================================================================
+// We extract your fastest, most accurate volume momentum signal.
+// (Replace signals.buffX with whichever buffer holds your volatilityMomentum)
+   SAN_SIGNAL tacticalVolumeSig = (SAN_SIGNAL)signals.buffX[0];
+
+// =========================================================================
+// 2. DEFINE THE MARKET PHASE
+// =========================================================================
+   bool isCompression = (f <= 0.35); // The M15 chart is messy/tangled
+
+// =========================================================================
+// 3. THE VANGUARD OVERRIDE (Early Breakout Snipe)
+// =========================================================================
+   bool vanguardOverride = false;
+
+   if (isCompression) {
+      // The chart looks bad, so we completely bypass the Cobb & Physics consensus.
+      // Instead, we demand that our Bayesian/Neural probabilities are awake,
+      // and our Tactical Volume indicator is screaming BUY or SELL.
+
+      bool smartMoneyIsAwake = (b > 0.50 && n > 0.50); // Just need a slight mathematical edge
+
+      if (smartMoneyIsAwake && tacticalVolumeSig != SAN_SIGNAL::NOSIG) {
+         vanguardOverride = true;
+      }
+   }
+
+// =========================================================================
+// 4. FINAL EXECUTION
+// =========================================================================
+// We enter if the Sages agree (Standard Trend) OR the Vanguard overrides them (Compression Breakout)
+   bool triggerEntry = (hasConsensus || vanguardOverride);
+
+   if (totalOrders == 0 && triggerEntry) {
+
+      SAN_SIGNAL entryDirection = vanguardOverride ? tacticalVolumeSig : direction;
+      string entryType = vanguardOverride ? "VANGUARD COMPRESSION SNIPE" : "MACRO CONSENSUS";
+
+      // Safety check: Scale down lot size slightly if we are doing an early snipe
+      double riskMultiplier = vanguardOverride ? 0.75 : convictionFactor;
+      double entryLots = baseLots * riskMultiplier;
+
+      PrintFormat("⚡ EXECUTION [%s]: Entering %s. fMSR is %.2f.",
+                  entryType, util.getSigString(entryDirection), f);
+
+      orderMesg = util.placeOrder(magicNumber, entryLots, (entryDirection == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+      BarsHeld = 0;
+   }
+
+}
 
 //+------------------------------------------------------------------+
