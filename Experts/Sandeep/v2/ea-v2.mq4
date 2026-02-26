@@ -179,45 +179,17 @@ void RefreshPhysicsData(INDDATA &data) {
    data.neuronHoldScore = nScore;
 
 
-//// Inside RefreshPhysicsData in ea-v2.mq4
-//   double fastSlope   = (data.ima120[0] - data.ima120[3])/(3*pipValue);   // Fast context
-//   double medSlope    = (data.ima240[0] - data.ima240[10])/(10*pipValue);  // Medium context
-//   double slowSlope   = (data.ima500[0] - data.ima500[30])/(30*pipValue);  // Slow context
-// Inside RefreshPhysicsData in ea-v2.mq4
-//   double fastSlope   = (data.ima30[0] - data.ima30[3])/(3*pipValue);   // Fast context
-//   double medSlope    = (data.ima60[0] - data.ima60[10])/(10*pipValue);  // Medium context
-//   double slowSlope   = (data.ima120[0] - data.ima120[30])/(30*pipValue);  // Slow context
-//
-//   double fMSR = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
-//   double fMSR_norm = 0;
-//
-//   if(fMSR > 0.80)
-//      fMSR_norm = 1.00; // Hyper-Expansion
-//   else if(fMSR > 0.50)
-//      fMSR_norm = 0.75; // Healthy
-//   else if(fMSR > 0.10)
-//      fMSR_norm = 0.30; // Dragging
-//   else
-//      fMSR_norm = 0.00; // Conflict/Whipsaw
-//
-//   data.fMSR = fMSR_norm; // Now normalized 0 to 1
-
-
    double fastSlope = (data.ima30[0] - data.ima30[3]) / (3 * pipValue);
    double medSlope  = (data.ima60[0] - data.ima60[10]) / (10 * pipValue);
    double slowSlope = (data.ima120[0] - data.ima120[30]) / (30 * pipValue);
 
-   double fMSR_raw = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
+// Pass the raw, signed measurement.
+// The Sages and Neuron will apply their Bimodal math to this!
+   data.fMSR = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
 
-// Continuous linear version — Option 1 (smooth 0.0 to 1.0)
-   double fMSR_norm = MathMax(0.0, MathMin(1.0, (fMSR_raw - 0.5) / 1.5));
-
-   data.fMSR = fMSR_norm;
-
-//double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope,data.atr[0],pipValue);
    double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
-
    data.fractalAlignment = fractal;
+
 
 }
 //+------------------------------------------------------------------+
@@ -263,8 +235,8 @@ void OnTick() {
    double fra = indData.fractalAlignment;
 
    double totalConf = MathPow(f+0.01, 1.0) * MathPow(n+0.01, 1.2) * MathPow(b+0.01, 1.5);
-   int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n);//, f, fra);
-   int physicsAction = ms.getHyperbolicCombinedScore(b, n);//, f, fra);
+   int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n, f, fra);
+   int physicsAction = ms.getHyperbolicCombinedScore(b, n, f, fra);
 
    PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %.2f",
                b, n, f, fra, totalConf, cobbsDouglasAction);
@@ -273,145 +245,276 @@ void OnTick() {
                b, n, f, fra, physicsAction);
 
 // ===============================================
-// CONSENSUS ENGINE — SINGLE SOURCE OF TRUTH
+// THE TRINITY CONSENSUS (SINGLE SOURCE OF TRUTH)
 // ===============================================
 
-//// 1. Calculate democratic entry score
-//   double finalScore = (physicsAction * physicsWeight) + (cobbsDouglasAction * cobbWeight) + (marketAction * cloudWeight);
-//
-//   int FinalAction = 0;
-//
-//// 2. Democratic Entry
-//   if (finalScore >= consensusThreshold) {
-//      FinalAction = 1;
-//   }
+// 1. The Environment Vote
+   bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
+   bool hasCollapse  = (physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1);
 
-// 3. DICTATORIAL EXIT (The Veto)
-// If ANY of the three sages detect a structural collapse, override the vote and exit immediately.
-//if (physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1) {
-//   FinalAction = -1;
-//}
+// 2. Identify the Structural Phase
+   double absF = MathAbs(f);
+   bool isSqueeze = (absF <= 0.15);
 
-   double consensusScore = (physicsAction * physicsWeight) +
-                           (cobbsDouglasAction * cobbWeight) +
-                           (marketAction * cloudWeight);
-
-   int finalAction = 0;
-   if(consensusScore >= consensusThreshold)      finalAction = 1;   // SNIPE
-//else if(consensusScore < -consensusThreshold) finalAction = -1; // COLLAPSE
-   else if(physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1) finalAction = -1; // COLLAPSE
-   else finalAction = 0;                                           // HOLD
-
-   PrintFormat("[CONSENSUS] Score: %.3f | FinalAction: %d | Physics:%d | Cobb:%d | Market:%d",
-               consensusScore, finalAction, physicsAction, cobbsDouglasAction, marketAction);
-
-// Conviction scaling (only when consensus is strong)
-   double convictionFactor = 1.0;
-   if(finalAction == 1) {
-      double entryFloor = 0.185;
-      double eliteCeiling = 0.300;
-      double depth = (totalConf - entryFloor) / (eliteCeiling - entryFloor);
-      depth = MathMax(0.0, MathMin(1.0, depth));
-      convictionFactor = 1.0 + (depth * (maxMultiplier - 1.0));
-      PrintFormat("CONSENSUS REACHED: Confidence %.4f | Conviction Multiplier: %.2fx", totalConf, convictionFactor);
-   } else if (direction != SAN_SIGNAL::NOSIG && util.isNewBar()) {
-      PrintFormat("CONSENSUS FAILED: Hyperbolic:%d | CobbDouglas:%d | Conf:%.4f", physicsAction, cobbsDouglasAction, totalConf);
+// 3. Extract the Tactical Vanguard (The Sniper)
+// We pull this directly from the internal SanStrategies object state
+   SAN_SIGNAL vanguardSignal = st1.s.volatilitySIG;
+   if (vanguardSignal == SAN_SIGNAL::NOSIG) {
+      vanguardSignal = st1.s.candleVolSIG; // Fallback to secondary volume metric if needed
    }
 
+// 4. The Phase-Dependent Trigger
+   SAN_SIGNAL triggerSignal = SAN_SIGNAL::NOSIG;
+   if (isSqueeze) {
+      triggerSignal = vanguardSignal; // Sniper reads tick volume in the dark
+   } else {
+      triggerSignal = direction;      // Macro generals read the expanding trend
+   }
+
+// 5. Dynamic Risk Scaling
+// We automatically scale down risk by 25% when sniping a blind squeeze
+   double convictionFactor = isSqueeze ? 0.75 : 1.0;
    double baseLots = microLots * minLotSize;
    double dynamicLots = baseLots * convictionFactor;
 
 //################################################################
-// FINAL GOVERNANCE
+// FINAL GOVERNANCE (EXECUTION)
 //################################################################
 
-// ENTRY
+// --- ENTRY LOGIC ---
    if(totalOrders == 0) {
-      if(finalAction == 1 && direction != SAN_SIGNAL::NOSIG) {
-         PrintFormat("SNIPER: Entering with %.2fx Conviction (Lots: %.2f) | Final Consensus: %d",
-                     convictionFactor, dynamicLots, finalAction);
+      if(hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+
+         string phaseStr = isSqueeze ? "COMPRESSION SQUEEZE" : "MACRO EXPANSION";
+
+         PrintFormat("⚡ SNIPER [%s]: Sages Approved. Trigger dictates: %s. (Lots: %.2f)",
+                     phaseStr, util.getSigString(triggerSignal), dynamicLots);
+
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
-                                     (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+                                     (triggerSignal == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
          BarsHeld = 0;
-      } else if(direction != SAN_SIGNAL::NOSIG && finalAction != 1 && util.isNewBar()) {
-         PrintFormat("ENTRY BLOCKED by Consensus: Signal %s but FinalAction %d",
-                     util.getSigString(direction), finalAction);
+      } else if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS && util.isNewBar()) {
+         PrintFormat("🛡️ ENTRY BLOCKED: Trigger %s fired, but Sages vetoed (Phy:%d, Cobb:%d, Mkt:%d)",
+                     util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
       }
    }
 
-// EXIT
+// --- EXIT LOGIC ---
    else {
-      if(finalAction == -1) {
-         Print("🚨 GOVERNANCE: Consensus Collapsed → Forcing Exit");
+      SAN_SIGNAL tradePosition = util.getTradePosition();
+
+      // EXIT A: MACRO COLLAPSE (The Ultimate Failsafe)
+      if(hasCollapse) {
+         PrintFormat("🚨 GOVERNANCE: Macro Collapse Detected (Phy:%d, Cobb:%d, Mkt:%d). Forcing Exit.",
+                     physicsAction, cobbsDouglasAction, marketAction);
          orderMesg = util.closeOrders();
          BarsHeld = 0;
-      } else if(closeSIG == SAN_SIGNAL::CLOSE && util.isNewBar()) {
-         Print("🛡️ Signal wants CLOSE but Consensus is stable → HOLDING");
+      }
+      // EXIT B: TACTICAL TRAP (Stop Hunt Defense)
+      // Market is expanding, but our tactical volume violently flipped against our position.
+      else if (!isSqueeze && vanguardSignal != SAN_SIGNAL::NOSIG && util.oppSignal(tradePosition, vanguardSignal)) {
+         PrintFormat("🚨 GOVERNANCE: Tactical Trap! Vanguard violently flipped to %s. EJECTING.",
+                     util.getSigString(vanguardSignal));
+         orderMesg = util.closeOrders();
+         BarsHeld = 0;
+      }
+      // EXIT C: STANDARD CLOSE (Natural trend death)
+      else if(closeSIG == SAN_SIGNAL::CLOSE && util.isNewBar()) {
+         Print("🛡️ GOVERNANCE: Standard Close Signal honored. Exiting.");
+         orderMesg = util.closeOrders();
+         BarsHeld = 0;
       }
 
       if(util.isNewBar()) BarsHeld++;
+
       if(GetLastError() != ERR_NO_ERROR)
-         Print("Order result: " + orderMesg + " :: Last Error: " + util.getUninitReasonText(GetLastError()));
+         Print("Order result: ", orderMesg, " :: Last Error: ", util.getUninitReasonText(GetLastError()));
    }
 
+// Data Telemetry
+
+   indData.convictionFactor = convictionFactor;
    if(recordData && util.isNewBarTime())
       st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
 }
 
 
-void onTask1() {
 
-// =========================================================================
-// 1. EXTRACT THE TACTICAL "VANGUARD" SIGNAL
-// =========================================================================
-// We extract your fastest, most accurate volume momentum signal.
-// (Replace signals.buffX with whichever buffer holds your volatilityMomentum)
-   SAN_SIGNAL tacticalVolumeSig = (SAN_SIGNAL)signals.buffX[0];
+////void OnTimer()
+//void OnTick() {
+//   int totalOrders = OrdersTotalByMagic(magicNumber);
+//
+//   if(totalOrders > 0 && util.isNewBar())
+//      BarsHeld++;
+//   else if(totalOrders == 0)
+//      BarsHeld = 0;
+//
+//   int orderMesg = NULL;
+//   INDDATA indData;
+//   RefreshPhysicsData(indData);
+//
+//// Steering
+//   SIGBUFF signals = st1.imaSt2(indData);
+//   SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
+//   SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
+//
+//   SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
+//   double mktIntensity = marketIntensity.buff3[0];
+//   double regimeMagnitude = marketIntensity.buff3[1];
+//   string marketState = ((bool)marketIntensity.buff4[0])
+//                        ?"DORMANT":(((bool)marketIntensity.buff4[1])
+//                                    ?"AWAKE":(((bool)marketIntensity.buff4[2])
+//                                          ?"STRETCH":(((bool)marketIntensity.buff4[3])
+//                                                ?"CLIMAX":"NOSTATE")));
+//
+//   int marketAction = (((bool)marketIntensity.buff4[1]) || ((bool)marketIntensity.buff4[2]))
+//                      ? 1:(((bool)marketIntensity.buff4[0])
+//                           ?0:-1);
+//
+//   PrintFormat("[MARKET] Intensity: %.2f | Regime: %.2f: | Market State: %s | Market Action: %d",
+//               mktIntensity,regimeMagnitude,marketState,marketAction);
+//
+//// Decisions
+//   double b = indData.bayesianHoldScore;
+//   double n = indData.neuronHoldScore;
+//   double f = indData.fMSR;
+//   double fra = indData.fractalAlignment;
+//
+//   double totalConf = MathPow(f+0.01, 1.0) * MathPow(n+0.01, 1.2) * MathPow(b+0.01, 1.5);
+//   int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n, f, fra);
+//   int physicsAction = ms.getHyperbolicCombinedScore(b, n, f, fra);
+//
+//   PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %.2f",
+//               b, n, f, fra, totalConf, cobbsDouglasAction);
+//
+//   PrintFormat("[HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | CombinedScore: %.2f",
+//               b, n, f, fra, physicsAction);
+//
+//// ===============================================
+//// CONSENSUS ENGINE — SINGLE SOURCE OF TRUTH
+//// ===============================================
+//
+//   double consensusScore = (physicsAction * physicsWeight) +
+//                           (cobbsDouglasAction * cobbWeight) +
+//                           (marketAction * cloudWeight);
+//
+//   int finalAction = 0;
+//   if(consensusScore >= consensusThreshold)      finalAction = 1;   // SNIPE
+////else if(consensusScore < -consensusThreshold) finalAction = -1; // COLLAPSE
+//   else if(physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1) finalAction = -1; // COLLAPSE
+//   else finalAction = 0;                                           // HOLD
+//
+//   PrintFormat("[CONSENSUS] Score: %.3f | FinalAction: %d | Physics:%d | Cobb:%d | Market:%d",
+//               consensusScore, finalAction, physicsAction, cobbsDouglasAction, marketAction);
+//
+//// Conviction scaling (only when consensus is strong)
+//   double convictionFactor = 1.0;
+//   if(finalAction == 1) {
+//      double entryFloor = 0.185;
+//      double eliteCeiling = 0.300;
+//      double depth = (totalConf - entryFloor) / (eliteCeiling - entryFloor);
+//      depth = MathMax(0.0, MathMin(1.0, depth));
+//      convictionFactor = 1.0 + (depth * (maxMultiplier - 1.0));
+//      PrintFormat("CONSENSUS REACHED: Confidence %.4f | Conviction Multiplier: %.2fx", totalConf, convictionFactor);
+//   } else if (direction != SAN_SIGNAL::NOSIG && util.isNewBar()) {
+//      PrintFormat("CONSENSUS FAILED: Hyperbolic:%d | CobbDouglas:%d | Conf:%.4f", physicsAction, cobbsDouglasAction, totalConf);
+//   }
+//
+//   double baseLots = microLots * minLotSize;
+//   double dynamicLots = baseLots * convictionFactor;
+//
+////################################################################
+//// FINAL GOVERNANCE
+////################################################################
+//
+//// ENTRY
+//   if(totalOrders == 0) {
+//      if(finalAction == 1 && direction != SAN_SIGNAL::NOSIG) {
+//         PrintFormat("SNIPER: Entering with %.2fx Conviction (Lots: %.2f) | Final Consensus: %d",
+//                     convictionFactor, dynamicLots, finalAction);
+//         orderMesg = util.placeOrder(magicNumber, dynamicLots,
+//                                     (direction == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+//         BarsHeld = 0;
+//      } else if(direction != SAN_SIGNAL::NOSIG && finalAction != 1 && util.isNewBar()) {
+//         PrintFormat("ENTRY BLOCKED by Consensus: Signal %s but FinalAction %d",
+//                     util.getSigString(direction), finalAction);
+//      }
+//   }
+//
+//// EXIT
+//   else {
+//      if(finalAction == -1) {
+//         Print("🚨 GOVERNANCE: Consensus Collapsed → Forcing Exit");
+//         orderMesg = util.closeOrders();
+//         BarsHeld = 0;
+//      } else if(closeSIG == SAN_SIGNAL::CLOSE && util.isNewBar()) {
+//         Print("🛡️ Signal wants CLOSE but Consensus is stable → HOLDING");
+//      }
+//
+//      if(util.isNewBar()) BarsHeld++;
+//      if(GetLastError() != ERR_NO_ERROR)
+//         Print("Order result: " + orderMesg + " :: Last Error: " + util.getUninitReasonText(GetLastError()));
+//   }
+//
+//   if(recordData && util.isNewBarTime())
+//      st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
+//}
 
-// =========================================================================
-// 2. DEFINE THE MARKET PHASE
-// =========================================================================
-   bool isCompression = (f <= 0.35); // The M15 chart is messy/tangled
 
-// =========================================================================
-// 3. THE VANGUARD OVERRIDE (Early Breakout Snipe)
-// =========================================================================
-   bool vanguardOverride = false;
-
-   if (isCompression) {
-      // The chart looks bad, so we completely bypass the Cobb & Physics consensus.
-      // Instead, we demand that our Bayesian/Neural probabilities are awake,
-      // and our Tactical Volume indicator is screaming BUY or SELL.
-
-      bool smartMoneyIsAwake = (b > 0.50 && n > 0.50); // Just need a slight mathematical edge
-
-      if (smartMoneyIsAwake && tacticalVolumeSig != SAN_SIGNAL::NOSIG) {
-         vanguardOverride = true;
-      }
-   }
-
-// =========================================================================
-// 4. FINAL EXECUTION
-// =========================================================================
-// We enter if the Sages agree (Standard Trend) OR the Vanguard overrides them (Compression Breakout)
-   bool triggerEntry = (hasConsensus || vanguardOverride);
-
-   if (totalOrders == 0 && triggerEntry) {
-
-      SAN_SIGNAL entryDirection = vanguardOverride ? tacticalVolumeSig : direction;
-      string entryType = vanguardOverride ? "VANGUARD COMPRESSION SNIPE" : "MACRO CONSENSUS";
-
-      // Safety check: Scale down lot size slightly if we are doing an early snipe
-      double riskMultiplier = vanguardOverride ? 0.75 : convictionFactor;
-      double entryLots = baseLots * riskMultiplier;
-
-      PrintFormat("⚡ EXECUTION [%s]: Entering %s. fMSR is %.2f.",
-                  entryType, util.getSigString(entryDirection), f);
-
-      orderMesg = util.placeOrder(magicNumber, entryLots, (entryDirection == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
-      BarsHeld = 0;
-   }
-
-}
+//
+//void onTask1() {
+//
+//// =========================================================================
+//// 1. EXTRACT THE TACTICAL "VANGUARD" SIGNAL
+//// =========================================================================
+//// We extract your fastest, most accurate volume momentum signal.
+//// (Replace signals.buffX with whichever buffer holds your volatilityMomentum)
+//   SAN_SIGNAL tacticalVolumeSig = (SAN_SIGNAL)signals.buffX[0];
+//
+//// =========================================================================
+//// 2. DEFINE THE MARKET PHASE
+//// =========================================================================
+//   bool isCompression = (f <= 0.35); // The M15 chart is messy/tangled
+//
+//// =========================================================================
+//// 3. THE VANGUARD OVERRIDE (Early Breakout Snipe)
+//// =========================================================================
+//   bool vanguardOverride = false;
+//
+//   if (isCompression) {
+//      // The chart looks bad, so we completely bypass the Cobb & Physics consensus.
+//      // Instead, we demand that our Bayesian/Neural probabilities are awake,
+//      // and our Tactical Volume indicator is screaming BUY or SELL.
+//
+//      bool smartMoneyIsAwake = (b > 0.50 && n > 0.50); // Just need a slight mathematical edge
+//
+//      if (smartMoneyIsAwake && tacticalVolumeSig != SAN_SIGNAL::NOSIG) {
+//         vanguardOverride = true;
+//      }
+//   }
+//
+//// =========================================================================
+//// 4. FINAL EXECUTION
+//// =========================================================================
+//// We enter if the Sages agree (Standard Trend) OR the Vanguard overrides them (Compression Breakout)
+//   bool triggerEntry = (hasConsensus || vanguardOverride);
+//
+//   if (totalOrders == 0 && triggerEntry) {
+//
+//      SAN_SIGNAL entryDirection = vanguardOverride ? tacticalVolumeSig : direction;
+//      string entryType = vanguardOverride ? "VANGUARD COMPRESSION SNIPE" : "MACRO CONSENSUS";
+//
+//      // Safety check: Scale down lot size slightly if we are doing an early snipe
+//      double riskMultiplier = vanguardOverride ? 0.75 : convictionFactor;
+//      double entryLots = baseLots * riskMultiplier;
+//
+//      PrintFormat("⚡ EXECUTION [%s]: Entering %s. fMSR is %.2f.",
+//                  entryType, util.getSigString(entryDirection), f);
+//
+//      orderMesg = util.placeOrder(magicNumber, entryLots, (entryDirection == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+//      BarsHeld = 0;
+//   }
+//
+//}
 
 //+------------------------------------------------------------------+

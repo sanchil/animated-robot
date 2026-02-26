@@ -85,15 +85,15 @@ class SanSignals {
       double strictness = 1.0
    );
 
-   double            probabilisticSIG(
-      const double &maArray[],
-      const double &closeArray[],   // renamed for clarity
-      const double &openArray[],    // ← add this
-      const double &volumeArray[],
-      double atr,
-      int period = 14,
-      int SHIFT = 1,
-      bool useOverallForce = true);
+   //double            probabilisticSIG(
+   //   const double &maArray[],
+   //   const double &closeArray[],   // renamed for clarity
+   //   const double &openArray[],    // ← add this
+   //   const double &volumeArray[],
+   //   double atr,
+   //   int period = 14,
+   //   int SHIFT = 1,
+   //   bool useOverallForce = true);
 
    SAN_SIGNAL        tradeVolVarSignal(const SAN_SIGNAL volSIG, const SIGMAVARIABILITY varFast, const SIGMAVARIABILITY varMedium, const SIGMAVARIABILITY varSlow, const SIGMAVARIABILITY varVerySlow = SIGMAVARIABILITY::SIGMA_NULL);
    //SANTRENDSTRENGTH        atrSIG(const double &atr[], const int period=10);
@@ -1953,26 +1953,26 @@ SAN_SIGNAL SanSignals::volatilityMomentumDirectionSIG(
 }
 
 
-//+------------------------------------------------------------------+
-//| FINAL Probabilistic Hold Score – FIXED & IMPROVED                |
-//+------------------------------------------------------------------+
-double SanSignals::probabilisticSIG(
-   const double &maArray[],
-   const double &closeArray[],   // renamed for clarity
-   const double &openArray[],    // ← add this
-   const double &volumeArray[],
-   double atr,
-   int period = 14,
-   int SHIFT = 1,
-   bool useOverallForce = true) {
-   static double barsHeldCount = 0;
-   if(util.isNewBar())
-      barsHeldCount++;
-
-   double hold = ms.probabilisticHoldScore(maArray,closeArray,openArray,volumeArray,barsHeldCount,atr,period,SHIFT);
-
-   return hold;
-}
+////+------------------------------------------------------------------+
+////| FINAL Probabilistic Hold Score – FIXED & IMPROVED                |
+////+------------------------------------------------------------------+
+//double SanSignals::probabilisticSIG(
+//   const double &maArray[],
+//   const double &closeArray[],   // renamed for clarity
+//   const double &openArray[],    // ← add this
+//   const double &volumeArray[],
+//   double atr,
+//   int period = 14,
+//   int SHIFT = 1,
+//   bool useOverallForce = true) {
+//   static double barsHeldCount = 0;
+//   if(util.isNewBar())
+//      barsHeldCount++;
+//
+//   double hold = ms.probabilisticHoldScore(maArray,closeArray,openArray,volumeArray,barsHeldCount,atr,period,SHIFT);
+//
+//   return hold;
+//}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
