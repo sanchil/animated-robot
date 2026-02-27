@@ -198,13 +198,19 @@ void RefreshPhysicsData(INDDATA &data) {
    data.neuronHoldScore = nScore;
 
 
-   double fastSlope = (data.ima30[0] - data.ima30[3]) / (3 * pipValue);
-   double medSlope  = (data.ima60[0] - data.ima60[10]) / (10 * pipValue);
-   double slowSlope = (data.ima120[0] - data.ima120[30]) / (30 * pipValue);
+   double fastSlope = (data.ima30[SHIFT] - data.ima30[3]) / (3 * pipValue);
+   double medSlope  = (data.ima60[SHIFT] - data.ima60[10]) / (10 * pipValue);
+   double slowSlope = (data.ima120[SHIFT] - data.ima120[30]) / (30 * pipValue);
+
+// NEW: Macro trend direction from slow/base slope
+   data.baseSlope = (slowSlope > 0.01) ? 1 : ((slowSlope < -0.01) ? -1 : 0);
 
 // Pass the raw, signed measurement.
 // The Sages and Neuron will apply their Bimodal math to this!
-   data.fMSR = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
+   double fMSR_Raw = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
+   data.fMSR_Raw = fMSR_Raw;
+
+   data.fMSR_Norm = fMSR_Raw / (1.0 + MathAbs(fMSR_Raw));
 
    double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
    data.fractalAlignment = fractal;
@@ -225,7 +231,7 @@ void OnCycleTask1() {
    else if(totalOrders == 0)
       BarsHeld = 0;
 
-   int orderMesg = NULL;
+   ulong orderMesg = NULL;
    INDDATA indData;
    RefreshPhysicsData(indData);
 
@@ -253,12 +259,15 @@ void OnCycleTask1() {
 // Decisions
    double b = indData.bayesianHoldScore;
    double n = indData.neuronHoldScore;
-   double f = indData.fMSR;
+   double f = indData.fMSR_Norm;
+   double f_Raw = indData.fMSR_Raw;
    double fra = indData.fractalAlignment;
 
-   double totalConf = MathPow(f+0.01, 1.0) * MathPow(n+0.01, 1.2) * MathPow(b+0.01, 1.5);
+   double absF = MathAbs(f);
+
+   double totalConf = MathPow(absF+0.01, 1.0) * MathPow(n+0.01, 1.2) * MathPow(b+0.01, 1.5);
    int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n, f, fra);
-   int physicsAction = ms.getHyperbolicCombinedScore(b, n, f, fra);
+   int physicsAction = ms.getHyperbolicCombinedScore(b, n,f_Raw, fra);
 
    PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %d",
                b, n, f, fra, totalConf, cobbsDouglasAction);
@@ -273,12 +282,14 @@ void OnCycleTask1() {
    bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
    bool hasCollapse  = (physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1);
 
-   double absF = MathAbs(f);
-   bool isSqueeze = (absF <= 0.15);
+//   double absF = MathAbs(f);
+//bool isSqueeze = (absF <= 0.15);
+   bool isSqueeze = (absF <= 0.4);
 
-   SAN_SIGNAL vanguardSignal = st1.s.volatilitySIG;
+
+   SAN_SIGNAL vanguardSignal = (SAN_SIGNAL)signals.buff5[0];
    if (vanguardSignal == SAN_SIGNAL::NOSIG) {
-      vanguardSignal = st1.s.candleVolSIG;
+      vanguardSignal = (SAN_SIGNAL)signals.buff5[1];
    }
 
    SAN_SIGNAL triggerSignal = isSqueeze ? vanguardSignal : direction;
@@ -286,6 +297,16 @@ void OnCycleTask1() {
    double convictionFactor = isSqueeze ? 0.75 : 1.0;
    double baseLots = microLots * minLotSize;
    double dynamicLots = baseLots * convictionFactor;
+
+// Get broker's lot step (usually 0.01)
+   double lotStep = MarketInfo(_Symbol, MODE_LOTSTEP);
+
+// Mathematically round to the nearest valid broker step
+// If your broker uses 0.01 increments, that is 2 decimal places.
+   dynamicLots = NormalizeDouble(MathRound(dynamicLots / lotStep) * lotStep, 2);
+
+// Failsafe: Ensure it never drops below the terminal minimum
+   if (dynamicLots < minLotSize) dynamicLots = minLotSize;
 
 // Call the modular execution strategy
 //################################################################
@@ -335,12 +356,19 @@ void OnEntryExit_1(
    const int physicsAction,
    const int cobbsDouglasAction,
    const int marketAction,
-   int& orderMesg
+   ulong& orderMesg
 ) {
 
 // --- ENTRY LOGIC ---
    if(totalOrders == 0) {
       if(hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+
+// Only check spread when we are about to enter!
+         double currentSpread = MarketInfo(_Symbol, MODE_SPREAD);
+         if (currentSpread > 8) {
+            Print("🛡️ STRATEGY 1: Spread too high (", currentSpread, "). Entry blocked.");
+            return; // Safe to return here since totalOrders == 0 (no trades to exit anyway)
+         }
 
          string phaseStr = isSqueeze ? "COMPRESSION SQUEEZE" : "MACRO EXPANSION";
 
@@ -348,7 +376,7 @@ void OnEntryExit_1(
                      phaseStr, util.getSigString(triggerSignal), dynamicLots);
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
-                                     (triggerSignal == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+                                     (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
          BarsHeld = 0; // Note: BarsHeld is a global variable
 
       } else if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS && isNewCandle) {
@@ -365,20 +393,20 @@ void OnEntryExit_1(
       if(hasCollapse) {
          PrintFormat("🚨 GOVERNANCE: Macro Collapse Detected (Phy:%d, Cobb:%d, Mkt:%d). Forcing Exit.",
                      physicsAction, cobbsDouglasAction, marketAction);
-         orderMesg = util.closeOrders();
+         orderMesg = util.closeOrders(magicNumber);
          BarsHeld = 0;
       }
       // EXIT B: TACTICAL TRAP
       else if (!isSqueeze && vanguardSignal != SAN_SIGNAL::NOSIG && util.oppSignal(tradePosition, vanguardSignal)) {
          PrintFormat("🚨 GOVERNANCE: Tactical Trap! Vanguard violently flipped to %s. EJECTING.",
                      util.getSigString(vanguardSignal));
-         orderMesg = util.closeOrders();
+         orderMesg = util.closeOrders(magicNumber);
          BarsHeld = 0;
       }
       // EXIT C: STANDARD CLOSE
       else if(closeSIG == SAN_SIGNAL::CLOSE && isNewCandle) {
          Print("🛡️ GOVERNANCE: Standard Close Signal honored. Exiting.");
-         orderMesg = util.closeOrders();
+         orderMesg = util.closeOrders(magicNumber);
          BarsHeld = 0;
       }
 
@@ -406,10 +434,19 @@ void OnEntryExit_2(
    const int physicsAction,
    const int cobbsDouglasAction,
    const int marketAction,
-   int& orderMesg
+   ulong& orderMesg
 ) {
 // 1. TIMING GATE: We only evaluate this strategy once per new candle.
    if (!isNewCandle) return;
+
+   double currentSpread = MarketInfo(_Symbol, MODE_SPREAD); // in points
+
+// Don't enter a new trade if the spread is abnormally high (e.g. > 30 points)
+   if (currentSpread > 20) {
+      Print("🛡️ Spread too high! Entry blocked.");
+      return;
+   }
+
 
    SAN_SIGNAL tradePosition = util.getTradePosition();
 
@@ -418,7 +455,7 @@ void OnEntryExit_2(
       // Failsafe: Total Macro Collapse
       if (hasCollapse) {
          PrintFormat("🚨 STRATEGY 2: Macro Collapse Detected. Liquidating %d positions.", totalOrders);
-         orderMesg = util.closeOrders();
+         orderMesg = util.closeOrders(magicNumber);
          BarsHeld = 0;
          totalOrders = 0; // <--- UPDATE STATE
          return; // Abort further action on this candle
@@ -429,7 +466,7 @@ void OnEntryExit_2(
          if (util.oppSignal(tradePosition, triggerSignal)) {
             PrintFormat("🔄 STRATEGY 2: Market violently flipped from %s to %s! Liquidating portfolio.",
                         util.getSigString(tradePosition), util.getSigString(triggerSignal));
-            orderMesg = util.closeOrders();
+            orderMesg = util.closeOrders(magicNumber);
             BarsHeld = 0;
             totalOrders = 0;
             tradePosition = SAN_SIGNAL::NOSIG; // Reset state so we can immediately enter the new direction
@@ -445,9 +482,18 @@ void OnEntryExit_2(
          PrintFormat("📈 STRATEGY 2: Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
                      util.getSigString(triggerSignal), (totalOrders + 1), dynamicLots);
 
-         orderMesg = util.placeOrder(magicNumber, dynamicLots,
-                                     (triggerSignal == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
-         BarsHeld = 0; // Reset holding time since we just modified the portfolio
+         double currentSpread = MarketInfo(_Symbol, MODE_SPREAD);
+         if (currentSpread <8) {
+            orderMesg = util.placeOrder(magicNumber, dynamicLots,
+                                        (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
+            BarsHeld = 0; // Reset holding time since we just modified the portfolio
+
+         } else {
+            // ... placeOrder ...
+            Print("🛡️ STRATEGY 2: Spread too high (", currentSpread, "). Pyramid addition blocked.");
+            return;
+         }
+
       }
    } else {
       Print("🛡️ STRATEGY 2: Max pyramid capacity reached. Riding the trend without adding more.");

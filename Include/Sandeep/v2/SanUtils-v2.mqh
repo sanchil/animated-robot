@@ -47,8 +47,8 @@ class SanUtils {
 
    //   void              initTrade();
 
-   ulong             placeOrder(ulong mnumber, double vol, ENUM_ORDER_TYPE orderType, int slippage = 3, double stopLoss = 0, double takeProfit = 0);
-   bool              closeOrders();
+   ulong             placeOrder(ulong mnumber, double vol, int orderType, int slippage = 3, double stopLoss = 0, double takeProfit = 0);
+   ulong             closeOrders(const ulong magicNumber);
    void              sayMesg();
    double            getPipValue(string symbol);
    bool              isNewBar();
@@ -288,29 +288,35 @@ bool SanUtils::renameFile(string oldFileName, string newFileName) {
 //+------------------------------------------------------------------+
 //| Close orders in reverse.                                                                 |
 //+------------------------------------------------------------------+
-bool SanUtils::closeOrders() {
+//bool SanUtils::closeOrders() {
+ulong SanUtils::closeOrders(const ulong magicNumber) {
    Print("Closing all buy and sell orders");
    bool success = true; // Track if all closures were successful
-
+   ulong result = 0;
 // Iterate backwards!
    for(int pos = OrdersTotal() - 1; pos >= 0; pos--) {
-      if(OrderSelect(pos, SELECT_BY_POS)) {
+      if(OrderSelect(pos, SELECT_BY_POS) &&
+            OrderMagicNumber() == magicNumber &&
+            OrderSymbol() == _Symbol) {
+         //if(OrderSelect(pos, SELECT_BY_POS)) {
 
          // Optional: Check if the order belongs to this EA
          // if(OrderMagicNumber() != magicNumber) continue;
-
+         result =  OrderTicket();
          if(OrderType() == OP_BUY) {
             if(!OrderClose(OrderTicket(), OrderLots(), Bid, 5, clrNONE)) {
                success = false;
+               result = 0;
             }
          } else if(OrderType() == OP_SELL) {
             if(!OrderClose(OrderTicket(), OrderLots(), Ask, 5, clrNONE)) {
                success = false;
+               result = 0;
             }
          }
       }
    }
-   return success;
+   return result;
 }
 
 //+------------------------------------------------------------------+
@@ -415,15 +421,30 @@ bool SanUtils::closeOrderTicket(ulong ticket) {
    return false;
 }
 
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//ulong SanUtils::placeOrder(ulong mnumber, double vol, ENUM_ORDER_TYPE orderType, int slippage = 3, double stopLoss = 0, double takeProfit = 0) {
+//   if(((ENUM_ORDER_TYPE)orderType) == ENUM_ORDER_TYPE::ORDER_TYPE_BUY && (OrdersTotal() == 0)) {
+//      Print("Inside BUY ORDER: " + mnumber + " Ask: " + Ask + " Modified ask: " + (Ask + (Point * 40)));
+//      return OrderSend(_Symbol, OP_BUY, vol, Ask, slippage, stopLoss, takeProfit, "My buy order", mnumber, 0, clrNONE);
+//   }
+//   if(((ENUM_ORDER_TYPE)orderType) == ENUM_ORDER_TYPE::ORDER_TYPE_SELL && (OrdersTotal() == 0)) {
+//      Print("Inside SELL ORDER: " + mnumber + " Bid: " + Bid + " Modified bid: " + (Bid - (Point * 40)));
+//      return OrderSend(_Symbol, OP_SELL, vol, Bid, slippage, stopLoss, takeProfit, "My sell order", mnumber, 0, clrNONE);
+//   }
+//   return -1;
+//}
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-ulong SanUtils::placeOrder(ulong mnumber, double vol, ENUM_ORDER_TYPE orderType, int slippage = 3, double stopLoss = 0, double takeProfit = 0) {
-   if(((ENUM_ORDER_TYPE)orderType) == ENUM_ORDER_TYPE::ORDER_TYPE_BUY && (OrdersTotal() == 0)) {
+ulong SanUtils::placeOrder(ulong mnumber, double vol, int orderType, int slippage = 3, double stopLoss = 0, double takeProfit = 0) {
+   if(orderType == OP_BUY) {
       Print("Inside BUY ORDER: " + mnumber + " Ask: " + Ask + " Modified ask: " + (Ask + (Point * 40)));
       return OrderSend(_Symbol, OP_BUY, vol, Ask, slippage, stopLoss, takeProfit, "My buy order", mnumber, 0, clrNONE);
    }
-   if(((ENUM_ORDER_TYPE)orderType) == ENUM_ORDER_TYPE::ORDER_TYPE_SELL && (OrdersTotal() == 0)) {
+   if(orderType == OP_SELL) {
       Print("Inside SELL ORDER: " + mnumber + " Bid: " + Bid + " Modified bid: " + (Bid - (Point * 40)));
       return OrderSend(_Symbol, OP_SELL, vol, Bid, slippage, stopLoss, takeProfit, "My sell order", mnumber, 0, clrNONE);
    }
