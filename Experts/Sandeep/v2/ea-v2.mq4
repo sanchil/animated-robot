@@ -13,6 +13,7 @@
 
 input ulong magicNumber = 1002; // MagicNumber
 input int activeStrategy = 1; // 1: Trinity Sniper, 2: Trend Pyramiding
+input int maxPyramidTrades = 15; // Stop adding after 15 open trades
 input int noOfCandles = 21;
 input const double TAKE_PROFIT = 1.4; // TakeProfit
 input const double STOP_LOSS = 0.3; //StopLoss
@@ -100,6 +101,23 @@ void OnDeinit(const int reason) {
    Print(__FUNCTION__, "_UninitReason = ", util.getUninitReasonText(_UninitReason));
    EventKillTimer();
 }
+
+
+//+------------------------------------------------------------------+
+
+//void OnTimer()
+void OnTick() {
+   OnCycleTask1();
+}
+
+//######################################################################################################
+//######################################################################################################
+// EA Lib functions:
+
+//######################################################################################################
+//######################################################################################################
+
+
 
 //+------------------------------------------------------------------+
 //| Count only orders with our magic number                          |
@@ -193,19 +211,6 @@ void RefreshPhysicsData(INDDATA &data) {
 
 
 }
-//+------------------------------------------------------------------+
-
-//void OnTimer()
-void OnTick() {
-   OnCycleTask1();
-}
-
-//######################################################################################################
-//######################################################################################################
-// EA Lib functions:
-
-//######################################################################################################
-//######################################################################################################
 
 
 void OnCycleTask1() {
@@ -329,6 +334,10 @@ void OnEntryExit_1(
    const int marketAction,
    int& orderMesg
 ) {
+
+// 1. TIMING GATE: We only evaluate this strategy once per new candle.
+   if (!isNewCandle) return;
+
 // --- ENTRY LOGIC ---
    if(totalOrders == 0) {
       if(hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
@@ -378,4 +387,68 @@ void OnEntryExit_1(
    }
 }
 
+//+------------------------------------------------------------------+
+
+
+//+------------------------------------------------------------------+
+//| ENTRY & EXIT STRATEGY 2: Continuous Pyramiding & Flip-Reversal   |
+//+------------------------------------------------------------------+
+void OnEntryExit_2(
+   const int totalOrders,
+   const double dynamicLots,
+   const bool hasConsensus,
+   const bool hasCollapse,
+   const bool isSqueeze,
+   const bool isNewCandle,
+   const SAN_SIGNAL vanguardSignal,
+   const SAN_SIGNAL triggerSignal,
+   const SAN_SIGNAL closeSIG,
+   const int physicsAction,
+   const int cobbsDouglasAction,
+   const int marketAction,
+   int& orderMesg
+) {
+// 1. TIMING GATE: We only evaluate this strategy once per new candle.
+   if (!isNewCandle) return;
+
+   SAN_SIGNAL tradePosition = util.getTradePosition();
+
+// --- EXIT LOGIC (The Flip & The Failsafe) ---
+   if (totalOrders > 0) {
+      // Failsafe: Total Macro Collapse
+      if (hasCollapse) {
+         PrintFormat("🚨 STRATEGY 2: Macro Collapse Detected. Liquidating %d positions.", totalOrders);
+         orderMesg = util.closeOrders();
+         BarsHeld = 0;
+         return; // Abort further action on this candle
+      }
+
+      // The Flip Reversal: If Sages scream SELL, but we hold BUYs -> Close all BUYs.
+      if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+         if (util.oppSignal(tradePosition, triggerSignal)) {
+            PrintFormat("🔄 STRATEGY 2: Market violently flipped from %s to %s! Liquidating portfolio.",
+                        util.getSigString(tradePosition), util.getSigString(triggerSignal));
+            orderMesg = util.closeOrders();
+            BarsHeld = 0;
+            tradePosition = SAN_SIGNAL::NOSIG; // Reset state so we can immediately enter the new direction
+         }
+      }
+   }
+
+// --- ENTRY LOGIC (Continuous Piling) ---
+// Notice there is NO "if(totalOrders == 0)" here. It will run every single candle.
+   if (totalOrders <= maxPyramidTrades) { //
+      if (hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+
+         PrintFormat("📈 STRATEGY 2: Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
+                     util.getSigString(triggerSignal), (totalOrders + 1), dynamicLots);
+
+         orderMesg = util.placeOrder(magicNumber, dynamicLots,
+                                     (triggerSignal == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
+         BarsHeld = 0; // Reset holding time since we just modified the portfolio
+      }
+   } else {
+      if(isNewCandle)Print("🛡️ STRATEGY 2: Max pyramid capacity reached. Riding the trend without adding more.");
+   }
+}
 //+------------------------------------------------------------------+
