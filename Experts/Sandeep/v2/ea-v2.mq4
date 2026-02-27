@@ -287,6 +287,7 @@ void OnCycleTask1() {
    double baseLots = microLots * minLotSize;
    double dynamicLots = baseLots * convictionFactor;
 
+// Call the modular execution strategy
 //################################################################
 // EXECUTION ROUTING
 //################################################################
@@ -299,9 +300,11 @@ void OnCycleTask1() {
          physicsAction, cobbsDouglasAction, marketAction, orderMesg
       );
    } else if (activeStrategy == 2) {
-      if (isNewCandle) {
-         PrintFormat("Empty section for future dynamic switching of entry exits based on market types");
-      }
+      OnEntryExit_2(
+         totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+         isNewCandle, vanguardSignal, triggerSignal, closeSIG,
+         physicsAction, cobbsDouglasAction, marketAction, orderMesg
+      );
    }
 
 
@@ -334,9 +337,6 @@ void OnEntryExit_1(
    const int marketAction,
    int& orderMesg
 ) {
-
-// 1. TIMING GATE: We only evaluate this strategy once per new candle.
-   if (!isNewCandle) return;
 
 // --- ENTRY LOGIC ---
    if(totalOrders == 0) {
@@ -394,7 +394,7 @@ void OnEntryExit_1(
 //| ENTRY & EXIT STRATEGY 2: Continuous Pyramiding & Flip-Reversal   |
 //+------------------------------------------------------------------+
 void OnEntryExit_2(
-   const int totalOrders,
+   int& totalOrders,
    const double dynamicLots,
    const bool hasConsensus,
    const bool hasCollapse,
@@ -420,6 +420,7 @@ void OnEntryExit_2(
          PrintFormat("🚨 STRATEGY 2: Macro Collapse Detected. Liquidating %d positions.", totalOrders);
          orderMesg = util.closeOrders();
          BarsHeld = 0;
+         totalOrders = 0; // <--- UPDATE STATE
          return; // Abort further action on this candle
       }
 
@@ -430,6 +431,7 @@ void OnEntryExit_2(
                         util.getSigString(tradePosition), util.getSigString(triggerSignal));
             orderMesg = util.closeOrders();
             BarsHeld = 0;
+            totalOrders = 0;
             tradePosition = SAN_SIGNAL::NOSIG; // Reset state so we can immediately enter the new direction
          }
       }
@@ -437,7 +439,7 @@ void OnEntryExit_2(
 
 // --- ENTRY LOGIC (Continuous Piling) ---
 // Notice there is NO "if(totalOrders == 0)" here. It will run every single candle.
-   if (totalOrders <= maxPyramidTrades) { //
+   if (totalOrders < maxPyramidTrades) { //
       if (hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
 
          PrintFormat("📈 STRATEGY 2: Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
@@ -448,7 +450,7 @@ void OnEntryExit_2(
          BarsHeld = 0; // Reset holding time since we just modified the portfolio
       }
    } else {
-      if(isNewCandle)Print("🛡️ STRATEGY 2: Max pyramid capacity reached. Riding the trend without adding more.");
+      Print("🛡️ STRATEGY 2: Max pyramid capacity reached. Riding the trend without adding more.");
    }
 }
 //+------------------------------------------------------------------+
