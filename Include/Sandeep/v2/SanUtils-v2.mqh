@@ -264,24 +264,53 @@ bool SanUtils::renameFile(string oldFileName, string newFileName) {
    Print("File successfully renamed from ", oldFileName, " to ", newFileName);
    return true;
 }
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//bool SanUtils::closeOrders() {
+//   int total = OrdersTotal();
+//   Print("Closing all buy and sell orders");
+//   for(int pos = 0; pos < total; pos++) {
+//      if(OrderSelect(pos, SELECT_BY_POS)) {
+//         if(OrderType() == OP_BUY) {
+//            return OrderClose(OrderTicket(), OrderLots(), Bid, 5, clrNONE);
+//         }
+//         if(OrderType() == OP_SELL) {
+//            return OrderClose(OrderTicket(), OrderLots(), Ask, 5, clrNONE);
+//         }
+//         // FileWrite(handle,OrderTicket(),OrderOpenPrice(),OrderOpenTime(),OrderSymbol(),OrderLots());
+//      }
+//   }
+//   return false;
+//}
+
+
 //+------------------------------------------------------------------+
-//|                                                                  |
+//| Close orders in reverse.                                                                 |
 //+------------------------------------------------------------------+
 bool SanUtils::closeOrders() {
-   int total = OrdersTotal();
    Print("Closing all buy and sell orders");
-   for(int pos = 0; pos < total; pos++) {
+   bool success = true; // Track if all closures were successful
+
+// Iterate backwards!
+   for(int pos = OrdersTotal() - 1; pos >= 0; pos--) {
       if(OrderSelect(pos, SELECT_BY_POS)) {
+
+         // Optional: Check if the order belongs to this EA
+         // if(OrderMagicNumber() != magicNumber) continue;
+
          if(OrderType() == OP_BUY) {
-            return OrderClose(OrderTicket(), OrderLots(), Bid, 5, clrNONE);
+            if(!OrderClose(OrderTicket(), OrderLots(), Bid, 5, clrNONE)) {
+               success = false;
+            }
+         } else if(OrderType() == OP_SELL) {
+            if(!OrderClose(OrderTicket(), OrderLots(), Ask, 5, clrNONE)) {
+               success = false;
+            }
          }
-         if(OrderType() == OP_SELL) {
-            return OrderClose(OrderTicket(), OrderLots(), Ask, 5, clrNONE);
-         }
-         // FileWrite(handle,OrderTicket(),OrderOpenPrice(),OrderOpenTime(),OrderSymbol(),OrderLots());
       }
    }
-   return false;
+   return success;
 }
 
 //+------------------------------------------------------------------+
