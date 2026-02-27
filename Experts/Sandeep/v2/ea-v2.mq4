@@ -12,6 +12,7 @@
 #include <Sandeep/v2/SanStrategies-v2.mqh> // This now "owns" SanSignals
 
 input ulong magicNumber = 1002; // MagicNumber
+input int activeStrategy = 1; // 1: Trinity Sniper, 2: Trend Pyramiding
 input int noOfCandles = 21;
 input const double TAKE_PROFIT = 1.4; // TakeProfit
 input const double STOP_LOSS = 0.3; //StopLoss
@@ -197,147 +198,14 @@ void RefreshPhysicsData(INDDATA &data) {
 //void OnTimer()
 void OnTick() {
    OnCycleTask1();
-//   int totalOrders = OrdersTotalByMagic(magicNumber);
-//
-//   if(totalOrders > 0 && util.isNewBar())
-//      BarsHeld++;
-//   else if(totalOrders == 0)
-//      BarsHeld = 0;
-//
-//   int orderMesg = NULL;
-//   INDDATA indData;
-//   RefreshPhysicsData(indData);
-//
-//// Steering
-//   SIGBUFF signals = st1.imaSt2(indData);
-//   SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
-//   SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
-//
-//   SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
-//   double mktIntensity = marketIntensity.buff3[0];
-//   double regimeMagnitude = marketIntensity.buff3[1];
-//   string marketState = ((bool)marketIntensity.buff4[0])
-//                        ?"DORMANT":(((bool)marketIntensity.buff4[1])
-//                                    ?"AWAKE":(((bool)marketIntensity.buff4[2])
-//                                          ?"STRETCH":(((bool)marketIntensity.buff4[3])
-//                                                ?"CLIMAX":"NOSTATE")));
-//
-//   int marketAction = (((bool)marketIntensity.buff4[1]) || ((bool)marketIntensity.buff4[2]))
-//                      ? 1:(((bool)marketIntensity.buff4[0])
-//                           ?0:-1);
-//
-//   PrintFormat("[MARKET] Intensity: %.2f | Regime: %.2f: | Market State: %s | Market Action: %d",
-//               mktIntensity,regimeMagnitude,marketState,marketAction);
-//
-//// Decisions
-//   double b = indData.bayesianHoldScore;
-//   double n = indData.neuronHoldScore;
-//   double f = indData.fMSR;
-//   double fra = indData.fractalAlignment;
-//
-//   double totalConf = MathPow(f+0.01, 1.0) * MathPow(n+0.01, 1.2) * MathPow(b+0.01, 1.5);
-//   int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n, f, fra);
-//   int physicsAction = ms.getHyperbolicCombinedScore(b, n, f, fra);
-//
-//   PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %.2f",
-//               b, n, f, fra, totalConf, cobbsDouglasAction);
-//
-//   PrintFormat("[HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | CombinedScore: %.2f",
-//               b, n, f, fra, physicsAction);
-//
-//// ===============================================
-//// THE TRINITY CONSENSUS (SINGLE SOURCE OF TRUTH)
-//// ===============================================
-//
-//// 1. The Environment Vote
-//   bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
-//   bool hasCollapse  = (physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1);
-//
-//// 2. Identify the Structural Phase
-//   double absF = MathAbs(f);
-//   bool isSqueeze = (absF <= 0.15);
-//
-//// 3. Extract the Tactical Vanguard (The Sniper)
-//// We pull this directly from the internal SanStrategies object state
-//   SAN_SIGNAL vanguardSignal = st1.s.volatilitySIG;
-//   if (vanguardSignal == SAN_SIGNAL::NOSIG) {
-//      vanguardSignal = st1.s.candleVolSIG; // Fallback to secondary volume metric if needed
-//   }
-//
-//// 4. The Phase-Dependent Trigger
-//   SAN_SIGNAL triggerSignal = SAN_SIGNAL::NOSIG;
-//   if (isSqueeze) {
-//      triggerSignal = vanguardSignal; // Sniper reads tick volume in the dark
-//   } else {
-//      triggerSignal = direction;      // Macro generals read the expanding trend
-//   }
-//
-//// 5. Dynamic Risk Scaling
-//// We automatically scale down risk by 25% when sniping a blind squeeze
-//   double convictionFactor = isSqueeze ? 0.75 : 1.0;
-//   double baseLots = microLots * minLotSize;
-//   double dynamicLots = baseLots * convictionFactor;
-//
-////################################################################
-//// FINAL GOVERNANCE (EXECUTION)
-////################################################################
-//
-//// --- ENTRY LOGIC ---
-//   if(totalOrders == 0) {
-//      if(hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-//
-//         string phaseStr = isSqueeze ? "COMPRESSION SQUEEZE" : "MACRO EXPANSION";
-//
-//         PrintFormat("⚡ SNIPER [%s]: Sages Approved. Trigger dictates: %s. (Lots: %.2f)",
-//                     phaseStr, util.getSigString(triggerSignal), dynamicLots);
-//
-//         orderMesg = util.placeOrder(magicNumber, dynamicLots,
-//                                     (triggerSignal == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
-//         BarsHeld = 0;
-//      } else if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS && util.isNewBar()) {
-//         PrintFormat("🛡️ ENTRY BLOCKED: Trigger %s fired, but Sages vetoed (Phy:%d, Cobb:%d, Mkt:%d)",
-//                     util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
-//      }
-//   }
-//
-//// --- EXIT LOGIC ---
-//   else {
-//      SAN_SIGNAL tradePosition = util.getTradePosition();
-//
-//      // EXIT A: MACRO COLLAPSE (The Ultimate Failsafe)
-//      if(hasCollapse) {
-//         PrintFormat("🚨 GOVERNANCE: Macro Collapse Detected (Phy:%d, Cobb:%d, Mkt:%d). Forcing Exit.",
-//                     physicsAction, cobbsDouglasAction, marketAction);
-//         orderMesg = util.closeOrders();
-//         BarsHeld = 0;
-//      }
-//      // EXIT B: TACTICAL TRAP (Stop Hunt Defense)
-//      // Market is expanding, but our tactical volume violently flipped against our position.
-//      else if (!isSqueeze && vanguardSignal != SAN_SIGNAL::NOSIG && util.oppSignal(tradePosition, vanguardSignal)) {
-//         PrintFormat("🚨 GOVERNANCE: Tactical Trap! Vanguard violently flipped to %s. EJECTING.",
-//                     util.getSigString(vanguardSignal));
-//         orderMesg = util.closeOrders();
-//         BarsHeld = 0;
-//      }
-//      // EXIT C: STANDARD CLOSE (Natural trend death)
-//      else if(closeSIG == SAN_SIGNAL::CLOSE && util.isNewBar()) {
-//         Print("🛡️ GOVERNANCE: Standard Close Signal honored. Exiting.");
-//         orderMesg = util.closeOrders();
-//         BarsHeld = 0;
-//      }
-//
-//      if(util.isNewBar()) BarsHeld++;
-//
-//      if(GetLastError() != ERR_NO_ERROR)
-//         Print("Order result: ", orderMesg, " :: Last Error: ", util.getUninitReasonText(GetLastError()));
-//   }
-//
-//// Data Telemetry
-//
-//   indData.convictionFactor = convictionFactor;
-//   if(recordData && util.isNewBarTime())
-//      st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
 }
+
+//######################################################################################################
+//######################################################################################################
+// EA Lib functions:
+
+//######################################################################################################
+//######################################################################################################
 
 
 void OnCycleTask1() {
@@ -393,75 +261,112 @@ void OnCycleTask1() {
    PrintFormat("[HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | CombinedScore: %d",
                b, n, f, fra, physicsAction);
 
-
 // ===============================================
-// THE TRINITY CONSENSUS (SINGLE SOURCE OF TRUTH)
+// THE TRINITY CONSENSUS & PHASE TRIGGER
 // ===============================================
 
-// 1. The Environment Vote
    bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
    bool hasCollapse  = (physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1);
 
-// 2. Identify the Structural Phase
    double absF = MathAbs(f);
    bool isSqueeze = (absF <= 0.15);
 
-// 3. Extract the Tactical Vanguard (The Sniper)
-// We pull this directly from the internal SanStrategies object state
    SAN_SIGNAL vanguardSignal = st1.s.volatilitySIG;
    if (vanguardSignal == SAN_SIGNAL::NOSIG) {
-      vanguardSignal = st1.s.candleVolSIG; // Fallback to secondary volume metric if needed
+      vanguardSignal = st1.s.candleVolSIG;
    }
 
-// 4. The Phase-Dependent Trigger
-   SAN_SIGNAL triggerSignal = SAN_SIGNAL::NOSIG;
-   if (isSqueeze) {
-      triggerSignal = vanguardSignal; // Sniper reads tick volume in the dark
-   } else {
-      triggerSignal = direction;      // Macro generals read the expanding trend
-   }
+   SAN_SIGNAL triggerSignal = isSqueeze ? vanguardSignal : direction;
 
-// 5. Dynamic Risk Scaling
-// We automatically scale down risk by 25% when sniping a blind squeeze
    double convictionFactor = isSqueeze ? 0.75 : 1.0;
    double baseLots = microLots * minLotSize;
    double dynamicLots = baseLots * convictionFactor;
 
 //################################################################
-// FINAL GOVERNANCE (EXECUTION)
+// EXECUTION ROUTING
 //################################################################
 
+// Call the modular execution strategy
+   if (activeStrategy == 1) {
+      OnEntryExit_1(
+         totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+         isNewCandle, vanguardSignal, triggerSignal, closeSIG,
+         physicsAction, cobbsDouglasAction, marketAction, orderMesg
+      );
+   } else if (activeStrategy == 2) {
+      if (isNewCandle) {
+         PrintFormat("Empty section for future dynamic switching of entry exits based on market types");
+      }
+   }
+
+
+// Data Telemetry
+   indData.convictionFactor = convictionFactor;
+   if(recordData && isNewCandle)
+      st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
+
+}
+
+
+
+
+
+//+------------------------------------------------------------------+
+//| ENTRY & EXIT STRATEGY 1: The Phase-Blended Trinity Sniper        |
+//+------------------------------------------------------------------+
+void OnEntryExit_1(
+   const int totalOrders,
+   const double dynamicLots,
+   const bool hasConsensus,
+   const bool hasCollapse,
+   const bool isSqueeze,
+   const bool isNewCandle,
+   const SAN_SIGNAL vanguardSignal,
+   const SAN_SIGNAL triggerSignal,
+   const SAN_SIGNAL closeSIG,
+   const int physicsAction,
+   const int cobbsDouglasAction,
+   const int marketAction,
+   int& orderMesg
+) {
 // --- ENTRY LOGIC ---
    if(totalOrders == 0) {
       if(hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+
          string phaseStr = isSqueeze ? "COMPRESSION SQUEEZE" : "MACRO EXPANSION";
+
          PrintFormat("⚡ SNIPER [%s]: Sages Approved. Trigger dictates: %s. (Lots: %.2f)",
                      phaseStr, util.getSigString(triggerSignal), dynamicLots);
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                      (triggerSignal == SAN_SIGNAL::BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 3, 0, 0);
-         BarsHeld = 0;
+         BarsHeld = 0; // Note: BarsHeld is a global variable
+
       } else if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS && isNewCandle) {
          PrintFormat("🛡️ ENTRY BLOCKED: Trigger %s fired, but Sages vetoed (Phy:%d, Cobb:%d, Mkt:%d)",
                      util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
       }
    }
+
 // --- EXIT LOGIC ---
    else {
-      SAN_SIGNAL tradePosition = util.getTradePosition();
+      SAN_SIGNAL tradePosition = util.getTradePosition(); // Relies on global 'util'
 
+      // EXIT A: MACRO COLLAPSE
       if(hasCollapse) {
          PrintFormat("🚨 GOVERNANCE: Macro Collapse Detected (Phy:%d, Cobb:%d, Mkt:%d). Forcing Exit.",
                      physicsAction, cobbsDouglasAction, marketAction);
          orderMesg = util.closeOrders();
          BarsHeld = 0;
       }
+      // EXIT B: TACTICAL TRAP
       else if (!isSqueeze && vanguardSignal != SAN_SIGNAL::NOSIG && util.oppSignal(tradePosition, vanguardSignal)) {
          PrintFormat("🚨 GOVERNANCE: Tactical Trap! Vanguard violently flipped to %s. EJECTING.",
                      util.getSigString(vanguardSignal));
          orderMesg = util.closeOrders();
          BarsHeld = 0;
       }
+      // EXIT C: STANDARD CLOSE
       else if(closeSIG == SAN_SIGNAL::CLOSE && isNewCandle) {
          Print("🛡️ GOVERNANCE: Standard Close Signal honored. Exiting.");
          orderMesg = util.closeOrders();
@@ -471,11 +376,6 @@ void OnCycleTask1() {
       if(GetLastError() != ERR_NO_ERROR)
          Print("Order result: ", orderMesg, " :: Last Error: ", util.getUninitReasonText(GetLastError()));
    }
-
-// Data Telemetry
-   indData.convictionFactor = convictionFactor;
-   if(recordData && isNewCandle)
-      st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
-      
 }
 
+//+------------------------------------------------------------------+
