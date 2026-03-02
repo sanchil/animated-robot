@@ -190,17 +190,21 @@ void RefreshPhysicsData(INDDATA &data) {
 
 // 2. Compute the Physics Scores
 // We compute these once and store them for both the Sniper and the Strategy
-   double bScore = ms.bayesianHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
-   double nScore = ms.neuronHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
+   //double bScore = ms.bayesianHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
+   //double nScore = ms.neuronHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
+
+   double bScore = ms.bayesianHoldScore(data.ima30, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
+   double nScore = ms.neuronHoldScore(data.ima30, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
+
 
 // Update the snapshot so the Strategy (st1) can see the results
    data.bayesianHoldScore = bScore;
    data.neuronHoldScore = nScore;
 
 
-   double fastSlope = (data.ima30[SHIFT] - data.ima30[3]) / (3 * pipValue);
-   double medSlope  = (data.ima60[SHIFT] - data.ima60[10]) / (10 * pipValue);
-   double slowSlope = (data.ima120[SHIFT] - data.ima120[30]) / (30 * pipValue);
+   double fastSlope = (data.ima14[SHIFT] - data.ima30[3]) / (3 * pipValue);
+   double medSlope  = (data.ima30[SHIFT] - data.ima60[10]) / (10 * pipValue);
+   double slowSlope = (data.ima60[SHIFT] - data.ima120[30]) / (30 * pipValue);
 
 // NEW: Macro trend direction from slow/base slope
    data.baseSlope = (slowSlope > 0.01) ? 1 : ((slowSlope < -0.01) ? -1 : 0);
