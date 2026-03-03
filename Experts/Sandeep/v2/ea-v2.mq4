@@ -322,7 +322,11 @@ void OnCycleTask1() {
 //SAN_SIGNAL triggerSignal =  direction;
 
 // 1. Switch off consensus, use purely tactical direction
-   SAN_SIGNAL triggerSignal = direction;
+   //SAN_SIGNAL triggerSignal = direction;
+// === PURE VOLATILITY FOR STRATEGY 4 (Harvester) ===
+   SAN_SIGNAL triggerSignal = ((activeStrategy == 4)&&(isNewCandle))
+                              ? (SAN_SIGNAL)signals.buff5[0]
+                              : direction;
 
 // 2. THE SQUEEZE BLOCKER (Your Pseudo-Code Translated)
 
@@ -657,12 +661,13 @@ void OnEntryExit_4(
 // The Steering module in OnCycleTask1 already checked the Sages and Squeeze traps!
 // If the signal survived and is not NOSIG, it is 100% authorized to trade.
    if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-         PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
-                     util.getSigString(triggerSignal), dynamicLots,
-                     TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
+      PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+                  util.getSigString(triggerSignal), dynamicLots,
+                  TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
 
-         orderMesg = util.placeOrder(magicNumber, dynamicLots,
-                                     (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-         BarsHeld = 0;
+      orderMesg = util.placeOrder(magicNumber, dynamicLots,
+                                  (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
+      BarsHeld = 0;
    }
 }
+//+------------------------------------------------------------------+
