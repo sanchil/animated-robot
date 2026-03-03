@@ -213,8 +213,12 @@ void RefreshPhysicsData(INDDATA &data, bool isNewCandle=false) {
    double medSlope  = (data.ima30[SHIFT] - data.ima60[10]) / (10 * pipValue);
    double slowSlope = (data.ima60[SHIFT] - data.ima120[30]) / (30 * pipValue);
 
-// NEW: Macro trend direction from slow/base slope
-   data.baseSlope = (slowSlope > 0.01) ? 1 : ((slowSlope < -0.01) ? -1 : 0);
+// NEW: Apply your strict Macro Trend threshold (e.g., 0.1 pips per bar)
+   double macroThreshold = 0.1;
+   data.baseSlope = (slowSlope > macroThreshold) ? 1 : ((slowSlope < -macroThreshold) ? -1 : 0);
+
+//// NEW: Macro trend direction from slow/base slope
+//   data.baseSlope = (slowSlope > 0.01) ? 1 : ((slowSlope < -0.01) ? -1 : 0);
 
 // Pass the raw, signed measurement.
 // The Sages and Neuron will apply their Bimodal math to this!
@@ -247,17 +251,16 @@ void OnCycleTask1() {
    RefreshPhysicsData(indData,isNewCandle);
 
 // Steering
-   SIGBUFF signals;
+   SIGBUFF signals = st1.imaSt3(indData);
 
    if (activeStrategy == 1) {
-      signals = st1.imaSt1(indData);
-   } else if (activeStrategy == 2) {
       signals = st1.imaSt2(indData);
    } else {
-      // Both Strategy 3 and 4 (Harvester) use the tactical St3 brain
+      // Both Strategy 2,3 and 4 (Harvester) use the tactical St3 brain
       signals = st1.imaSt3(indData);
    }
 
+//SIGBUFF signals = st1.imaSt3(indData);
    SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
 
 
@@ -315,7 +318,52 @@ void OnCycleTask1() {
       vanguardSignal = (SAN_SIGNAL)signals.buff5[1];
    }
 
-   SAN_SIGNAL triggerSignal = isSqueeze ? vanguardSignal : direction;
+////SAN_SIGNAL triggerSignal = isSqueeze ? vanguardSignal : direction;
+//SAN_SIGNAL triggerSignal =  direction;
+
+// 1. Switch off consensus, use purely tactical direction
+   SAN_SIGNAL triggerSignal = direction;
+
+// 2. THE SQUEEZE BLOCKER (Your Pseudo-Code Translated)
+
+// 2. THE AUTOMATED STATE MACHINE
+   if (!isSqueeze) {
+      // --- STATE A: MACRO EXPANSION ---
+      // Sages are REQUIRED. If no consensus, kill the signal.
+      if (!hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG) {
+         triggerSignal = SAN_SIGNAL::NOSIG;
+         Print("🛡️ EXPANSION: Tactical signal fired, but Sages vetoed. Waiting for consensus.");
+      }
+   } else {
+      // --- STATE B: COMPRESSION SQUEEZE ---
+      // Sages are BYPASSED. The Squeeze Blocker takes over.
+      if (indData.baseSlope == 1 && triggerSignal == SAN_SIGNAL::BUY) {
+         triggerSignal = SAN_SIGNAL::NOSIG;
+         Print("🛑 BUY SQUEEZE: Trend is UP, buyers exhausted. BUY blocked, waiting for SELL pullback.");
+      } else if (indData.baseSlope == -1 && triggerSignal == SAN_SIGNAL::SELL) {
+         triggerSignal = SAN_SIGNAL::NOSIG;
+         Print("🛑 SELL SQUEEZE: Trend is DOWN, sellers exhausted. SELL blocked, waiting for BUY pullback.");
+      }
+   }
+
+//if (isSqueeze) {
+//    // IF {baseslope is greater than threshold then trend is BUY}
+//    if (indData.baseSlope == 1) {
+//        // AND {it is a BUY SQUEEZE. Keep open SELL trades and block all BUY trades}
+//        if (triggerSignal == SAN_SIGNAL::BUY) {
+//            triggerSignal = SAN_SIGNAL::NOSIG;
+//            Print("🛑 BUY SQUEEZE: Trend is UP (> 0.1), buyers exhausted. BUY blocked, waiting for SELL pullback.");
+//        }
+//    }
+//    // IF {baseslope is less than -threshold then trend is SELL}
+//    else if (indData.baseSlope == -1) {
+//        // AND {it is a SELL SQUEEZE. Keep open BUY trades and block all SELL trades}
+//        if (triggerSignal == SAN_SIGNAL::SELL) {
+//            triggerSignal = SAN_SIGNAL::NOSIG;
+//            Print("🛑 SELL SQUEEZE: Trend is DOWN (< -0.1), sellers exhausted. SELL blocked, waiting for BUY pullback.");
+//        }
+//    }
+//}
 
    double convictionFactor = isSqueeze ? 0.75 : 1.0;
    double baseLots = microLots * minLotSize;
@@ -357,7 +405,7 @@ void OnCycleTask1() {
       );
    } else if (activeStrategy == 4) {
       OnEntryExit_4(
-         totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+         totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction, orderMesg
       );
@@ -579,13 +627,14 @@ void OnEntryExit_3(
 
 
 //+------------------------------------------------------------------+
-//| ENTRY & EXIT STRATEGY1: The pure trade collector trading and no close on tactical only        |
+//| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (Clean Test)  |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
-//| ENTRY STRATEGY 4: The Pure Trade Harvester (Raw Signal Testing)  |
+//| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (Clean Test)  |
 //+------------------------------------------------------------------+
 void OnEntryExit_4(
    const int totalOrders,
+   const bool isNewCandle,
    const double dynamicLots,
    const bool hasConsensus,
    const bool hasCollapse,
@@ -599,28 +648,21 @@ void OnEntryExit_4(
    ulong& orderMesg
 ) {
 
-// --- SAFETY GATE ---
-// Prevents the broker from banning you or margin-calling the account during manual testing
+// === 1. PYRAMID LIMIT ===
    if (totalOrders >= maxPyramidTrades) {
-      // Optional: Print("Max test trades reached. Close some manually.");
       return;
    }
 
-// --- ENTRY LOGIC (Raw Signal Collection) ---
-   if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+// === 2. ENTRY: Trust the State Machine ===
+// The Steering module in OnCycleTask1 already checked the Sages and Squeeze traps!
+// If the signal survived and is not NOSIG, it is 100% authorized to trade.
+   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+         PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+                     util.getSigString(triggerSignal), dynamicLots,
+                     TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
 
-      string phaseStr = isSqueeze ? "COMPRESSION SQUEEZE" : "MACRO EXPANSION";
-
-      // Updated print statement to reflect this is a raw tactical test
-      PrintFormat("🚜 HARVESTER [%s]: Raw Tactical Signal dictates: %s. (Lots: %.2f)",
-                  phaseStr, util.getSigString(triggerSignal), dynamicLots);
-
-      orderMesg = util.placeOrder(magicNumber, dynamicLots,
-                                  (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-      BarsHeld = 0;
+         orderMesg = util.placeOrder(magicNumber, dynamicLots,
+                                     (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
+         BarsHeld = 0;
    }
-
-// --- EXIT LOGIC ---
-// Intentionally disabled. Manual close only for visual backtesting & validation.
 }
-//+------------------------------------------------------------------+
