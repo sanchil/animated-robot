@@ -12,11 +12,13 @@
 #include <Sandeep/v2/SanStrategies-v2.mqh> // This now "owns" SanSignals
 
 input ulong magicNumber = 1002; // MagicNumber
-input int activeStrategy = 1; // 1: Trinity Sniper, 2: Trend Pyramiding
+input int activeStrategy = 4; // 1: Trinity Sniper, 2: Trend Pyramiding
 input int maxPyramidTrades = 15; // Stop adding after 15 open trades
 input int noOfCandles = 21;
 input const double TAKE_PROFIT = 1.4; // TakeProfit
 input const double STOP_LOSS = 0.3; //StopLoss
+input int SPREAD_LIMIT  = 30;
+
 // Data File Inputs
 input bool recordData = false; // Record Data
 //input int recordFreqInMinutes=1; // Record after the mentioned period. Default is record once every minute.
@@ -135,7 +137,7 @@ int OrdersTotalByMagic(ulong magic) {
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void RefreshPhysicsData(INDDATA &data) {
+void RefreshPhysicsData(INDDATA &data, bool isNewCandle=false) {
    op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
    closeProfit = op3.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
    stopLoss = op3.STOPLOSS;
@@ -153,7 +155,12 @@ void RefreshPhysicsData(INDDATA &data) {
    data.microLots = microLots;
 // 2. Sync EA State
    data.BarsHeld   = BarsHeld;
+   data.newBar = isNewCandle;
    data.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);
+
+   data.spreadLimit = SPREAD_LIMIT;
+   data.maxPyramidTrades = maxPyramidTrades;
+   data.totalOrders = OrdersTotalByMagic(magicNumber);
 
 // 1. Fill the "Macro" perspective (last 240 bars)
    for(int i = 0; i < 240; i++) {
@@ -190,8 +197,8 @@ void RefreshPhysicsData(INDDATA &data) {
 
 // 2. Compute the Physics Scores
 // We compute these once and store them for both the Sniper and the Strategy
-   //double bScore = ms.bayesianHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
-   //double nScore = ms.neuronHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
+//double bScore = ms.bayesianHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
+//double nScore = ms.neuronHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
 
    double bScore = ms.bayesianHoldScore(data.ima30, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
    double nScore = ms.neuronHoldScore(data.ima30, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
@@ -237,14 +244,26 @@ void OnCycleTask1() {
 
    ulong orderMesg = NULL;
    INDDATA indData;
-   RefreshPhysicsData(indData);
+   RefreshPhysicsData(indData,isNewCandle);
 
 // Steering
-   SIGBUFF signals = st1.imaSt2(indData);
+   SIGBUFF signals;
+
+   if (activeStrategy == 1) {
+      signals = st1.imaSt1(indData);
+   } else if (activeStrategy == 2) {
+      signals = st1.imaSt2(indData);
+   } else {
+      // Both Strategy 3 and 4 (Harvester) use the tactical St3 brain
+      signals = st1.imaSt3(indData);
+   }
+
+   SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
+
+
    SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
    SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
 
-   SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
    double mktIntensity = marketIntensity.buff3[0];
    double regimeMagnitude = marketIntensity.buff3[1];
    string marketState = ((bool)marketIntensity.buff4[0])
@@ -321,13 +340,25 @@ void OnCycleTask1() {
    if (activeStrategy == 1) {
       OnEntryExit_1(
          totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
-         isNewCandle, vanguardSignal, triggerSignal, closeSIG,
+         vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction, orderMesg
       );
    } else if (activeStrategy == 2) {
       OnEntryExit_2(
          totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
-         isNewCandle, vanguardSignal, triggerSignal, closeSIG,
+         vanguardSignal, triggerSignal, closeSIG,
+         physicsAction, cobbsDouglasAction, marketAction, orderMesg
+      );
+   } else if (activeStrategy == 3) {
+      OnEntryExit_3(
+         totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+         vanguardSignal, triggerSignal, closeSIG,
+         physicsAction, cobbsDouglasAction, marketAction, orderMesg
+      );
+   } else if (activeStrategy == 4) {
+      OnEntryExit_4(
+         totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+         vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction, orderMesg
       );
    }
@@ -353,7 +384,6 @@ void OnEntryExit_1(
    const bool hasConsensus,
    const bool hasCollapse,
    const bool isSqueeze,
-   const bool isNewCandle,
    const SAN_SIGNAL vanguardSignal,
    const SAN_SIGNAL triggerSignal,
    const SAN_SIGNAL closeSIG,
@@ -366,14 +396,6 @@ void OnEntryExit_1(
 // --- ENTRY LOGIC ---
    if(totalOrders == 0) {
       if(hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-
-// Only check spread when we are about to enter!
-         double currentSpread = MarketInfo(_Symbol, MODE_SPREAD);
-         if (currentSpread > 8) {
-            Print("🛡️ STRATEGY 1: Spread too high (", currentSpread, "). Entry blocked.");
-            return; // Safe to return here since totalOrders == 0 (no trades to exit anyway)
-         }
-
          string phaseStr = isSqueeze ? "COMPRESSION SQUEEZE" : "MACRO EXPANSION";
 
          PrintFormat("⚡ SNIPER [%s]: Sages Approved. Trigger dictates: %s. (Lots: %.2f)",
@@ -383,7 +405,7 @@ void OnEntryExit_1(
                                      (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
          BarsHeld = 0; // Note: BarsHeld is a global variable
 
-      } else if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS && isNewCandle) {
+      } else if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
          PrintFormat("🛡️ ENTRY BLOCKED: Trigger %s fired, but Sages vetoed (Phy:%d, Cobb:%d, Mkt:%d)",
                      util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
       }
@@ -408,7 +430,7 @@ void OnEntryExit_1(
          BarsHeld = 0;
       }
       // EXIT C: STANDARD CLOSE
-      else if(closeSIG == SAN_SIGNAL::CLOSE && isNewCandle) {
+      else if(closeSIG == SAN_SIGNAL::CLOSE) {
          Print("🛡️ GOVERNANCE: Standard Close Signal honored. Exiting.");
          orderMesg = util.closeOrders(magicNumber);
          BarsHeld = 0;
@@ -431,7 +453,6 @@ void OnEntryExit_2(
    const bool hasConsensus,
    const bool hasCollapse,
    const bool isSqueeze,
-   const bool isNewCandle,
    const SAN_SIGNAL vanguardSignal,
    const SAN_SIGNAL triggerSignal,
    const SAN_SIGNAL closeSIG,
@@ -440,17 +461,6 @@ void OnEntryExit_2(
    const int marketAction,
    ulong& orderMesg
 ) {
-// 1. TIMING GATE: We only evaluate this strategy once per new candle.
-   if (!isNewCandle) return;
-
-   double currentSpread = MarketInfo(_Symbol, MODE_SPREAD); // in points
-
-// Don't enter a new trade if the spread is abnormally high (e.g. > 30 points)
-   if (currentSpread > 20) {
-      Print("🛡️ Spread too high! Entry blocked.");
-      return;
-   }
-
 
    SAN_SIGNAL tradePosition = util.getTradePosition();
 
@@ -480,27 +490,137 @@ void OnEntryExit_2(
 
 // --- ENTRY LOGIC (Continuous Piling) ---
 // Notice there is NO "if(totalOrders == 0)" here. It will run every single candle.
-   if (totalOrders < maxPyramidTrades) { //
+   if ((totalOrders < maxPyramidTrades)) {
       if (hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
 
          PrintFormat("📈 STRATEGY 2: Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
                      util.getSigString(triggerSignal), (totalOrders + 1), dynamicLots);
 
-         double currentSpread = MarketInfo(_Symbol, MODE_SPREAD);
-         if (currentSpread <8) {
-            orderMesg = util.placeOrder(magicNumber, dynamicLots,
-                                        (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-            BarsHeld = 0; // Reset holding time since we just modified the portfolio
-
-         } else {
-            // ... placeOrder ...
-            Print("🛡️ STRATEGY 2: Spread too high (", currentSpread, "). Pyramid addition blocked.");
-            return;
-         }
+         orderMesg = util.placeOrder(magicNumber, dynamicLots,
+                                     (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
+         BarsHeld = 0; // Reset holding time since we just modified the portfolio
 
       }
    } else {
-      Print("🛡️ STRATEGY 2: Max pyramid capacity reached. Riding the trend without adding more.");
+      //  Print("🛡️ STRATEGY 2: Max pyramid capacity reached. Riding the trend without adding more.");
    }
+}
+//+------------------------------------------------------------------+
+
+
+//+------------------------------------------------------------------+
+//| ENTRY & EXIT STRATEGY 3: Tactical Pyramiding with Auto-Pruning   |
+//+------------------------------------------------------------------+
+void OnEntryExit_3(
+   int& totalOrders,
+   const bool isNewCandle,
+   const double dynamicLots,
+   const bool hasConsensus,
+   const bool hasCollapse,
+   const bool isSqueeze,
+   const SAN_SIGNAL vanguardSignal,
+   const SAN_SIGNAL triggerSignal,
+   const SAN_SIGNAL closeSIG,
+   const int physicsAction,
+   const int cobbsDouglasAction,
+   const int marketAction,
+   ulong& orderMesg
+) {
+
+// --- EXIT LOGIC (The Automated Gardener / Pruner) ---
+// OPTIMIZATION: Only evaluate the weeds once per candle!
+   if ((totalOrders > 0) && isNewCandle) {
+      bool pruned = false;
+
+      // Iterate backwards through the order pool!
+      for (int i = OrdersTotal() - 1; i >= 0; i--) {
+         if (OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magicNumber) {
+
+            // Calculate how many bars this specific trade has been alive
+            int tradeBarsAlive = (int)((TimeCurrent() - OrderOpenTime()) / PeriodSeconds());
+
+            // THE PRUNING RULE: If trade is negative after 4 bars, cut it.
+            if (OrderProfit() < 0 && tradeBarsAlive >= 4) {
+               PrintFormat("✂️ STRATEGY 3 PRUNER: Ticket %d is negative after %d bars. Cutting the weed.", OrderTicket(), tradeBarsAlive);
+
+               if (OrderType() == OP_BUY) {
+                  OrderClose(OrderTicket(), OrderLots(), Bid, 30, clrNONE);
+               } else if (OrderType() == OP_SELL) {
+                  OrderClose(OrderTicket(), OrderLots(), Ask, 30, clrNONE);
+               }
+               pruned = true;
+            }
+         }
+      }
+
+      // If we pruned anything, update the state for the Entry Logic below
+      if (pruned) {
+         totalOrders = OrdersTotalByMagic(magicNumber);
+         BarsHeld = 0;
+      }
+   }
+
+// --- ENTRY LOGIC (Continuous Piling) ---
+   if ((totalOrders < maxPyramidTrades)) {
+
+      // Strategy 3 ignores Sages (hasConsensus), relies only on tactical signal
+      if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+
+         PrintFormat("📈 STRATEGY 3: Tactical Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
+                     util.getSigString(triggerSignal), (totalOrders + 1), dynamicLots);
+
+         orderMesg = util.placeOrder(magicNumber, dynamicLots,
+                                     (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
+         BarsHeld = 0;
+      }
+   }
+}
+//+------------------------------------------------------------------+
+
+
+//+------------------------------------------------------------------+
+//| ENTRY & EXIT STRATEGY1: The pure trade collector trading and no close on tactical only        |
+//+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| ENTRY STRATEGY 4: The Pure Trade Harvester (Raw Signal Testing)  |
+//+------------------------------------------------------------------+
+void OnEntryExit_4(
+   const int totalOrders,
+   const double dynamicLots,
+   const bool hasConsensus,
+   const bool hasCollapse,
+   const bool isSqueeze,
+   const SAN_SIGNAL vanguardSignal,
+   const SAN_SIGNAL triggerSignal,
+   const SAN_SIGNAL closeSIG,
+   const int physicsAction,
+   const int cobbsDouglasAction,
+   const int marketAction,
+   ulong& orderMesg
+) {
+
+// --- SAFETY GATE ---
+// Prevents the broker from banning you or margin-calling the account during manual testing
+   if (totalOrders >= maxPyramidTrades) {
+      // Optional: Print("Max test trades reached. Close some manually.");
+      return;
+   }
+
+// --- ENTRY LOGIC (Raw Signal Collection) ---
+   if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+
+      string phaseStr = isSqueeze ? "COMPRESSION SQUEEZE" : "MACRO EXPANSION";
+
+      // Updated print statement to reflect this is a raw tactical test
+      PrintFormat("🚜 HARVESTER [%s]: Raw Tactical Signal dictates: %s. (Lots: %.2f)",
+                  phaseStr, util.getSigString(triggerSignal), dynamicLots);
+
+      orderMesg = util.placeOrder(magicNumber, dynamicLots,
+                                  (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
+      BarsHeld = 0;
+   }
+
+// --- EXIT LOGIC ---
+// Intentionally disabled. Manual close only for visual backtesting & validation.
 }
 //+------------------------------------------------------------------+
