@@ -137,7 +137,7 @@ int OrdersTotalByMagic(ulong magic) {
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void RefreshPhysicsData(INDDATA &data, bool isNewCandle=false) {
+void RefreshPhysicsData(INDDATA &data) {
    op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
    closeProfit = op3.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
    stopLoss = op3.STOPLOSS;
@@ -155,12 +155,15 @@ void RefreshPhysicsData(INDDATA &data, bool isNewCandle=false) {
    data.microLots = microLots;
 // 2. Sync EA State
    data.BarsHeld   = BarsHeld;
-   data.newBar = isNewCandle;
+   data.newBar = util.isNewBarTime();
    data.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);
 
    data.spreadLimit = SPREAD_LIMIT;
    data.maxPyramidTrades = maxPyramidTrades;
    data.totalOrders = OrdersTotalByMagic(magicNumber);
+   data.newBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,0);
+   data.prevBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,1);
+   data.candleTraded = util.hasTradedCurrentBar(magicNumber);
 
 // 1. Fill the "Macro" perspective (last 240 bars)
    for(int i = 0; i < 240; i++) {
@@ -237,50 +240,77 @@ void RefreshPhysicsData(INDDATA &data, bool isNewCandle=false) {
 void OnCycleTask1() {
 
 // 1. Capture Bar State ONCE per tick
-   bool isNewCandle = util.isNewBar();
+//   bool isNewCandle = util.isNewBarTime();
 
    int totalOrders = OrdersTotalByMagic(magicNumber);
+
+   ulong orderMesg = NULL;
+   INDDATA indData;
+   RefreshPhysicsData(indData);
+   bool isNewCandle = indData.newBar;
+
+// --- THE POST-FLIGHT TRIGGER ---
+   if(isNewCandle) {
+      // Capture the state of the latch before the new bar resets it
+      if (activeStrategy == 4) {
+         util.postFlightLog(indData, activeStrategy, op5.NEWCANDLE);
+      } else if (activeStrategy == 1) {
+         util.postFlightLog(indData, activeStrategy, op4.NEWCANDLE);
+      }
+//      // B. RESET: Flip the global latches to TRUE for the brand new bar
+//      op4.NEWCANDLE = true;
+//      op5.NEWCANDLE = true;
+//
+//      // Update BarsHeld for the new cycle
+//      if(totalOrders > 0) BarsHeld++;
+//      else BarsHeld = 0;
+
+      Print("🔄 GLOBAL RESET: New bar started. Performance Logged.");
+   }
+
 
    if(totalOrders > 0 && isNewCandle)
       BarsHeld++;
    else if(totalOrders == 0)
       BarsHeld = 0;
 
-   ulong orderMesg = NULL;
-   INDDATA indData;
-   RefreshPhysicsData(indData,isNewCandle);
-
 // Steering
-   SIGBUFF signals = st1.imaSt3(indData);
+   SIGBUFF signals;
 
    if (activeStrategy == 1) {
       signals = st1.imaSt2(indData);
    } else {
-      // Both Strategy 2,3 and 4 (Harvester) use the tactical St3 brain
       signals = st1.imaSt3(indData);
    }
 
+
+
 //SIGBUFF signals = st1.imaSt3(indData);
-   SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
+//SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
 
 
    SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
    SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
 
-   double mktIntensity = marketIntensity.buff3[0];
-   double regimeMagnitude = marketIntensity.buff3[1];
-   string marketState = ((bool)marketIntensity.buff4[0])
-                        ?"DORMANT":(((bool)marketIntensity.buff4[1])
-                                    ?"AWAKE":(((bool)marketIntensity.buff4[2])
-                                          ?"STRETCH":(((bool)marketIntensity.buff4[3])
-                                                ?"CLIMAX":"NOSTATE")));
+//   double mktIntensity = marketIntensity.buff3[0];
+//   double regimeMagnitude = marketIntensity.buff3[1];
+//   string marketState = ((bool)marketIntensity.buff4[0])
+//                        ?"DORMANT":(((bool)marketIntensity.buff4[1])
+//                                    ?"AWAKE":(((bool)marketIntensity.buff4[2])
+//                                          ?"STRETCH":(((bool)marketIntensity.buff4[3])
+//                                                ?"CLIMAX":"NOSTATE")));
+//
+//   int marketAction = (((bool)marketIntensity.buff4[1]) || ((bool)marketIntensity.buff4[2]))
+//                      ? 1:(((bool)marketIntensity.buff4[0])
+//                           ?0:-1);
 
-   int marketAction = (((bool)marketIntensity.buff4[1]) || ((bool)marketIntensity.buff4[2]))
-                      ? 1:(((bool)marketIntensity.buff4[0])
-                           ?0:-1);
+   int marketAction =        ms.getMarketActionCombinedScore(indData);
 
-   PrintFormat("[MARKET] Intensity: %.2f | Regime: %.2f: | Market State: %s | Market Action: %d",
-               mktIntensity,regimeMagnitude,marketState,marketAction);
+//PrintFormat("[MARKET] Intensity: %.2f | Regime: %.2f: | Market State: %s | Market Action: %d | Market Action2: %d ",
+//            mktIntensity,regimeMagnitude,marketState,marketAction,marketAction2);
+
+   //PrintFormat("[MARKET] Market Action: %d ", marketAction);
+
 
 // Decisions
    double b = indData.bayesianHoldScore;
@@ -322,52 +352,68 @@ void OnCycleTask1() {
 //SAN_SIGNAL triggerSignal =  direction;
 
 // 1. Switch off consensus, use purely tactical direction
-   //SAN_SIGNAL triggerSignal = direction;
-// === PURE VOLATILITY FOR STRATEGY 4 (Harvester) ===
-   SAN_SIGNAL triggerSignal = ((activeStrategy == 4)&&(isNewCandle))
+//SAN_SIGNAL triggerSignal = direction;
+//// === PURE VOLATILITY FOR STRATEGY 4 (Harvester) ===
+//   SAN_SIGNAL triggerSignal = ((activeStrategy == 4)&&(isNewCandle))
+//                              ? (SAN_SIGNAL)signals.buff5[0]
+//                              : direction;
+//
+//// 2. THE SQUEEZE BLOCKER (Your Pseudo-Code Translated)
+//
+//// 2. THE AUTOMATED STATE MACHINE
+//   if (!isSqueeze) {
+//      // --- STATE A: MACRO EXPANSION ---
+//      // Sages are REQUIRED. If no consensus, kill the signal.
+//      if (!hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG) {
+//         triggerSignal = SAN_SIGNAL::NOSIG;
+//         Print("🛡️ EXPANSION: Tactical signal fired, but Sages vetoed. Waiting for consensus.");
+//      }
+//   } else {
+//      // --- STATE B: COMPRESSION SQUEEZE ---
+//      // Sages are BYPASSED. The Squeeze Blocker takes over.
+//      if (indData.baseSlope == 1 && triggerSignal == SAN_SIGNAL::BUY) {
+//         triggerSignal = SAN_SIGNAL::NOSIG;
+//         Print("🛑 BUY SQUEEZE: Trend is UP, buyers exhausted. BUY blocked, waiting for SELL pullback.");
+//      } else if (indData.baseSlope == -1 && triggerSignal == SAN_SIGNAL::SELL) {
+//         triggerSignal = SAN_SIGNAL::NOSIG;
+//         Print("🛑 SELL SQUEEZE: Trend is DOWN, sellers exhausted. SELL blocked, waiting for BUY pullback.");
+//      }
+//   }
+
+// ===============================================
+// THE AUTOMATED STATE MACHINE (WITH DEBUG LOGS)
+// ===============================================
+   SAN_SIGNAL triggerSignal = ((activeStrategy == 4))
                               ? (SAN_SIGNAL)signals.buff5[0]
                               : direction;
 
-// 2. THE SQUEEZE BLOCKER (Your Pseudo-Code Translated)
+   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
 
-// 2. THE AUTOMATED STATE MACHINE
-   if (!isSqueeze) {
-      // --- STATE A: MACRO EXPANSION ---
-      // Sages are REQUIRED. If no consensus, kill the signal.
-      if (!hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG) {
-         triggerSignal = SAN_SIGNAL::NOSIG;
-         Print("🛡️ EXPANSION: Tactical signal fired, but Sages vetoed. Waiting for consensus.");
+      if (!isSqueeze) {
+         // --- EXPANSION GATE CHECK ---
+         if (!hasConsensus) {
+            PrintFormat("🔍 DEBUG: [%s] Expansion Signal %s VETOED by Sages. (Phy:%d, Cobb:%d, Mkt:%d)",
+                        _Symbol, util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
+            triggerSignal = SAN_SIGNAL::NOSIG;
+         }
+      } else {
+         // --- SQUEEZE BLOCKER CHECK ---
+         if (indData.baseSlope == 1 && triggerSignal == SAN_SIGNAL::BUY) {
+            PrintFormat("🔍 DEBUG: [%s] Buy Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
+                        _Symbol, util.getSigString(triggerSignal));
+            triggerSignal = SAN_SIGNAL::NOSIG;
+         } else if (indData.baseSlope == -1 && triggerSignal == SAN_SIGNAL::SELL) {
+            PrintFormat("🔍 DEBUG: [%s] Sell Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
+                        _Symbol, util.getSigString(triggerSignal));
+            triggerSignal = SAN_SIGNAL::NOSIG;
+         }
       }
-   } else {
-      // --- STATE B: COMPRESSION SQUEEZE ---
-      // Sages are BYPASSED. The Squeeze Blocker takes over.
-      if (indData.baseSlope == 1 && triggerSignal == SAN_SIGNAL::BUY) {
-         triggerSignal = SAN_SIGNAL::NOSIG;
-         Print("🛑 BUY SQUEEZE: Trend is UP, buyers exhausted. BUY blocked, waiting for SELL pullback.");
-      } else if (indData.baseSlope == -1 && triggerSignal == SAN_SIGNAL::SELL) {
-         triggerSignal = SAN_SIGNAL::NOSIG;
-         Print("🛑 SELL SQUEEZE: Trend is DOWN, sellers exhausted. SELL blocked, waiting for BUY pullback.");
+
+      if (triggerSignal != SAN_SIGNAL::NOSIG) {
+         PrintFormat("🚀 DEBUG: [%s] %s Signal AUTHORIZED for Strategy %d.",
+                     _Symbol, util.getSigString(triggerSignal), activeStrategy);
       }
    }
-
-//if (isSqueeze) {
-//    // IF {baseslope is greater than threshold then trend is BUY}
-//    if (indData.baseSlope == 1) {
-//        // AND {it is a BUY SQUEEZE. Keep open SELL trades and block all BUY trades}
-//        if (triggerSignal == SAN_SIGNAL::BUY) {
-//            triggerSignal = SAN_SIGNAL::NOSIG;
-//            Print("🛑 BUY SQUEEZE: Trend is UP (> 0.1), buyers exhausted. BUY blocked, waiting for SELL pullback.");
-//        }
-//    }
-//    // IF {baseslope is less than -threshold then trend is SELL}
-//    else if (indData.baseSlope == -1) {
-//        // AND {it is a SELL SQUEEZE. Keep open BUY trades and block all SELL trades}
-//        if (triggerSignal == SAN_SIGNAL::SELL) {
-//            triggerSignal = SAN_SIGNAL::NOSIG;
-//            Print("🛑 SELL SQUEEZE: Trend is DOWN (< -0.1), sellers exhausted. SELL blocked, waiting for BUY pullback.");
-//        }
-//    }
-//}
 
    double convictionFactor = isSqueeze ? 0.75 : 1.0;
    double baseLots = microLots * minLotSize;
@@ -383,10 +429,29 @@ void OnCycleTask1() {
 // Failsafe: Ensure it never drops below the terminal minimum
    if (dynamicLots < minLotSize) dynamicLots = minLotSize;
 
+
+
+   if(isNewCandle) {
+      PrintFormat("🔍 DIAGNOSTIC [%s]: Trigger: %s | Squeeze: %s | Consensus: %s | TotalOrders: %d",
+                  _Symbol, util.getSigString(triggerSignal), (isSqueeze?"YES":"NO"), (hasConsensus?"YES":"NO"), totalOrders);
+
+      if(triggerSignal == SAN_SIGNAL::NOSIG)
+         Print("❌ SILENCE CAUSE: Tactical Brain (imaSt3) returned NOSIG.");
+      else if(!hasConsensus && !isSqueeze)
+         Print("❌ SILENCE CAUSE: Sages (Physics/Cobb) Vetoed the Expansion trade.");
+      else if(indData.currSpread > SPREAD_LIMIT)
+         PrintFormat("❌ SILENCE CAUSE: Spread (%d) is above Limit (%d).", indData.currSpread, SPREAD_LIMIT);
+   }
+
 // Call the modular execution strategy
+
+
+
 //################################################################
 // EXECUTION ROUTING
 //################################################################
+
+
 
 // Call the modular execution strategy
    if (activeStrategy == 1) {
