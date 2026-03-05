@@ -12,7 +12,7 @@
 #include <Sandeep/v2/SanStrategies-v2.mqh> // This now "owns" SanSignals
 
 input ulong magicNumber = 1002; // MagicNumber
-input int activeStrategy = 4; // 1: Trinity Sniper, 2: Trend Pyramiding
+input int activeStrategy = 5; // 1: Trinity Sniper, 2: Trend Pyramiding
 input int maxPyramidTrades = 15; // Stop adding after 15 open trades
 input int noOfCandles = 21;
 input const double TAKE_PROFIT = 1.4; // TakeProfit
@@ -259,7 +259,7 @@ void OnCycleTask1() {
 // --- THE POST-FLIGHT TRIGGER ---
    if(isNewCandle) {
       // Capture the state of the latch before the new bar resets it
-      if (activeStrategy == 4) {
+      if ((activeStrategy == 4)||(activeStrategy == 5)) {
          util.postFlightLog(indData, activeStrategy, op5.NEWCANDLE);
       } else if (activeStrategy == 1) {
          util.postFlightLog(indData, activeStrategy, op4.NEWCANDLE);
@@ -366,7 +366,7 @@ void OnCycleTask1() {
 // ===============================================
 // THE AUTOMATED STATE MACHINE (WITH DEBUG LOGS)
 // ===============================================
-   SAN_SIGNAL triggerSignal = ((activeStrategy == 4))
+   SAN_SIGNAL triggerSignal = ((activeStrategy == 4)||(activeStrategy == 5))
                               ? (SAN_SIGNAL)signals.buff5[0]
                               : direction;
 
@@ -457,6 +457,12 @@ void OnCycleTask1() {
       );
    } else if (activeStrategy == 4) {
       OnEntryExit_4(
+         totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+         vanguardSignal, triggerSignal, closeSIG,
+         physicsAction, cobbsDouglasAction, marketAction, orderMesg
+      );
+   } else if (activeStrategy == 5) {
+      OnEntryExit_5(
          totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction, orderMesg
@@ -716,14 +722,47 @@ void OnEntryExit_3(
 //+------------------------------------------------------------------+
 
 
-//+------------------------------------------------------------------+
-//| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (Clean Test)  |
-//+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
 //| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (1 per candle)|
 //+------------------------------------------------------------------+
 void OnEntryExit_4(
+   const int totalOrders,
+   const bool isNewCandle,
+   const double dynamicLots,
+   const bool hasConsensus,
+   const bool hasCollapse,
+   const bool isSqueeze,
+   const SAN_SIGNAL vanguardSignal,
+   const SAN_SIGNAL triggerSignal,
+   const SAN_SIGNAL closeSIG,
+   const int physicsAction,
+   const int cobbsDouglasAction,
+   const int marketAction,
+   ulong& orderMesg
+) {
+
+// === 1. PYRAMID LIMIT ===
+   if (totalOrders >= maxPyramidTrades) return;
+
+// === 2. ONE ENTRY PER CANDLE ONLY ===
+// We use the exact same gate that imaSt3 already computed
+   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+      PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+                  util.getSigString(triggerSignal), dynamicLots,
+                  TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
+
+      orderMesg = util.placeOrder(magicNumber, dynamicLots,
+                                  (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
+      BarsHeld = 0;
+   }
+}
+
+
+//+------------------------------------------------------------------+
+//| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (1 per candle)|
+//+------------------------------------------------------------------+
+void OnEntryExit_5(
    const int totalOrders,
    const bool isNewCandle,
    const double dynamicLots,
@@ -754,3 +793,4 @@ void OnEntryExit_4(
       BarsHeld = 0;
    }
 }
+//+------------------------------------------------------------------+
