@@ -642,70 +642,21 @@ void OnEntryExit_3(
 ) {
 
 // --- EXIT LOGIC (The Automated Gardener / Pruner) ---
-// OPTIMIZATION: Only evaluate the weeds once per candle!
+   // OPTIMIZATION: Only evaluate the weeds once per candle!
    if ((totalOrders > 0) && isNewCandle) {
-      bool pruned = false;
-
-
-// Iterate backwards through the order pool!
-      for (int i = OrdersTotal() - 1; i >= 0; i--) {
-         if (OrderSelect(i, SELECT_BY_POS)) {
-
-            // We found a trade! Let's get its ticket.
-            int currentTicket = OrderTicket();
-
-            // Calculate the exact bar age using our new utility
-            int tradeBarsAlive = util.barAge(currentTicket, magicNumber);
-
-            // Ensure it's a valid trade for our EA (-1 means it failed the magic check)
-            if (tradeBarsAlive >= 0) {
-
-               // THE PRUNING RULE: If trade is negative after 4 bars, cut it.
-               if (OrderProfit() < 0 && tradeBarsAlive >= 4) {
-                  PrintFormat("✂️ STRATEGY 3 PRUNER: Ticket %d is negative after %d bars. Cutting the weed.", currentTicket, tradeBarsAlive);
-
-                  if (OrderType() == OP_BUY) {
-                     OrderClose(currentTicket, OrderLots(), Bid, 30, clrNONE);
-                  } else if (OrderType() == OP_SELL) {
-                     OrderClose(currentTicket, OrderLots(), Ask, 30, clrNONE);
-                  }
-               }
-               pruned = true;
-            }
-         }
-      }
-
-
-//      // Iterate backwards through the order pool!
-//      for (int i = OrdersTotal() - 1; i >= 0; i--) {
-//         if (OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magicNumber) {
-//
-//            // Calculate how many bars this specific trade has been alive
-//            int tradeBarsAlive = (int)((TimeCurrent() - OrderOpenTime()) / PeriodSeconds());
-//
-//            // THE PRUNING RULE: If trade is negative after 4 bars, cut it.
-//            if (OrderProfit() < 0 && tradeBarsAlive >= 4) {
-//               PrintFormat("✂️ STRATEGY 3 PRUNER: Ticket %d is negative after %d bars. Cutting the weed.", OrderTicket(), tradeBarsAlive);
-//
-//               if (OrderType() == OP_BUY) {
-//                  OrderClose(OrderTicket(), OrderLots(), Bid, 30, clrNONE);
-//               } else if (OrderType() == OP_SELL) {
-//                  OrderClose(OrderTicket(), OrderLots(), Ask, 30, clrNONE);
-//               }
-//               pruned = true;
-//            }
-//         }
-//      }
-
-      // If we pruned anything, update the state for the Entry Logic below
-      if (pruned) {
+      
+      // Call the plugin! Cut negative trades older than 4 bars.
+      int prunedWeeds = util.pruneTrades(magicNumber, 4, 30);
+      
+      // If we pruned anything, update the totalOrders count for the Entry Logic below
+      if (prunedWeeds > 0) {
          totalOrders = OrdersTotalByMagic(magicNumber);
-         BarsHeld = 0;
+         // NOTE: Do NOT set BarsHeld = 0 here anymore! getPyramidAge() handles it.
       }
    }
 
 // --- ENTRY LOGIC (Continuous Piling) ---
-   if ((totalOrders < maxPyramidTrades)) {
+   if (totalOrders < maxPyramidTrades) {
 
       // Strategy 3 ignores Sages (hasConsensus), relies only on tactical signal
       if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
@@ -715,7 +666,8 @@ void OnEntryExit_3(
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                      (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-         BarsHeld = 0;
+                                     
+         // NOTE: Do NOT set BarsHeld = 0 here! If you do, the Sages forget the age of the trend.
       }
    }
 }
@@ -762,8 +714,11 @@ void OnEntryExit_4(
 //+------------------------------------------------------------------+
 //| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (1 per candle)|
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| ENTRY & EXIT STRATEGY 4/5: Pure Volatility Harvester             |
+//+------------------------------------------------------------------+
 void OnEntryExit_5(
-   const int totalOrders,
+   int& totalOrders,              // FIXED: Removed 'const' so we can update it!
    const bool isNewCandle,
    const double dynamicLots,
    const bool hasConsensus,
@@ -778,19 +733,38 @@ void OnEntryExit_5(
    ulong& orderMesg
 ) {
 
-// === 1. PYRAMID LIMIT ===
-   if (totalOrders >= maxPyramidTrades) return;
+// === 1. EXIT LOGIC (The Pruner goes FIRST!) ===
+   // We prune if we have ANY trades open, not just when full.
+   if ((totalOrders > 0) && isNewCandle) {
+      
+      // Cut negative trades older than half the pyramid size (e.g., 7 bars)
+      int pruneAge = (int)MathFloor(maxPyramidTrades / 2.0);
+      int prunedWeeds = util.pruneTrades(magicNumber, pruneAge, 30);
+      
+      // If we pruned anything, update the totalOrders count
+      if (prunedWeeds > 0) {
+         totalOrders = OrdersTotalByMagic(magicNumber);
+      }
+   }
 
-// === 2. ONE ENTRY PER CANDLE ONLY ===
-// We use the exact same gate that imaSt3 already computed
-   if (isNewCandle && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+// === 2. PYRAMID LIMIT (The Bouncer) ===
+   // NOW we can safely exit if the stack is full, because the Pruner already did its job.
+   if (totalOrders >= maxPyramidTrades) {
+       return; 
+   }
+
+// === 3. ENTRY LOGIC (The Harvester) ===
+   // We trust the EA's main loop and 'op5.NEWCANDLE' gate. No 'isNewCandle' check needed here.
+   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+      
       PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
                   util.getSigString(triggerSignal), dynamicLots,
                   TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
 
       orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                   (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-      BarsHeld = 0;
+                                  
+      // FIXED: Removed BarsHeld = 0; The Sages' memory is now safe!
    }
 }
 //+------------------------------------------------------------------+
