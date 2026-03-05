@@ -81,12 +81,17 @@ int OnInit() {
    pipValue = util.getPipValue(_Symbol);
 // --- RECOVERY LOGIC ---
    BarsHeld = 0;
+   BarsHeld = util.getPyramidAge(magicNumber);
+
    if(OrdersTotalByMagic(magicNumber) > 0) {
       for(int i = OrdersTotal()-1; i >= 0; i--) {
          if(OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magicNumber) {
-            // Calculate bars elapsed since the order was opened
-            BarsHeld = (int)((TimeCurrent() - OrderOpenTime()) / PeriodSeconds());
-            break;
+
+            // Calculate actual printed bars elapsed since the order was opened
+            // iBarShift handles weekends, holidays, and missing data automatically
+            BarsHeld = iBarShift(_Symbol, PERIOD_CURRENT, OrderOpenTime());
+
+            break; // Breaks after finding the first one (which is the oldest due to the loop order)
          }
       }
    }
@@ -243,6 +248,7 @@ void OnCycleTask1() {
 //   bool isNewCandle = util.isNewBarTime();
 
    int totalOrders = OrdersTotalByMagic(magicNumber);
+   BarsHeld = util.getPyramidAge(magicNumber);
 
    ulong orderMesg = NULL;
    INDDATA indData;
@@ -268,11 +274,10 @@ void OnCycleTask1() {
       Print("🔄 GLOBAL RESET: New bar started. Performance Logged.");
    }
 
-
-   if(totalOrders > 0 && isNewCandle)
-      BarsHeld++;
-   else if(totalOrders == 0)
-      BarsHeld = 0;
+//   if(totalOrders > 0 && isNewCandle)
+//      BarsHeld++;
+//   else if(totalOrders == 0)
+//      BarsHeld = 0;
 
 // Steering
    SIGBUFF signals;
@@ -309,7 +314,7 @@ void OnCycleTask1() {
 //PrintFormat("[MARKET] Intensity: %.2f | Regime: %.2f: | Market State: %s | Market Action: %d | Market Action2: %d ",
 //            mktIntensity,regimeMagnitude,marketState,marketAction,marketAction2);
 
-   //PrintFormat("[MARKET] Market Action: %d ", marketAction);
+//PrintFormat("[MARKET] Market Action: %d ", marketAction);
 
 
 // Decisions
@@ -649,26 +654,56 @@ void OnEntryExit_3(
    if ((totalOrders > 0) && isNewCandle) {
       bool pruned = false;
 
-      // Iterate backwards through the order pool!
+
+// Iterate backwards through the order pool!
       for (int i = OrdersTotal() - 1; i >= 0; i--) {
-         if (OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magicNumber) {
+         if (OrderSelect(i, SELECT_BY_POS)) {
 
-            // Calculate how many bars this specific trade has been alive
-            int tradeBarsAlive = (int)((TimeCurrent() - OrderOpenTime()) / PeriodSeconds());
+            // We found a trade! Let's get its ticket.
+            int currentTicket = OrderTicket();
 
-            // THE PRUNING RULE: If trade is negative after 4 bars, cut it.
-            if (OrderProfit() < 0 && tradeBarsAlive >= 4) {
-               PrintFormat("✂️ STRATEGY 3 PRUNER: Ticket %d is negative after %d bars. Cutting the weed.", OrderTicket(), tradeBarsAlive);
+            // Calculate the exact bar age using our new utility
+            int tradeBarsAlive = util.barAge(currentTicket, magicNumber);
 
-               if (OrderType() == OP_BUY) {
-                  OrderClose(OrderTicket(), OrderLots(), Bid, 30, clrNONE);
-               } else if (OrderType() == OP_SELL) {
-                  OrderClose(OrderTicket(), OrderLots(), Ask, 30, clrNONE);
+            // Ensure it's a valid trade for our EA (-1 means it failed the magic check)
+            if (tradeBarsAlive >= 0) {
+
+               // THE PRUNING RULE: If trade is negative after 4 bars, cut it.
+               if (OrderProfit() < 0 && tradeBarsAlive >= 4) {
+                  PrintFormat("✂️ STRATEGY 3 PRUNER: Ticket %d is negative after %d bars. Cutting the weed.", currentTicket, tradeBarsAlive);
+
+                  if (OrderType() == OP_BUY) {
+                     OrderClose(currentTicket, OrderLots(), Bid, 30, clrNONE);
+                  } else if (OrderType() == OP_SELL) {
+                     OrderClose(currentTicket, OrderLots(), Ask, 30, clrNONE);
+                  }
                }
                pruned = true;
             }
          }
       }
+
+
+//      // Iterate backwards through the order pool!
+//      for (int i = OrdersTotal() - 1; i >= 0; i--) {
+//         if (OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magicNumber) {
+//
+//            // Calculate how many bars this specific trade has been alive
+//            int tradeBarsAlive = (int)((TimeCurrent() - OrderOpenTime()) / PeriodSeconds());
+//
+//            // THE PRUNING RULE: If trade is negative after 4 bars, cut it.
+//            if (OrderProfit() < 0 && tradeBarsAlive >= 4) {
+//               PrintFormat("✂️ STRATEGY 3 PRUNER: Ticket %d is negative after %d bars. Cutting the weed.", OrderTicket(), tradeBarsAlive);
+//
+//               if (OrderType() == OP_BUY) {
+//                  OrderClose(OrderTicket(), OrderLots(), Bid, 30, clrNONE);
+//               } else if (OrderType() == OP_SELL) {
+//                  OrderClose(OrderTicket(), OrderLots(), Ask, 30, clrNONE);
+//               }
+//               pruned = true;
+//            }
+//         }
+//      }
 
       // If we pruned anything, update the state for the Entry Logic below
       if (pruned) {
