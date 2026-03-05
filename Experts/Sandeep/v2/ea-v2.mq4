@@ -264,9 +264,9 @@ void OnCycleTask1() {
       } else if (activeStrategy == 1) {
          util.postFlightLog(indData, activeStrategy, op4.NEWCANDLE);
       }
-//      // B. RESET: Flip the global latches to TRUE for the brand new bar
-//      op4.NEWCANDLE = true;
-//      op5.NEWCANDLE = true;
+      // B. RESET: Flip the global latches to TRUE for the brand new bar
+      op4.NEWCANDLE = true;
+      op5.NEWCANDLE = true;
 //
 //      // Update BarsHeld for the new cycle
 //      if(totalOrders > 0) BarsHeld++;
@@ -462,6 +462,14 @@ void OnCycleTask1() {
          physicsAction, cobbsDouglasAction, marketAction, orderMesg
       );
    }
+
+//else if (activeStrategy == 4) {
+//   OnEntryExit_4(
+//      totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+//      vanguardSignal, triggerSignal, closeSIG,
+//      physicsAction, cobbsDouglasAction, marketAction, orderMesg
+//   );
+//}
 
 
 // Data Telemetry
@@ -711,8 +719,9 @@ void OnEntryExit_3(
 //+------------------------------------------------------------------+
 //| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (Clean Test)  |
 //+------------------------------------------------------------------+
+
 //+------------------------------------------------------------------+
-//| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (Clean Test)  |
+//| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (1 per candle)|
 //+------------------------------------------------------------------+
 void OnEntryExit_4(
    const int totalOrders,
@@ -731,14 +740,11 @@ void OnEntryExit_4(
 ) {
 
 // === 1. PYRAMID LIMIT ===
-   if (totalOrders >= maxPyramidTrades) {
-      return;
-   }
+   if (totalOrders >= maxPyramidTrades) return;
 
-// === 2. ENTRY: Trust the State Machine ===
-// The Steering module in OnCycleTask1 already checked the Sages and Squeeze traps!
-// If the signal survived and is not NOSIG, it is 100% authorized to trade.
-   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+// === 2. ONE ENTRY PER CANDLE ONLY ===
+// We use the exact same gate that imaSt3 already computed
+   if (isNewCandle && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
       PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
                   util.getSigString(triggerSignal), dynamicLots,
                   TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
@@ -748,4 +754,41 @@ void OnEntryExit_4(
       BarsHeld = 0;
    }
 }
-//+------------------------------------------------------------------+
+
+
+//
+//void OnEntryExit_4(
+//   const int totalOrders,
+//   const bool isNewCandle,
+//   const double dynamicLots,
+//   const bool hasConsensus,
+//   const bool hasCollapse,
+//   const bool isSqueeze,
+//   const SAN_SIGNAL vanguardSignal,
+//   const SAN_SIGNAL triggerSignal,
+//   const SAN_SIGNAL closeSIG,
+//   const int physicsAction,
+//   const int cobbsDouglasAction,
+//   const int marketAction,
+//   ulong& orderMesg
+//) {
+//
+//// === 1. PYRAMID LIMIT ===
+//   if (totalOrders >= maxPyramidTrades) {
+//      return;
+//   }
+//
+//// === 2. ENTRY: Trust the State Machine ===
+//// The Steering module in OnCycleTask1 already checked the Sages and Squeeze traps!
+//// If the signal survived and is not NOSIG, it is 100% authorized to trade.
+//   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+//      PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+//                  util.getSigString(triggerSignal), dynamicLots,
+//                  TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
+//
+//      orderMesg = util.placeOrder(magicNumber, dynamicLots,
+//                                  (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
+//      BarsHeld = 0;
+//   }
+//}
+////+------------------------------------------------------------------+
