@@ -163,7 +163,7 @@ void RefreshPhysicsData(INDDATA &data) {
    data.newBar = util.isNewBarTime();
    data.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);
 
-   data.spreadLimit = SPREAD_LIMIT;
+
    data.maxPyramidTrades = maxPyramidTrades;
    data.totalOrders = OrdersTotalByMagic(magicNumber);
    data.newBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,0);
@@ -237,6 +237,7 @@ void RefreshPhysicsData(INDDATA &data) {
 
    double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
    data.fractalAlignment = fractal;
+   data.spreadLimit = ms.getDynamicSpreadLimit(data.atr[1],_Period);
 
 
 }
@@ -288,33 +289,10 @@ void OnCycleTask1() {
       signals = st1.imaSt3(indData);
    }
 
-
-
-//SIGBUFF signals = st1.imaSt3(indData);
-//SIGBUFF marketIntensity = st1.featureCloud_Strategy(indData);
-
-
    SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
    SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
 
-//   double mktIntensity = marketIntensity.buff3[0];
-//   double regimeMagnitude = marketIntensity.buff3[1];
-//   string marketState = ((bool)marketIntensity.buff4[0])
-//                        ?"DORMANT":(((bool)marketIntensity.buff4[1])
-//                                    ?"AWAKE":(((bool)marketIntensity.buff4[2])
-//                                          ?"STRETCH":(((bool)marketIntensity.buff4[3])
-//                                                ?"CLIMAX":"NOSTATE")));
-//
-//   int marketAction = (((bool)marketIntensity.buff4[1]) || ((bool)marketIntensity.buff4[2]))
-//                      ? 1:(((bool)marketIntensity.buff4[0])
-//                           ?0:-1);
-
    int marketAction =        ms.getMarketActionCombinedScore(indData);
-
-//PrintFormat("[MARKET] Intensity: %.2f | Regime: %.2f: | Market State: %s | Market Action: %d | Market Action2: %d ",
-//            mktIntensity,regimeMagnitude,marketState,marketAction,marketAction2);
-
-//PrintFormat("[MARKET] Market Action: %d ", marketAction);
 
 
 // Decisions
