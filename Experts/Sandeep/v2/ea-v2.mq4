@@ -642,12 +642,12 @@ void OnEntryExit_3(
 ) {
 
 // --- EXIT LOGIC (The Automated Gardener / Pruner) ---
-   // OPTIMIZATION: Only evaluate the weeds once per candle!
+// OPTIMIZATION: Only evaluate the weeds once per candle!
    if ((totalOrders > 0) && isNewCandle) {
-      
+
       // Call the plugin! Cut negative trades older than 4 bars.
       int prunedWeeds = util.pruneTrades(magicNumber, 4, 30);
-      
+
       // If we pruned anything, update the totalOrders count for the Entry Logic below
       if (prunedWeeds > 0) {
          totalOrders = OrdersTotalByMagic(magicNumber);
@@ -666,7 +666,7 @@ void OnEntryExit_3(
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                      (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-                                     
+
          // NOTE: Do NOT set BarsHeld = 0 here! If you do, the Sages forget the age of the trend.
       }
    }
@@ -733,38 +733,51 @@ void OnEntryExit_5(
    ulong& orderMesg
 ) {
 
+
+   if (isNewCandle) {
+      util.cleanUpOrphanedMemory();
+   }
+
+
 // === 1. EXIT LOGIC (The Pruner goes FIRST!) ===
-   // We prune if we have ANY trades open, not just when full.
-   if ((totalOrders > 0) && isNewCandle) {
-      
-      // Cut negative trades older than half the pyramid size (e.g., 7 bars)
-      int pruneAge = (int)MathFloor(maxPyramidTrades / 2.0);
-      int prunedWeeds = util.pruneTrades(magicNumber, pruneAge, 30);
-      
+// We prune if we have ANY trades open, not just when full.
+   if (totalOrders > 0) {
+      int weedsCut = 0;
+      int profitsHarvested = 0;
+      if (isNewCandle) {
+         int pruneAge = (int)MathFloor(maxPyramidTrades / 2.0);
+         weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
+// Sweep the memory bank to remove any trades closed by the weed pruner
+
+      }
+      // B. The Profit Harvester (Runs on EVERY tick)
+      profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, 100, 30);
+
       // If we pruned anything, update the totalOrders count
-      if (prunedWeeds > 0) {
+      if ((weedsCut > 0)||(profitsHarvested>0)) {
          totalOrders = OrdersTotalByMagic(magicNumber);
       }
    }
 
+
 // === 2. PYRAMID LIMIT (The Bouncer) ===
-   // NOW we can safely exit if the stack is full, because the Pruner already did its job.
+// NOW we can safely exit if the stack is full, because the Pruner already did its job.
    if (totalOrders >= maxPyramidTrades) {
-       return; 
+      return;
    }
 
 // === 3. ENTRY LOGIC (The Harvester) ===
-   // We trust the EA's main loop and 'op5.NEWCANDLE' gate. No 'isNewCandle' check needed here.
+// We trust the EA's main loop and 'op5.NEWCANDLE' gate. No 'isNewCandle' check needed here.
    if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-      
+
       PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
                   util.getSigString(triggerSignal), dynamicLots,
                   TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
 
       orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                   (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-                                  
-      // FIXED: Removed BarsHeld = 0; The Sages' memory is now safe!
+
+// FIXED: Removed BarsHeld = 0; The Sages' memory is now safe!
    }
 }
 //+------------------------------------------------------------------+
