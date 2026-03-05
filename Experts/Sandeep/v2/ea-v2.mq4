@@ -17,7 +17,7 @@ input int maxPyramidTrades = 15; // Stop adding after 15 open trades
 input int noOfCandles = 21;
 input const double TAKE_PROFIT = 1.4; // TakeProfit
 input const double STOP_LOSS = 0.3; //StopLoss
-input int SPREAD_LIMIT  = 30;
+//input int SPREAD_LIMIT  = 30;
 
 // Data File Inputs
 input bool recordData = false; // Record Data
@@ -422,8 +422,8 @@ void OnCycleTask1() {
          Print("❌ SILENCE CAUSE: Tactical Brain (imaSt3) returned NOSIG.");
       else if(!hasConsensus && !isSqueeze)
          Print("❌ SILENCE CAUSE: Sages (Physics/Cobb) Vetoed the Expansion trade.");
-      else if(indData.currSpread > SPREAD_LIMIT)
-         PrintFormat("❌ SILENCE CAUSE: Spread (%d) is above Limit (%d).", indData.currSpread, SPREAD_LIMIT);
+      else if(indData.currSpread > indData.spreadLimit)
+         PrintFormat("❌ SILENCE CAUSE: Spread (%d) is above Limit (%d).", indData.currSpread, indData.spreadLimit);
    }
 
 // Call the modular execution strategy
