@@ -166,6 +166,7 @@ void RefreshPhysicsData(INDDATA &data) {
 
    data.maxPyramidTrades = maxPyramidTrades;
    data.totalOrders = OrdersTotalByMagic(magicNumber);
+   data.currBarOrders = util.numOfOrdersCurrBar(magicNumber);
    data.newBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,0);
    data.prevBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,1);
    data.candleTraded = util.hasTradedCurrentBar(magicNumber);
@@ -250,43 +251,47 @@ void OnCycleTask1() {
 
    int totalOrders = OrdersTotalByMagic(magicNumber);
    BarsHeld = util.getPyramidAge(magicNumber);
+//   Print("OCOMMON Message: "+ocommon.mesg1);
 
    ulong orderMesg = NULL;
    INDDATA indData;
    RefreshPhysicsData(indData);
-   bool isNewCandle = indData.newBar;
+   bool isNewCandle = false;
+   bool candleTraded = indData.candleTraded;
+   int numOfTrades = indData.currBarOrders;
+
+
+   if(indData.newBar) {
+      ocommon.newCandleGate = true;
+   }
+
+   if(!(indData.newBar) && (numOfTrades > 0) && indData.candleTraded) {
+      ocommon.newCandleGate = false;
+   }
+
+
 
 // --- THE POST-FLIGHT TRIGGER ---
-   if(isNewCandle) {
+   if(indData.newBar) {
       // Capture the state of the latch before the new bar resets it
       if ((activeStrategy == 4)||(activeStrategy == 5)) {
-         util.postFlightLog(indData, activeStrategy, op5.NEWCANDLE);
+         util.postFlightLog(indData, activeStrategy, ocommon.newCandleGate);
       } else if (activeStrategy == 1) {
-         util.postFlightLog(indData, activeStrategy, op4.NEWCANDLE);
+         util.postFlightLog(indData, activeStrategy, ocommon.newCandleGate);
       }
-      // B. RESET: Flip the global latches to TRUE for the brand new bar
-      op4.NEWCANDLE = true;
-      op5.NEWCANDLE = true;
-//
-//      // Update BarsHeld for the new cycle
-//      if(totalOrders > 0) BarsHeld++;
-//      else BarsHeld = 0;
-
       Print("🔄 GLOBAL RESET: New bar started. Performance Logged.");
    }
 
-//   if(totalOrders > 0 && isNewCandle)
-//      BarsHeld++;
-//   else if(totalOrders == 0)
-//      BarsHeld = 0;
 
 // Steering
    SIGBUFF signals;
 
    if (activeStrategy == 1) {
       signals = st1.imaSt2(indData);
+      isNewCandle = ocommon.newCandleGate;
    } else {
       signals = st1.imaSt3(indData);
+      isNewCandle = ocommon.newCandleGate;
    }
 
    SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
@@ -463,7 +468,7 @@ void OnCycleTask1() {
       );
    } else if (activeStrategy == 5) {
       OnEntryExit_5(
-         totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+         totalOrders, isNewCandle,candleTraded, numOfTrades,dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction, orderMesg
       );
@@ -714,9 +719,15 @@ void OnEntryExit_4(
 //+------------------------------------------------------------------+
 //| ENTRY & EXIT STRATEGY 4/5: Pure Volatility Harvester             |
 //+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| ENTRY & EXIT STRATEGY 5: Pure Volatility Harvester + Smart Pruner|
+//+------------------------------------------------------------------+
 void OnEntryExit_5(
-   int& totalOrders,              // FIXED: Removed 'const' so we can update it!
+   int& totalOrders,
    const bool isNewCandle,
+   const bool candleTraded,
+   const int numOfTrades,
    const double dynamicLots,
    const bool hasConsensus,
    const bool hasCollapse,
@@ -730,51 +741,110 @@ void OnEntryExit_5(
    ulong& orderMesg
 ) {
 
-
-   if (isNewCandle) {
+   if(isNewCandle) {
       util.cleanUpOrphanedMemory();
    }
 
-
-// === 1. EXIT LOGIC (The Pruner goes FIRST!) ===
-// We prune if we have ANY trades open, not just when full.
-   if (totalOrders > 0) {
+// === 1. EXIT LOGIC (Pruners run first) ===
+   if(totalOrders > 0) {
       int weedsCut = 0;
       int profitsHarvested = 0;
-      if (isNewCandle) {
-         int pruneAge = (int)MathFloor(maxPyramidTrades / 2.0);
-         weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
-// Sweep the memory bank to remove any trades closed by the weed pruner
 
+      if(isNewCandle) {
+         int pruneAge = (int)MathFloor(maxPyramidTrades / 4.0);
+         // Fixed: Hardcoded 4 bars (MT4 standard for quick weed removal)
+         //weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
       }
-      // B. The Profit Harvester (Runs on EVERY tick)
-      profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, 100, 30);
 
-      // If we pruned anything, update the totalOrders count
-      if ((weedsCut > 0)||(profitsHarvested>0)) {
+      // Profit Harvester runs every tick (correct)
+      // Raised threshold to 300 points (~30 pips) + can be made ATR-based later
+      profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, 300, 30);
+
+      if(weedsCut > 0 || profitsHarvested > 0) {
          totalOrders = OrdersTotalByMagic(magicNumber);
       }
    }
 
+// === 2. PYRAMID LIMIT ===
+   if(totalOrders >= maxPyramidTrades) return;
 
-// === 2. PYRAMID LIMIT (The Bouncer) ===
-// NOW we can safely exit if the stack is full, because the Pruner already did its job.
-   if (totalOrders >= maxPyramidTrades) {
-      return;
-   }
-
-// === 3. ENTRY LOGIC (The Harvester) ===
-// We trust the EA's main loop and 'op5.NEWCANDLE' gate. No 'isNewCandle' check needed here.
-   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-
+// === 3. ENTRY LOGIC — FIXED: isNewCandle gate restored ===
+// This is the single highest-leverage fix — one trade per candle only
+   if(isNewCandle && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
       PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
                   util.getSigString(triggerSignal), dynamicLots,
                   TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
 
       orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                   (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-
-// FIXED: Removed BarsHeld = 0; The Sages' memory is now safe!
+      ocommon.newCandleGate=false;
    }
 }
-//+------------------------------------------------------------------+
+
+//---
+
+
+//void OnEntryExit_5(
+//   int& totalOrders,              // FIXED: Removed 'const' so we can update it!
+//   const bool isNewCandle,
+//   const double dynamicLots,
+//   const bool hasConsensus,
+//   const bool hasCollapse,
+//   const bool isSqueeze,
+//   const SAN_SIGNAL vanguardSignal,
+//   const SAN_SIGNAL triggerSignal,
+//   const SAN_SIGNAL closeSIG,
+//   const int physicsAction,
+//   const int cobbsDouglasAction,
+//   const int marketAction,
+//   ulong& orderMesg
+//) {
+//
+//
+//   if (isNewCandle) {
+//      util.cleanUpOrphanedMemory();
+//   }
+//
+//
+//// === 1. EXIT LOGIC (The Pruner goes FIRST!) ===
+//// We prune if we have ANY trades open, not just when full.
+//   if (totalOrders > 0) {
+//      int weedsCut = 0;
+//      int profitsHarvested = 0;
+//      if (isNewCandle) {
+//         int pruneAge = (int)MathFloor(maxPyramidTrades / 4.0);
+//         weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
+//// Sweep the memory bank to remove any trades closed by the weed pruner
+//
+//      }
+//      // B. The Profit Harvester (Runs on EVERY tick)
+//     // profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, 100, 30);
+//
+//      // If we pruned anything, update the totalOrders count
+//      if ((weedsCut > 0)||(profitsHarvested>0)) {
+//         totalOrders = OrdersTotalByMagic(magicNumber);
+//      }
+//   }
+//
+//
+//// === 2. PYRAMID LIMIT (The Bouncer) ===
+//// NOW we can safely exit if the stack is full, because the Pruner already did its job.
+//   if (totalOrders >= maxPyramidTrades) {
+//      return;
+//   }
+//
+//// === 3. ENTRY LOGIC (The Harvester) ===
+//// We trust the EA's main loop and 'op5.NEWCANDLE' gate. No 'isNewCandle' check needed here.
+//   if (isNewCandle && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+//
+//      PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+//                  util.getSigString(triggerSignal), dynamicLots,
+//                  TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
+//
+//      orderMesg = util.placeOrder(magicNumber, dynamicLots,
+//                                  (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
+//
+//// FIXED: Removed BarsHeld = 0; The Sages' memory is now safe!
+//   }
+//}
+////+------------------------------------------------------------------+
