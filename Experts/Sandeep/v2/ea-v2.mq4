@@ -260,15 +260,8 @@ void OnCycleTask1() {
    bool candleTraded = indData.candleTraded;
    int numOfTrades = indData.currBarOrders;
 
-
-// --- THE POST-FLIGHT TRIGGER ---
    if(indData.newBar) {
-      // Capture the state of the latch before the new bar resets it
-      if ((activeStrategy == 4)||(activeStrategy == 5)) {
-         util.postFlightLog(indData, activeStrategy, ocommon.newCandleGate);
-      } else if (activeStrategy == 1) {
-         util.postFlightLog(indData, activeStrategy, ocommon.newCandleGate);
-      }
+      util.postFlightLog(indData, activeStrategy, ocommon.newCandleGate);
       Print("🔄 GLOBAL RESET: New bar started. Performance Logged.");
    }
 
@@ -284,12 +277,11 @@ void OnCycleTask1() {
 // Steering
    SIGBUFF signals;
 
+   isNewCandle = ocommon.newCandleGate;
    if (activeStrategy == 1) {
       signals = st1.imaSt2(indData);
-      isNewCandle = ocommon.newCandleGate;
    } else {
       signals = st1.imaSt3(indData);
-      isNewCandle = ocommon.newCandleGate;
    }
 
    SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
@@ -750,7 +742,6 @@ void OnEntryExit_5(
 
       if(isNewCandle) {
          int pruneAge = MathMax(3,(int)MathFloor(maxPyramidTrades / 4.0));
-         // Fixed: Hardcoded 4 bars (MT4 standard for quick weed removal)
          weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
       }
 
@@ -779,3 +770,4 @@ void OnEntryExit_5(
    }
 }
 
+//+------------------------------------------------------------------+
