@@ -749,7 +749,7 @@ void OnEntryExit_5(
       int profitsHarvested = 0;
 
       if(isNewCandle) {
-         int pruneAge = (int)MathFloor(maxPyramidTrades / 4.0);
+         int pruneAge = MathMax(3,(int)MathFloor(maxPyramidTrades / 4.0));
          // Fixed: Hardcoded 4 bars (MT4 standard for quick weed removal)
          weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
       }
