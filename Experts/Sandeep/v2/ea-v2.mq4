@@ -148,9 +148,6 @@ void RefreshPhysicsData(INDDATA &data) {
    stopLoss = op3.STOPLOSS;
    currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
    maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
-
-
-//data.freeData(); // Vital: Clean the slate
    data.magicnumber = magicNumber;
    data.stopLoss = stopLoss;
    data.currProfit = currProfit;
@@ -326,44 +323,14 @@ void OnCycleTask1() {
       vanguardSignal = (SAN_SIGNAL)signals.buff5[1];
    }
 
-////SAN_SIGNAL triggerSignal = isSqueeze ? vanguardSignal : direction;
-//SAN_SIGNAL triggerSignal =  direction;
-
-// 1. Switch off consensus, use purely tactical direction
-//SAN_SIGNAL triggerSignal = direction;
-//// === PURE VOLATILITY FOR STRATEGY 4 (Harvester) ===
-//   SAN_SIGNAL triggerSignal = ((activeStrategy == 4)&&(isNewCandle))
-//                              ? (SAN_SIGNAL)signals.buff5[0]
-//                              : direction;
-//
-//// 2. THE SQUEEZE BLOCKER (Your Pseudo-Code Translated)
-//
-//// 2. THE AUTOMATED STATE MACHINE
-//   if (!isSqueeze) {
-//      // --- STATE A: MACRO EXPANSION ---
-//      // Sages are REQUIRED. If no consensus, kill the signal.
-//      if (!hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG) {
-//         triggerSignal = SAN_SIGNAL::NOSIG;
-//         Print("🛡️ EXPANSION: Tactical signal fired, but Sages vetoed. Waiting for consensus.");
-//      }
-//   } else {
-//      // --- STATE B: COMPRESSION SQUEEZE ---
-//      // Sages are BYPASSED. The Squeeze Blocker takes over.
-//      if (indData.baseSlope == 1 && triggerSignal == SAN_SIGNAL::BUY) {
-//         triggerSignal = SAN_SIGNAL::NOSIG;
-//         Print("🛑 BUY SQUEEZE: Trend is UP, buyers exhausted. BUY blocked, waiting for SELL pullback.");
-//      } else if (indData.baseSlope == -1 && triggerSignal == SAN_SIGNAL::SELL) {
-//         triggerSignal = SAN_SIGNAL::NOSIG;
-//         Print("🛑 SELL SQUEEZE: Trend is DOWN, sellers exhausted. SELL blocked, waiting for BUY pullback.");
-//      }
-//   }
-
 // ===============================================
 // THE AUTOMATED STATE MACHINE (WITH DEBUG LOGS)
 // ===============================================
-   SAN_SIGNAL triggerSignal = ((activeStrategy == 4)||(activeStrategy == 5))
-                              ? (SAN_SIGNAL)signals.buff5[0]
-                              : direction;
+   //SAN_SIGNAL triggerSignal = ((activeStrategy == 4)||(activeStrategy == 5))
+   //                           ? (SAN_SIGNAL)signals.buff5[0]
+   //                           : direction;
+
+   SAN_SIGNAL triggerSignal = direction;
 
    if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
 
@@ -463,15 +430,6 @@ void OnCycleTask1() {
          physicsAction, cobbsDouglasAction, marketAction, orderMesg
       );
    }
-
-//else if (activeStrategy == 4) {
-//   OnEntryExit_4(
-//      totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
-//      vanguardSignal, triggerSignal, closeSIG,
-//      physicsAction, cobbsDouglasAction, marketAction, orderMesg
-//   );
-//}
-
 
 // Data Telemetry
    indData.convictionFactor = convictionFactor;
@@ -739,6 +697,7 @@ void OnEntryExit_5(
    if(totalOrders > 0) {
       int weedsCut = 0;
       int profitsHarvested = 0;
+      int reverseTrades = 0;
 
       if(isNewCandle) {
          int pruneAge = MathMax(3,(int)MathFloor(maxPyramidTrades / 4.0));
@@ -747,9 +706,12 @@ void OnEntryExit_5(
 
       // Profit Harvester runs every tick (correct)
       // Raised threshold to 300 points (~30 pips) + can be made ATR-based later
-      profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, 300, 30);
+      //profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, 300, 30);
 
-      if(weedsCut > 0 || profitsHarvested > 0) {
+      reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
+
+
+      if(weedsCut > 0 || profitsHarvested > 0 || reverseTrades>0) {
          totalOrders = OrdersTotalByMagic(magicNumber);
       }
    }
