@@ -405,8 +405,6 @@ void OnCycleTask1() {
 // EXECUTION ROUTING
 //################################################################
 
-Print("Active Strategy: "+activeStrategy);
-
 // Call the modular execution strategy
    if (activeStrategy == 1) {
       OnEntryExit_1(
