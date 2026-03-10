@@ -237,7 +237,9 @@ void RefreshPhysicsData(INDDATA &data) {
 
    double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
    data.fractalAlignment = fractal;
-   data.spreadLimit = ms.getDynamicSpreadLimit(data.atr[1],_Period);
+//   data.spreadLimit = ms.getDynamicSpreadLimit(data.atr[1],_Period);
+   data.spreadLimit = ms.atrScale(data.atr[1],15,120);
+
 
 
 }
@@ -255,9 +257,11 @@ void OnCycleTask1() {
    ulong orderMesg = NULL;
    INDDATA indData;
    RefreshPhysicsData(indData);
+   int SHIFT = indData.shift;
    bool isNewCandle = false;
    bool candleTraded = indData.candleTraded;
    int numOfTrades = indData.currBarOrders;
+   double atrRaw = indData.atr[SHIFT];
 
    if(indData.newBar) {
       util.postFlightLog(indData, activeStrategy, ocommon.newCandleGate);
@@ -407,31 +411,31 @@ void OnCycleTask1() {
       OnEntryExit_1(
          totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
-         physicsAction, cobbsDouglasAction, marketAction, orderMesg
+         physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
       );
    } else if (activeStrategy == 2) {
       OnEntryExit_2(
          totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
-         physicsAction, cobbsDouglasAction, marketAction, orderMesg
+         physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
       );
    } else if (activeStrategy == 3) {
       OnEntryExit_3(
          totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
-         physicsAction, cobbsDouglasAction, marketAction, orderMesg
+         physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
       );
    } else if (activeStrategy == 4) {
       OnEntryExit_4(
          totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
-         physicsAction, cobbsDouglasAction, marketAction, orderMesg
+         physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
       );
    } else if (activeStrategy == 5) {
       OnEntryExit_5(
          totalOrders, isNewCandle,candleTraded, numOfTrades,dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
-         physicsAction, cobbsDouglasAction, marketAction, orderMesg
+         physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
       );
    }
 
@@ -461,6 +465,7 @@ void OnEntryExit_1(
    const int physicsAction,
    const int cobbsDouglasAction,
    const int marketAction,
+   const double atrRaw,
    ulong& orderMesg
 ) {
 
@@ -530,6 +535,7 @@ void OnEntryExit_2(
    const int physicsAction,
    const int cobbsDouglasAction,
    const int marketAction,
+   const double atrRaw,
    ulong& orderMesg
 ) {
 
@@ -595,6 +601,7 @@ void OnEntryExit_3(
    const int physicsAction,
    const int cobbsDouglasAction,
    const int marketAction,
+   const double atrRaw,
    ulong& orderMesg
 ) {
 
@@ -648,6 +655,7 @@ void OnEntryExit_4(
    const int physicsAction,
    const int cobbsDouglasAction,
    const int marketAction,
+   const double atrRaw,
    ulong& orderMesg
 ) {
 
@@ -690,6 +698,7 @@ void OnEntryExit_5(
    const int physicsAction,
    const int cobbsDouglasAction,
    const int marketAction,
+   const double atrRaw,
    ulong& orderMesg
 ) {
 
@@ -700,7 +709,7 @@ void OnEntryExit_5(
    }
 
 //// CLOSE block if trigger Singal is CLOSE
-//   if(triggerSignal != SAN_SIGNAL::CLOSE) {
+//   if(triggerSignal == SAN_SIGNAL::CLOSE) {
 //      util.closeOrders(magicNumber);
 //      totalOrders = OrdersTotalByMagic(magicNumber);
 //   }
@@ -710,18 +719,23 @@ void OnEntryExit_5(
       int weedsCut = 0;
       int profitsHarvested = 0;
       int reverseTrades = 0;
+      int profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
 
       if(isNewCandle) {
-         int pruneAge = MathMax(3,(int)MathFloor(maxPyramidTrades / 4.0));
+         //int pruneAge = MathMax(3,(int)MathFloor(maxPyramidTrades / 4.0));
+         //int spreadLimit      = (int)ms.atrScale(atrRaw, 15,  120);  // tight → loose
+         int pruneAge         = (int)ms.atrScale(atrRaw, 3, 5);    // patient → aggressive
+        // profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
+
          weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
+         reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
       }
 
       // Profit Harvester runs every tick (correct)
       // Raised threshold to 300 points (~30 pips) + can be made ATR-based later
-      
-      profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, 300, 30);
 
-      reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
+      profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
+
 
 
       if(weedsCut > 0 || profitsHarvested > 0 || reverseTrades>0) {
