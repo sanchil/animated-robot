@@ -116,6 +116,7 @@ void OnDeinit(const int reason) {
 
 //void OnTimer()
 void OnTick() {
+
    OnCycleTask1();
 }
 
@@ -404,7 +405,7 @@ void OnCycleTask1() {
 // EXECUTION ROUTING
 //################################################################
 
-
+Print("Active Strategy: "+activeStrategy);
 
 // Call the modular execution strategy
    if (activeStrategy == 1) {
@@ -683,6 +684,11 @@ void OnEntryExit_4(
 //+------------------------------------------------------------------+
 //| ENTRY & EXIT STRATEGY 5: Pure Volatility Harvester + Smart Pruner|
 //+------------------------------------------------------------------+
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 void OnEntryExit_5(
    int& totalOrders,
    const bool isNewCandle,
@@ -701,8 +707,6 @@ void OnEntryExit_5(
    const double atrRaw,
    ulong& orderMesg
 ) {
-
-
 
    if(isNewCandle) {
       util.cleanUpOrphanedMemory();
@@ -725,7 +729,7 @@ void OnEntryExit_5(
          //int pruneAge = MathMax(3,(int)MathFloor(maxPyramidTrades / 4.0));
          //int spreadLimit      = (int)ms.atrScale(atrRaw, 15,  120);  // tight → loose
          int pruneAge         = (int)ms.atrScale(atrRaw, 3, 5);    // patient → aggressive
-        // profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
+         // profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
 
          weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
          reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
@@ -736,7 +740,7 @@ void OnEntryExit_5(
 
       profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
 
-
+      //Print("[Prune] weeds: "+weedsCut+" Reverse: "+reverseTrades+" profits: "+profitsHarvested);
 
       if(weedsCut > 0 || profitsHarvested > 0 || reverseTrades>0) {
          totalOrders = OrdersTotalByMagic(magicNumber);
