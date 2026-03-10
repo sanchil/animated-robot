@@ -30,6 +30,7 @@ string dataFileName = "NEWDATA_" + TimeToString(TimeCurrent(), TIME_DATE) + ".js
 input SAN_SIGNAL recordSignal = SAN_SIGNAL::NOTRADE;
 // Flip signal. BUY becomes SELL and SELL becomes BUY
 input bool flipSig = false; // Flip Signal
+
 // Lot size = 0.01.
 // 1 Microlot = 1*0.01=0.01, 10 Microlots = 10*0.01 = 0.1, 100 Microlots = 1,
 
@@ -58,6 +59,7 @@ double ciHandle; // buff1 : Comprehensive Buy Sell composite signals based on ot
 double ciClose; // buff2: Quick close signal based on candle close below ima5
 double ciStrategy; // buff3: The Signal strategy used to generate buy sell signals
 int BarsHeld = 0;   // per trade
+bool printStatus = false;
 //double ciTradeSig; // buff4 : Trade NoTrade signal.
 //double ciMktType; // buff4 : Set Market type: Trending or Flat.
 
@@ -259,7 +261,7 @@ void OnCycleTask1() {
 
    if(indData.newBar) {
       util.postFlightLog(indData, activeStrategy, ocommon.newCandleGate);
-      Print("🔄 GLOBAL RESET: New bar started. Performance Logged.");
+      if(printStatus)Print("🔄 GLOBAL RESET: New bar started. Performance Logged.");
    }
 
 
@@ -300,11 +302,13 @@ void OnCycleTask1() {
    int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n, f, fra);
    int physicsAction = ms.getHyperbolicCombinedScore(b, n,f_Raw, fra);
 
-   PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %d",
-               b, n, f, fra, totalConf, cobbsDouglasAction);
+   if(printStatus) {
+      PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %d",
+                  b, n, f, fra, totalConf, cobbsDouglasAction);
 
-   PrintFormat("[HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | CombinedScore: %d",
-               b, n, f, fra, physicsAction);
+      PrintFormat("[HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | CombinedScore: %d",
+                  b, n, f, fra, physicsAction);
+   }
 
 // ===============================================
 // THE TRINITY CONSENSUS & PHASE TRIGGER
@@ -326,9 +330,9 @@ void OnCycleTask1() {
 // ===============================================
 // THE AUTOMATED STATE MACHINE (WITH DEBUG LOGS)
 // ===============================================
-   //SAN_SIGNAL triggerSignal = ((activeStrategy == 4)||(activeStrategy == 5))
-   //                           ? (SAN_SIGNAL)signals.buff5[0]
-   //                           : direction;
+//SAN_SIGNAL triggerSignal = ((activeStrategy == 4)||(activeStrategy == 5))
+//                           ? (SAN_SIGNAL)signals.buff5[0]
+//                           : direction;
 
    SAN_SIGNAL triggerSignal = direction;
 
@@ -337,26 +341,26 @@ void OnCycleTask1() {
       if (!isSqueeze) {
          // --- EXPANSION GATE CHECK ---
          if (!hasConsensus) {
-            PrintFormat("🔍 DEBUG: [%s] Expansion Signal %s VETOED by Sages. (Phy:%d, Cobb:%d, Mkt:%d)",
-                        _Symbol, util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
+            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Expansion Signal %s VETOED by Sages. (Phy:%d, Cobb:%d, Mkt:%d)",
+                                          _Symbol, util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
             triggerSignal = SAN_SIGNAL::NOSIG;
          }
       } else {
          // --- SQUEEZE BLOCKER CHECK ---
          if (indData.baseSlope == 1 && triggerSignal == SAN_SIGNAL::BUY) {
-            PrintFormat("🔍 DEBUG: [%s] Buy Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
-                        _Symbol, util.getSigString(triggerSignal));
+            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Buy Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
+                                          _Symbol, util.getSigString(triggerSignal));
             triggerSignal = SAN_SIGNAL::NOSIG;
          } else if (indData.baseSlope == -1 && triggerSignal == SAN_SIGNAL::SELL) {
-            PrintFormat("🔍 DEBUG: [%s] Sell Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
-                        _Symbol, util.getSigString(triggerSignal));
+            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Sell Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
+                                          _Symbol, util.getSigString(triggerSignal));
             triggerSignal = SAN_SIGNAL::NOSIG;
          }
       }
 
       if (triggerSignal != SAN_SIGNAL::NOSIG) {
-         PrintFormat("🚀 DEBUG: [%s] %s Signal AUTHORIZED for Strategy %d.",
-                     _Symbol, util.getSigString(triggerSignal), activeStrategy);
+         if(printStatus)PrintFormat("🚀 DEBUG: [%s] %s Signal AUTHORIZED for Strategy %d.",
+                                       _Symbol, util.getSigString(triggerSignal), activeStrategy);
       }
    }
 
@@ -377,15 +381,15 @@ void OnCycleTask1() {
 
 
    if(isNewCandle) {
-      PrintFormat("🔍 DIAGNOSTIC [%s]: Trigger: %s | Squeeze: %s | Consensus: %s | TotalOrders: %d",
-                  _Symbol, util.getSigString(triggerSignal), (isSqueeze?"YES":"NO"), (hasConsensus?"YES":"NO"), totalOrders);
+      if(printStatus)PrintFormat("🔍 DIAGNOSTIC [%s]: Trigger: %s | Squeeze: %s | Consensus: %s | TotalOrders: %d",
+                                    _Symbol, util.getSigString(triggerSignal), (isSqueeze?"YES":"NO"), (hasConsensus?"YES":"NO"), totalOrders);
 
       if(triggerSignal == SAN_SIGNAL::NOSIG)
-         Print("❌ SILENCE CAUSE: Tactical Brain (imaSt3) returned NOSIG.");
-      else if(!hasConsensus && !isSqueeze)
-         Print("❌ SILENCE CAUSE: Sages (Physics/Cobb) Vetoed the Expansion trade.");
-      else if(indData.currSpread > indData.spreadLimit)
-         PrintFormat("❌ SILENCE CAUSE: Spread (%d) is above Limit (%d).", indData.currSpread, indData.spreadLimit);
+         if(printStatus)Print("❌ SILENCE CAUSE: Tactical Brain (imaSt3) returned NOSIG.");
+         else if(!hasConsensus && !isSqueeze)
+            if(printStatus)Print("❌ SILENCE CAUSE: Sages (Physics/Cobb) Vetoed the Expansion trade.");
+            else if(indData.currSpread > indData.spreadLimit)
+               if(printStatus)PrintFormat("❌ SILENCE CAUSE: Spread (%d) is above Limit (%d).", indData.currSpread, indData.spreadLimit);
    }
 
 // Call the modular execution strategy
@@ -465,16 +469,16 @@ void OnEntryExit_1(
       if(hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
          string phaseStr = isSqueeze ? "COMPRESSION SQUEEZE" : "MACRO EXPANSION";
 
-         PrintFormat("⚡ SNIPER [%s]: Sages Approved. Trigger dictates: %s. (Lots: %.2f)",
-                     phaseStr, util.getSigString(triggerSignal), dynamicLots);
+         if(printStatus)PrintFormat("⚡ SNIPER [%s]: Sages Approved. Trigger dictates: %s. (Lots: %.2f)",
+                                       phaseStr, util.getSigString(triggerSignal), dynamicLots);
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                      (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
          BarsHeld = 0; // Note: BarsHeld is a global variable
 
       } else if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-         PrintFormat("🛡️ ENTRY BLOCKED: Trigger %s fired, but Sages vetoed (Phy:%d, Cobb:%d, Mkt:%d)",
-                     util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
+         if(printStatus)PrintFormat("🛡️ ENTRY BLOCKED: Trigger %s fired, but Sages vetoed (Phy:%d, Cobb:%d, Mkt:%d)",
+                                       util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
       }
    }
 
@@ -484,27 +488,27 @@ void OnEntryExit_1(
 
       // EXIT A: MACRO COLLAPSE
       if(hasCollapse) {
-         PrintFormat("🚨 GOVERNANCE: Macro Collapse Detected (Phy:%d, Cobb:%d, Mkt:%d). Forcing Exit.",
-                     physicsAction, cobbsDouglasAction, marketAction);
+         if(printStatus)PrintFormat("🚨 GOVERNANCE: Macro Collapse Detected (Phy:%d, Cobb:%d, Mkt:%d). Forcing Exit.",
+                                       physicsAction, cobbsDouglasAction, marketAction);
          orderMesg = util.closeOrders(magicNumber);
          BarsHeld = 0;
       }
       // EXIT B: TACTICAL TRAP
       else if (!isSqueeze && vanguardSignal != SAN_SIGNAL::NOSIG && util.oppSignal(tradePosition, vanguardSignal)) {
-         PrintFormat("🚨 GOVERNANCE: Tactical Trap! Vanguard violently flipped to %s. EJECTING.",
-                     util.getSigString(vanguardSignal));
+         if(printStatus)PrintFormat("🚨 GOVERNANCE: Tactical Trap! Vanguard violently flipped to %s. EJECTING.",
+                                       util.getSigString(vanguardSignal));
          orderMesg = util.closeOrders(magicNumber);
          BarsHeld = 0;
       }
       // EXIT C: STANDARD CLOSE
       else if(closeSIG == SAN_SIGNAL::CLOSE) {
-         Print("🛡️ GOVERNANCE: Standard Close Signal honored. Exiting.");
+         if(printStatus)Print("🛡️ GOVERNANCE: Standard Close Signal honored. Exiting.");
          orderMesg = util.closeOrders(magicNumber);
          BarsHeld = 0;
       }
 
       if(GetLastError() != ERR_NO_ERROR)
-         Print("Order result: ", orderMesg, " :: Last Error: ", util.getUninitReasonText(GetLastError()));
+         if(printStatus)Print("Order result: ", orderMesg, " :: Last Error: ", util.getUninitReasonText(GetLastError()));
    }
 }
 
@@ -535,7 +539,7 @@ void OnEntryExit_2(
    if (totalOrders > 0) {
       // Failsafe: Total Macro Collapse
       if (hasCollapse) {
-         PrintFormat("🚨 STRATEGY 2: Macro Collapse Detected. Liquidating %d positions.", totalOrders);
+         if(printStatus)PrintFormat("🚨 STRATEGY 2: Macro Collapse Detected. Liquidating %d positions.", totalOrders);
          orderMesg = util.closeOrders(magicNumber);
          BarsHeld = 0;
          totalOrders = 0; // <--- UPDATE STATE
@@ -545,8 +549,8 @@ void OnEntryExit_2(
       // The Flip Reversal: If Sages scream SELL, but we hold BUYs -> Close all BUYs.
       if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
          if (util.oppSignal(tradePosition, triggerSignal)) {
-            PrintFormat("🔄 STRATEGY 2: Market violently flipped from %s to %s! Liquidating portfolio.",
-                        util.getSigString(tradePosition), util.getSigString(triggerSignal));
+            if(printStatus)PrintFormat("🔄 STRATEGY 2: Market violently flipped from %s to %s! Liquidating portfolio.",
+                                          util.getSigString(tradePosition), util.getSigString(triggerSignal));
             orderMesg = util.closeOrders(magicNumber);
             BarsHeld = 0;
             totalOrders = 0;
@@ -560,8 +564,8 @@ void OnEntryExit_2(
    if ((totalOrders < maxPyramidTrades)) {
       if (hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
 
-         PrintFormat("📈 STRATEGY 2: Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
-                     util.getSigString(triggerSignal), (totalOrders + 1), dynamicLots);
+         if(printStatus)PrintFormat("📈 STRATEGY 2: Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
+                                       util.getSigString(triggerSignal), (totalOrders + 1), dynamicLots);
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                      (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
@@ -614,8 +618,8 @@ void OnEntryExit_3(
       // Strategy 3 ignores Sages (hasConsensus), relies only on tactical signal
       if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
 
-         PrintFormat("📈 STRATEGY 3: Tactical Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
-                     util.getSigString(triggerSignal), (totalOrders + 1), dynamicLots);
+         if(printStatus)PrintFormat("📈 STRATEGY 3: Tactical Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
+                                       util.getSigString(triggerSignal), (totalOrders + 1), dynamicLots);
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                      (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
@@ -653,9 +657,9 @@ void OnEntryExit_4(
 // === 2. ONE ENTRY PER CANDLE ONLY ===
 // We use the exact same gate that imaSt3 already computed
    if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-      PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
-                  util.getSigString(triggerSignal), dynamicLots,
-                  TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
+      if(printStatus)PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+                                    util.getSigString(triggerSignal), dynamicLots,
+                                    TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
 
       orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                   (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
@@ -689,9 +693,17 @@ void OnEntryExit_5(
    ulong& orderMesg
 ) {
 
+
+
    if(isNewCandle) {
       util.cleanUpOrphanedMemory();
    }
+
+//// CLOSE block if trigger Singal is CLOSE
+//   if(triggerSignal != SAN_SIGNAL::CLOSE) {
+//      util.closeOrders(magicNumber);
+//      totalOrders = OrdersTotalByMagic(magicNumber);
+//   }
 
 // === 1. EXIT LOGIC (Pruners run first) ===
    if(totalOrders > 0) {
@@ -706,7 +718,8 @@ void OnEntryExit_5(
 
       // Profit Harvester runs every tick (correct)
       // Raised threshold to 300 points (~30 pips) + can be made ATR-based later
-      //profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, 300, 30);
+      
+      profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, 300, 30);
 
       reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
 
@@ -716,15 +729,17 @@ void OnEntryExit_5(
       }
    }
 
+
 // === 2. PYRAMID LIMIT ===
    if(totalOrders >= maxPyramidTrades) return;
 
+
 // === 3. ENTRY LOGIC — FIXED: isNewCandle gate restored ===
 // This is the single highest-leverage fix — one trade per candle only
-   if(isNewCandle && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-      PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
-                  util.getSigString(triggerSignal), dynamicLots,
-                  TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
+   if(isNewCandle && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS && triggerSignal != SAN_SIGNAL::CLOSE ) {
+      if(printStatus)PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+                                    util.getSigString(triggerSignal), dynamicLots,
+                                    TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
 
       orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                   (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
