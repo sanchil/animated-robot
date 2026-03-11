@@ -77,6 +77,8 @@ class Stats {
    void              createSubmatrix(const double &matrix[], double &submatrix[], const int excludeRow, const int excludeCol, const int DIM, const int rowSize);
    double            det(const double &matrix[], const int DIM = 2);
    double            sigmoid(const double x);
+   double            safeLog(double x);
+   double            logit(double p);
    double            tanh(const double x);
    void              swap(double &a, double &b);
    double            det4(double &mat[][4]);
@@ -233,6 +235,9 @@ void Stats::sayMesg1() {
 //};
 
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 long Stats::getDataSize(const double &data[], int n = 0, int shift = 0) {
    long SIZE = EMPTY_VALUE;
    long arraySize = ArraySize(data);
@@ -251,6 +256,9 @@ long Stats::getDataSize(const double &data[], int n = 0, int shift = 0) {
    return SIZE;
 }
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 double Stats::mean(const double &data[], int n = 0, int shift = 0) {
    double sum = 0.0;
    long SIZE = getDataSize(data, n, shift);
@@ -264,6 +272,9 @@ double Stats::mean(const double &data[], int n = 0, int shift = 0) {
    return (count > 0) ? sum / count : 0.0;
 }
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 double Stats::stdDev(const double &data[], int type = 0, int n = 0, int shift = 0) {
    double summation = 0.0;
    double mn = mean(data, n, shift);
@@ -349,7 +360,7 @@ double  Stats::acf(const double &data[], int n = 0, int lag = 1) {
 double Stats::norm(const double &data[], int n = 0) {
    int SIZE = (n <= 0) ? ArraySize(data) : n;
    if(SIZE <= 0) return 0.0;
-   
+
    double sumSq = 0;
    for(int i = 0; i < SIZE; i++) {
       // Safety: Only square valid numbers to prevent INF results
@@ -357,7 +368,7 @@ double Stats::norm(const double &data[], int n = 0) {
          sumSq += (data[i] * data[i]);
       }
    }
-   
+
    return MathSqrt(sumSq);
 }
 
@@ -1320,6 +1331,21 @@ double Stats::det(const double &matrix[], const int DIM = 2) {
    }
    return EMPTY_VALUE;
 }
+
+
+// Helper: natural log safe guard
+double Stats::safeLog(double x) {
+   if(x <= 0.0) x = 1e-9;
+   if(x >= 1.0) x = 1.0 - 1e-9;
+   return MathLog(x);
+}
+
+// Helper: logit transform  logit(p) = log(p / 1-p)
+double Stats::logit(double p) {
+   return safeLog(p) - safeLog(1.0 - p);
+}
+
+
 
 // Custom tanh function in MQL4
 double Stats::tanh(const double x) {
