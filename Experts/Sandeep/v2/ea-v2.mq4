@@ -647,7 +647,7 @@ void OnEntryExit_3(
 //| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (1 per candle)|
 //+------------------------------------------------------------------+
 void OnEntryExit_4(
-   const int totalOrders,
+   int& totalOrders,
    const bool isNewCandle,
    const double dynamicLots,
    const bool hasConsensus,
@@ -662,6 +662,23 @@ void OnEntryExit_4(
    const double atrRaw,
    ulong& orderMesg
 ) {
+
+
+// CLOSE block if trigger Singal is CLOSE
+   if(triggerSignal == SAN_SIGNAL::CLOSE) {
+      util.closeOrders(magicNumber);
+      totalOrders = OrdersTotalByMagic(magicNumber);
+   }
+
+   if(totalOrders>0) {
+      int reverseTrades = 0;
+      if(isNewCandle) {
+         reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
+      }
+      if(reverseTrades>0) {
+         totalOrders = OrdersTotalByMagic(magicNumber);
+      }
+   }
 
 // === 1. PYRAMID LIMIT ===
    if (totalOrders >= maxPyramidTrades) return;
