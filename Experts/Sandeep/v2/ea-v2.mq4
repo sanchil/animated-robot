@@ -66,6 +66,10 @@ bool printStatus = false;
 bool TRADESWITCH = true;
 ORDERPARAMS op3;
 double pipValue;
+
+int vSIG[12][5];
+
+
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -277,6 +281,7 @@ void OnCycleTask1() {
    if(!(indData.newBar) && (numOfTrades > 0) && indData.candleTraded) {
       ocommon.newCandleGate = false;
    }
+
 
 // Steering
    SIGBUFF signals;
@@ -730,13 +735,13 @@ void OnEntryExit_5(
          // profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
 
          weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
-   //      reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
+         //      reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
       }
 
       // Profit Harvester runs every tick (correct)
       // Raised threshold to 300 points (~30 pips) + can be made ATR-based later
 
-    //  profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
+      //  profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
 
       //Print("[Prune] weeds: "+weedsCut+" Reverse: "+reverseTrades+" profits: "+profitsHarvested);
 
