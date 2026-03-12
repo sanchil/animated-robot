@@ -222,9 +222,14 @@ void RefreshPhysicsData(INDDATA &data) {
    data.neuronHoldScore = nScore;
 
 
-   double fastSlope = (data.ima14[SHIFT] - data.ima30[3]) / (3 * pipValue);
-   double medSlope  = (data.ima30[SHIFT] - data.ima60[10]) / (10 * pipValue);
-   double slowSlope = (data.ima60[SHIFT] - data.ima120[30]) / (30 * pipValue);
+   //double fastSlope = (data.ima14[SHIFT] - data.ima30[3]) / (3 * pipValue);
+   //double medSlope  = (data.ima30[SHIFT] - data.ima60[10]) / (10 * pipValue);
+   //double slowSlope = (data.ima60[SHIFT] - data.ima120[30]) / (30 * pipValue);
+
+   double fastSlope = (data.ima14[SHIFT] - data.ima14[5]) / (5 * pipValue);
+   double medSlope  = (data.ima30[SHIFT] - data.ima30[5]) / (5 * pipValue);
+   double slowSlope = (data.ima60[SHIFT] - data.ima60[5]) / (5 * pipValue);
+
 
 // NEW: Apply your strict Macro Trend threshold (e.g., 0.1 pips per bar)
    double macroThreshold = 0.1;
@@ -287,15 +292,7 @@ void OnCycleTask1() {
    SIGBUFF signals;
 
    isNewCandle = ocommon.newCandleGate;
-   if (activeStrategy == 1) {
-      signals = st1.imaSt2(indData);
-   } else {
-      signals = st1.imaSt3(indData);
-   }
-
-   SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
-   SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
-
+ 
    int marketAction =        ms.getMarketActionCombinedScore(indData);
 
 
@@ -330,6 +327,16 @@ void OnCycleTask1() {
 //   double absF = MathAbs(f);
 //bool isSqueeze = (absF <= 0.15);
    bool isSqueeze = (absF <= 0.4);
+
+  if (activeStrategy == 1) {
+      signals = st1.imaSt2(indData);
+   } else {
+      signals = st1.imaSt3(indData);
+   }
+
+   SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
+   SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
+
 
 
    SAN_SIGNAL vanguardSignal = (SAN_SIGNAL)signals.buff5[0];
