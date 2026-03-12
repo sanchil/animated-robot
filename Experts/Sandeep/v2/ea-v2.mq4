@@ -776,11 +776,11 @@ void OnEntryExit_5(
       util.cleanUpOrphanedMemory();
    }
 
-//// CLOSE block if trigger Singal is CLOSE
-//   if(triggerSignal == SAN_SIGNAL::CLOSE) {
-//      util.closeOrders(magicNumber);
-//      totalOrders = OrdersTotalByMagic(magicNumber);
-//   }
+// CLOSE block if trigger Singal is CLOSE
+   if(triggerSignal == SAN_SIGNAL::CLOSE) {
+      util.closeOrders(magicNumber);
+      totalOrders = OrdersTotalByMagic(magicNumber);
+   }
 
 // === 1. EXIT LOGIC (Pruners run first) ===
    if(totalOrders > 0) {
@@ -796,7 +796,7 @@ void OnEntryExit_5(
          // profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
 
          weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
-         //      reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
+         reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
       }
 
       // Profit Harvester runs every tick (correct)
