@@ -222,13 +222,13 @@ void RefreshPhysicsData(INDDATA &data) {
    data.neuronHoldScore = nScore;
 
 
-   //double fastSlope = (data.ima14[SHIFT] - data.ima30[3]) / (3 * pipValue);
-   //double medSlope  = (data.ima30[SHIFT] - data.ima60[10]) / (10 * pipValue);
-   //double slowSlope = (data.ima60[SHIFT] - data.ima120[30]) / (30 * pipValue);
+//double fastSlope = (data.ima14[SHIFT] - data.ima30[3]) / (3 * pipValue);
+//double medSlope  = (data.ima30[SHIFT] - data.ima60[10]) / (10 * pipValue);
+//double slowSlope = (data.ima60[SHIFT] - data.ima120[30]) / (30 * pipValue);
 
    double fastSlope = (data.ima14[SHIFT] - data.ima14[5]) / (5 * pipValue);
-   double medSlope  = (data.ima30[SHIFT] - data.ima30[5]) / (5 * pipValue);
-   double slowSlope = (data.ima60[SHIFT] - data.ima60[5]) / (5 * pipValue);
+   double medSlope  = (data.ima30[SHIFT] - data.ima30[10]) / (10 * pipValue);
+   double slowSlope = (data.ima60[SHIFT] - data.ima60[30]) / (30 * pipValue);
 
 
 // NEW: Apply your strict Macro Trend threshold (e.g., 0.1 pips per bar)
@@ -292,8 +292,8 @@ void OnCycleTask1() {
    SIGBUFF signals;
 
    isNewCandle = ocommon.newCandleGate;
- 
-   int marketAction =        ms.getMarketActionCombinedScore(indData);
+
+   int marketAction = ms.getMarketActionCombinedScore(indData);
 
 
 // Decisions
@@ -328,7 +328,7 @@ void OnCycleTask1() {
 //bool isSqueeze = (absF <= 0.15);
    bool isSqueeze = (absF <= 0.4);
 
-  if (activeStrategy == 1) {
+   if (activeStrategy == 1) {
       signals = st1.imaSt2(indData);
    } else {
       signals = st1.imaSt3(indData);
@@ -351,37 +351,76 @@ void OnCycleTask1() {
 //                           ? (SAN_SIGNAL)signals.buff5[0]
 //                           : direction;
 
-   SAN_SIGNAL triggerSignal = direction;
+//SAN_SIGNAL triggerSignal = direction;
 
-   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+// 2. Apply squeeze filter to entry direction only
+   SAN_SIGNAL triggerSignal = sig.squeezeFilter(
+                                 indData.fMSR_Norm,
+                                 (double)indData.baseSlope,
+                                 direction                   // raw direction, not closeSIG
+                              );
 
-      if (!isSqueeze) {
-         // --- EXPANSION GATE CHECK ---
-         if (!hasConsensus) {
-            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Expansion Signal %s VETOED by Sages. (Phy:%d, Cobb:%d, Mkt:%d)",
-                                          _Symbol, util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
-            triggerSignal = SAN_SIGNAL::NOSIG;
-         }
-      } else {
-         // --- SQUEEZE BLOCKER CHECK ---
-         if (indData.baseSlope == 1 && triggerSignal == SAN_SIGNAL::BUY) {
-            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Buy Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
-                                          _Symbol, util.getSigString(triggerSignal));
-            triggerSignal = SAN_SIGNAL::NOSIG;
-         } else if (indData.baseSlope == -1 && triggerSignal == SAN_SIGNAL::SELL) {
-            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Sell Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
-                                          _Symbol, util.getSigString(triggerSignal));
-            triggerSignal = SAN_SIGNAL::NOSIG;
-         }
-      }
 
-      if (triggerSignal != SAN_SIGNAL::NOSIG) {
-         if(printStatus)PrintFormat("🚀 DEBUG: [%s] %s Signal AUTHORIZED for Strategy %d.",
-                                       _Symbol, util.getSigString(triggerSignal), activeStrategy);
-      }
+
+// 3. Conviction sizing
+   bool squeezeReversal = ms.isSqueezeReversal(
+                             indData.fMSR_Norm,
+                             (double)indData.baseSlope,
+                             direction                   // pre-filter so reversal is detectable
+                          );
+
+
+   if(triggerSignal == SAN_SIGNAL::NOSIG && isSqueeze && squeezeReversal) {
+      triggerSignal = direction;  // allow the reversal at reduced conviction
    }
 
-   double convictionFactor = isSqueeze ? 0.75 : 1.0;
+//
+//// --- EXPANSION GATE CHECK ---
+//// Has Consensus check.
+//// commented for now
+//if (!isSqueeze && triggerSignal != SAN_SIGNAL::NOSIG) {
+//   if (!hasConsensus) {
+//      if(printStatus) PrintFormat(
+//         "🔍 EXPANSION VETO: %s vetoed by Sages. (Phy:%d, Cobb:%d, Mkt:%d)",
+//         util.getSigString(filteredSignal),
+//         physicsAction, cobbsDouglasAction, marketAction);
+//      triggerSignal = SAN_SIGNAL::NOSIG;
+//   }
+//}
+
+//
+//   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+//
+//      if (!isSqueeze) {
+//         // --- EXPANSION GATE CHECK ---
+//         if (!hasConsensus) {
+//            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Expansion Signal %s VETOED by Sages. (Phy:%d, Cobb:%d, Mkt:%d)",
+//                                          _Symbol, util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
+//            triggerSignal = SAN_SIGNAL::NOSIG;
+//         }
+//      } else {
+//         // --- SQUEEZE BLOCKER CHECK ---
+//         if (indData.baseSlope == 1 && triggerSignal == SAN_SIGNAL::BUY) {
+//            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Buy Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
+//                                          _Symbol, util.getSigString(triggerSignal));
+//            triggerSignal = SAN_SIGNAL::NOSIG;
+//         } else if (indData.baseSlope == -1 && triggerSignal == SAN_SIGNAL::SELL) {
+//            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Sell Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
+//                                          _Symbol, util.getSigString(triggerSignal));
+//            triggerSignal = SAN_SIGNAL::NOSIG;
+//         }
+//      }
+//
+//      if (triggerSignal != SAN_SIGNAL::NOSIG) {
+//         if(printStatus)PrintFormat("🚀 DEBUG: [%s] %s Signal AUTHORIZED for Strategy %d.",
+//                                       _Symbol, util.getSigString(triggerSignal), activeStrategy);
+//      }
+//   }
+
+//double convictionFactor = isSqueeze ? 0.75 : 1.0;
+   double convictionFactor = (!isSqueeze)? 1.0
+                             :((squeezeReversal)?0.55 :0.75);
+
    double baseLots = microLots * minLotSize;
    double dynamicLots = baseLots * convictionFactor;
 
@@ -394,8 +433,6 @@ void OnCycleTask1() {
 
 // Failsafe: Ensure it never drops below the terminal minimum
    if (dynamicLots < minLotSize) dynamicLots = minLotSize;
-
-
 
    if(isNewCandle) {
       if(printStatus)PrintFormat("🔍 DIAGNOSTIC [%s]: Trigger: %s | Squeeze: %s | Consensus: %s | TotalOrders: %d",

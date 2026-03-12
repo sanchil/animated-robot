@@ -23,7 +23,7 @@ class SanSignals {
    double            m_peakRatio;  // class member
    datetime          m_last_bar;
    SAN_SIGNAL        m_cached;
-   
+
  public:
                      SanSignals();
                     ~SanSignals();
@@ -366,6 +366,8 @@ class SanSignals {
       const int SIZE = 8,
       const int FILTER = 3
    );
+
+   SAN_SIGNAL        squeezeFilter(const double fMSR_Norm, const double baseSlope, SAN_SIGNAL inpsig, const double SQUEEZE_BOUNDARY=0.4);
 
 };
 
@@ -3754,6 +3756,98 @@ D20TYPE SanSignals::hilbertDftSIG(
    }
    d20.val[0] = hibertdftSIG;
    return d20;
+}
+
+//+------------------------------------------------------------------+
+//| squeezeFilter                                                    |
+//| Returns filtered signal based on momentum squeeze state.        |
+//|                                                                  |
+//| fMSR_Norm  : normalised slope acceleration ratio [-1,+1]        |
+//| baseSlope  : macro trend direction (+1=up, -1=down, 0=flat)     |
+//| inpsig     : raw tactical signal from strategy                  |
+//| SQUEEZE_BOUNDARY : threshold below which momentum is compressed |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::squeezeFilter(
+   const double    fMSR_Norm,
+   const double    baseSlope,
+   const SAN_SIGNAL inpsig,
+   const double    SQUEEZE_BOUNDARY = 0.4
+) {
+   bool printStatus = false;
+   double absF    = MathAbs(fMSR_Norm);
+   bool isSqueeze = (absF <= SQUEEZE_BOUNDARY);
+
+// --- EXPANSION: momentum is healthy, pass signal through unchanged ---
+   if (!isSqueeze) {
+      if(printStatus) PrintFormat(
+            "🚀 EXPANSION: Signal %s passed through. (fMSR: %.2f)",
+            util.getSigString(inpsig), fMSR_Norm);
+      return inpsig;
+   }
+
+// --- SQUEEZE: momentum is compressed, apply directional gate ---
+
+// Always pass through non-directional signals (CLOSE, SIDEWAYS, NOSIG)
+// A CLOSE signal must never be suppressed by a squeeze filter
+   bool isDirectional = (inpsig == SAN_SIGNAL::BUY || inpsig == SAN_SIGNAL::SELL);
+   if (!isDirectional) {
+      return inpsig;
+   }
+
+//// Squeeze blocks: trend-aligned entries (exhaustion trap)
+//   bool squeezeBlocksBuy  = (isSqueeze && baseSlope == 1);
+//   bool squeezeBlocksSell = (isSqueeze && baseSlope == -1);
+//
+//// Squeeze allows: counter-trend entries (mean reversion play)
+//   bool squeezeReversalBuy  = (squeezeBlocksSell && inpsig == SAN_SIGNAL::BUY);
+//   bool squeezeReversalSell = (squeezeBlocksBuy  && inpsig == SAN_SIGNAL::SELL);
+//   bool squeezeReversal     = (squeezeReversalBuy || squeezeReversalSell);
+//
+
+   bool squeezeReversal = ms.isSqueezeReversal(fMSR_Norm,baseSlope,inpsig,SQUEEZE_BOUNDARY);
+
+   if((squeezeReversal)||(baseSlope==0)) {
+      return inpsig;
+   } else {
+      return SAN_SIGNAL::NOSIG;
+   }
+
+//   if (squeezeBlocksBuy && inpsig == SAN_SIGNAL::BUY) {
+//      // Uptrend exhausting — block trend-chasing buy
+//      if(printStatus) PrintFormat(
+//            "⚠️ SQUEEZE BLOCK: Uptrend exhausting. BUY blocked. "
+//            "(fMSR: %.2f, baseSlope: %.0f)",
+//            fMSR_Norm, baseSlope);
+//      return SAN_SIGNAL::NOSIG;
+//
+//   } else if (squeezeBlocksSell && inpsig == SAN_SIGNAL::SELL) {
+//      // Downtrend exhausting — block trend-chasing sell
+//      if(printStatus) PrintFormat(
+//            "⚠️ SQUEEZE BLOCK: Downtrend exhausting. SELL blocked. "
+//            "(fMSR: %.2f, baseSlope: %.0f)",
+//            fMSR_Norm, baseSlope);
+//      return SAN_SIGNAL::NOSIG;
+//
+//   } else if (squeezeReversal) {
+//      // Counter-trend entry during exhaustion — mean reversion play
+//      if(printStatus) PrintFormat(
+//            "🔄 SQUEEZE REVERSAL: %s counter-trend entry allowed. "
+//            "(fMSR: %.2f, baseSlope: %.0f)",
+//            util.getSigString(inpsig), fMSR_Norm, baseSlope);
+//      return inpsig;
+//
+//   } else if (baseSlope == 0) {
+//      // Flat macro during squeeze — no trend to exhaust or reverse
+//      // Pass signal through but caller should apply reduced conviction
+//      if(printStatus) PrintFormat(
+//            "⚡ SQUEEZE FLAT: No macro direction. Signal %s passed through. "
+//            "(fMSR: %.2f)",
+//            util.getSigString(inpsig), fMSR_Norm);
+//      return inpsig;
+//   }
+
+// Fallback — squeeze active but no specific rule matched
+   return SAN_SIGNAL::NOSIG;
 }
 
 SanSignals sig;
