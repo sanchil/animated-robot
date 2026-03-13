@@ -255,6 +255,131 @@ void RefreshPhysicsData(INDDATA &data) {
 }
 
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void RefreshPhysicsData_CB(INDDATA_CB &data) {
+   op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
+   closeProfit = op3.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
+   stopLoss = op3.STOPLOSS;
+   currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
+   maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
+   data.magicnumber = magicNumber;
+   data.stopLoss = stopLoss;
+   data.currProfit = currProfit;
+   data.closeProfit = closeProfit;
+   data.maxProfit = maxProfit;
+   data.shift = SHIFT;
+   data.microLots = microLots;
+// 2. Sync EA State
+   data.BarsHeld   = BarsHeld;
+   data.newBar = util.isNewBarTime();
+   data.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);
+
+
+   data.maxPyramidTrades = maxPyramidTrades;
+   data.totalOrders = OrdersTotalByMagic(magicNumber);
+   data.currBarOrders = util.numOfOrdersCurrBar(magicNumber);
+   data.newBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,0);
+   data.prevBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,1);
+   data.candleTraded = util.hasTradedCurrentBar(magicNumber);
+
+// 1. Fill the "Macro" perspective (last 240 bars)
+   for(int i = 0; i < 240; i++) {
+
+
+      data.open.push(iOpen(_Symbol, PERIOD_CURRENT, i));
+      data.close.push(iClose(_Symbol, PERIOD_CURRENT, i));
+      data.tick_volume.push((long)iVolume(_Symbol, PERIOD_CURRENT, i));
+      data.ima120.push(iMA(_Symbol, PERIOD_CURRENT, 120, 0, MODE_SMMA, PRICE_CLOSE, i));
+      data.ima240.push(iMA(_Symbol, PERIOD_CURRENT, 240, 0, MODE_SMMA, PRICE_CLOSE, i));
+      data.ima500.push(iMA(_Symbol, PERIOD_CURRENT, 500, 0, MODE_SMMA, PRICE_CLOSE, i));
+
+      // Heavy computation only for the "active" zone (last 31 bars)
+      if(i < 120) {
+         data.high.push(iHigh(_Symbol,PERIOD_CURRENT,i));
+         data.low.push(iLow(_Symbol,PERIOD_CURRENT,i));
+         data.time.push(iTime(_Symbol,PERIOD_CURRENT,i));
+         data.std.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_CLOSE, i));
+         data.stdOpen.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_OPEN, i));
+         data.obv.push(iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, i));
+         data.rsi.push(iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, i));
+         data.mfi.push(iMFI(_Symbol, PERIOD_CURRENT,noOfCandles,i));
+         data.ima5.push(iMA(_Symbol, PERIOD_CURRENT, 5, 0, MODE_SMMA, PRICE_CLOSE, i));
+         data.ima14.push(iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, i));
+         data.ima30.push(iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, i));
+         data.ima60.push(iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, i));
+         data.atr.push(iATR(_Symbol, PERIOD_CURRENT, noOfCandles, i));
+         data.adx.push(iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,MODE_MAIN,i));
+         data.adxPlus.push(iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,1,i));
+         data.adxMinus.push(iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,2,i));
+      }
+   }
+
+
+// 2. Compute the Physics Scores
+// We compute these once and store them for both the Sniper and the Strategy
+//double bScore = ms.bayesianHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
+//double nScore = ms.neuronHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
+
+   double ima14Arr[];
+   double ima30Arr[];
+   double ima60Arr[];
+   double openArr[];
+   double closeArr[];
+   double tickVolArr[];
+   
+
+   data.ima14.exportToArray(ima14Arr);
+   data.ima30.exportToArray(ima30Arr);
+   data.ima60.exportToArray(ima60Arr);
+   data.open.exportToArray(openArr);
+   data.close.exportToArray(closeArr);
+   data.tick_volume.exportToArray(tickVolArr);
+
+
+   double bScore = ms.bayesianHoldScore(ima30Arr, closeArr, openArr, tickVolArr, BarsHeld, data.atr.get(0));
+   double nScore = ms.neuronHoldScore(ima30Arr, closeArr, openArr, tickVolArr, BarsHeld, data.atr.get(0));
+
+
+// Update the snapshot so the Strategy (st1) can see the results
+   data.bayesianHoldScore = bScore;
+   data.neuronHoldScore = nScore;
+
+
+//double fastSlope = (data.ima14[SHIFT] - data.ima30[3]) / (3 * pipValue);
+//double medSlope  = (data.ima30[SHIFT] - data.ima60[10]) / (10 * pipValue);
+//double slowSlope = (data.ima60[SHIFT] - data.ima120[30]) / (30 * pipValue);
+
+
+   double fastSlope = (ima14Arr[SHIFT] - ima14Arr[5]) / (5 * pipValue);
+   double medSlope  = (ima30Arr[SHIFT] - ima30Arr[10]) / (10 * pipValue);
+   double slowSlope = (ima60Arr[SHIFT] - ima60Arr[30]) / (30 * pipValue);
+
+
+// NEW: Apply your strict Macro Trend threshold (e.g., 0.1 pips per bar)
+   double macroThreshold = 0.1;
+   data.baseSlope = (slowSlope > macroThreshold) ? 1 : ((slowSlope < -macroThreshold) ? -1 : 0);
+
+//// NEW: Macro trend direction from slow/base slope
+//   data.baseSlope = (slowSlope > 0.01) ? 1 : ((slowSlope < -0.01) ? -1 : 0);
+
+// Pass the raw, signed measurement.
+// The Sages and Neuron will apply their Bimodal math to this!
+   double fMSR_Raw = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
+   data.fMSR_Raw = fMSR_Raw;
+
+   data.fMSR_Norm = fMSR_Raw / (1.0 + MathAbs(fMSR_Raw));
+
+   double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
+   data.fractalAlignment = fractal;
+//   data.spreadLimit = ms.getDynamicSpreadLimit(data.atr[1],_Period);
+   data.spreadLimit = ms.atrScale(data.atr.get(SHIFT),15,120);
+
+
+
+}
+
 void OnCycleTask1() {
 
 // 1. Capture Bar State ONCE per tick
@@ -344,14 +469,21 @@ void OnCycleTask1() {
       vanguardSignal = (SAN_SIGNAL)signals.buff5[1];
    }
 
+
+// #####################################################################################################
+
 // ===============================================
 // THE AUTOMATED STATE MACHINE (WITH DEBUG LOGS)
 // ===============================================
 //SAN_SIGNAL triggerSignal = ((activeStrategy == 4)||(activeStrategy == 5))
 //                           ? (SAN_SIGNAL)signals.buff5[0]
 //                           : direction;
-
 //SAN_SIGNAL triggerSignal = direction;
+
+
+// ####################################################################################################
+// #################### SQUEEZE BLOCK #################################################################
+// ####################################################################################################
 
 // 2. Apply squeeze filter to entry direction only
    SAN_SIGNAL triggerSignal = sig.squeezeFilter(
@@ -374,48 +506,7 @@ void OnCycleTask1() {
       triggerSignal = direction;  // allow the reversal at reduced conviction
    }
 
-//
-//// --- EXPANSION GATE CHECK ---
-//// Has Consensus check.
-//// commented for now
-//if (!isSqueeze && triggerSignal != SAN_SIGNAL::NOSIG) {
-//   if (!hasConsensus) {
-//      if(printStatus) PrintFormat(
-//         "🔍 EXPANSION VETO: %s vetoed by Sages. (Phy:%d, Cobb:%d, Mkt:%d)",
-//         util.getSigString(filteredSignal),
-//         physicsAction, cobbsDouglasAction, marketAction);
-//      triggerSignal = SAN_SIGNAL::NOSIG;
-//   }
-//}
-
-//
-//   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-//
-//      if (!isSqueeze) {
-//         // --- EXPANSION GATE CHECK ---
-//         if (!hasConsensus) {
-//            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Expansion Signal %s VETOED by Sages. (Phy:%d, Cobb:%d, Mkt:%d)",
-//                                          _Symbol, util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
-//            triggerSignal = SAN_SIGNAL::NOSIG;
-//         }
-//      } else {
-//         // --- SQUEEZE BLOCKER CHECK ---
-//         if (indData.baseSlope == 1 && triggerSignal == SAN_SIGNAL::BUY) {
-//            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Buy Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
-//                                          _Symbol, util.getSigString(triggerSignal));
-//            triggerSignal = SAN_SIGNAL::NOSIG;
-//         } else if (indData.baseSlope == -1 && triggerSignal == SAN_SIGNAL::SELL) {
-//            if(printStatus)PrintFormat("🔍 DEBUG: [%s] Sell Squeeze Detected. Blocked %s to prevent Trend Exhaustion trap.",
-//                                          _Symbol, util.getSigString(triggerSignal));
-//            triggerSignal = SAN_SIGNAL::NOSIG;
-//         }
-//      }
-//
-//      if (triggerSignal != SAN_SIGNAL::NOSIG) {
-//         if(printStatus)PrintFormat("🚀 DEBUG: [%s] %s Signal AUTHORIZED for Strategy %d.",
-//                                       _Symbol, util.getSigString(triggerSignal), activeStrategy);
-//      }
-//   }
+// #################### SQUEEZE BLOCK #################################################################
 
 //double convictionFactor = isSqueeze ? 0.75 : 1.0;
    double convictionFactor = (!isSqueeze)? 1.0
@@ -776,11 +867,14 @@ void OnEntryExit_5(
       util.cleanUpOrphanedMemory();
    }
 
+// ======================= 1. EXIT LOGIC (CLOSE) ===
 // CLOSE block if trigger Singal is CLOSE
    if(triggerSignal == SAN_SIGNAL::CLOSE) {
       util.closeOrders(magicNumber);
       totalOrders = OrdersTotalByMagic(magicNumber);
    }
+// ==========================================================
+
 
 // === 1. EXIT LOGIC (Pruners run first) ===
    if(totalOrders > 0) {
@@ -794,8 +888,7 @@ void OnEntryExit_5(
          //int spreadLimit      = (int)ms.atrScale(atrRaw, 15,  120);  // tight → loose
          int pruneAge         = (int)ms.atrScale(atrRaw, 3, 5);    // patient → aggressive
          // profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
-
-         weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
+//         weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
          reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
       }
 
