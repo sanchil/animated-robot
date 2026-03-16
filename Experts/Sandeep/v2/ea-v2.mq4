@@ -871,13 +871,13 @@ void OnEntryExit_5(
       util.cleanUpOrphanedMemory();
    }
 
-//// ======================= 1. EXIT LOGIC (CLOSE) ===
-//// CLOSE block if trigger Singal is CLOSE
-//   if(triggerSignal == SAN_SIGNAL::CLOSE) {
-//      util.closeOrders(magicNumber);
-//      totalOrders = OrdersTotalByMagic(magicNumber);
-//   }
-//// ==========================================================
+// ======================= 1. EXIT LOGIC (CLOSE) ===
+// CLOSE block if trigger Singal is CLOSE
+   if(triggerSignal == SAN_SIGNAL::CLOSE) {
+      util.closeAllOrdersOnReverse(magicNumber,vanguardSignal);
+      totalOrders = OrdersTotalByMagic(magicNumber);
+   }
+// ==========================================================
 
 
 // === 1. EXIT LOGIC (Pruners run first) ===
@@ -899,7 +899,7 @@ void OnEntryExit_5(
       // Profit Harvester runs every tick (correct)
       // Raised threshold to 300 points (~30 pips) + can be made ATR-based later
 
-        profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
+        //profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
 
       //Print("[Prune] weeds: "+weedsCut+" Reverse: "+reverseTrades+" profits: "+profitsHarvested);
 
