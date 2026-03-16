@@ -30,6 +30,7 @@ string dataFileName = "NEWDATA_" + TimeToString(TimeCurrent(), TIME_DATE) + ".js
 input SAN_SIGNAL recordSignal = SAN_SIGNAL::NOTRADE;
 // Flip signal. BUY becomes SELL and SELL becomes BUY
 input bool flipSig = false; // Flip Signal
+INDDATA_CB indData_cb;
 
 // Lot size = 0.01.
 // 1 Microlot = 1*0.01=0.01, 10 Microlots = 10*0.01 = 0.1, 100 Microlots = 1,
@@ -328,7 +329,7 @@ void RefreshPhysicsData_CB(INDDATA_CB &data) {
    double openArr[];
    double closeArr[];
    double tickVolArr[];
-   
+
 
    data.ima14.exportToArray(ima14Arr);
    data.ima30.exportToArray(ima30Arr);
@@ -392,6 +393,9 @@ void OnCycleTask1() {
    ulong orderMesg = NULL;
    INDDATA indData;
    RefreshPhysicsData(indData);
+
+//RefreshPhysicsData_CB(indData_cb);
+
    int SHIFT = indData.shift;
    bool isNewCandle = false;
    bool candleTraded = indData.candleTraded;
@@ -867,13 +871,13 @@ void OnEntryExit_5(
       util.cleanUpOrphanedMemory();
    }
 
-// ======================= 1. EXIT LOGIC (CLOSE) ===
-// CLOSE block if trigger Singal is CLOSE
-   if(triggerSignal == SAN_SIGNAL::CLOSE) {
-      util.closeOrders(magicNumber);
-      totalOrders = OrdersTotalByMagic(magicNumber);
-   }
-// ==========================================================
+//// ======================= 1. EXIT LOGIC (CLOSE) ===
+//// CLOSE block if trigger Singal is CLOSE
+//   if(triggerSignal == SAN_SIGNAL::CLOSE) {
+//      util.closeOrders(magicNumber);
+//      totalOrders = OrdersTotalByMagic(magicNumber);
+//   }
+//// ==========================================================
 
 
 // === 1. EXIT LOGIC (Pruners run first) ===
@@ -889,13 +893,13 @@ void OnEntryExit_5(
          int pruneAge         = (int)ms.atrScale(atrRaw, 3, 5);    // patient → aggressive
          // profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
 //         weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
-         reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
+//         reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
       }
 
       // Profit Harvester runs every tick (correct)
       // Raised threshold to 300 points (~30 pips) + can be made ATR-based later
 
-      //  profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
+        profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
 
       //Print("[Prune] weeds: "+weedsCut+" Reverse: "+reverseTrades+" profits: "+profitsHarvested);
 
