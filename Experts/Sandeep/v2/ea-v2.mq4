@@ -66,10 +66,11 @@ bool printStatus = false;
 //double ciMktType; // buff4 : Set Market type: Trending or Flat.
 
 bool TRADESWITCH = true;
-ORDERPARAMS op3;
+ORDERPARAMS opMain;
+
 double pipValue;
 
-int vSIG[12][5];
+//int vSIG[12][5];
 
 
 //+------------------------------------------------------------------+
@@ -81,28 +82,49 @@ int vSIG[12][5];
 //+------------------------------------------------------------------+
 int OnInit() {
    EventSetTimer(1);
-   op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
-   closeProfit = op3.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
-   stopLoss = op3.STOPLOSS;
-   currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
-   maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
+   opMain.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
+   closeProfit = opMain.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
+   stopLoss = opMain.STOPLOSS;
+   currProfit = opMain.TRADEPROFIT; // The profit of the currently held trade
+   maxProfit = opMain.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
    pipValue = util.getPipValue(_Symbol);
 // --- RECOVERY LOGIC ---
-   BarsHeld = 0;
+//   BarsHeld = 0;
    BarsHeld = util.getPyramidAge(magicNumber);
 
-   if(OrdersTotalByMagic(magicNumber) > 0) {
-      for(int i = OrdersTotal()-1; i >= 0; i--) {
-         if(OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magicNumber) {
+//   if(OrdersTotalByMagic(magicNumber) > 0) {
+//      for(int i = OrdersTotal()-1; i >= 0; i--) {
+//         if(OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magicNumber) {
+//
+//            // Calculate actual printed bars elapsed since the order was opened
+//            // iBarShift handles weekends, holidays, and missing data automatically
+//            BarsHeld = iBarShift(_Symbol, PERIOD_CURRENT, OrderOpenTime());
+//
+//            break; // Breaks after finding the first one (which is the oldest due to the loop order)
+//         }
+//      }
+//   }
 
-            // Calculate actual printed bars elapsed since the order was opened
-            // iBarShift handles weekends, holidays, and missing data automatically
-            BarsHeld = iBarShift(_Symbol, PERIOD_CURRENT, OrderOpenTime());
+   ocommon.magicNumber = magicNumber;
+   ocommon.activeStrategy = activeStrategy;
+   ocommon.BarsHeld=BarsHeld;
+   ocommon.noOfCandles=noOfCandles;
+   ocommon.SHIFT=SHIFT;
+   ocommon.microLots = microLots;
+   ocommon.minLotSize = minLotSize;
+   ocommon.maxMultiplier = maxMultiplier;
+   ocommon.maxPyramidTrades = maxPyramidTrades;
+   ocommon.TAKEPROFIT = TAKE_PROFIT;
+   ocommon.STOPLOSS = STOP_LOSS;
+   ocommon.physicsWeight = physicsWeight;
+   ocommon.cobbWeight = cobbWeight;
+   ocommon.cloudWeight = cloudWeight;
+   ocommon.consensusThreshold = consensusThreshold;
+   ocommon.pipValue = pipValue;
+   ocommon.g_cbWarmedUp = g_cbWarmedUp;
 
-            break; // Breaks after finding the first one (which is the oldest due to the loop order)
-         }
-      }
-   }
+
+
    return(INIT_SUCCEEDED);
 }
 //+------------------------------------------------------------------+
@@ -134,407 +156,62 @@ void OnTick() {
 //######################################################################################################
 
 
-
-//+------------------------------------------------------------------+
-//| Count only orders with our magic number                          |
-//+------------------------------------------------------------------+
-int OrdersTotalByMagic(ulong magic) {
-   int cnt = 0;
-   for(int i = OrdersTotal()-1; i >= 0; i--)
-      if(OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magic)
-         cnt++;
-   return cnt;
-}
+//
+////+------------------------------------------------------------------+
+////| Count only orders with our magic number                          |
+////+------------------------------------------------------------------+
+//int OrdersTotalByMagic(ulong magic) {
+//   int cnt = 0;
+//   for(int i = OrdersTotal()-1; i >= 0; i--)
+//      if(OrderSelect(i, SELECT_BY_POS) && OrderMagicNumber() == magic)
+//         cnt++;
+//   return cnt;
+//}
 //+------------------------------------------------------------------+
 
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void RefreshPhysicsData(INDDATA &data) {
-   op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
-   closeProfit = op3.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
-   stopLoss = op3.STOPLOSS;
-   currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
-   maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
-   data.magicnumber = magicNumber;
-   data.stopLoss = stopLoss;
-   data.currProfit = currProfit;
-   data.closeProfit = closeProfit;
-   data.maxProfit = maxProfit;
-   data.shift = SHIFT;
-   data.microLots = microLots;
-// 2. Sync EA State
-   data.BarsHeld   = BarsHeld;
-   data.newBar = util.isNewBarTime();
-   data.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);
-
-
-   data.maxPyramidTrades = maxPyramidTrades;
-   data.totalOrders = OrdersTotalByMagic(magicNumber);
-   data.currBarOrders = util.numOfOrdersCurrBar(magicNumber);
-   data.newBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,0);
-   data.prevBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,1);
-   data.candleTraded = util.hasTradedCurrentBar(magicNumber);
-
-// 1. Fill the "Macro" perspective (last 240 bars)
-   for(int i = 0; i < 240; i++) {
-
-
-      data.open[i] = iOpen(_Symbol, PERIOD_CURRENT, i);
-      data.close[i] = iClose(_Symbol, PERIOD_CURRENT, i);
-      data.tick_volume[i] = (long)iVolume(_Symbol, PERIOD_CURRENT, i);
-      data.ima120[i] = iMA(_Symbol, PERIOD_CURRENT, 120, 0, MODE_SMMA, PRICE_CLOSE, i);
-      data.ima240[i] = iMA(_Symbol, PERIOD_CURRENT, 240, 0, MODE_SMMA, PRICE_CLOSE, i);
-      data.ima500[i] = iMA(_Symbol, PERIOD_CURRENT, 500, 0, MODE_SMMA, PRICE_CLOSE, i);
-
-      // Heavy computation only for the "active" zone (last 31 bars)
-      if(i < 120) {
-         data.high[i] = iHigh(_Symbol,PERIOD_CURRENT,i);
-         data.low[i] = iLow(_Symbol,PERIOD_CURRENT,i);
-         data.time[i] = iTime(_Symbol,PERIOD_CURRENT,i);
-         data.std[i] = iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_CLOSE, i);
-         data.stdOpen[i] = iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_OPEN, i);
-         data.obv[i] = iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, i);
-         data.rsi[i] = iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, i);
-         data.mfi[i] = iMFI(_Symbol, PERIOD_CURRENT,noOfCandles,i);
-         data.ima5[i] = iMA(_Symbol, PERIOD_CURRENT, 5, 0, MODE_SMMA, PRICE_CLOSE, i);
-         data.ima14[i] = iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, i);
-         data.ima30[i] = iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, i);
-         data.ima60[i] = iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, i);
-         data.atr[i] = iATR(_Symbol, PERIOD_CURRENT, noOfCandles, i);
-         data.adx[i] = iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,MODE_MAIN,i);
-         data.adxPlus[i] = iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,1,i);
-         data.adxMinus[i] = iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,2,i);
-      }
+void RefreshAll_CB(INDDATA_CB &data, STRATEGY_STATE& ocommon) {
+   if(!ocommon.g_cbWarmedUp) {
+      st1.WarmUpCache_CB(data,ocommon);
+      g_cbWarmedUp = true;
+      ocommon.g_cbWarmedUp = true;
+   } else if(data.newBar) {
+      st1.PushNewBar_CB(data,ocommon);
    }
-
-
-// 2. Compute the Physics Scores
-// We compute these once and store them for both the Sniper and the Strategy
-//double bScore = ms.bayesianHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
-//double nScore = ms.neuronHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
-
-   double bScore = ms.bayesianHoldScore(data.ima30, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
-   double nScore = ms.neuronHoldScore(data.ima30, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
-
-
-// Update the snapshot so the Strategy (st1) can see the results
-   data.bayesianHoldScore = bScore;
-   data.neuronHoldScore = nScore;
-
-
-//double fastSlope = (data.ima14[SHIFT] - data.ima30[3]) / (3 * pipValue);
-//double medSlope  = (data.ima30[SHIFT] - data.ima60[10]) / (10 * pipValue);
-//double slowSlope = (data.ima60[SHIFT] - data.ima120[30]) / (30 * pipValue);
-
-   double fastSlope = (data.ima14[SHIFT] - data.ima14[5]) / (5 * pipValue);
-   double medSlope  = (data.ima30[SHIFT] - data.ima30[10]) / (10 * pipValue);
-   double slowSlope = (data.ima60[SHIFT] - data.ima60[30]) / (30 * pipValue);
-
-
-// NEW: Apply your strict Macro Trend threshold (e.g., 0.1 pips per bar)
-   double macroThreshold = 0.1;
-   data.baseSlope = (slowSlope > macroThreshold) ? 1 : ((slowSlope < -macroThreshold) ? -1 : 0);
-
-//// NEW: Macro trend direction from slow/base slope
-//   data.baseSlope = (slowSlope > 0.01) ? 1 : ((slowSlope < -0.01) ? -1 : 0);
-
-// Pass the raw, signed measurement.
-// The Sages and Neuron will apply their Bimodal math to this!
-   double fMSR_Raw = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
-   data.fMSR_Raw = fMSR_Raw;
-
-   data.fMSR_Norm = fMSR_Raw / (1.0 + MathAbs(fMSR_Raw));
-
-   double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
-   data.fractalAlignment = fractal;
-//   data.spreadLimit = ms.getDynamicSpreadLimit(data.atr[1],_Period);
-   data.spreadLimit = ms.atrScale(data.atr[1],15,120);
-
-
-
-}
-
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void RefreshPhysicsData_CB(INDDATA_CB &data) {
-   op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
-   closeProfit = op3.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
-   stopLoss = op3.STOPLOSS;
-   currProfit = op3.TRADEPROFIT; // The profit of the currently held trade
-   maxProfit = op3.MAXTRADEPROFIT; // The current profit is adjusted by subtracting the spread and a margin added.
-   data.magicnumber = magicNumber;
-   data.stopLoss = stopLoss;
-   data.currProfit = currProfit;
-   data.closeProfit = closeProfit;
-   data.maxProfit = maxProfit;
-   data.shift = SHIFT;
-   data.microLots = microLots;
-// 2. Sync EA State
-   data.BarsHeld   = BarsHeld;
-   data.newBar = util.isNewBarTime();
-   data.currSpread = (int)MarketInfo(_Symbol, MODE_SPREAD);
-
-
-   data.maxPyramidTrades = maxPyramidTrades;
-   data.totalOrders = OrdersTotalByMagic(magicNumber);
-   data.currBarOrders = util.numOfOrdersCurrBar(magicNumber);
-   data.newBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,0);
-   data.prevBarOpenTime = iTime(_Symbol,PERIOD_CURRENT,1);
-   data.candleTraded = util.hasTradedCurrentBar(magicNumber);
-
-// 1. Fill the "Macro" perspective (last 240 bars)
-   for(int i = 0; i < 240; i++) {
-
-
-      data.open.push(iOpen(_Symbol, PERIOD_CURRENT, i));
-      data.close.push(iClose(_Symbol, PERIOD_CURRENT, i));
-      data.tick_volume.push((long)iVolume(_Symbol, PERIOD_CURRENT, i));
-      data.ima120.push(iMA(_Symbol, PERIOD_CURRENT, 120, 0, MODE_SMMA, PRICE_CLOSE, i));
-      data.ima240.push(iMA(_Symbol, PERIOD_CURRENT, 240, 0, MODE_SMMA, PRICE_CLOSE, i));
-      data.ima500.push(iMA(_Symbol, PERIOD_CURRENT, 500, 0, MODE_SMMA, PRICE_CLOSE, i));
-
-      // Heavy computation only for the "active" zone (last 31 bars)
-      if(i < 120) {
-         data.high.push(iHigh(_Symbol,PERIOD_CURRENT,i));
-         data.low.push(iLow(_Symbol,PERIOD_CURRENT,i));
-         data.time.push(iTime(_Symbol,PERIOD_CURRENT,i));
-         data.std.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_CLOSE, i));
-         data.stdOpen.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_OPEN, i));
-         data.obv.push(iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, i));
-         data.rsi.push(iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, i));
-         data.mfi.push(iMFI(_Symbol, PERIOD_CURRENT,noOfCandles,i));
-         data.ima5.push(iMA(_Symbol, PERIOD_CURRENT, 5, 0, MODE_SMMA, PRICE_CLOSE, i));
-         data.ima14.push(iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, i));
-         data.ima30.push(iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, i));
-         data.ima60.push(iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, i));
-         data.atr.push(iATR(_Symbol, PERIOD_CURRENT, noOfCandles, i));
-         data.adx.push(iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,MODE_MAIN,i));
-         data.adxPlus.push(iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,1,i));
-         data.adxMinus.push(iADX(_Symbol,PERIOD_CURRENT,noOfCandles,PRICE_CLOSE,2,i));
-      }
-   }
-
-
-// 2. Compute the Physics Scores
-// We compute these once and store them for both the Sniper and the Strategy
-//double bScore = ms.bayesianHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
-//double nScore = ms.neuronHoldScore(data.ima120, data.close, data.open, data.tick_volume, BarsHeld, data.atr[0]);
-
-   double ima14Arr[];
-   double ima30Arr[];
-   double ima60Arr[];
-   double openArr[];
-   double closeArr[];
-   double tickVolArr[];
-
-
-   data.ima14.exportToArray(ima14Arr);
-   data.ima30.exportToArray(ima30Arr);
-   data.ima60.exportToArray(ima60Arr);
-   data.open.exportToArray(openArr);
-   data.close.exportToArray(closeArr);
-   data.tick_volume.exportToArray(tickVolArr);
-
-
-   double bScore = ms.bayesianHoldScore(ima30Arr, closeArr, openArr, tickVolArr, BarsHeld, data.atr.get(0));
-   double nScore = ms.neuronHoldScore(ima30Arr, closeArr, openArr, tickVolArr, BarsHeld, data.atr.get(0));
-
-
-// Update the snapshot so the Strategy (st1) can see the results
-   data.bayesianHoldScore = bScore;
-   data.neuronHoldScore = nScore;
-
-
-//double fastSlope = (data.ima14[SHIFT] - data.ima30[3]) / (3 * pipValue);
-//double medSlope  = (data.ima30[SHIFT] - data.ima60[10]) / (10 * pipValue);
-//double slowSlope = (data.ima60[SHIFT] - data.ima120[30]) / (30 * pipValue);
-
-
-   double fastSlope = (ima14Arr[SHIFT] - ima14Arr[5]) / (5 * pipValue);
-   double medSlope  = (ima30Arr[SHIFT] - ima30Arr[10]) / (10 * pipValue);
-   double slowSlope = (ima60Arr[SHIFT] - ima60Arr[30]) / (30 * pipValue);
-
-
-// NEW: Apply your strict Macro Trend threshold (e.g., 0.1 pips per bar)
-   double macroThreshold = 0.1;
-   data.baseSlope = (slowSlope > macroThreshold) ? 1 : ((slowSlope < -macroThreshold) ? -1 : 0);
-
-//// NEW: Macro trend direction from slow/base slope
-//   data.baseSlope = (slowSlope > 0.01) ? 1 : ((slowSlope < -0.01) ? -1 : 0);
-
-// Pass the raw, signed measurement.
-// The Sages and Neuron will apply their Bimodal math to this!
-   double fMSR_Raw = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
-   data.fMSR_Raw = fMSR_Raw;
-
-   data.fMSR_Norm = fMSR_Raw / (1.0 + MathAbs(fMSR_Raw));
-
-   double fractal = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
-   data.fractalAlignment = fractal;
-//   data.spreadLimit = ms.getDynamicSpreadLimit(data.atr[1],_Period);
-   data.spreadLimit = ms.atrScale(data.atr.get(SHIFT),15,120);
-
-
-
-}
-
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void WarmUpCache_CB(INDDATA_CB &data) {
-// Loop HIGH to LOW so newest value lands at get(0)
-   for(int i = 239; i >= 0; i--) {
-      data.open.push(iOpen(_Symbol, PERIOD_CURRENT, i));
-      data.close.push(iClose(_Symbol, PERIOD_CURRENT, i));
-      data.tick_volume.push((long)iVolume(_Symbol, PERIOD_CURRENT, i));
-      data.ima120.push(iMA(_Symbol, PERIOD_CURRENT, 120, 0, MODE_SMMA, PRICE_CLOSE, i));
-      data.ima240.push(iMA(_Symbol, PERIOD_CURRENT, 240, 0, MODE_SMMA, PRICE_CLOSE, i));
-      data.ima500.push(iMA(_Symbol, PERIOD_CURRENT, 500, 0, MODE_SMMA, PRICE_CLOSE, i));
-
-      if(i < 120) {
-         data.high.push(iHigh(_Symbol, PERIOD_CURRENT, i));
-         data.low.push(iLow(_Symbol, PERIOD_CURRENT, i));
-         data.time.push(iTime(_Symbol, PERIOD_CURRENT, i));
-         data.std.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_CLOSE, i));
-         data.stdOpen.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_OPEN, i));
-         data.obv.push(iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, i));
-         data.rsi.push(iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, i));
-         data.mfi.push(iMFI(_Symbol, PERIOD_CURRENT, noOfCandles, i));
-         data.ima5.push(iMA(_Symbol, PERIOD_CURRENT, 5,  0, MODE_SMMA, PRICE_CLOSE, i));
-         data.ima14.push(iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, i));
-         data.ima30.push(iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, i));
-         data.ima60.push(iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, i));
-         data.atr.push(iATR(_Symbol, PERIOD_CURRENT, noOfCandles, i));
-         data.adx.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, MODE_MAIN, i));
-         data.adxPlus.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, 1, i));
-         data.adxMinus.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, 2, i));
-      }
-   }
-}
-
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void PushNewBar_CB(INDDATA_CB &data) {
-// Push the just-closed bar (shift=1) — this is the confirmed, immutable value
-   data.open.push(iOpen(_Symbol, PERIOD_CURRENT, 1));
-   data.close.push(iClose(_Symbol, PERIOD_CURRENT, 1));
-   data.tick_volume.push((long)iVolume(_Symbol, PERIOD_CURRENT, 1));
-   data.ima120.push(iMA(_Symbol, PERIOD_CURRENT, 120, 0, MODE_SMMA, PRICE_CLOSE, 1));
-   data.ima240.push(iMA(_Symbol, PERIOD_CURRENT, 240, 0, MODE_SMMA, PRICE_CLOSE, 1));
-   data.ima500.push(iMA(_Symbol, PERIOD_CURRENT, 500, 0, MODE_SMMA, PRICE_CLOSE, 1));
-   data.high.push(iHigh(_Symbol, PERIOD_CURRENT, 1));
-   data.low.push(iLow(_Symbol, PERIOD_CURRENT, 1));
-   data.time.push(iTime(_Symbol, PERIOD_CURRENT, 1));
-   data.std.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_CLOSE, 1));
-   data.stdOpen.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_OPEN, 1));
-   data.obv.push(iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, 1));
-   data.rsi.push(iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, 1));
-   data.mfi.push(iMFI(_Symbol, PERIOD_CURRENT, noOfCandles, 1));
-   data.ima5.push(iMA(_Symbol, PERIOD_CURRENT, 5,  0, MODE_SMMA, PRICE_CLOSE, 1));
-   data.ima14.push(iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, 1));
-   data.ima30.push(iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, 1));
-   data.ima60.push(iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, 1));
-   data.atr.push(iATR(_Symbol, PERIOD_CURRENT, noOfCandles, 1));
-   data.adx.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, MODE_MAIN, 1));
-   data.adxPlus.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, 1, 1));
-   data.adxMinus.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, 2, 1));
-}
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void RefreshLiveScalars_CB(INDDATA_CB &data) {
-// Trade/order state
-   op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
-   data.magicnumber    = magicNumber;
-   data.stopLoss       = op3.STOPLOSS;
-   data.currProfit     = op3.TRADEPROFIT;
-   data.closeProfit    = op3.TAKEPROFIT;
-   data.maxProfit      = op3.MAXTRADEPROFIT;
-   data.shift          = SHIFT;
-   data.microLots      = microLots;
-   data.BarsHeld       = BarsHeld;
-   data.newBar         = util.isNewBarTime();
-   data.currSpread     = (int)MarketInfo(_Symbol, MODE_SPREAD);
-   data.maxPyramidTrades = maxPyramidTrades;
-   data.totalOrders    = OrdersTotalByMagic(magicNumber);
-   data.currBarOrders  = util.numOfOrdersCurrBar(magicNumber);
-   data.newBarOpenTime = iTime(_Symbol, PERIOD_CURRENT, 0);
-   data.prevBarOpenTime= iTime(_Symbol, PERIOD_CURRENT, 1);
-   data.candleTraded   = util.hasTradedCurrentBar(magicNumber);
-
-// Live current bar — shift=0, changes every tick
-   double live_ima14 = iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, 0);
-   double live_ima30 = iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, 0);
-   double live_ima60 = iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, 0);
-   double live_atr   = iATR(_Symbol, PERIOD_CURRENT, noOfCandles, 0);
-
-// Physics scores — use cached history (get(1) = SHIFT=1, confirmed bar)
-   double ima30Arr[], closeArr[], openArr[];
-   double   volArr[];
-   data.ima30.exportToArray(ima30Arr);
-   data.close.exportToArray(closeArr);
-   data.open.exportToArray(openArr);
-   data.tick_volume.exportToArray(volArr);
-
-   data.bayesianHoldScore = ms.bayesianHoldScore(ima30Arr, closeArr, openArr, volArr,
-                            BarsHeld, live_atr);
-   data.neuronHoldScore   = ms.neuronHoldScore(ima30Arr, closeArr, openArr, volArr,
-                            BarsHeld, live_atr);
-
-// Slope calculations using cached confirmed bars (get(1), get(5), etc.)
-   double fastSlope = (data.ima14.get(SHIFT) - data.ima14.get(5)) / (5 * pipValue);
-   double medSlope  = (data.ima30.get(SHIFT) - data.ima30.get(10)) / (10 * pipValue);
-   double slowSlope = (data.ima60.get(SHIFT) - data.ima60.get(30)) / (30 * pipValue);
-
-   double macroThreshold  = 0.1;
-   data.baseSlope         = (slowSlope > macroThreshold) ? 1 : ((slowSlope < -macroThreshold) ? -1 : 0);
-   double fMSR_Raw        = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
-   data.fMSR_Raw          = fMSR_Raw;
-   data.fMSR_Norm         = fMSR_Raw / (1.0 + MathAbs(fMSR_Raw));
-   data.fractalAlignment  = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
-   data.spreadLimit       = ms.atrScale(data.atr.get(SHIFT), 15, 120);
+   st1.RefreshLiveScalars_CB(data,ocommon);
 }
 
 void OnCycleTask1() {
 
 // 1. Capture Bar State ONCE per tick
-//   bool isNewCandle = util.isNewBarTime();
+   bool isNewBar = util.isNewBarTime();
 
-   int totalOrders = OrdersTotalByMagic(magicNumber);
-   BarsHeld = util.getPyramidAge(magicNumber);
+   int totalOrders = util.OrdersTotalByMagic(magicNumber);
+//BarsHeld = util.getPyramidAge(magicNumber);
+//ocommon.BarsHeld = BarsHeld;
 //   Print("OCOMMON Message: "+ocommon.mesg1);
 
    ulong orderMesg = NULL;
    INDDATA indData;
-   RefreshPhysicsData(indData);
+   indData.newBar = isNewBar;
 
-//RefreshPhysicsData_CB(indData_cb);
+   st1.RefreshPhysicsData(indData,ocommon);
+   ocommon.BarsHeld = indData.BarsHeld;
 
-   if(!g_cbWarmedUp) {
-      WarmUpCache_CB(indData_cb);       // fills history oldest-first on first run
-      g_cbWarmedUp = true;
-   } else if(indData.newBar) {
-      PushNewBar_CB(indData_cb);        // pushes ONE value per series on new bar
-   }
-
-// Mid-bar ticks: zero MT4 indicator calls for history
-
-// Update live current-bar values every tick (shift=0 only)
-   RefreshLiveScalars_CB(indData_cb);    // ~15 calls: spread, orders, live ima30[0], etc.
-
-
-   if(MathAbs(indData.ima30[1] - indData_cb.ima30.get(1)) > _Point) {
-      PrintFormat("⚠️ CB MISMATCH ima30[1]: old=%.5f cb=%.5f",
-                  indData.ima30[1], indData_cb.ima30.get(1));
-   }
+//   indData_cb.newBar = isNewBar;
+//   RefreshAll_CB(indData_cb,ocommon);
+//
+//   if(MathAbs(indData.ima30[1] - indData_cb.ima30.get(1)) > _Point) {
+//      PrintFormat("⚠️ CB MISMATCH ima30[1]: old=%.5f cb=%.5f",
+//                  indData.ima30[1], indData_cb.ima30.get(1));
+//   } else {
+//      PrintFormat("⚠️ CB MATCHED ima30[1]: old=%.5f cb=%.5f, Match : %s",
+//                  indData.ima30[1], indData_cb.ima30.get(1),
+//                  util.boolToStr((MathAbs(indData.ima30[1] - indData_cb.ima30.get(1)) < _Point)));
+//   }
 
    int SHIFT = indData.shift;
    bool isNewCandle = false;
@@ -692,30 +369,35 @@ void OnCycleTask1() {
 // Call the modular execution strategy
    if (activeStrategy == 1) {
       OnEntryExit_1(
+         ocommon,
          totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
       );
    } else if (activeStrategy == 2) {
       OnEntryExit_2(
+         ocommon,
          totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
       );
    } else if (activeStrategy == 3) {
       OnEntryExit_3(
+         ocommon,
          totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
       );
    } else if (activeStrategy == 4) {
       OnEntryExit_4(
+         ocommon,
          totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
       );
    } else if (activeStrategy == 5) {
       OnEntryExit_5(
+         ocommon,
          totalOrders, isNewCandle,candleTraded, numOfTrades,dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
@@ -737,6 +419,7 @@ void OnCycleTask1() {
 //| ENTRY & EXIT STRATEGY 1: The Phase-Blended Trinity Sniper        |
 //+------------------------------------------------------------------+
 void OnEntryExit_1(
+   STRATEGY_STATE& ocommon,
    const int totalOrders,
    const double dynamicLots,
    const bool hasConsensus,
@@ -762,7 +445,8 @@ void OnEntryExit_1(
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                      (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-         BarsHeld = 0; // Note: BarsHeld is a global variable
+         //BarsHeld = 0; // Note: BarsHeld is a global variable
+         ocommon.BarsHeld = 0;
 
       } else if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
          if(printStatus)PrintFormat("🛡️ ENTRY BLOCKED: Trigger %s fired, but Sages vetoed (Phy:%d, Cobb:%d, Mkt:%d)",
@@ -779,20 +463,23 @@ void OnEntryExit_1(
          if(printStatus)PrintFormat("🚨 GOVERNANCE: Macro Collapse Detected (Phy:%d, Cobb:%d, Mkt:%d). Forcing Exit.",
                                        physicsAction, cobbsDouglasAction, marketAction);
          orderMesg = util.closeOrders(magicNumber);
-         BarsHeld = 0;
+         //BarsHeld = 0;
+         ocommon.BarsHeld = 0;
       }
       // EXIT B: TACTICAL TRAP
       else if (!isSqueeze && vanguardSignal != SAN_SIGNAL::NOSIG && util.oppSignal(tradePosition, vanguardSignal)) {
          if(printStatus)PrintFormat("🚨 GOVERNANCE: Tactical Trap! Vanguard violently flipped to %s. EJECTING.",
                                        util.getSigString(vanguardSignal));
          orderMesg = util.closeOrders(magicNumber);
-         BarsHeld = 0;
+         //BarsHeld = 0;
+         ocommon.BarsHeld = 0;
       }
       // EXIT C: STANDARD CLOSE
       else if(closeSIG == SAN_SIGNAL::CLOSE) {
          if(printStatus)Print("🛡️ GOVERNANCE: Standard Close Signal honored. Exiting.");
          orderMesg = util.closeOrders(magicNumber);
-         BarsHeld = 0;
+         //BarsHeld = 0;
+         ocommon.BarsHeld = 0;
       }
 
       if(GetLastError() != ERR_NO_ERROR)
@@ -807,6 +494,7 @@ void OnEntryExit_1(
 //| ENTRY & EXIT STRATEGY 2: Continuous Pyramiding & Flip-Reversal   |
 //+------------------------------------------------------------------+
 void OnEntryExit_2(
+   STRATEGY_STATE& ocommon,
    int& totalOrders,
    const double dynamicLots,
    const bool hasConsensus,
@@ -830,7 +518,8 @@ void OnEntryExit_2(
       if (hasCollapse) {
          if(printStatus)PrintFormat("🚨 STRATEGY 2: Macro Collapse Detected. Liquidating %d positions.", totalOrders);
          orderMesg = util.closeOrders(magicNumber);
-         BarsHeld = 0;
+         //BarsHeld = 0;
+         ocommon.BarsHeld = 0;
          totalOrders = 0; // <--- UPDATE STATE
          return; // Abort further action on this candle
       }
@@ -841,7 +530,8 @@ void OnEntryExit_2(
             if(printStatus)PrintFormat("🔄 STRATEGY 2: Market violently flipped from %s to %s! Liquidating portfolio.",
                                           util.getSigString(tradePosition), util.getSigString(triggerSignal));
             orderMesg = util.closeOrders(magicNumber);
-            BarsHeld = 0;
+            //BarsHeld = 0;
+            ocommon.BarsHeld = 0;
             totalOrders = 0;
             tradePosition = SAN_SIGNAL::NOSIG; // Reset state so we can immediately enter the new direction
          }
@@ -858,8 +548,8 @@ void OnEntryExit_2(
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                      (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-         BarsHeld = 0; // Reset holding time since we just modified the portfolio
-
+         //BarsHeld = 0; // Reset holding time since we just modified the portfolio
+         ocommon.BarsHeld = 0;
       }
    } else {
       //  Print("🛡️ STRATEGY 2: Max pyramid capacity reached. Riding the trend without adding more.");
@@ -872,6 +562,7 @@ void OnEntryExit_2(
 //| ENTRY & EXIT STRATEGY 3: Tactical Pyramiding with Auto-Pruning   |
 //+------------------------------------------------------------------+
 void OnEntryExit_3(
+   STRATEGY_STATE& ocommon,
    int& totalOrders,
    const bool isNewCandle,
    const double dynamicLots,
@@ -897,7 +588,7 @@ void OnEntryExit_3(
 
       // If we pruned anything, update the totalOrders count for the Entry Logic below
       if (prunedWeeds > 0) {
-         totalOrders = OrdersTotalByMagic(magicNumber);
+         totalOrders = util.OrdersTotalByMagic(magicNumber);
          // NOTE: Do NOT set BarsHeld = 0 here anymore! getPyramidAge() handles it.
       }
    }
@@ -926,6 +617,7 @@ void OnEntryExit_3(
 //| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (1 per candle)|
 //+------------------------------------------------------------------+
 void OnEntryExit_4(
+   STRATEGY_STATE& ocommon,
    int& totalOrders,
    const bool isNewCandle,
    const double dynamicLots,
@@ -946,7 +638,7 @@ void OnEntryExit_4(
 // CLOSE block if trigger Singal is CLOSE
    if(triggerSignal == SAN_SIGNAL::CLOSE) {
       util.closeOrders(magicNumber);
-      totalOrders = OrdersTotalByMagic(magicNumber);
+      totalOrders = util.OrdersTotalByMagic(magicNumber);
    }
 
    if(totalOrders>0) {
@@ -955,7 +647,7 @@ void OnEntryExit_4(
          reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
       }
       if(reverseTrades>0) {
-         totalOrders = OrdersTotalByMagic(magicNumber);
+         totalOrders = util.OrdersTotalByMagic(magicNumber);
       }
    }
 
@@ -971,7 +663,8 @@ void OnEntryExit_4(
 
       orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                   (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-      BarsHeld = 0;
+      //BarsHeld = 0;
+      ocommon.BarsHeld = 0;
    }
 }
 
@@ -989,6 +682,7 @@ void OnEntryExit_4(
 //|                                                                  |
 //+------------------------------------------------------------------+
 void OnEntryExit_5(
+   STRATEGY_STATE& ocommon,
    int& totalOrders,
    const bool isNewCandle,
    const bool candleTraded,
@@ -1014,8 +708,9 @@ void OnEntryExit_5(
 // ======================= 1. EXIT LOGIC (CLOSE) ===
 // CLOSE block if trigger Singal is CLOSE
    if(triggerSignal == SAN_SIGNAL::CLOSE) {
-      util.closeAllOrdersOnReverse(magicNumber,vanguardSignal);
-      totalOrders = OrdersTotalByMagic(magicNumber);
+      //util.closeAllOrdersOnReverse(magicNumber,vanguardSignal);
+      util.closeOrders(ocommon.magicNumber);
+      totalOrders = util.OrdersTotalByMagic(magicNumber);
    }
 // ==========================================================
 
@@ -1030,7 +725,7 @@ void OnEntryExit_5(
       if(isNewCandle) {
          //int pruneAge = MathMax(3,(int)MathFloor(maxPyramidTrades / 4.0));
          //int spreadLimit      = (int)ms.atrScale(atrRaw, 15,  120);  // tight → loose
-         int pruneAge         = (int)ms.atrScale(atrRaw, 3, 5);    // patient → aggressive
+         //int pruneAge         = (int)ms.atrScale(atrRaw, 3, 5);    // patient → aggressive
          // profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
 //         weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
 //         reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
@@ -1044,7 +739,7 @@ void OnEntryExit_5(
       //Print("[Prune] weeds: "+weedsCut+" Reverse: "+reverseTrades+" profits: "+profitsHarvested);
 
       if(weedsCut > 0 || profitsHarvested > 0 || reverseTrades>0) {
-         totalOrders = OrdersTotalByMagic(magicNumber);
+         totalOrders = util.OrdersTotalByMagic(magicNumber);
       }
    }
 
