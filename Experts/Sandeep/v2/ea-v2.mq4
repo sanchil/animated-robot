@@ -31,6 +31,7 @@ input SAN_SIGNAL recordSignal = SAN_SIGNAL::NOTRADE;
 // Flip signal. BUY becomes SELL and SELL becomes BUY
 input bool flipSig = false; // Flip Signal
 INDDATA_CB indData_cb;
+bool g_cbWarmedUp = false;
 
 // Lot size = 0.01.
 // 1 Microlot = 1*0.01=0.01, 10 Microlots = 10*0.01 = 0.1, 100 Microlots = 1,
@@ -381,6 +382,127 @@ void RefreshPhysicsData_CB(INDDATA_CB &data) {
 
 }
 
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void WarmUpCache_CB(INDDATA_CB &data) {
+// Loop HIGH to LOW so newest value lands at get(0)
+   for(int i = 239; i >= 0; i--) {
+      data.open.push(iOpen(_Symbol, PERIOD_CURRENT, i));
+      data.close.push(iClose(_Symbol, PERIOD_CURRENT, i));
+      data.tick_volume.push((long)iVolume(_Symbol, PERIOD_CURRENT, i));
+      data.ima120.push(iMA(_Symbol, PERIOD_CURRENT, 120, 0, MODE_SMMA, PRICE_CLOSE, i));
+      data.ima240.push(iMA(_Symbol, PERIOD_CURRENT, 240, 0, MODE_SMMA, PRICE_CLOSE, i));
+      data.ima500.push(iMA(_Symbol, PERIOD_CURRENT, 500, 0, MODE_SMMA, PRICE_CLOSE, i));
+
+      if(i < 120) {
+         data.high.push(iHigh(_Symbol, PERIOD_CURRENT, i));
+         data.low.push(iLow(_Symbol, PERIOD_CURRENT, i));
+         data.time.push(iTime(_Symbol, PERIOD_CURRENT, i));
+         data.std.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_CLOSE, i));
+         data.stdOpen.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_OPEN, i));
+         data.obv.push(iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, i));
+         data.rsi.push(iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, i));
+         data.mfi.push(iMFI(_Symbol, PERIOD_CURRENT, noOfCandles, i));
+         data.ima5.push(iMA(_Symbol, PERIOD_CURRENT, 5,  0, MODE_SMMA, PRICE_CLOSE, i));
+         data.ima14.push(iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, i));
+         data.ima30.push(iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, i));
+         data.ima60.push(iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, i));
+         data.atr.push(iATR(_Symbol, PERIOD_CURRENT, noOfCandles, i));
+         data.adx.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, MODE_MAIN, i));
+         data.adxPlus.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, 1, i));
+         data.adxMinus.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, 2, i));
+      }
+   }
+}
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void PushNewBar_CB(INDDATA_CB &data) {
+// Push the just-closed bar (shift=1) — this is the confirmed, immutable value
+   data.open.push(iOpen(_Symbol, PERIOD_CURRENT, 1));
+   data.close.push(iClose(_Symbol, PERIOD_CURRENT, 1));
+   data.tick_volume.push((long)iVolume(_Symbol, PERIOD_CURRENT, 1));
+   data.ima120.push(iMA(_Symbol, PERIOD_CURRENT, 120, 0, MODE_SMMA, PRICE_CLOSE, 1));
+   data.ima240.push(iMA(_Symbol, PERIOD_CURRENT, 240, 0, MODE_SMMA, PRICE_CLOSE, 1));
+   data.ima500.push(iMA(_Symbol, PERIOD_CURRENT, 500, 0, MODE_SMMA, PRICE_CLOSE, 1));
+   data.high.push(iHigh(_Symbol, PERIOD_CURRENT, 1));
+   data.low.push(iLow(_Symbol, PERIOD_CURRENT, 1));
+   data.time.push(iTime(_Symbol, PERIOD_CURRENT, 1));
+   data.std.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_CLOSE, 1));
+   data.stdOpen.push(iStdDev(_Symbol, PERIOD_CURRENT, noOfCandles, 0, MODE_EMA, PRICE_OPEN, 1));
+   data.obv.push(iOBV(_Symbol, PERIOD_CURRENT, PRICE_CLOSE, 1));
+   data.rsi.push(iRSI(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_WEIGHTED, 1));
+   data.mfi.push(iMFI(_Symbol, PERIOD_CURRENT, noOfCandles, 1));
+   data.ima5.push(iMA(_Symbol, PERIOD_CURRENT, 5,  0, MODE_SMMA, PRICE_CLOSE, 1));
+   data.ima14.push(iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, 1));
+   data.ima30.push(iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, 1));
+   data.ima60.push(iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, 1));
+   data.atr.push(iATR(_Symbol, PERIOD_CURRENT, noOfCandles, 1));
+   data.adx.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, MODE_MAIN, 1));
+   data.adxPlus.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, 1, 1));
+   data.adxMinus.push(iADX(_Symbol, PERIOD_CURRENT, noOfCandles, PRICE_CLOSE, 2, 1));
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void RefreshLiveScalars_CB(INDDATA_CB &data) {
+// Trade/order state
+   op3.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
+   data.magicnumber    = magicNumber;
+   data.stopLoss       = op3.STOPLOSS;
+   data.currProfit     = op3.TRADEPROFIT;
+   data.closeProfit    = op3.TAKEPROFIT;
+   data.maxProfit      = op3.MAXTRADEPROFIT;
+   data.shift          = SHIFT;
+   data.microLots      = microLots;
+   data.BarsHeld       = BarsHeld;
+   data.newBar         = util.isNewBarTime();
+   data.currSpread     = (int)MarketInfo(_Symbol, MODE_SPREAD);
+   data.maxPyramidTrades = maxPyramidTrades;
+   data.totalOrders    = OrdersTotalByMagic(magicNumber);
+   data.currBarOrders  = util.numOfOrdersCurrBar(magicNumber);
+   data.newBarOpenTime = iTime(_Symbol, PERIOD_CURRENT, 0);
+   data.prevBarOpenTime= iTime(_Symbol, PERIOD_CURRENT, 1);
+   data.candleTraded   = util.hasTradedCurrentBar(magicNumber);
+
+// Live current bar — shift=0, changes every tick
+   double live_ima14 = iMA(_Symbol, PERIOD_CURRENT, 14, 0, MODE_SMMA, PRICE_CLOSE, 0);
+   double live_ima30 = iMA(_Symbol, PERIOD_CURRENT, 30, 0, MODE_SMMA, PRICE_CLOSE, 0);
+   double live_ima60 = iMA(_Symbol, PERIOD_CURRENT, 60, 0, MODE_SMMA, PRICE_CLOSE, 0);
+   double live_atr   = iATR(_Symbol, PERIOD_CURRENT, noOfCandles, 0);
+
+// Physics scores — use cached history (get(1) = SHIFT=1, confirmed bar)
+   double ima30Arr[], closeArr[], openArr[];
+   double   volArr[];
+   data.ima30.exportToArray(ima30Arr);
+   data.close.exportToArray(closeArr);
+   data.open.exportToArray(openArr);
+   data.tick_volume.exportToArray(volArr);
+
+   data.bayesianHoldScore = ms.bayesianHoldScore(ima30Arr, closeArr, openArr, volArr,
+                            BarsHeld, live_atr);
+   data.neuronHoldScore   = ms.neuronHoldScore(ima30Arr, closeArr, openArr, volArr,
+                            BarsHeld, live_atr);
+
+// Slope calculations using cached confirmed bars (get(1), get(5), etc.)
+   double fastSlope = (data.ima14.get(SHIFT) - data.ima14.get(5)) / (5 * pipValue);
+   double medSlope  = (data.ima30.get(SHIFT) - data.ima30.get(10)) / (10 * pipValue);
+   double slowSlope = (data.ima60.get(SHIFT) - data.ima60.get(30)) / (30 * pipValue);
+
+   double macroThreshold  = 0.1;
+   data.baseSlope         = (slowSlope > macroThreshold) ? 1 : ((slowSlope < -macroThreshold) ? -1 : 0);
+   double fMSR_Raw        = ms.slopeAccelerationRatio(fastSlope, medSlope, slowSlope);
+   data.fMSR_Raw          = fMSR_Raw;
+   data.fMSR_Norm         = fMSR_Raw / (1.0 + MathAbs(fMSR_Raw));
+   data.fractalAlignment  = ms.fractalAlignment(fastSlope, medSlope, slowSlope);
+   data.spreadLimit       = ms.atrScale(data.atr.get(SHIFT), 15, 120);
+}
+
 void OnCycleTask1() {
 
 // 1. Capture Bar State ONCE per tick
@@ -395,6 +517,24 @@ void OnCycleTask1() {
    RefreshPhysicsData(indData);
 
 //RefreshPhysicsData_CB(indData_cb);
+
+   if(!g_cbWarmedUp) {
+      WarmUpCache_CB(indData_cb);       // fills history oldest-first on first run
+      g_cbWarmedUp = true;
+   } else if(indData.newBar) {
+      PushNewBar_CB(indData_cb);        // pushes ONE value per series on new bar
+   }
+
+// Mid-bar ticks: zero MT4 indicator calls for history
+
+// Update live current-bar values every tick (shift=0 only)
+   RefreshLiveScalars_CB(indData_cb);    // ~15 calls: spread, orders, live ima30[0], etc.
+
+
+   if(MathAbs(indData.ima30[1] - indData_cb.ima30.get(1)) > _Point) {
+      PrintFormat("⚠️ CB MISMATCH ima30[1]: old=%.5f cb=%.5f",
+                  indData.ima30[1], indData_cb.ima30.get(1));
+   }
 
    int SHIFT = indData.shift;
    bool isNewCandle = false;
@@ -899,7 +1039,7 @@ void OnEntryExit_5(
       // Profit Harvester runs every tick (correct)
       // Raised threshold to 300 points (~30 pips) + can be made ATR-based later
 
-        //profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
+      //profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
 
       //Print("[Prune] weeds: "+weedsCut+" Reverse: "+reverseTrades+" profits: "+profitsHarvested);
 

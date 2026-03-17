@@ -35,7 +35,7 @@ class SanSignals {
    SAN_SIGNAL        tradeSlopeSIG_v1(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr);
-   SAN_SIGNAL        tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
+   SAN_SIGNAL        macroWaveSIG(const DTYPE &fast, const DTYPE &slow, const double atr);
    SAN_SIGNAL        waveTideSIG(const DTYPE &fast, const DTYPE &medium, const DTYPE &slow, double atr);
    SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope);
    SAN_SIGNAL        layeredMomentumSIG(const double &signal[], int N = 20);
@@ -1402,7 +1402,8 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
 
    double fS = fast.val1;
    double mS = med.val1;
-   SAN_SIGNAL dir = (fS > 0) ? BUY : SELL;
+//SAN_SIGNAL dir = (fS > 0) ? BUY : SELL;
+   SAN_SIGNAL dir = (mS > 0) ? BUY : SELL;
 
 // 2. THE VELOCITY CHECK (The "Explosion" Gate)
 // We use slopeRatio but we pass our lower MICRO_FLOOR.
@@ -1412,19 +1413,29 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
 // 3. THE MICRO-POLICY
 // We ONLY enter if the expansion is nearly perfect (>= 0.95)
 // This ensures we are catching the "Meat" of the micro-move.
-   if(vScore >= 0.95) {
+//   if(vScore >= 0.95) {
+   if(vScore >= 0.8) {
       return dir;
    }
 
 // 4. THE LIGHTNING EXIT
 // If the velocity score drops even slightly (e.g., below 0.70),
 // we BAIL. There is no macro structure to save us here.
-   if(vScore < 0.70) return CLOSE;
+   if((vScore > 0.40)&&(vScore < 0.60)) return CLOSE;
+
+   if(vScore <= 0.40) {
+      if(dir == SAN_SIGNAL::BUY) {
+         return SAN_SIGNAL::SELL;
+      }
+      if(dir == SAN_SIGNAL::SELL) {
+         return SAN_SIGNAL::BUY;
+      }
+   };
 
    return NOSIG;
 }
 
-SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, double atr, ulong magicnumber = -1) {
+SAN_SIGNAL SanSignals::macroWaveSIG(const DTYPE &fast, const DTYPE &slow, double atr) {
 
    double floor    = atr * 0.30;
 
@@ -1432,25 +1443,31 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow
    double sS       = slow.val1;
    double absSlow  = MathAbs(sS);
 
-
    SAN_SIGNAL dir  = (sS > 0) ? BUY : SELL;
-//const double SLOPERANGELIMIT = 0.3;
 
 // 1. CALL THE PHYSICS ENGINE
 // This one call handles Directional Alignment AND the Structural Floor.
-//double mScore = ms.slopeRatio(fS, sS, SLOPERANGELIMIT);
-// To this:
    double mScore = ms.expansionCompressionRatio(fS, sS, floor);
-
 
 // 2. THE LEAN POLICY
 // If mScore is 1.0, the Metric has already verified Direction, Floor, and Expansion.
-   if(mScore >= 1.0) return dir;
+//if(mScore >= 1.0) return dir;
+   if(mScore >= 0.9) return dir;
 
 // For Case B (Compression), we check for the "Power Trend" extra requirement.
    if(mScore >= 0.8 && absSlow >= (floor * 1.5)) return dir;
 
-   if(mScore == 0) return SAN_SIGNAL::CLOSE;
+   if((mScore>0.4) &&(mScore < 0.6))  return SAN_SIGNAL::CLOSE;
+
+   if(mScore<=0.4) {
+      if(dir == SAN_SIGNAL::BUY) {
+         return SAN_SIGNAL::SELL;
+      }
+      if(dir == SAN_SIGNAL::SELL) {
+         return SAN_SIGNAL::BUY;
+      }
+   }
+//if(mScore == 0) return SAN_SIGNAL::CLOSE;
 
 // If the Metric returned 0.0 (Veto) or a weak ratio, we bail.
    return SAN_SIGNAL::CLOSE;
@@ -1463,11 +1480,12 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::waveTideSIG(const DTYPE &fast, const DTYPE &med, const DTYPE &slow, double atr) {
 // THE TRIPLE-GEOMETRY CHAIN
-   SAN_SIGNAL waveSignal = tradeSlopeSIG_Static(fast, med, atr);  // Micro-Expansion
-   SAN_SIGNAL tideSignal = tradeSlopeSIG_Static(med, slow, atr);  // Macro-Expansion
+   SAN_SIGNAL waveSignal = macroWaveSIG(fast, med, atr);  // Micro-Expansion
+   SAN_SIGNAL tideSignal = macroWaveSIG(med, slow, atr);  // Macro-Expansion
 
    if(waveSignal == BUY && tideSignal == BUY) return SAN_SIGNAL::BUY;
    if(waveSignal == SELL && tideSignal == SELL) return SAN_SIGNAL::SELL;
+//if(util.oppSignal(waveSignal,tideSignal)) return SAN_SIGNAL::CLOSE;
    return SAN_SIGNAL::NOSIG;
 }
 //+------------------------------------------------------------------+
