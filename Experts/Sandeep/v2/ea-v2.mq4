@@ -185,7 +185,113 @@ void RefreshAll_CB(INDDATA_CB &data, STRATEGY_STATE& ocommon) {
    st1.RefreshLiveScalars_CB(data,ocommon);
 }
 
+//+------------------------------------------------------------------+
+//| GOVERNANCE MODULE: Manages Macro Panics, Tactical Exits & Pruning|
+//+------------------------------------------------------------------+
+void ManageRiskAndExits(
+   STRATEGY_STATE& ocommon,
+   int& totalOrders,
+   const bool isNewCandle,
+   const bool hasCollapse,
+   const int physicsAction,
+   const SAN_SIGNAL triggerSignal,
+   const double atrRaw,
+   const bool printLogs
+) {
+   if (totalOrders <= 0) return; // Fast return if portfolio is empty
 
+   bool fullLiquidation = false;
+
+// 1. MACRO PANIC: Check Sages First (They bypass everything)
+   bool sagesWantOut = (physicsAction == -1 || hasCollapse);
+   if (sagesWantOut) {
+      if(printLogs && isNewCandle) Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation. Shield bypassed.");
+      util.closeOrders(ocommon.magicNumber);
+      totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+      ocommon.BarsHeld = 0;
+      fullLiquidation = true;
+   }
+
+// 2. TACTICAL CLOSE: Check Fast Trigger (Needs the Trade Shield)
+   else if(triggerSignal == SAN_SIGNAL::CLOSE) {
+      bool enoughHoldTime = (ocommon.BarsHeld >= 5);
+
+      if(enoughHoldTime) {
+         if(printLogs) PrintFormat("🛡️ MATURE EXIT: Trade held for %d bars. Fast CLOSE accepted.", ocommon.BarsHeld);
+         util.closeOrders(ocommon.magicNumber);
+         totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+         ocommon.BarsHeld = 0;   // reset for next entry
+         fullLiquidation = true;
+      } else if (printLogs && isNewCandle) {
+         PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE signal. Trade age is %d/5 bars.", ocommon.BarsHeld);
+      }
+   }
+
+// 3. MAINTENANCE (PRUNERS): Trim the fat ONLY if the basket survived
+   if (!fullLiquidation) {
+      /*
+      int weedsCut = 0;
+      int profitsHarvested = 0;
+      int reverseTrades = 0;
+      int profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000);
+
+      if(isNewCandle) {
+         // int pruneAge = MathMax(3, (int)MathFloor(ocommon.maxPyramidTrades / 4.0));
+         // weedsCut = util.pruneTrades(ocommon.magicNumber, pruneAge, 30);
+         // reverseTrades = util.pruneReverseTrades(ocommon.magicNumber, triggerSignal, 30);
+      }
+
+      // profitsHarvested = util.pruneByTrailingProfit(ocommon.magicNumber, 0.80, profitThreshold, 30);
+
+      if(weedsCut > 0 || profitsHarvested > 0 || reverseTrades > 0) {
+         if(printLogs) PrintFormat("✂️ PRUNER: Weeds Cut: %d | Reverse: %d | Profits Harvested: %d", weedsCut, reverseTrades, profitsHarvested);
+         totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+      }
+      */
+   }
+}
+
+//+------------------------------------------------------------------+
+//| ENTRY MODULE: Evaluates Limits, Approvals, and Executes Trades   |
+//+------------------------------------------------------------------+
+void ManageEntries(
+   STRATEGY_STATE& ocommon,
+   const int totalOrders,
+   const bool isNewCandle,
+   const bool isEntryApproved,      // Allows specific strategies to require 'hasConsensus'
+   const SAN_SIGNAL triggerSignal,
+   const double dynamicLots,
+   const string strategyName,       // For clean logging (e.g., "🚜 HARVESTER")
+   const bool printLogs,
+   ulong& orderMesg
+) {
+// === 1. PYRAMID LIMIT ===
+   if(totalOrders >= ocommon.maxPyramidTrades) return;
+
+// === 2. EXECUTION GATE ===
+// Must be a new candle, must be approved by strategy rules, and must have a valid directional signal
+   if(isNewCandle &&
+         isEntryApproved &&
+         triggerSignal != SAN_SIGNAL::NOSIG &&
+         triggerSignal != SAN_SIGNAL::SIDEWAYS &&
+         triggerSignal != SAN_SIGNAL::CLOSE ) {
+
+      if(printLogs) {
+         PrintFormat("%s: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+                     strategyName,
+                     util.getSigString(triggerSignal),
+                     dynamicLots,
+                     TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
+      }
+
+      // Execute Order
+      int cmd = (triggerSignal == SAN_SIGNAL::BUY) ? OP_BUY : OP_SELL;
+      orderMesg = util.placeOrder(ocommon.magicNumber, dynamicLots, cmd, 30, 0, 0);
+
+      // Close the internal state gate to strictly enforce 1-trade-per-candle
+      ocommon.newCandleGate = false;
+   }
+}
 
 void OnCycleTask1() {
 
@@ -689,7 +795,6 @@ void OnEntryExit_4(
 //| ENTRY & EXIT STRATEGY 5: Pure Volatility Harvester + Smart Pruner|
 //+------------------------------------------------------------------+
 
-
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -717,83 +822,32 @@ void OnEntryExit_5(
       util.cleanUpOrphanedMemory();
    }
 
-// ======================= 1. EXIT LOGIC (CLOSE & PRUNE) ===
-// CLOSE block if trigger Singal is CLOSE
-// ======================= 1. EXIT LOGIC (CLOSE & PRUNE) ===
-   if (totalOrders > 0) {
-
-      bool fullLiquidation = false; // Flag to prevent pruning if we just closed everything
-
-      // 1. MACRO PANIC: Check Sages First (They bypass everything)
-      bool sagesWantOut = (physicsAction == -1 || hasCollapse); // future three-sage hook
-      if (sagesWantOut) {
-         if(printStatus && isNewCandle) Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation. Shield bypassed.");
-         util.closeOrders(ocommon.magicNumber);
-         totalOrders = util.OrdersTotalByMagic(magicNumber);
-         ocommon.BarsHeld = 0;
-         fullLiquidation = true;
-      }
-
-      // 2. TACTICAL CLOSE: Check Fast Trigger (Needs the Trade Shield)
-      else if(triggerSignal == SAN_SIGNAL::CLOSE) {
-         bool enoughHoldTime = (ocommon.BarsHeld >= 5);
-
-         if(enoughHoldTime) {
-            if(printStatus) PrintFormat("🛡️ MATURE EXIT: Trade held for %d bars. Fast CLOSE accepted.", ocommon.BarsHeld);
-            util.closeOrders(ocommon.magicNumber);
-            totalOrders = util.OrdersTotalByMagic(magicNumber);
-            ocommon.BarsHeld = 0;   // reset for next entry
-            fullLiquidation = true;
-         } else if (printStatus && isNewCandle) {
-            PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE signal. Trade age is %d/5 bars.", ocommon.BarsHeld);
-         }
-      }
-
-      // 3. MAINTENANCE (PRUNERS): Trim the fat ONLY if the basket survived
-      if (!fullLiquidation) {
-
-         // --- EXPERIMENTAL PRUNERS (CURRENTLY OFFLINE) ---
-         /*
-         int weedsCut = 0;
-         int profitsHarvested = 0;
-         int reverseTrades = 0;
-         int profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
-
-         if(isNewCandle) {
-            // int pruneAge = MathMax(3, (int)MathFloor(maxPyramidTrades / 4.0));
-            // weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
-            // reverseTrades = util.pruneReverseTrades(magicNumber, triggerSignal, 30);
-         }
-
-         // Profit Harvester runs every tick (Trailing profit capture)
-         // profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
-
-         // If any pruning occurred, update the global order count
-         if(weedsCut > 0 || profitsHarvested > 0 || reverseTrades > 0) {
-            if(printStatus) PrintFormat("✂️ PRUNER: Weeds Cut: %d | Reverse: %d | Profits Harvested: %d", weedsCut, reverseTrades, profitsHarvested);
-            totalOrders = util.OrdersTotalByMagic(magicNumber);
-         }
-         */
-      }
-   }
-// ==========================================================
-
+// ======================= 1. EXIT LOGIC (GOVERNANCE MODULE) ===
+   ManageRiskAndExits(
+      ocommon,
+      totalOrders,
+      isNewCandle,
+      hasCollapse,
+      physicsAction,
+      triggerSignal,
+      atrRaw,
+      printStatus
+   );
+// =============================================================
 
 // === 2. PYRAMID LIMIT ===
-   if(totalOrders >= maxPyramidTrades) return;
+   if(totalOrders >= ocommon.maxPyramidTrades) return;
 
-
-// === 3. ENTRY LOGIC — FIXED: isNewCandle gate restored ===
-// This is the single highest-leverage fix — one trade per candle only
+// === 3. ENTRY LOGIC — ONE ENTRY PER CANDLE ONLY ===
    if(isNewCandle && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS && triggerSignal != SAN_SIGNAL::CLOSE ) {
-      if(printStatus)PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
-                                    util.getSigString(triggerSignal), dynamicLots,
-                                    TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
 
-      orderMesg = util.placeOrder(magicNumber, dynamicLots,
+      if(printStatus) PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+                                     util.getSigString(triggerSignal), dynamicLots,
+                                     TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
+
+      orderMesg = util.placeOrder(ocommon.magicNumber, dynamicLots,
                                   (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-      ocommon.newCandleGate=false;
+      ocommon.newCandleGate = false;
    }
 }
-
 //+------------------------------------------------------------------+
