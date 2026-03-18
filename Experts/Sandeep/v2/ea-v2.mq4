@@ -822,7 +822,7 @@ void OnEntryExit_5(
       util.cleanUpOrphanedMemory();
    }
 
-// ======================= 1. EXIT LOGIC (GOVERNANCE MODULE) ===
+// ======================= 1. EXIT LOGIC (GOVERNANCE) =======================
    ManageRiskAndExits(
       ocommon,
       totalOrders,
@@ -833,21 +833,20 @@ void OnEntryExit_5(
       atrRaw,
       printStatus
    );
-// =============================================================
 
-// === 2. PYRAMID LIMIT ===
-   if(totalOrders >= ocommon.maxPyramidTrades) return;
-
-// === 3. ENTRY LOGIC — ONE ENTRY PER CANDLE ONLY ===
-   if(isNewCandle && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS && triggerSignal != SAN_SIGNAL::CLOSE ) {
-
-      if(printStatus) PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
-                                     util.getSigString(triggerSignal), dynamicLots,
-                                     TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
-
-      orderMesg = util.placeOrder(ocommon.magicNumber, dynamicLots,
-                                  (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-      ocommon.newCandleGate = false;
-   }
+// ======================= 2. ENTRY LOGIC (EXECUTION) =======================
+// Strategy 5 is a raw Harvester, so 'isEntryApproved' is automatically true.
+// If this were Strategy 1, you would pass 'hasConsensus' instead.
+   ManageEntries(
+      ocommon,
+      totalOrders,
+      isNewCandle,
+      true,                // isEntryApproved
+      triggerSignal,
+      dynamicLots,
+      "🚜 HARVESTER",      // strategyName
+      printStatus,
+      orderMesg
+   );
 }
 //+------------------------------------------------------------------+
