@@ -61,7 +61,7 @@ double ciHandle; // buff1 : Comprehensive Buy Sell composite signals based on ot
 double ciClose; // buff2: Quick close signal based on candle close below ima5
 double ciStrategy; // buff3: The Signal strategy used to generate buy sell signals
 int BarsHeld = 0;   // per trade
-bool printStatus = false;
+bool printStatus = true;
 //double ciTradeSig; // buff4 : Trade NoTrade signal.
 //double ciMktType; // buff4 : Set Market type: Trending or Flat.
 
@@ -107,7 +107,6 @@ int OnInit() {
 
    ocommon.magicNumber = magicNumber;
    ocommon.activeStrategy = activeStrategy;
-   ocommon.BarsHeld=BarsHeld;
    ocommon.noOfCandles=noOfCandles;
    ocommon.SHIFT=SHIFT;
    ocommon.microLots = microLots;
@@ -121,9 +120,11 @@ int OnInit() {
    ocommon.cloudWeight = cloudWeight;
    ocommon.consensusThreshold = consensusThreshold;
    ocommon.pipValue = pipValue;
+
+// Following state is modifiable.
    ocommon.g_cbWarmedUp = g_cbWarmedUp;
-
-
+   ocommon.BarsHeld=BarsHeld;
+   ocommon.isNewBar = false;
 
    return(INIT_SUCCEEDED);
 }
@@ -178,30 +179,30 @@ void RefreshAll_CB(INDDATA_CB &data, STRATEGY_STATE& ocommon) {
       st1.WarmUpCache_CB(data,ocommon);
       g_cbWarmedUp = true;
       ocommon.g_cbWarmedUp = true;
-   } else if(data.newBar) {
+   } else if(ocommon.isNewBar) {
       st1.PushNewBar_CB(data,ocommon);
    }
    st1.RefreshLiveScalars_CB(data,ocommon);
 }
 
+
+
 void OnCycleTask1() {
 
 // 1. Capture Bar State ONCE per tick
    bool isNewBar = util.isNewBarTime();
-
    int totalOrders = util.OrdersTotalByMagic(magicNumber);
+   ocommon.isNewBar = isNewBar;
 //BarsHeld = util.getPyramidAge(magicNumber);
 //ocommon.BarsHeld = BarsHeld;
 //   Print("OCOMMON Message: "+ocommon.mesg1);
 
    ulong orderMesg = NULL;
    INDDATA indData;
-   indData.newBar = isNewBar;
 
    st1.RefreshPhysicsData(indData,ocommon);
    ocommon.BarsHeld = indData.BarsHeld;
 
-//   indData_cb.newBar = isNewBar;
 //   RefreshAll_CB(indData_cb,ocommon);
 //
 //   if(MathAbs(indData.ima30[1] - indData_cb.ima30.get(1)) > _Point) {
@@ -239,7 +240,6 @@ void OnCycleTask1() {
 
    isNewCandle = ocommon.newCandleGate;
 
-   int marketAction = ms.getMarketActionCombinedScore(indData);
 
 
 // Decisions
@@ -254,14 +254,9 @@ void OnCycleTask1() {
    double totalConf = MathPow(absF+0.01, 1.0) * MathPow(n+0.01, 1.2) * MathPow(b+0.01, 1.5);
    int cobbsDouglasAction = ms.getCobbDouglasCombinedScore(b, n, f, fra);
    int physicsAction = ms.getHyperbolicCombinedScore(b, n,f_Raw, fra);
+   int marketAction = ms.getMarketActionCombinedScore(indData);
 
-   if(printStatus) {
-      PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %d",
-                  b, n, f, fra, totalConf, cobbsDouglasAction);
 
-      PrintFormat("[HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | CombinedScore: %d",
-                  b, n, f, fra, physicsAction);
-   }
 
 // ===============================================
 // THE TRINITY CONSENSUS & PHASE TRIGGER
@@ -270,9 +265,26 @@ void OnCycleTask1() {
    bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
    bool hasCollapse  = (physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1);
 
+
+
 //   double absF = MathAbs(f);
 //bool isSqueeze = (absF <= 0.15);
    bool isSqueeze = (absF <= 0.4);
+
+   if(printStatus) {
+      PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %d",
+                  b, n, f, fra, totalConf, cobbsDouglasAction);
+
+      PrintFormat("[HYPERBOLIC] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | CombinedScore: %d",
+                  b, n, f, fra, physicsAction);
+
+
+      PrintFormat("[ACTION] Market: %.2f | Physics: %.2f | Cobb: %.2f | Squeeze: %s "
+                  , marketAction, physicsAction,cobbsDouglasAction,util.boolToStr(isSqueeze));
+
+
+   }
+
 
    if (activeStrategy == 1) {
       signals = st1.imaSt2(indData);
@@ -705,43 +717,66 @@ void OnEntryExit_5(
       util.cleanUpOrphanedMemory();
    }
 
-// ======================= 1. EXIT LOGIC (CLOSE) ===
+// ======================= 1. EXIT LOGIC (CLOSE & PRUNE) ===
 // CLOSE block if trigger Singal is CLOSE
-   if(triggerSignal == SAN_SIGNAL::CLOSE) {
-      //util.closeAllOrdersOnReverse(magicNumber,vanguardSignal);
-      util.closeOrders(ocommon.magicNumber);
-      totalOrders = util.OrdersTotalByMagic(magicNumber);
+// ======================= 1. EXIT LOGIC (CLOSE & PRUNE) ===
+   if (totalOrders > 0) {
+
+      bool fullLiquidation = false; // Flag to prevent pruning if we just closed everything
+
+      // 1. MACRO PANIC: Check Sages First (They bypass everything)
+      bool sagesWantOut = (physicsAction == -1 || hasCollapse); // future three-sage hook
+      if (sagesWantOut) {
+         if(printStatus && isNewCandle) Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation. Shield bypassed.");
+         util.closeOrders(ocommon.magicNumber);
+         totalOrders = util.OrdersTotalByMagic(magicNumber);
+         ocommon.BarsHeld = 0;
+         fullLiquidation = true;
+      }
+
+      // 2. TACTICAL CLOSE: Check Fast Trigger (Needs the Trade Shield)
+      else if(triggerSignal == SAN_SIGNAL::CLOSE) {
+         bool enoughHoldTime = (ocommon.BarsHeld >= 5);
+
+         if(enoughHoldTime) {
+            if(printStatus) PrintFormat("🛡️ MATURE EXIT: Trade held for %d bars. Fast CLOSE accepted.", ocommon.BarsHeld);
+            util.closeOrders(ocommon.magicNumber);
+            totalOrders = util.OrdersTotalByMagic(magicNumber);
+            ocommon.BarsHeld = 0;   // reset for next entry
+            fullLiquidation = true;
+         } else if (printStatus && isNewCandle) {
+            PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE signal. Trade age is %d/5 bars.", ocommon.BarsHeld);
+         }
+      }
+
+      // 3. MAINTENANCE (PRUNERS): Trim the fat ONLY if the basket survived
+      if (!fullLiquidation) {
+
+         // --- EXPERIMENTAL PRUNERS (CURRENTLY OFFLINE) ---
+         /*
+         int weedsCut = 0;
+         int profitsHarvested = 0;
+         int reverseTrades = 0;
+         int profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
+
+         if(isNewCandle) {
+            // int pruneAge = MathMax(3, (int)MathFloor(maxPyramidTrades / 4.0));
+            // weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
+            // reverseTrades = util.pruneReverseTrades(magicNumber, triggerSignal, 30);
+         }
+
+         // Profit Harvester runs every tick (Trailing profit capture)
+         // profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
+
+         // If any pruning occurred, update the global order count
+         if(weedsCut > 0 || profitsHarvested > 0 || reverseTrades > 0) {
+            if(printStatus) PrintFormat("✂️ PRUNER: Weeds Cut: %d | Reverse: %d | Profits Harvested: %d", weedsCut, reverseTrades, profitsHarvested);
+            totalOrders = util.OrdersTotalByMagic(magicNumber);
+         }
+         */
+      }
    }
 // ==========================================================
-
-
-// === 1. EXIT LOGIC (Pruners run first) ===
-   if(totalOrders > 0) {
-      int weedsCut = 0;
-      int profitsHarvested = 0;
-      int reverseTrades = 0;
-      int profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
-
-      if(isNewCandle) {
-         //int pruneAge = MathMax(3,(int)MathFloor(maxPyramidTrades / 4.0));
-         //int spreadLimit      = (int)ms.atrScale(atrRaw, 15,  120);  // tight → loose
-         //int pruneAge         = (int)ms.atrScale(atrRaw, 3, 5);    // patient → aggressive
-         // profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000); // low bar → high bar
-//         weedsCut = util.pruneTrades(magicNumber, pruneAge, 30);
-//         reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
-      }
-
-      // Profit Harvester runs every tick (correct)
-      // Raised threshold to 300 points (~30 pips) + can be made ATR-based later
-
-      //profitsHarvested = util.pruneByTrailingProfit(magicNumber, 0.80, profitThreshold, 30);
-
-      //Print("[Prune] weeds: "+weedsCut+" Reverse: "+reverseTrades+" profits: "+profitsHarvested);
-
-      if(weedsCut > 0 || profitsHarvested > 0 || reverseTrades>0) {
-         totalOrders = util.OrdersTotalByMagic(magicNumber);
-      }
-   }
 
 
 // === 2. PYRAMID LIMIT ===
