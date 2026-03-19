@@ -12,7 +12,7 @@
 #include <Sandeep/v2/SanStrategies-v2.mqh> // This now "owns" SanSignals
 
 input ulong magicNumber = 1002; // MagicNumber
-input int activeStrategy = 5; // 1: Trinity Sniper, 2: Trend Pyramiding
+input int activeStrategy = 3; // 1: Trinity Sniper, 2: Trend Pyramiding
 input int maxPyramidTrades = 15; // Stop adding after 15 open trades
 input int noOfCandles = 21;
 input const double TAKE_PROFIT = 1.4; // TakeProfit
@@ -195,6 +195,7 @@ void ManageRiskAndExits(
    const bool hasCollapse,
    const int physicsAction,
    const SAN_SIGNAL triggerSignal,
+   const SAN_SIGNAL closeSIG,
    const double atrRaw,
    const bool printLogs
 ) {
@@ -203,8 +204,9 @@ void ManageRiskAndExits(
    bool fullLiquidation = false;
 
 // 1. MACRO PANIC: Check Sages First (They bypass everything)
-   bool sagesWantOut = (physicsAction == -1 || hasCollapse);
-   if (sagesWantOut) {
+   bool sagesWantOut = hasCollapse;
+   
+   if (sagesWantOut && (ocommon.BarsHeld >= 2)) {
       if(printLogs && isNewCandle) Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation. Shield bypassed.");
       util.closeOrders(ocommon.magicNumber);
       totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
@@ -213,7 +215,7 @@ void ManageRiskAndExits(
    }
 
 // 2. TACTICAL CLOSE: Check Fast Trigger (Needs the Trade Shield)
-   else if(triggerSignal == SAN_SIGNAL::CLOSE) {
+   else if((triggerSignal == SAN_SIGNAL::CLOSE)||(closeSIG == SAN_SIGNAL::CLOSE)) {
       bool enoughHoldTime = (ocommon.BarsHeld >= 5);
 
       if(enoughHoldTime) {
@@ -368,8 +370,35 @@ void OnCycleTask1() {
 // THE TRINITY CONSENSUS & PHASE TRIGGER
 // ===============================================
 
-   bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
-   bool hasCollapse  = (physicsAction == -1 || cobbsDouglasAction == -1 || marketAction == -1);
+   //bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
+   //bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
+
+
+   bool hasConsensus = (((physicsAction == 1) || (cobbsDouglasAction == 1)) && marketAction == 1);
+   bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
+
+//// ===============================================
+//// THE TRINITY CONSENSUS & PHASE TRIGGER
+//// ===============================================
+//
+//// 1. Identify Directional Alignment
+//bool bullConsensus = (((physicsAction == 1)  || (cobbsDouglasAction == 1))  && marketAction == 1);
+//bool bearConsensus = (((physicsAction == -1) || (cobbsDouglasAction == -1)) && marketAction == -1);
+//
+//// 2. Global Entry Approval Gate (Now supports both Buy and Sell!)
+//bool hasConsensus = (bullConsensus || bearConsensus);
+//
+//// 3. Identify Macro Failure States (The market dies, engines return 0)
+//bool isDeadMarket    = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 0);
+//
+//// 4. Identify Macro Reversals (The Sages violently flip against your open trade)
+//SAN_SIGNAL tradePosition = util.getAvgTradePosition(ocommon.magicNumber);
+//bool isMacroReversal = ((tradePosition == SAN_SIGNAL::BUY  && bearConsensus) || 
+//                        (tradePosition == SAN_SIGNAL::SELL && bullConsensus));
+//
+//// 5. The Ultimate Panic Button
+//bool macroPanic = (isDeadMarket || isMacroReversal);
+
 
 
 
@@ -440,12 +469,8 @@ void OnCycleTask1() {
                              direction                   // pre-filter so reversal is detectable
                           );
 
-
-   if(triggerSignal == SAN_SIGNAL::NOSIG && isSqueeze && squeezeReversal) {
-      triggerSignal = direction;  // allow the reversal at reduced conviction
-   }
-
 // #################### SQUEEZE BLOCK #################################################################
+
 
 //double convictionFactor = isSqueeze ? 0.75 : 1.0;
    double convictionFactor = (!isSqueeze)? 1.0
@@ -491,30 +516,17 @@ void OnCycleTask1() {
          totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
-      );
+      );   
+
    } else if (activeStrategy == 2) {
       OnEntryExit_2(
-         ocommon,
-         totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
-         vanguardSignal, triggerSignal, closeSIG,
-         physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
-      );
-   } else if (activeStrategy == 3) {
-      OnEntryExit_3(
-         ocommon,
-         totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
-         vanguardSignal, triggerSignal, closeSIG,
-         physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
-      );
-   } else if (activeStrategy == 4) {
-      OnEntryExit_4(
          ocommon,
          totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
       );
-   } else if (activeStrategy == 5) {
-      OnEntryExit_5(
+   } else if (activeStrategy == 3) {
+      OnEntryExit_3(
          ocommon,
          totalOrders, isNewCandle,candleTraded, numOfTrades,dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
@@ -608,133 +620,12 @@ void OnEntryExit_1(
 //+------------------------------------------------------------------+
 
 
-//+------------------------------------------------------------------+
-//| ENTRY & EXIT STRATEGY 2: Continuous Pyramiding & Flip-Reversal   |
-//+------------------------------------------------------------------+
-void OnEntryExit_2(
-   STRATEGY_STATE& ocommon,
-   int& totalOrders,
-   const double dynamicLots,
-   const bool hasConsensus,
-   const bool hasCollapse,
-   const bool isSqueeze,
-   const SAN_SIGNAL vanguardSignal,
-   const SAN_SIGNAL triggerSignal,
-   const SAN_SIGNAL closeSIG,
-   const int physicsAction,
-   const int cobbsDouglasAction,
-   const int marketAction,
-   const double atrRaw,
-   ulong& orderMesg
-) {
-
-   SAN_SIGNAL tradePosition = util.getTradePosition();
-
-// --- EXIT LOGIC (The Flip & The Failsafe) ---
-   if (totalOrders > 0) {
-      // Failsafe: Total Macro Collapse
-      if (hasCollapse) {
-         if(printStatus)PrintFormat("🚨 STRATEGY 2: Macro Collapse Detected. Liquidating %d positions.", totalOrders);
-         orderMesg = util.closeOrders(magicNumber);
-         //BarsHeld = 0;
-         ocommon.BarsHeld = 0;
-         totalOrders = 0; // <--- UPDATE STATE
-         return; // Abort further action on this candle
-      }
-
-      // The Flip Reversal: If Sages scream SELL, but we hold BUYs -> Close all BUYs.
-      if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-         if (util.oppSignal(tradePosition, triggerSignal)) {
-            if(printStatus)PrintFormat("🔄 STRATEGY 2: Market violently flipped from %s to %s! Liquidating portfolio.",
-                                          util.getSigString(tradePosition), util.getSigString(triggerSignal));
-            orderMesg = util.closeOrders(magicNumber);
-            //BarsHeld = 0;
-            ocommon.BarsHeld = 0;
-            totalOrders = 0;
-            tradePosition = SAN_SIGNAL::NOSIG; // Reset state so we can immediately enter the new direction
-         }
-      }
-   }
-
-// --- ENTRY LOGIC (Continuous Piling) ---
-// Notice there is NO "if(totalOrders == 0)" here. It will run every single candle.
-   if ((totalOrders < maxPyramidTrades)) {
-      if (hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-
-         if(printStatus)PrintFormat("📈 STRATEGY 2: Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
-                                       util.getSigString(triggerSignal), (totalOrders + 1), dynamicLots);
-
-         orderMesg = util.placeOrder(magicNumber, dynamicLots,
-                                     (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-         //BarsHeld = 0; // Reset holding time since we just modified the portfolio
-         ocommon.BarsHeld = 0;
-      }
-   } else {
-      //  Print("🛡️ STRATEGY 2: Max pyramid capacity reached. Riding the trend without adding more.");
-   }
-}
-//+------------------------------------------------------------------+
-
-
-//+------------------------------------------------------------------+
-//| ENTRY & EXIT STRATEGY 3: Tactical Pyramiding with Auto-Pruning   |
-//+------------------------------------------------------------------+
-void OnEntryExit_3(
-   STRATEGY_STATE& ocommon,
-   int& totalOrders,
-   const bool isNewCandle,
-   const double dynamicLots,
-   const bool hasConsensus,
-   const bool hasCollapse,
-   const bool isSqueeze,
-   const SAN_SIGNAL vanguardSignal,
-   const SAN_SIGNAL triggerSignal,
-   const SAN_SIGNAL closeSIG,
-   const int physicsAction,
-   const int cobbsDouglasAction,
-   const int marketAction,
-   const double atrRaw,
-   ulong& orderMesg
-) {
-
-// --- EXIT LOGIC (The Automated Gardener / Pruner) ---
-// OPTIMIZATION: Only evaluate the weeds once per candle!
-   if ((totalOrders > 0) && isNewCandle) {
-
-      // Call the plugin! Cut negative trades older than 4 bars.
-      int prunedWeeds = util.pruneTrades(magicNumber, 4, 30);
-
-      // If we pruned anything, update the totalOrders count for the Entry Logic below
-      if (prunedWeeds > 0) {
-         totalOrders = util.OrdersTotalByMagic(magicNumber);
-         // NOTE: Do NOT set BarsHeld = 0 here anymore! getPyramidAge() handles it.
-      }
-   }
-
-// --- ENTRY LOGIC (Continuous Piling) ---
-   if (totalOrders < maxPyramidTrades) {
-
-      // Strategy 3 ignores Sages (hasConsensus), relies only on tactical signal
-      if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-
-         if(printStatus)PrintFormat("📈 STRATEGY 3: Tactical Trend is %s. Adding position #%d to the portfolio. (Lots: %.2f)",
-                                       util.getSigString(triggerSignal), (totalOrders + 1), dynamicLots);
-
-         orderMesg = util.placeOrder(magicNumber, dynamicLots,
-                                     (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
-
-         // NOTE: Do NOT set BarsHeld = 0 here! If you do, the Sages forget the age of the trend.
-      }
-   }
-}
-//+------------------------------------------------------------------+
-
 
 
 //+------------------------------------------------------------------+
 //| ENTRY & EXIT STRATEGY 4: Pure Volatility Harvester (1 per candle)|
 //+------------------------------------------------------------------+
-void OnEntryExit_4(
+void OnEntryExit_2(
    STRATEGY_STATE& ocommon,
    int& totalOrders,
    const bool isNewCandle,
@@ -754,7 +645,7 @@ void OnEntryExit_4(
 
 
 // CLOSE block if trigger Singal is CLOSE
-   if(triggerSignal == SAN_SIGNAL::CLOSE) {
+   if((triggerSignal == SAN_SIGNAL::CLOSE)||(closeSIG == SAN_SIGNAL::CLOSE)) {
       util.closeOrders(magicNumber);
       totalOrders = util.OrdersTotalByMagic(magicNumber);
    }
@@ -798,7 +689,7 @@ void OnEntryExit_4(
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void OnEntryExit_5(
+void OnEntryExit_3(
    STRATEGY_STATE& ocommon,
    int& totalOrders,
    const bool isNewCandle,
@@ -830,6 +721,7 @@ void OnEntryExit_5(
       hasCollapse,
       physicsAction,
       triggerSignal,
+      closeSIG,
       atrRaw,
       printStatus
    );

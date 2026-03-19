@@ -367,7 +367,7 @@ class SanSignals {
       const int FILTER = 3
    );
 
-   SAN_SIGNAL        squeezeFilter(const double fMSR_Norm, const double baseSlope, SAN_SIGNAL inpsig, const double SQUEEZE_BOUNDARY=0.4);
+   SAN_SIGNAL        squeezeFilter(const double fMSR_Norm, const double baseSlope, SAN_SIGNAL inpsig, const double SQUEEZE_BOUNDARY=0.4,const double SLOPE_BOUNDARY=0.1);
 
 };
 
@@ -1296,102 +1296,39 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
    return NOSIG;
 }
 
-////+------------------------------------------------------------------+
-////| STATIC REGIME ALGORITHM: Ratio-based, No Decay                   |
-////+------------------------------------------------------------------+
-//SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1) {
+//SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr) {
 //
-//// 1. CONSTANTS
-//   const double MIN_SLOW_THRESHOLD  = 0.0001; // Division by zero protection
-//   const double STRONG_MACRO_TREND  = 0.50;   // The "Fixed Value" for slow slope
-//   const double RATIO_LOWER_BOUND   = 0.80;   // The tolerance for momentum loss
+//   double MICRO_FLOOR = atr * 0.10;
+//   const double NOTRADEZONE = MICRO_FLOOR * 1.5;
 //
-//   double fastSlope = fast.val1;
-//   double slowSlope = slow.val1;
+//   double fS = fast.val1;
+//   double mS = med.val1;
+//   double absSlow  = MathAbs(mS);
+//   SAN_SIGNAL dir = (mS > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
 //
-//// 2. SINGULARITY / FLAT MARKET CHECK
-//   double absSlow = MathAbs(slowSlope);
-//   if(absSlow < MIN_SLOW_THRESHOLD) {
-//      // If the slow trend is completely dead, we don't trade the ratio.
-//      return NOSIG;
+//   double vScore = ms.expansionCompressionRatio(fS, mS, MICRO_FLOOR);
+//
+//   // 1. THE MICRO-POLICY (Expansion)
+//   // If momentum is pushing with the trend, report the trend direction.
+//   if(vScore >= 0.70) {
+//      return dir; 
 //   }
 //
-//// 3. DIVERGENCE CHECK (Directional Alignment)
-//// Even if the absolute ratio is 1.5, if Fast is UP and Slow is DOWN, it's a reversal.
-//   if(fastSlope * slowSlope < 0) {
-//      return CLOSE; // They disagree. Exit immediately.
+//   // 2. THE LIGHTNING EXIT (Flat Market)
+//   // If momentum dies AND the macro trend is flat, report CLOSE.
+//   if(vScore < 0.70 && absSlow <= NOTRADEZONE) {
+//      return SAN_SIGNAL::CLOSE;
 //   }
 //
-//// 4. THE RATIO CALCULATION
-//// Since we already checked directional alignment, we can use absolute values safely.
-//   double ratio = MathAbs(fastSlope) / absSlow;
-//
-//// 5. THE DECISION TREE (Your Logic)
-//   SAN_SIGNAL direction = (slowSlope > 0) ? BUY : SELL;
-//// RULE 1: Fast is outpacing Slow (Expansion)
-//   if(ratio >= 1.0) {
-//      return direction;
+//   // 3. THE COMPRESSION STATE (The Fix)
+//   // Momentum is compressing, but the trend is still heavily sloped.
+//   // Instead of flipping to SELL here and fighting tradeSlopeSig, just report NOSIG.
+//   // Let the master 'squeezeFilter' and 'isSqueezeReversal' handle the counter-trend logic!
+//   if(vScore < 0.70 && absSlow > NOTRADEZONE) {
+//      return SAN_SIGNAL::NOSIG; 
 //   }
 //
-//// RULE 2 & 3: Fast is lagging Slow (Contraction / Consolidation)
-//   if(ratio >= RATIO_LOWER_BOUND && ratio < 1.0) {
-//
-//      if(absSlow > STRONG_MACRO_TREND) {
-//         // RULE 2: The macro trend is strong enough to carry us through this minor dip.
-//         return direction;
-//      } else {
-//         // RULE 3: The macro trend is weak, and fast momentum is dying. Get out.
-//         return CLOSE;
-//      }
-//   }
-//
-//// RULE 4: Ratio is below 0.80. Total momentum collapse.
-//   return CLOSE;
-//}
-
-//SAN_SIGNAL SanSignals::tradeSlopeSIG_Static(const DTYPE &fast, const DTYPE &slow, double atr, ulong magicnumber = -1) {
-//
-//   // 1. DEFINE THE STRUCTURAL FLOOR
-//   // Instead of a hard 0.6 (which changes per pair), we use a Volatility Floor.
-//   // 0.3 * ATR is usually the "sweet spot" for a valid macro-structure floor.
-//   double STRUCTURAL_FLOOR = atr * 0.30;
-//
-//   double fSlope = fast.val1;
-//   double sSlope = slow.val1;
-//   double absSlow = MathAbs(sSlope);
-//
-//   // 2. DIRECTIONAL ALIGNMENT (The first "No Sense" check)
-//   // If slopes are against each other, the result is negative. Exit/Stay out.
-//   if(fSlope * sSlope <= 0) {
-//      return CLOSE;
-//   }
-//
-//   // 3. THE RATIO (Expansion Check)
-//   double ratio = MathAbs(fSlope) / absSlow;
-//
-//   // 4. THE DECISION ENGINE
-//   SAN_SIGNAL direction = (sSlope > 0) ? BUY : SELL;
-//
-//   // CASE A: Perfect Expansion (Fast is leading the Slow)
-//   if(ratio >= 1.0) {
-//      // Even in expansion, the "Tide" (Slow Slope) must be strong enough.
-//      if(absSlow >= STRUCTURAL_FLOOR) {
-//         return direction;
-//      } else {
-//         // Good ratio, but the market structure is too weak/flat.
-//         return NOSIG;
-//      }
-//   }
-//
-//   // CASE B: Compression (Fast is lagging the Slow)
-//   // Even if ratio is 0.8-0.9, we only stay in if the macro trend is very powerful.
-//   double POWER_TREND = STRUCTURAL_FLOOR * 1.5; // Demand extra tide speed
-//   if(ratio >= 0.8 && absSlow >= POWER_TREND) {
-//      return direction;
-//   }
-//
-//   // CASE C: Everything else (Inefficient Geometry)
-//   return CLOSE;
+//   return SAN_SIGNAL::NOSIG;
 //}
 
 SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr) {
@@ -1399,9 +1336,12 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
 // 1. THE MICRO-FLOOR (Aggressive)
 // We lower the barrier to entry. We only need 10% of ATR to consider it "Active."
    double MICRO_FLOOR = atr * 0.10;
+   const double NOTRADEZONE = MICRO_FLOOR*1.5;
+
 
    double fS = fast.val1;
    double mS = med.val1;
+   double absSlow  = MathAbs(mS);
 //SAN_SIGNAL dir = (fS > 0) ? BUY : SELL;
    SAN_SIGNAL dir = (mS > 0) ? BUY : SELL;
 
@@ -1414,30 +1354,34 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
 // We ONLY enter if the expansion is nearly perfect (>= 0.95)
 // This ensures we are catching the "Meat" of the micro-move.
 //   if(vScore >= 0.95) {
-   if(vScore >= 0.8) {
+   if(vScore >= 0.7) {
       return dir;
    }
 
 // 4. THE LIGHTNING EXIT
 // If the velocity score drops even slightly (e.g., below 0.70),
 // we BAIL. There is no macro structure to save us here.
-   if((vScore > 0.40)&&(vScore < 0.60)) return CLOSE;
+//   if((vScore > 0.40)&&(vScore < 0.60)) return CLOSE;
+   if((vScore < 0.70)&&(absSlow<=NOTRADEZONE)) return CLOSE;
 
-   if(vScore <= 0.40) {
-      if(dir == SAN_SIGNAL::BUY) {
-         return SAN_SIGNAL::SELL;
-      }
-      if(dir == SAN_SIGNAL::SELL) {
-         return SAN_SIGNAL::BUY;
-      }
+   if((vScore < 0.70)&&(absSlow>NOTRADEZONE)) {
+      //if(dir == SAN_SIGNAL::BUY) {
+      //   return SAN_SIGNAL::SELL;
+      //}
+      //if(dir == SAN_SIGNAL::SELL) {
+      //   return SAN_SIGNAL::BUY;
+      //}
+      return SAN_SIGNAL::NOSIG;
    };
 
-   return NOSIG;
+   return SAN_SIGNAL::NOSIG;
 }
+
 
 SAN_SIGNAL SanSignals::macroWaveSIG(const DTYPE &fast, const DTYPE &slow, double atr) {
 
    double floor    = atr * 0.30;
+   const double NOTRADEZONE = (floor * 1.5);
 
    double fS       = fast.val1;
    double sS       = slow.val1;
@@ -1445,35 +1389,32 @@ SAN_SIGNAL SanSignals::macroWaveSIG(const DTYPE &fast, const DTYPE &slow, double
 
    SAN_SIGNAL dir  = (sS > 0) ? BUY : SELL;
 
-// 1. CALL THE PHYSICS ENGINE
-// This one call handles Directional Alignment AND the Structural Floor.
+   // 1. CALL THE PHYSICS ENGINE
    double mScore = ms.expansionCompressionRatio(fS, sS, floor);
 
-// 2. THE LEAN POLICY
-// If mScore is 1.0, the Metric has already verified Direction, Floor, and Expansion.
-//if(mScore >= 1.0) return dir;
+   // 2. THE LEAN POLICY
    if(mScore >= 0.9) return dir;
 
-// For Case B (Compression), we check for the "Power Trend" extra requirement.
-   if(mScore >= 0.8 && absSlow >= (floor * 1.5)) return dir;
+   // For Case B (Compression), we check for the "Power Trend" extra requirement.
+   if(mScore >= 0.8 && absSlow >= NOTRADEZONE) return dir;
 
-   if((mScore>0.4) &&(mScore < 0.6))  return SAN_SIGNAL::CLOSE;
-
-   if(mScore<=0.4) {
-      if(dir == SAN_SIGNAL::BUY) {
-         return SAN_SIGNAL::SELL;
-      }
-      if(dir == SAN_SIGNAL::SELL) {
-         return SAN_SIGNAL::BUY;
-      }
+   // 3. FLATSQUEEZE: Squeezing/Weak and the base trend is flat
+   if(mScore < 0.8 && absSlow < NOTRADEZONE)   return SAN_SIGNAL::CLOSE;
+   
+   // 4. BUYSQUEEZE / SELLSQUEEZE: Squeezing but the trend is heavily sloped
+   if(mScore < 0.8 && absSlow >= NOTRADEZONE) {
+      //if(dir == SAN_SIGNAL::BUY) {
+      //   return SAN_SIGNAL::SELL;
+      //}
+      //if(dir == SAN_SIGNAL::SELL) {
+      //   return SAN_SIGNAL::BUY;
+      //}
+      return SAN_SIGNAL::NOSIG;
    }
-//if(mScore == 0) return SAN_SIGNAL::CLOSE;
 
-// If the Metric returned 0.0 (Veto) or a weak ratio, we bail.
+   // 5. DEFAULT FAILSAFE (Catches weak expansions in flat markets)
    return SAN_SIGNAL::CLOSE;
 }
-
-
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -3785,88 +3726,128 @@ D20TYPE SanSignals::hilbertDftSIG(
 //| inpsig     : raw tactical signal from strategy                  |
 //| SQUEEZE_BOUNDARY : threshold below which momentum is compressed |
 //+------------------------------------------------------------------+
+
 SAN_SIGNAL SanSignals::squeezeFilter(
    const double    fMSR_Norm,
    const double    baseSlope,
    const SAN_SIGNAL inpsig,
-   const double    SQUEEZE_BOUNDARY = 0.4
+   const double    SQUEEZE_BOUNDARY, // Default defined in .mqh
+   const double    SLOPE_BOUNDARY    // Default defined in .mqh
 ) {
    bool printStatus = false;
    double absF    = MathAbs(fMSR_Norm);
    bool isSqueeze = (absF <= SQUEEZE_BOUNDARY);
 
-// --- EXPANSION: momentum is healthy, pass signal through unchanged ---
-   if (!isSqueeze) {
-      if(printStatus) PrintFormat(
-            "🚀 EXPANSION: Signal %s passed through. (fMSR: %.2f)",
-            util.getSigString(inpsig), fMSR_Norm);
-      return inpsig;
+   // --- EXPANSION: pass signal through ---
+   if (!isSqueeze) return inpsig;
+
+   // --- SQUEEZE HANDLING ---
+   
+   // Always pass through existing CLOSE signals
+   if (inpsig == SAN_SIGNAL::CLOSE) return inpsig;
+
+   // RULE 3: FLATSQUEEZE -> Block all buy/sell, exit all trades
+   // FIXED: <= closes the boundary black hole
+   if ((MathAbs(baseSlope) <= SLOPE_BOUNDARY) && isSqueeze) {
+      if(printStatus) Print("⚡ FLATSQUEEZE: Market dead. Exiting all trades.");
+      return SAN_SIGNAL::CLOSE; 
    }
 
-// --- SQUEEZE: momentum is compressed, apply directional gate ---
+   // RULES 1 & 2: BUYSQUEEZE / SELLSQUEEZE -> Counter-trend only
+   bool squeezeReversal = ms.isSqueezeReversal(fMSR_Norm, baseSlope, inpsig, SQUEEZE_BOUNDARY, SLOPE_BOUNDARY);
 
-// Always pass through non-directional signals (CLOSE, SIDEWAYS, NOSIG)
-// A CLOSE signal must never be suppressed by a squeeze filter
-   bool isDirectional = (inpsig == SAN_SIGNAL::BUY || inpsig == SAN_SIGNAL::SELL);
-   if (!isDirectional) {
-      return inpsig;
-   }
+   if(squeezeReversal) {
+      if(printStatus) PrintFormat("🔄 SQUEEZE REVERSAL: %s counter-trend entry allowed.", util.getSigString(inpsig));
+      return inpsig; // Allow the reversal
+   } 
 
-//// Squeeze blocks: trend-aligned entries (exhaustion trap)
-//   bool squeezeBlocksBuy  = (isSqueeze && baseSlope == 1);
-//   bool squeezeBlocksSell = (isSqueeze && baseSlope == -1);
+   // Trend-aligned signals during a squeeze are blocked
+   return SAN_SIGNAL::NOSIG;
+}
+
+
+//SAN_SIGNAL SanSignals::squeezeFilter(
+//   const double    fMSR_Norm,
+//   const double    baseSlope,
+//   const SAN_SIGNAL inpsig,
+//   const double    SQUEEZE_BOUNDARY = 0.4
+//) {
+//   bool printStatus = false;
+//   double absF    = MathAbs(fMSR_Norm);
+//   bool isSqueeze = (absF <= SQUEEZE_BOUNDARY);
 //
-//// Squeeze allows: counter-trend entries (mean reversion play)
-//   bool squeezeReversalBuy  = (squeezeBlocksSell && inpsig == SAN_SIGNAL::BUY);
-//   bool squeezeReversalSell = (squeezeBlocksBuy  && inpsig == SAN_SIGNAL::SELL);
-//   bool squeezeReversal     = (squeezeReversalBuy || squeezeReversalSell);
-//
-
-   bool squeezeReversal = ms.isSqueezeReversal(fMSR_Norm,baseSlope,inpsig,SQUEEZE_BOUNDARY);
-
-   if((squeezeReversal)||(baseSlope==0)) {
-      return inpsig;
-   } else {
-      return SAN_SIGNAL::NOSIG;
-   }
-
-//   if (squeezeBlocksBuy && inpsig == SAN_SIGNAL::BUY) {
-//      // Uptrend exhausting — block trend-chasing buy
+//// --- EXPANSION: momentum is healthy, pass signal through unchanged ---
+//   if (!isSqueeze) {
 //      if(printStatus) PrintFormat(
-//            "⚠️ SQUEEZE BLOCK: Uptrend exhausting. BUY blocked. "
-//            "(fMSR: %.2f, baseSlope: %.0f)",
-//            fMSR_Norm, baseSlope);
-//      return SAN_SIGNAL::NOSIG;
-//
-//   } else if (squeezeBlocksSell && inpsig == SAN_SIGNAL::SELL) {
-//      // Downtrend exhausting — block trend-chasing sell
-//      if(printStatus) PrintFormat(
-//            "⚠️ SQUEEZE BLOCK: Downtrend exhausting. SELL blocked. "
-//            "(fMSR: %.2f, baseSlope: %.0f)",
-//            fMSR_Norm, baseSlope);
-//      return SAN_SIGNAL::NOSIG;
-//
-//   } else if (squeezeReversal) {
-//      // Counter-trend entry during exhaustion — mean reversion play
-//      if(printStatus) PrintFormat(
-//            "🔄 SQUEEZE REVERSAL: %s counter-trend entry allowed. "
-//            "(fMSR: %.2f, baseSlope: %.0f)",
-//            util.getSigString(inpsig), fMSR_Norm, baseSlope);
-//      return inpsig;
-//
-//   } else if (baseSlope == 0) {
-//      // Flat macro during squeeze — no trend to exhaust or reverse
-//      // Pass signal through but caller should apply reduced conviction
-//      if(printStatus) PrintFormat(
-//            "⚡ SQUEEZE FLAT: No macro direction. Signal %s passed through. "
-//            "(fMSR: %.2f)",
+//            "🚀 EXPANSION: Signal %s passed through. (fMSR: %.2f)",
 //            util.getSigString(inpsig), fMSR_Norm);
 //      return inpsig;
 //   }
-
-// Fallback — squeeze active but no specific rule matched
-   return SAN_SIGNAL::NOSIG;
-}
+//
+//// --- SQUEEZE: momentum is compressed, apply directional gate ---
+//
+//// Always pass through non-directional signals (CLOSE, SIDEWAYS, NOSIG)
+//// A CLOSE signal must never be suppressed by a squeeze filter
+//   bool isDirectional = (inpsig == SAN_SIGNAL::BUY || inpsig == SAN_SIGNAL::SELL);
+//   if (!isDirectional) {
+//      return inpsig;
+//   }
+//
+////// Squeeze blocks: trend-aligned entries (exhaustion trap)
+////   bool squeezeBlocksBuy  = (isSqueeze && baseSlope == 1);
+////   bool squeezeBlocksSell = (isSqueeze && baseSlope == -1);
+////
+////// Squeeze allows: counter-trend entries (mean reversion play)
+////   bool squeezeReversalBuy  = (squeezeBlocksSell && inpsig == SAN_SIGNAL::BUY);
+////   bool squeezeReversalSell = (squeezeBlocksBuy  && inpsig == SAN_SIGNAL::SELL);
+////   bool squeezeReversal     = (squeezeReversalBuy || squeezeReversalSell);
+////
+//
+//   bool squeezeReversal = ms.isSqueezeReversal(fMSR_Norm,baseSlope,inpsig,SQUEEZE_BOUNDARY);
+//
+//   if((squeezeReversal)||(baseSlope==0)) {
+//      return inpsig;
+//   } else {
+//      return SAN_SIGNAL::NOSIG;
+//   }
+//
+////   if (squeezeBlocksBuy && inpsig == SAN_SIGNAL::BUY) {
+////      // Uptrend exhausting — block trend-chasing buy
+////      if(printStatus) PrintFormat(
+////            "⚠️ SQUEEZE BLOCK: Uptrend exhausting. BUY blocked. "
+////            "(fMSR: %.2f, baseSlope: %.0f)",
+////            fMSR_Norm, baseSlope);
+////      return SAN_SIGNAL::NOSIG;
+////
+////   } else if (squeezeBlocksSell && inpsig == SAN_SIGNAL::SELL) {
+////      // Downtrend exhausting — block trend-chasing sell
+////      if(printStatus) PrintFormat(
+////            "⚠️ SQUEEZE BLOCK: Downtrend exhausting. SELL blocked. "
+////            "(fMSR: %.2f, baseSlope: %.0f)",
+////            fMSR_Norm, baseSlope);
+////      return SAN_SIGNAL::NOSIG;
+////
+////   } else if (squeezeReversal) {
+////      // Counter-trend entry during exhaustion — mean reversion play
+////      if(printStatus) PrintFormat(
+////            "🔄 SQUEEZE REVERSAL: %s counter-trend entry allowed. "
+////            "(fMSR: %.2f, baseSlope: %.0f)",
+////            util.getSigString(inpsig), fMSR_Norm, baseSlope);
+////      return inpsig;
+////
+////   } else if (baseSlope == 0) {
+////      // Flat macro during squeeze — no trend to exhaust or reverse
+////      // Pass signal through but caller should apply reduced conviction
+////      if(printStatus) PrintFormat(
+////            "⚡ SQUEEZE FLAT: No macro direction. Signal %s passed through. "
+////            "(fMSR: %.2f)",
+////            util.getSigString(inpsig), fMSR_Norm);
+////      return inpsig;
+////   }
+//
+//// Fallback — squeeze active but no specific rule matched
+//   return SAN_SIGNAL::NOSIG;
+//}
 
 SanSignals sig;
 //+------------------------------------------------------------------+
