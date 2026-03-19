@@ -205,7 +205,7 @@ void ManageRiskAndExits(
 
 // 1. MACRO PANIC: Check Sages First (They bypass everything)
    bool sagesWantOut = hasCollapse;
-   
+
    if (sagesWantOut && (ocommon.BarsHeld >= 2)) {
       if(printLogs && isNewCandle) Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation. Shield bypassed.");
       util.closeOrders(ocommon.magicNumber);
@@ -370,36 +370,12 @@ void OnCycleTask1() {
 // THE TRINITY CONSENSUS & PHASE TRIGGER
 // ===============================================
 
-   //bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
-   //bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
+//bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
+//bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
 
 
    bool hasConsensus = (((physicsAction == 1) || (cobbsDouglasAction == 1)) && marketAction == 1);
    bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
-
-//// ===============================================
-//// THE TRINITY CONSENSUS & PHASE TRIGGER
-//// ===============================================
-//
-//// 1. Identify Directional Alignment
-//bool bullConsensus = (((physicsAction == 1)  || (cobbsDouglasAction == 1))  && marketAction == 1);
-//bool bearConsensus = (((physicsAction == -1) || (cobbsDouglasAction == -1)) && marketAction == -1);
-//
-//// 2. Global Entry Approval Gate (Now supports both Buy and Sell!)
-//bool hasConsensus = (bullConsensus || bearConsensus);
-//
-//// 3. Identify Macro Failure States (The market dies, engines return 0)
-//bool isDeadMarket    = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 0);
-//
-//// 4. Identify Macro Reversals (The Sages violently flip against your open trade)
-//SAN_SIGNAL tradePosition = util.getAvgTradePosition(ocommon.magicNumber);
-//bool isMacroReversal = ((tradePosition == SAN_SIGNAL::BUY  && bearConsensus) || 
-//                        (tradePosition == SAN_SIGNAL::SELL && bullConsensus));
-//
-//// 5. The Ultimate Panic Button
-//bool macroPanic = (isDeadMarket || isMacroReversal);
-
-
 
 
 //   double absF = MathAbs(f);
@@ -490,15 +466,17 @@ void OnCycleTask1() {
    if (dynamicLots < minLotSize) dynamicLots = minLotSize;
 
    if(isNewCandle) {
-      if(printStatus)PrintFormat("🔍 DIAGNOSTIC [%s]: Trigger: %s | Squeeze: %s | Consensus: %s | TotalOrders: %d",
-                                    _Symbol, util.getSigString(triggerSignal), (isSqueeze?"YES":"NO"), (hasConsensus?"YES":"NO"), totalOrders);
+      if(printStatus) PrintFormat("🔍 DIAGNOSTIC [%s]: Trigger: %s | Squeeze: %s | Consensus: %s | TotalOrders: %d",
+                                     _Symbol, util.getSigString(triggerSignal), (isSqueeze?"YES":"NO"), (hasConsensus?"YES":"NO"), totalOrders);
 
-      if(triggerSignal == SAN_SIGNAL::NOSIG)
-         if(printStatus)Print("❌ SILENCE CAUSE: Tactical Brain (imaSt3) returned NOSIG.");
-         else if(!hasConsensus && !isSqueeze)
-            if(printStatus)Print("❌ SILENCE CAUSE: Sages (Physics/Cobb) Vetoed the Expansion trade.");
-            else if(indData.currSpread > indData.spreadLimit)
-               if(printStatus)PrintFormat("❌ SILENCE CAUSE: Spread (%d) is above Limit (%d).", indData.currSpread, indData.spreadLimit);
+      // FIXED: Added explicit scope so the compiler evaluates the logic correctly
+      if(triggerSignal == SAN_SIGNAL::NOSIG) {
+         if(printStatus) Print("❌ SILENCE CAUSE: Tactical Brain (imaSt3) returned NOSIG.");
+      } else if(!hasConsensus && !isSqueeze) {
+         if(printStatus) Print("❌ SILENCE CAUSE: Sages (Physics/Cobb) Vetoed the Expansion trade.");
+      } else if(indData.currSpread > indData.spreadLimit) {
+         if(printStatus) PrintFormat("❌ SILENCE CAUSE: Spread (%d) is above Limit (%d).", indData.currSpread, indData.spreadLimit);
+      }
    }
 
 // Call the modular execution strategy
@@ -516,7 +494,7 @@ void OnCycleTask1() {
          totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
-      );   
+      );
 
    } else if (activeStrategy == 2) {
       OnEntryExit_2(
