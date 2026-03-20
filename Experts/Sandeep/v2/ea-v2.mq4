@@ -444,7 +444,7 @@ void OnCycleTask1() {
                              (double)indData.baseSlope,
                              direction                   // pre-filter so reversal is detectable
                           );
-
+Print("[SQPARAMS]: Squeeze: "+isSqueeze+" Squeeze reversal: "+squeezeReversal+" Squeezed trigger: "+ util.getSigString(triggerSignal));
 // #################### SQUEEZE BLOCK #################################################################
 
 
