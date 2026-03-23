@@ -1179,6 +1179,15 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
       return m_cached;
 
    m_last_bar = Time[0];
+   
+   double totalOrders = util.OrdersTotalByMagic(magicnumber);
+   
+   // --- THE GHOST PEAK FIX ---
+   // If the EA currently holds no positions, we MUST reset the peak.
+   if(totalOrders == 0 && m_peakRatio > 0) {
+      m_peakRatio = 0;
+      m_cached = NOSIG; 
+   }
 
 //// --- 2. CONSTANTS & INPUTS ---
 //   const double MIN_SLOW_THRESHOLD = 0.0001;
