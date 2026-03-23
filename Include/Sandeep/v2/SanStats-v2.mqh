@@ -53,6 +53,7 @@ class Stats {
    void              sayMesg1();
    long              getDataSize(const double &data[], int n = 0, int shift = 0);
    double            Arctan2(double y, double x);
+   double            MathArctan2(double y, double x);
    double            mean(const double &data[], int n = 0, int shift = 0);
    double            stdDev(const double &data[], int n = 0, int type = 0, int shift = 0);
    double            norm(const double &data[], int n = 0);
@@ -291,6 +292,8 @@ double Stats::stdDev(const double &data[], int type = 0, int n = 0, int shift = 
    return MathSqrt(summation / denom);
 }
 
+
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -307,6 +310,29 @@ double Stats::Arctan2(double y, double x) {
    if(y < 0)
       return -M_PI / 2;
    return 0.0; // x=0, y=0
+}
+
+//+------------------------------------------------------------------+
+//| Custom MathArctan2 for MQL4                                      |
+//| Returns the angle in radians between the positive X-axis         |
+//| and the ray to the point (x, y). Returns [-PI, +PI]              |
+//+------------------------------------------------------------------+
+double Stats::MathArctan2(double y, double x) {
+   // Quadrant 1 and 4 (Right half)
+   if (x > 0.0) return MathArctan(y / x);
+   
+   // Quadrant 2 and 3 (Left half)
+   if (x < 0.0) {
+      if (y >= 0.0) return MathArctan(y / x) + M_PI;   // Quadrant 2
+      else          return MathArctan(y / x) - M_PI;   // Quadrant 3
+   }
+   
+   // x is exactly 0 (Vertical lines)
+   if (y > 0.0) return M_PI_2;  // +90 degrees (Straight up)
+   if (y < 0.0) return -M_PI_2; // -90 degrees (Straight down)
+   
+   // x and y are both 0 (The origin - undefined, return 0)
+   return 0.0; 
 }
 
 //+------------------------------------------------------------------+

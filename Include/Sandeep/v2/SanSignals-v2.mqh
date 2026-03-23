@@ -34,6 +34,8 @@ class SanSignals {
    SAN_SIGNAL        tradeSignal(const double ciStd, const double ciMfi, const double &atr[], const double ciAdxMain, const double ciAdxPlus, const double ciAdxMinus);
    SAN_SIGNAL        tradeSlopeSIG_v1(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
+   SAN_SIGNAL        phaseSpaceSIG(double fast, double slow);
+   SAN_SIGNAL        simpleDivergenceSIG(double pFast, double pSlow, const double LIMIT=0.2);
    SAN_SIGNAL        microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr);
    SAN_SIGNAL        macroWaveSIG(const DTYPE &fast, const DTYPE &slow, const double atr);
    SAN_SIGNAL        waveTideSIG(const DTYPE &fast, const DTYPE &medium, const DTYPE &slow, double atr);
@@ -1179,14 +1181,14 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
       return m_cached;
 
    m_last_bar = Time[0];
-   
+
    double totalOrders = util.OrdersTotalByMagic(magicnumber);
-   
-   // --- THE GHOST PEAK FIX ---
-   // If the EA currently holds no positions, we MUST reset the peak.
+
+// --- THE GHOST PEAK FIX ---
+// If the EA currently holds no positions, we MUST reset the peak.
    if(totalOrders == 0 && m_peakRatio > 0) {
       m_peakRatio = 0;
-      m_cached = NOSIG; 
+      m_cached = NOSIG;
    }
 
 //// --- 2. CONSTANTS & INPUTS ---
@@ -1305,40 +1307,39 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
    return NOSIG;
 }
 
-//SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr) {
-//
-//   double MICRO_FLOOR = atr * 0.10;
-//   const double NOTRADEZONE = MICRO_FLOOR * 1.5;
-//
-//   double fS = fast.val1;
-//   double mS = med.val1;
-//   double absSlow  = MathAbs(mS);
-//   SAN_SIGNAL dir = (mS > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
-//
-//   double vScore = ms.expansionCompressionRatio(fS, mS, MICRO_FLOOR);
-//
-//   // 1. THE MICRO-POLICY (Expansion)
-//   // If momentum is pushing with the trend, report the trend direction.
-//   if(vScore >= 0.70) {
-//      return dir; 
-//   }
-//
-//   // 2. THE LIGHTNING EXIT (Flat Market)
-//   // If momentum dies AND the macro trend is flat, report CLOSE.
-//   if(vScore < 0.70 && absSlow <= NOTRADEZONE) {
-//      return SAN_SIGNAL::CLOSE;
-//   }
-//
-//   // 3. THE COMPRESSION STATE (The Fix)
-//   // Momentum is compressing, but the trend is still heavily sloped.
-//   // Instead of flipping to SELL here and fighting tradeSlopeSig, just report NOSIG.
-//   // Let the master 'squeezeFilter' and 'isSqueezeReversal' handle the counter-trend logic!
-//   if(vScore < 0.70 && absSlow > NOTRADEZONE) {
-//      return SAN_SIGNAL::NOSIG; 
-//   }
-//
-//   return SAN_SIGNAL::NOSIG;
-//}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::phaseSpaceSIG(double fast, double slow) {
+   double angle = ms.arcTanScore(fast, slow);
+
+// Quadrant 1: Both are Positive (Bull Market)
+   if (angle > 15.0 && angle < 75.0) return SAN_SIGNAL::BUY;
+
+// Quadrant 3: Both are Negative (Bear Market)
+   if (angle < -105.0 && angle > -165.0) return SAN_SIGNAL::SELL;
+
+// Quadrants 2 & 4: Opposing forces (Conflict)
+// Or angles too close to 0/90 (One MA is completely flat)
+   return SAN_SIGNAL::NOSIG;
+}
+
+SAN_SIGNAL SanSignals::simpleDivergenceSIG(double pFast, double pSlow, const double LIMIT=0.2) {
+
+// CONDITION 1: Fast drops 20 points below Slow (Exhaustion / Breakdown)
+   if (pFast <= pSlow - LIMIT) {
+      return SAN_SIGNAL::SELL;
+   }
+
+// CONDITION 2: Fast surges 20 points above Slow (Early Breakout)
+   if (pFast >= pSlow + LIMIT) {
+      return SAN_SIGNAL::BUY;
+   }
+
+// DEFAULT: They are moving together. Flatten the book or hold.
+   return SAN_SIGNAL::CLOSE;
+}
+
 
 SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr) {
 
@@ -1398,19 +1399,19 @@ SAN_SIGNAL SanSignals::macroWaveSIG(const DTYPE &fast, const DTYPE &slow, double
 
    SAN_SIGNAL dir  = (sS > 0) ? BUY : SELL;
 
-   // 1. CALL THE PHYSICS ENGINE
+// 1. CALL THE PHYSICS ENGINE
    double mScore = ms.expansionCompressionRatio(fS, sS, floor);
 
-   // 2. THE LEAN POLICY
+// 2. THE LEAN POLICY
    if(mScore >= 0.9) return dir;
 
-   // For Case B (Compression), we check for the "Power Trend" extra requirement.
+// For Case B (Compression), we check for the "Power Trend" extra requirement.
    if(mScore >= 0.8 && absSlow >= NOTRADEZONE) return dir;
 
-   // 3. FLATSQUEEZE: Squeezing/Weak and the base trend is flat
+// 3. FLATSQUEEZE: Squeezing/Weak and the base trend is flat
    if(mScore < 0.8 && absSlow < NOTRADEZONE)   return SAN_SIGNAL::CLOSE;
-   
-   // 4. BUYSQUEEZE / SELLSQUEEZE: Squeezing but the trend is heavily sloped
+
+// 4. BUYSQUEEZE / SELLSQUEEZE: Squeezing but the trend is heavily sloped
    if(mScore < 0.8 && absSlow >= NOTRADEZONE) {
       //if(dir == SAN_SIGNAL::BUY) {
       //   return SAN_SIGNAL::SELL;
@@ -1421,7 +1422,7 @@ SAN_SIGNAL SanSignals::macroWaveSIG(const DTYPE &fast, const DTYPE &slow, double
       return SAN_SIGNAL::NOSIG;
    }
 
-   // 5. DEFAULT FAILSAFE (Catches weak expansions in flat markets)
+// 5. DEFAULT FAILSAFE (Catches weak expansions in flat markets)
    return SAN_SIGNAL::CLOSE;
 }
 
@@ -3736,6 +3737,9 @@ D20TYPE SanSignals::hilbertDftSIG(
 //| SQUEEZE_BOUNDARY : threshold below which momentum is compressed |
 //+------------------------------------------------------------------+
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::squeezeFilter(
    const double    fMSR_Norm,
    const double    baseSlope,
@@ -3747,30 +3751,30 @@ SAN_SIGNAL SanSignals::squeezeFilter(
    double absF    = MathAbs(fMSR_Norm);
    bool isSqueeze = (absF <= SQUEEZE_BOUNDARY);
 
-   // --- EXPANSION: pass signal through ---
+// --- EXPANSION: pass signal through ---
    if (!isSqueeze) return inpsig;
 
-   // --- SQUEEZE HANDLING ---
-   
-   // Always pass through existing CLOSE signals
+// --- SQUEEZE HANDLING ---
+
+// Always pass through existing CLOSE signals
    if (inpsig == SAN_SIGNAL::CLOSE) return inpsig;
 
-   // RULE 3: FLATSQUEEZE -> Block all buy/sell, exit all trades
-   // FIXED: <= closes the boundary black hole
+// RULE 3: FLATSQUEEZE -> Block all buy/sell, exit all trades
+// FIXED: <= closes the boundary black hole
    if ((MathAbs(baseSlope) <= SLOPE_BOUNDARY) && isSqueeze) {
       if(printStatus) Print("⚡ FLATSQUEEZE: Market dead. Exiting all trades.");
-      return SAN_SIGNAL::CLOSE; 
+      return SAN_SIGNAL::CLOSE;
    }
 
-   // RULES 1 & 2: BUYSQUEEZE / SELLSQUEEZE -> Counter-trend only
+// RULES 1 & 2: BUYSQUEEZE / SELLSQUEEZE -> Counter-trend only
    bool squeezeReversal = ms.isSqueezeReversal(fMSR_Norm, baseSlope, inpsig, SQUEEZE_BOUNDARY, SLOPE_BOUNDARY);
 
    if(squeezeReversal) {
       if(printStatus) PrintFormat("🔄 SQUEEZE REVERSAL: %s counter-trend entry allowed.", util.getSigString(inpsig));
       return inpsig; // Allow the reversal
-   } 
+   }
 
-   // Trend-aligned signals during a squeeze are blocked
+// Trend-aligned signals during a squeeze are blocked
    return SAN_SIGNAL::NOSIG;
 }
 
