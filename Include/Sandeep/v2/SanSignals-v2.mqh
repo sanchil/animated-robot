@@ -3737,46 +3737,92 @@ D20TYPE SanSignals::hilbertDftSIG(
 //| SQUEEZE_BOUNDARY : threshold below which momentum is compressed |
 //+------------------------------------------------------------------+
 
+
 //+------------------------------------------------------------------+
-//|                                                                  |
+//| SanSignals::squeezeFilter (updated for raw baseSlope)            |
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::squeezeFilter(
-   const double    fMSR_Norm,
-   const double    baseSlope,
+   const double fMSR_Norm,
+   const double baseSlope,           // still raw
    const SAN_SIGNAL inpsig,
-   const double    SQUEEZE_BOUNDARY, // Default defined in .mqh
-   const double    SLOPE_BOUNDARY    // Default defined in .mqh
+   const double SQUEEZE_BOUNDARY = 0.4,
+   const double SLOPE_BOUNDARY = 0.1
 ) {
    bool printStatus = false;
-   double absF    = MathAbs(fMSR_Norm);
+   double absF = MathAbs(fMSR_Norm);
    bool isSqueeze = (absF <= SQUEEZE_BOUNDARY);
 
-// --- EXPANSION: pass signal through ---
+   // --- EXPANSION: pass signal through ---
    if (!isSqueeze) return inpsig;
 
-// --- SQUEEZE HANDLING ---
-
-// Always pass through existing CLOSE signals
+   // Always pass through existing CLOSE signals
    if (inpsig == SAN_SIGNAL::CLOSE) return inpsig;
 
-// RULE 3: FLATSQUEEZE -> Block all buy/sell, exit all trades
-// FIXED: <= closes the boundary black hole
-   if ((MathAbs(baseSlope) <= SLOPE_BOUNDARY) && isSqueeze) {
+   // === LOCAL DIRECTION CONVERSION (ATR-adaptive) ===
+   double atrInPips = iATR(_Symbol, PERIOD_CURRENT, 21, 0) / util.getPipValue(_Symbol);
+   double macroThreshold = atrInPips * 0.05;   // same as your old logic
+
+   int direction = (baseSlope > macroThreshold) ? 1 :
+                   (baseSlope < -macroThreshold) ? -1 : 0;
+
+   // RULE 3: FLATSQUEEZE → Block all buy/sell
+   if (direction == 0 && isSqueeze) {
       if(printStatus) Print("⚡ FLATSQUEEZE: Market dead. Exiting all trades.");
       return SAN_SIGNAL::CLOSE;
    }
 
-// RULES 1 & 2: BUYSQUEEZE / SELLSQUEEZE -> Counter-trend only
+   // RULES 1 & 2: Counter-trend only
    bool squeezeReversal = ms.isSqueezeReversal(fMSR_Norm, baseSlope, inpsig, SQUEEZE_BOUNDARY, SLOPE_BOUNDARY);
 
    if(squeezeReversal) {
       if(printStatus) PrintFormat("🔄 SQUEEZE REVERSAL: %s counter-trend entry allowed.", util.getSigString(inpsig));
-      return inpsig; // Allow the reversal
+      return inpsig;
    }
 
-// Trend-aligned signals during a squeeze are blocked
+   // Trend-aligned during squeeze → blocked
    return SAN_SIGNAL::NOSIG;
 }
+
+////+------------------------------------------------------------------+
+////|                                                                  |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::squeezeFilter(
+//   const double    fMSR_Norm,
+//   const double    baseSlope,
+//   const SAN_SIGNAL inpsig,
+//   const double    SQUEEZE_BOUNDARY, // Default defined in .mqh
+//   const double    SLOPE_BOUNDARY    // Default defined in .mqh
+//) {
+//   bool printStatus = false;
+//   double absF    = MathAbs(fMSR_Norm);
+//   bool isSqueeze = (absF <= SQUEEZE_BOUNDARY);
+//
+//// --- EXPANSION: pass signal through ---
+//   if (!isSqueeze) return inpsig;
+//
+//// --- SQUEEZE HANDLING ---
+//
+//// Always pass through existing CLOSE signals
+//   if (inpsig == SAN_SIGNAL::CLOSE) return inpsig;
+//
+//// RULE 3: FLATSQUEEZE -> Block all buy/sell, exit all trades
+//// FIXED: <= closes the boundary black hole
+//   if ((MathAbs(baseSlope) <= SLOPE_BOUNDARY) && isSqueeze) {
+//      if(printStatus) Print("⚡ FLATSQUEEZE: Market dead. Exiting all trades.");
+//      return SAN_SIGNAL::CLOSE;
+//   }
+//
+//// RULES 1 & 2: BUYSQUEEZE / SELLSQUEEZE -> Counter-trend only
+//   bool squeezeReversal = ms.isSqueezeReversal(fMSR_Norm, baseSlope, inpsig, SQUEEZE_BOUNDARY, SLOPE_BOUNDARY);
+//
+//   if(squeezeReversal) {
+//      if(printStatus) PrintFormat("🔄 SQUEEZE REVERSAL: %s counter-trend entry allowed.", util.getSigString(inpsig));
+//      return inpsig; // Allow the reversal
+//   }
+//
+//// Trend-aligned signals during a squeeze are blocked
+//   return SAN_SIGNAL::NOSIG;
+//}
 
 
 //SAN_SIGNAL SanSignals::squeezeFilter(
