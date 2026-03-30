@@ -1353,7 +1353,7 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
    double mS = med.val1;
    double absSlow  = MathAbs(mS);
 //SAN_SIGNAL dir = (fS > 0) ? BUY : SELL;
-   SAN_SIGNAL dir = (mS > 0) ? BUY : SELL;
+   SAN_SIGNAL dir = (mS > 0) ? SAN_SIGNAL::BUY : SAN_SIGNAL::SELL;
 
 // 2. THE VELOCITY CHECK (The "Explosion" Gate)
 // We use slopeRatio but we pass our lower MICRO_FLOOR.

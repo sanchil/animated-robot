@@ -8,6 +8,8 @@
 #property version   "1.00"
 #property strict
 
+#define M_PI 3.14159265358979323846
+
 // ea-v2.mq4 - TOP SECTION
 #include <Sandeep/v2/SanStrategies-v2.mqh> // This now "owns" SanSignals
 
@@ -188,6 +190,136 @@ void RefreshAll_CB(INDDATA_CB &data, STRATEGY_STATE& ocommon) {
 //+------------------------------------------------------------------+
 //| GOVERNANCE MODULE: Manages Macro Panics, Tactical Exits & Pruning|
 //+------------------------------------------------------------------+
+//void ManageRiskAndExits(
+//   STRATEGY_STATE& ocommon,
+//   int& totalOrders,
+//   const bool isNewCandle,
+//   const bool hasCollapse,
+//   const int physicsAction,
+//   const SAN_SIGNAL triggerSignal,
+//   const SAN_SIGNAL closeSIG,
+//   const double atrRaw,
+//   const bool printLogs
+//) {
+//   if (totalOrders <= 0) return; // Fast return if portfolio is empty
+//
+//   bool fullLiquidation = false;
+//
+//// 1. MACRO PANIC: Check Sages First (They bypass everything)
+//   bool sagesWantOut = hasCollapse;
+//
+//   if (sagesWantOut && (ocommon.BarsHeld >= 2)) {
+//      if(printLogs && isNewCandle) Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation. Shield bypassed.");
+//      util.closeOrders(ocommon.magicNumber);
+//      totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+//      ocommon.BarsHeld = 0;
+//      fullLiquidation = true;
+//   }
+//
+//// 2. TACTICAL CLOSE: Check Fast Trigger (Needs the Trade Shield)
+//   else if((triggerSignal == SAN_SIGNAL::CLOSE)||(closeSIG == SAN_SIGNAL::CLOSE)) {
+//      bool enoughHoldTime = (ocommon.BarsHeld >= 5);
+//
+//      if(enoughHoldTime) {
+//         if(printLogs) PrintFormat("🛡️ MATURE EXIT: Trade held for %d bars. Fast CLOSE accepted.", ocommon.BarsHeld);
+//         util.closeOrders(ocommon.magicNumber);
+//         totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+//         ocommon.BarsHeld = 0;   // reset for next entry
+//         fullLiquidation = true;
+//      } else if (printLogs && isNewCandle) {
+//         PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE signal. Trade age is %d/5 bars.", ocommon.BarsHeld);
+//      }
+//   }
+//
+//// 3. MAINTENANCE (PRUNERS): Trim the fat ONLY if the basket survived
+//   if (!fullLiquidation) {
+//      /*
+//      int weedsCut = 0;
+//      int profitsHarvested = 0;
+//      int reverseTrades = 0;
+//      int profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000);
+//
+//      if(isNewCandle) {
+//         // int pruneAge = MathMax(3, (int)MathFloor(ocommon.maxPyramidTrades / 4.0));
+//         // weedsCut = util.pruneTrades(ocommon.magicNumber, pruneAge, 30);
+//         // reverseTrades = util.pruneReverseTrades(ocommon.magicNumber, triggerSignal, 30);
+//      }
+//
+//      // profitsHarvested = util.pruneByTrailingProfit(ocommon.magicNumber, 0.80, profitThreshold, 30);
+//
+//      if(weedsCut > 0 || profitsHarvested > 0 || reverseTrades > 0) {
+//         if(printLogs) PrintFormat("✂️ PRUNER: Weeds Cut: %d | Reverse: %d | Profits Harvested: %d", weedsCut, reverseTrades, profitsHarvested);
+//         totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+//      }
+//      */
+//   }
+//}
+
+
+//void ManageRiskAndExits(
+//   STRATEGY_STATE& ocommon,
+//   int& totalOrders,
+//   const bool isNewCandle,
+//   const bool hasCollapse,
+//   const int physicsAction,
+//   const SAN_SIGNAL triggerSignal,
+//   const SAN_SIGNAL closeSIG,
+//   const double atrRaw,
+//   const bool printLogs
+//) {
+//   if (totalOrders <= 0) return;
+//
+//   bool fullLiquidation = false;
+//
+//   // 1. MACRO PANIC (unchanged)
+//   if (hasCollapse && (ocommon.BarsHeld >= 2)) {
+//      if(printLogs && isNewCandle) Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation.");
+//      util.closeOrders(ocommon.magicNumber);
+//      totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+//      ocommon.BarsHeld = 0;
+//      fullLiquidation = true;
+//   }
+//
+//   // 2. FAST TACTICAL CLOSE — now ATR + timeframe adaptive
+//   else if((triggerSignal == SAN_SIGNAL::CLOSE) || (closeSIG == SAN_SIGNAL::CLOSE)) {
+//      // Adaptive shield: shorter on M1, longer on higher TFs
+//      int adaptiveHoldBars = 3;
+//      if(_Period >= PERIOD_H1)   adaptiveHoldBars = 4;   // 4 hours on H1
+//      else if(_Period >= PERIOD_M15) adaptiveHoldBars = 3; // 45 min on M15
+//      // M1/M5 stays at 3 bars
+//
+//      bool enoughHoldTime = (ocommon.BarsHeld >= adaptiveHoldBars);
+//
+//      if(enoughHoldTime) {
+//         if(printLogs) PrintFormat("🛡️ FAST EXIT: Trade held for %d bars (adaptive). CLOSE accepted.", ocommon.BarsHeld);
+//         util.closeOrders(ocommon.magicNumber);
+//         totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+//         ocommon.BarsHeld = 0;
+//         fullLiquidation = true;
+//      } 
+//      else if (printLogs && isNewCandle) {
+//         PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE (age %d/%d bars).", ocommon.BarsHeld, adaptiveHoldBars);
+//      }
+//   }
+//
+//   // 3. PROFIT PROTECTOR — now looser when ATR is higher (your exact philosophy)
+//   if (!fullLiquidation && totalOrders > 0 && isNewCandle) {
+//      double retainPct = 0.80;                     // base
+//      if(atrRaw > 0.0003) retainPct = 0.75;       // higher volatility → let it breathe more
+//      if(atrRaw > 0.0006) retainPct = 0.70;       // very high ATR → even looser
+//
+//      int profitsHarvested = util.pruneByTrailingProfit(ocommon.magicNumber, retainPct, 0, 30);
+//      if(profitsHarvested > 0 && printLogs) {
+//         PrintFormat("✂️ PROFIT PROTECTOR: Harvested %d trades at %.0f%% trailing.", profitsHarvested, retainPct*100);
+//         totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+//      }
+//   }
+//}
+
+
+//+------------------------------------------------------------------+
+//| UNIVERSAL RISK & EXIT GOVERNANCE — uses your atrScale + atrKinetic |
+//+------------------------------------------------------------------+
 void ManageRiskAndExits(
    STRATEGY_STATE& ocommon,
    int& totalOrders,
@@ -199,57 +331,54 @@ void ManageRiskAndExits(
    const double atrRaw,
    const bool printLogs
 ) {
-   if (totalOrders <= 0) return; // Fast return if portfolio is empty
+   if(totalOrders <= 0) return;
 
    bool fullLiquidation = false;
 
-// 1. MACRO PANIC: Check Sages First (They bypass everything)
-   bool sagesWantOut = hasCollapse;
-
-   if (sagesWantOut && (ocommon.BarsHeld >= 2)) {
-      if(printLogs && isNewCandle) Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation. Shield bypassed.");
+   // 1. MACRO PANIC (sage collapse) — keep 2-bar emergency gate (very fast on any TF)
+   if(hasCollapse && (ocommon.BarsHeld >= 2)) {
+      if(printLogs && isNewCandle) 
+         Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation.");
       util.closeOrders(ocommon.magicNumber);
       totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
       ocommon.BarsHeld = 0;
       fullLiquidation = true;
    }
 
-// 2. TACTICAL CLOSE: Check Fast Trigger (Needs the Trade Shield)
-   else if((triggerSignal == SAN_SIGNAL::CLOSE)||(closeSIG == SAN_SIGNAL::CLOSE)) {
-      bool enoughHoldTime = (ocommon.BarsHeld >= 5);
+   // 2. FAST TACTICAL CLOSE — now fully scaled with your atrScale
+   else if((triggerSignal == SAN_SIGNAL::CLOSE) || (closeSIG == SAN_SIGNAL::CLOSE)) {
+      
+      // Use your scaler: min=2 bars (M1), max=5 bars (H4+)
+      int adaptiveHoldBars = (int)ms.atrScale(atrRaw, 2.0, 5.0);   // ← your atrScale + atrKinetic does the TF magic
+      adaptiveHoldBars = MathMax(2, adaptiveHoldBars);           // safety floor
+
+      bool enoughHoldTime = (ocommon.BarsHeld >= adaptiveHoldBars);
 
       if(enoughHoldTime) {
-         if(printLogs) PrintFormat("🛡️ MATURE EXIT: Trade held for %d bars. Fast CLOSE accepted.", ocommon.BarsHeld);
+         if(printLogs) 
+            PrintFormat("🛡️ FAST EXIT: Trade held for %d bars (adaptive). CLOSE accepted.", ocommon.BarsHeld);
          util.closeOrders(ocommon.magicNumber);
          totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
-         ocommon.BarsHeld = 0;   // reset for next entry
+         ocommon.BarsHeld = 0;
          fullLiquidation = true;
-      } else if (printLogs && isNewCandle) {
-         PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE signal. Trade age is %d/5 bars.", ocommon.BarsHeld);
+      } 
+      else if(printLogs && isNewCandle) {
+         PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE (age %d/%d bars).", ocommon.BarsHeld, adaptiveHoldBars);
       }
    }
 
-// 3. MAINTENANCE (PRUNERS): Trim the fat ONLY if the basket survived
-   if (!fullLiquidation) {
-      /*
-      int weedsCut = 0;
-      int profitsHarvested = 0;
-      int reverseTrades = 0;
-      int profitThreshold  = (int)ms.atrScale(atrRaw, 100, 1000);
-
-      if(isNewCandle) {
-         // int pruneAge = MathMax(3, (int)MathFloor(ocommon.maxPyramidTrades / 4.0));
-         // weedsCut = util.pruneTrades(ocommon.magicNumber, pruneAge, 30);
-         // reverseTrades = util.pruneReverseTrades(ocommon.magicNumber, triggerSignal, 30);
-      }
-
-      // profitsHarvested = util.pruneByTrailingProfit(ocommon.magicNumber, 0.80, profitThreshold, 30);
-
-      if(weedsCut > 0 || profitsHarvested > 0 || reverseTrades > 0) {
-         if(printLogs) PrintFormat("✂️ PRUNER: Weeds Cut: %d | Reverse: %d | Profits Harvested: %d", weedsCut, reverseTrades, profitsHarvested);
+   // 3. PROFIT PROTECTOR — trailing % now scales with volatility
+   if(!fullLiquidation && totalOrders > 0 && isNewCandle) {
+      
+      // Higher ATR → looser trailing (let winners breathe)
+      double retainPct = ms.atrScale(atrRaw, 0.70, 0.85);   // 70 % on very high ATR, 85 % on low ATR
+      
+      int profitsHarvested = util.pruneByTrailingProfit(ocommon.magicNumber, retainPct, 0, 30);
+      if(profitsHarvested > 0 && printLogs) {
+         PrintFormat("✂️ PROFIT PROTECTOR: Harvested %d trades at %.0f%% trailing.", 
+                     profitsHarvested, retainPct*100);
          totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
       }
-      */
    }
 }
 
