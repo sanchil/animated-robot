@@ -29,11 +29,13 @@ class SanSignals {
                     ~SanSignals();
    void              sayMesg();
 
-
+   double            getMPeakRatio();
    double            getPeakDecay(double atr = 0, DECAY_STRATEGY strat = STRAT_ATR, double period = 14, int shift = 1);
    SAN_SIGNAL        tradeSignal(const double ciStd, const double ciMfi, const double &atr[], const double ciAdxMain, const double ciAdxPlus, const double ciAdxMinus);
    SAN_SIGNAL        tradeSlopeSIG_v1(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
+   SAN_SIGNAL        tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
+   SAN_SIGNAL        tradeSlopeSIG_v4(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        phaseSpaceSIG(double fast, double slow);
    SAN_SIGNAL        simpleDivergenceSIG(double pFast, double pSlow, const double LIMIT=0.2);
    SAN_SIGNAL        microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr);
@@ -390,6 +392,13 @@ SanSignals::~SanSignals() {
 void SanSignals::sayMesg() {
    ticket = 100;
 // Print("CURRENT Ticket is :"+ticket);
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+double SanSignals::getMPeakRatio() {
+   return m_peakRatio;
 }
 //+------------------------------------------------------------------+
 
@@ -1272,8 +1281,8 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
    double ratio = fastSlope / slowSlope;
 
 // Use PrintFormat for efficiency
-   PrintFormat("Ratio=%.3f | Peak=%.3f | DropLimit=%.3f | Regime=%d",
-               ratio, m_peakRatio, (PEAK_DROP*m_peakRatio), regimeIdx);
+   PrintFormat("[TRADESLOPE] Ratio=%.3f | Peak=%.3f| PEAK_DROP | DropLimit=%.3f | Regime=%d",
+               ratio, m_peakRatio, PEAK_DROP, (PEAK_DROP*m_peakRatio), regimeIdx);
 
 // 1. INSTANT REVERSAL (Divergence Check)
    if(ratio <= 0) {
@@ -1307,6 +1316,372 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v2(const DTYPE &fast, const DTYPE &slow, co
    return NOSIG;
 }
 
+
+//SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1) {
+//
+//// --- 1. BAR OPENING CHECK (Fixed State Management) ---
+//// Uses class members m_last_bar and m_cached instead of static variables
+//// Passed Time[0] as a parameter or fetched cleanly.
+//   if(Time[0] == m_last_bar)
+//      return m_cached;
+//
+//   m_last_bar = Time[0];
+//
+//   double totalOrders = util.OrdersTotalByMagic(magicnumber);
+//
+//// --- THE GHOST PEAK FIX ---
+//// If the EA currently holds no positions, we MUST reset the peak.
+//   if(totalOrders == 0 && m_peakRatio > 0) {
+//      m_peakRatio = 0;
+//      m_cached = NOSIG;
+//   }
+//
+//// --- 2. DYNAMIC CONSTANTS & INPUTS ---
+//   const double MIN_SLOW_THRESHOLD = 0.0001; // Avoid division by zero
+//
+////// The Elastic Ruler: We define slope thresholds as fractions of the ATR.
+////// Example: If ATR is 10 pips, FLAT is anything moving less than 0.5 pips/bar.
+////   double FLAT_REGIME_ENTRY  = atr * 0.05;  // 5% of ATR
+////   double WEAK_TREND_BOUND   = atr * 0.10;  // 10% of ATR
+////   double MID_TREND_BOUND    = atr * 0.20;  // 20% of ATR
+////   double STRONG_TREND_BOUND = atr * 0.35;  // 35% of ATR
+////   double TURBO_TREND_BOUND  = atr * 0.50;  // 50% of ATR
+//
+//
+//   //double k = ms.atrKinetic(atr);
+//   //double FLAT_REGIME_ENTRY  = atr * 0.05 * (1.0 + 2.0 * k);   // becomes more tolerant in high kinetic regimes
+//   //double WEAK_TREND_BOUND   = atr * 0.12 * (1.0 + 1.8 * k);
+//   //double MID_TREND_BOUND    = atr * 0.22 * (1.0 + 1.6 * k);
+//   //double STRONG_TREND_BOUND = atr * 0.38 * (1.0 + 1.4 * k);
+//   //double TURBO_TREND_BOUND  = atr * 0.55 * (1.0 + 1.2 * k);
+//
+//   double k = ms.atrKinetic(atr);   // optional: see raw kinetic for debugging
+//// Dynamic Elastic Bounds using the new atrScale
+//   double FLAT_REGIME_ENTRY  = ms.atrScale(atr, 0.0, atr * 0.12);   // 0% → 12% of ATR
+//   double WEAK_TREND_BOUND   = ms.atrScale(atr, atr*0.08, atr * 0.25);  // 8%  → 25%
+//   double MID_TREND_BOUND    = ms.atrScale(atr, atr*0.18, atr * 0.42);  // 18% → 42%
+//   double STRONG_TREND_BOUND = ms.atrScale(atr, atr*0.30, atr * 0.60);  // 30% → 60%
+//   double TURBO_TREND_BOUND  = ms.atrScale(atr, atr*0.45, atr * 0.85);  // 45% → 85%
+//
+//
+//   double fastSlope = fast.val1;
+//   double slowSlope = slow.val1;
+//   double absSlow   = MathAbs(slowSlope);
+//
+//// --- 3. ADAPTIVE REGIME SELECTION ---
+//// We replace your static 0.35, 0.80, 1.50 guesses with the ATR boundaries.
+//   int regimeIdx = (absSlow <= WEAK_TREND_BOUND)   ? 0 :
+//                   (absSlow <= MID_TREND_BOUND)    ? 1 :
+//                   (absSlow <= STRONG_TREND_BOUND) ? 2 :
+//                   (absSlow <= TURBO_TREND_BOUND)  ? 3 : 4;
+//
+//   //if((MathAbs(regimeIdx)>4)||(MathAbs(regimeIdx)<0))return m_cached;
+//
+//   const double closeRVal[] = {1.3, 1.2, 1.1, 1.0, 0.9};
+//   double CLOSERATIO = closeRVal[regimeIdx];
+//
+//   double PEAK_DROP = ms.getVolAdaptiveRetention(atr);
+//   PEAK_DROP = MathMax(MathMin(PEAK_DROP, 0.99), 0.70); // Hard clamp
+//
+//// --- 4. CORE LOGIC BRANCHING ---
+//
+//// BRANCH A: The "Flat" Market (Singularity Avoidance)
+//   if(absSlow < MIN_SLOW_THRESHOLD) {
+//      // Reversal Check
+//      if((m_cached == BUY && fastSlope < -FLAT_REGIME_ENTRY) ||
+//            (m_cached == SELL && fastSlope > FLAT_REGIME_ENTRY)) {
+//         m_peakRatio = 0;
+//         m_cached = CLOSE;
+//         return CLOSE;
+//      }
+//
+//      // Entry Logic
+//      if(MathAbs(fastSlope) > FLAT_REGIME_ENTRY) {
+//         if(m_peakRatio == 0) m_peakRatio = CLOSERATIO * 1.05;
+//         m_cached = (fastSlope > 0) ? BUY : SELL;
+//         return m_cached;
+//      }
+//
+//      // FLAT MARKET ORPHAN FIX: If momentum died while holding a trade, close it.
+//      if(m_peakRatio > 0) {
+//         m_peakRatio = 0;
+//         m_cached = CLOSE;
+//         return CLOSE;
+//      }
+//
+//      m_peakRatio = 0;
+//      m_cached = NOSIG;
+//      return NOSIG;
+//   }
+//
+//// BRANCH B: The Standard Adaptive Engine
+//   double ratio = fastSlope / slowSlope;
+//
+//// Use PrintFormat for efficiency
+//   PrintFormat("[TRADESLOPE] Ratio=%.3f | Peak=%.3f| PEAK_DROP=%.3f | DropLimit=%.3f | Regime=%d",
+//               ratio, m_peakRatio, PEAK_DROP, (PEAK_DROP*m_peakRatio), regimeIdx);
+//
+//// 1. INSTANT REVERSAL (Divergence Check)
+//   if(ratio <= 0) {
+//      m_peakRatio = 0;
+//      m_cached = CLOSE;
+//      return CLOSE;
+//   }
+//
+//// 2. MOMENTUM DECAY EXIT (The Adaptive Stop)
+//   if(m_peakRatio > 0 && ratio < (PEAK_DROP * m_peakRatio)) {
+//      m_peakRatio = 0;
+//      m_cached = CLOSE;
+//      return CLOSE;
+//   }
+//
+//// 3. WEAK ALIGNMENT EXIT (Hard Floor)
+//   if(ratio <= CLOSERATIO) {
+//      m_peakRatio = 0;
+//      m_cached = CLOSE;
+//      return CLOSE;
+//   }
+//
+//// 4. ENTRY & CONTINUATION (New Peak Tracking)
+//   if(ratio > CLOSERATIO) {
+//      if(ratio > m_peakRatio) m_peakRatio = ratio;
+//      m_cached = (fastSlope > 0) ? BUY : SELL;
+//      return m_cached;
+//   }
+//
+//   m_cached = NOSIG;
+//   return NOSIG;
+//}
+
+//+------------------------------------------------------------------+
+//|  SanSignals::tradeSlopeSIG_v3 - Fixed Adaptive Regime Version   |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow,
+                                        const double atr, ulong magicnumber = -1) {
+   if(Time[0] == m_last_bar)
+      return m_cached;
+
+   m_last_bar = Time[0];
+
+   double totalOrders = util.OrdersTotalByMagic(magicnumber);
+
+// Ghost Peak Fix - Reset when no positions
+   if(totalOrders == 0 && m_peakRatio > 0) {
+      m_peakRatio = 0;
+      m_cached = NOSIG;
+   }
+
+// --- 2. DYNAMIC ELASTIC RULER using atrScale + atrKinetic ---
+   double k = ms.atrKinetic(atr);   // 0.0 to 1.0
+
+   double FLAT_REGIME_ENTRY  = ms.atrScale(atr, 0.0,     atr * 0.12);
+   double WEAK_TREND_BOUND   = ms.atrScale(atr, atr*0.07, atr * 0.24);
+   double MID_TREND_BOUND    = ms.atrScale(atr, atr*0.16, atr * 0.40);
+   double STRONG_TREND_BOUND = ms.atrScale(atr, atr*0.28, atr * 0.58);
+   double TURBO_TREND_BOUND  = ms.atrScale(atr, atr*0.45, atr * 0.88);
+
+   double fastSlope = fast.val1;
+   double slowSlope = slow.val1;
+   double absSlow   = MathAbs(slowSlope);
+
+// --- 3. PROPER REGIME INDEX (0 = Flat/Weak → 4 = Turbo) ---
+   int regimeIdx = 0;
+   if(absSlow <= FLAT_REGIME_ENTRY)       regimeIdx = 0;   // Very flat
+   else if(absSlow <= WEAK_TREND_BOUND)   regimeIdx = 1;   // Weak trend
+   else if(absSlow <= MID_TREND_BOUND)    regimeIdx = 2;   // Mid trend
+   else if(absSlow <= STRONG_TREND_BOUND) regimeIdx = 3;   // Strong trend
+   else                                   regimeIdx = 4;   // Turbo / Very strong
+
+// Safety clamp
+   regimeIdx = MathMax(0, MathMin(4, regimeIdx));
+
+// Closer ratio becomes stricter as regime gets stronger
+   const double closeRVal[5] = {1.35, 1.25, 1.15, 1.05, 0.92};
+   double CLOSERATIO = closeRVal[regimeIdx];
+
+   double PEAK_DROP = ms.getVolAdaptiveRetention(atr);
+   PEAK_DROP = MathMax(MathMin(PEAK_DROP, 0.98), 0.72);   // sensible clamp
+
+// Debug print (clean & useful)
+   PrintFormat("[TRADESLOPE] Ratio=%.3f | Peak=%.3f | PEAK_DROP=%.3f | DropLimit=%.3f | Regime=%d | absSlow=%.3f | k=%.3f",
+               fastSlope/slowSlope, m_peakRatio, PEAK_DROP, PEAK_DROP*m_peakRatio,
+               regimeIdx, absSlow, k);
+
+// --- 4. CORE LOGIC ---
+
+// FLAT MARKET branch
+   double MIN_SLOW_THRESHOLD = 0.0001;
+   if(absSlow < MIN_SLOW_THRESHOLD) {
+      if((m_cached == BUY  && fastSlope < -FLAT_REGIME_ENTRY) ||
+            (m_cached == SELL && fastSlope >  FLAT_REGIME_ENTRY)) {
+         m_peakRatio = 0;
+         m_cached = CLOSE;
+         return CLOSE;
+      }
+
+      if(MathAbs(fastSlope) > FLAT_REGIME_ENTRY) {
+         if(m_peakRatio == 0) m_peakRatio = CLOSERATIO * 1.08;
+         m_cached = (fastSlope > 0) ? BUY : SELL;
+         return m_cached;
+      }
+
+      if(m_peakRatio > 0) {
+         m_peakRatio = 0;
+         m_cached = CLOSE;
+         return CLOSE;
+      }
+
+      m_peakRatio = 0;
+      m_cached = NOSIG;
+      return NOSIG;
+   }
+
+// Standard momentum logic
+   double ratio = (slowSlope != 0) ? fastSlope / slowSlope : 0.0;
+
+// 1. Instant reversal on opposite direction
+   if(ratio <= 0) {
+      m_peakRatio = 0;
+      m_cached = CLOSE;
+      return CLOSE;
+   }
+
+// 2. Momentum decay exit (adaptive trail)
+   if(m_peakRatio > 0 && ratio < (PEAK_DROP * m_peakRatio)) {
+      m_peakRatio = 0;
+      m_cached = CLOSE;
+      return CLOSE;
+   }
+
+// 3. Weak alignment exit
+   if(ratio <= CLOSERATIO) {
+      m_peakRatio = 0;
+      m_cached = CLOSE;
+      return CLOSE;
+   }
+
+// 4. Continuation + new peak update
+   if(ratio > CLOSERATIO) {
+      if(ratio > m_peakRatio)
+         m_peakRatio = ratio;
+
+      m_cached = (fastSlope > 0) ? BUY : SELL;
+      return m_cached;
+   }
+
+   m_cached = NOSIG;
+   return NOSIG;
+}
+
+
+//+------------------------------------------------------------------+
+//|  tradeSlopeSIG_v4 - Decoupled Regime + Dynamic Gates            |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::tradeSlopeSIG_v4(const DTYPE &fast, const DTYPE &slow,
+                                        const double atr, ulong magicnumber = -1) {
+   if(Time[0] == m_last_bar) return m_cached;
+   m_last_bar = Time[0];
+
+// Ghost Peak Reset
+   if(util.OrdersTotalByMagic(magicnumber) == 0 && m_peakRatio > 0) {
+      m_peakRatio = 0;
+      m_cached = NOSIG;
+   }
+
+   double fastSlope = fast.val1;
+   double slowSlope = slow.val1;
+   double absSlow   = MathAbs(slowSlope);
+
+// === 1. STATIC REGIME SELECTION - Physical Trend Strength ===
+// This never moves. It tells us "how strong is the Army right now?"
+   double s = (atr > 0) ? absSlow / atr : 0.0;
+
+   //int regimeIdx = (s <= 0.08) ? 0 :      // Flat / Dormant
+   //                (s <= 0.18) ? 1 :      // Weak Trend
+   //                (s <= 0.32) ? 2 :      // Mid Trend
+   //                (s <= 0.55) ? 3 : 4;   // Strong → Turbo
+                   
+   int regimeIdx = (s <= 0.09) ? 0 :      // Flat
+                   (s <= 0.20) ? 1 :      // Weak
+                   (s <= 0.38) ? 2 :      // Mid
+                   (s <= 0.70) ? 3 : 4;   // Strong → Turbo (raised from 0.55)
+
+// === 2. DYNAMIC ELASTIC GATES - Only for Entry/Flat Detection ===
+   double k = ms.atrKinetic(atr);
+
+   double FLAT_REGIME_ENTRY  = ms.atrScale(atr, 0.0,atr * 0.13, 1.6);  // noise filter
+   double WEAK_ENTRY_GATE    = ms.atrScale(atr, atr*0.09, atr * 0.27, 1.4);
+   double MID_ENTRY_GATE     = ms.atrScale(atr, atr*0.20, atr * 0.45, 1.2);
+
+// Closer ratios - looser in higher regimes
+   //const double closeRVal[5] = {1.38, 1.28, 1.16, 1.04, 0.90};
+   const double closeRVal[5] = {1.40, 1.30, 1.18, 1.06, 0.88};
+
+   double CLOSERATIO = closeRVal[regimeIdx];
+   double PEAK_DROP  = MathMax(MathMin(ms.getVolAdaptiveRetention(atr), 0.97), 0.75);
+
+   PrintFormat("[TRADESLOPE] Ratio=%.3f | Peak=%.3f | Drop=%.3f | Limit=%.3f | Regime=%d | s=%.3f | k=%.3f | absSlow/ATR=%.3f",
+               (slowSlope!=0?fastSlope/slowSlope:0), m_peakRatio, PEAK_DROP, PEAK_DROP*m_peakRatio,
+               regimeIdx, s, k, s);
+
+   double MIN_SLOW = 0.00015;
+
+// === FLAT MARKET BRANCH ===
+   if(absSlow < MIN_SLOW) {
+      if((m_cached==BUY && fastSlope < -FLAT_REGIME_ENTRY) ||
+            (m_cached==SELL && fastSlope >  FLAT_REGIME_ENTRY)) {
+         m_peakRatio = 0;
+         m_cached = CLOSE;
+         return CLOSE;
+      }
+
+      if(MathAbs(fastSlope) > FLAT_REGIME_ENTRY) {
+         if(m_peakRatio <= 0) m_peakRatio = CLOSERATIO * 1.07;
+         m_cached = (fastSlope > 0) ? BUY : SELL;
+         return m_cached;
+      }
+
+      if(m_peakRatio > 0) {
+         m_peakRatio=0;
+         m_cached=CLOSE;
+         return CLOSE;
+      }
+
+      m_cached = NOSIG;
+      return NOSIG;
+   }
+
+// === MAIN MOMENTUM LOGIC ===
+   double ratio = (slowSlope != 0) ? fastSlope / slowSlope : 0.0;
+
+   if(ratio <= 0) {                  // Instant reversal
+      m_peakRatio = 0;
+      m_cached = CLOSE;
+      return CLOSE;
+   }
+
+   if(m_peakRatio > 0 && ratio < PEAK_DROP * m_peakRatio) { // Momentum decay (primary brake in strong regimes)
+      m_peakRatio = 0;
+      m_cached = CLOSE;
+      return CLOSE;
+   }
+
+   if(ratio <= CLOSERATIO) {         // Hard floor (more important in weak regimes)
+      m_peakRatio = 0;
+      m_cached = CLOSE;
+      return CLOSE;
+   }
+
+// Continuation + peak update
+   if(ratio > CLOSERATIO) {
+      if(ratio > m_peakRatio) m_peakRatio = ratio;
+      m_cached = (fastSlope > 0) ? BUY : SELL;
+      return m_cached;
+   }
+
+   m_cached = NOSIG;
+   return NOSIG;
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -1436,6 +1811,7 @@ SAN_SIGNAL SanSignals::waveTideSIG(const DTYPE &fast, const DTYPE &med, const DT
 
    if(waveSignal == BUY && tideSignal == BUY) return SAN_SIGNAL::BUY;
    if(waveSignal == SELL && tideSignal == SELL) return SAN_SIGNAL::SELL;
+   if(waveSignal == SAN_SIGNAL::CLOSE && tideSignal == SAN_SIGNAL::CLOSE) return SAN_SIGNAL::CLOSE;
 //if(util.oppSignal(waveSignal,tideSignal)) return SAN_SIGNAL::CLOSE;
    return SAN_SIGNAL::NOSIG;
 }
@@ -3752,26 +4128,26 @@ SAN_SIGNAL SanSignals::squeezeFilter(
    double absF = MathAbs(fMSR_Norm);
    bool isSqueeze = (absF <= SQUEEZE_BOUNDARY);
 
-   // --- EXPANSION: pass signal through ---
+// --- EXPANSION: pass signal through ---
    if (!isSqueeze) return inpsig;
 
-   // Always pass through existing CLOSE signals
+// Always pass through existing CLOSE signals
    if (inpsig == SAN_SIGNAL::CLOSE) return inpsig;
 
-   // === LOCAL DIRECTION CONVERSION (ATR-adaptive) ===
+// === LOCAL DIRECTION CONVERSION (ATR-adaptive) ===
    double atrInPips = iATR(_Symbol, PERIOD_CURRENT, 21, 0) / util.getPipValue(_Symbol);
    double macroThreshold = atrInPips * 0.05;   // same as your old logic
 
    int direction = (baseSlope > macroThreshold) ? 1 :
                    (baseSlope < -macroThreshold) ? -1 : 0;
 
-   // RULE 3: FLATSQUEEZE → Block all buy/sell
+// RULE 3: FLATSQUEEZE → Block all buy/sell
    if (direction == 0 && isSqueeze) {
       if(printStatus) Print("⚡ FLATSQUEEZE: Market dead. Exiting all trades.");
       return SAN_SIGNAL::CLOSE;
    }
 
-   // RULES 1 & 2: Counter-trend only
+// RULES 1 & 2: Counter-trend only
    bool squeezeReversal = ms.isSqueezeReversal(fMSR_Norm, baseSlope, inpsig, SQUEEZE_BOUNDARY, SLOPE_BOUNDARY);
 
    if(squeezeReversal) {
@@ -3779,7 +4155,7 @@ SAN_SIGNAL SanSignals::squeezeFilter(
       return inpsig;
    }
 
-   // Trend-aligned during squeeze → blocked
+// Trend-aligned during squeeze → blocked
    return SAN_SIGNAL::NOSIG;
 }
 

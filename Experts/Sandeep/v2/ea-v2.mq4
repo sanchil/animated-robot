@@ -344,7 +344,7 @@ void ManageRiskAndExits(
 
 // 1. MACRO PANIC (sage collapse) — keep 2-bar emergency gate (very fast on any TF)
 //   if(hasCollapse && (ocommon.BarsHeld >= 2)) {
-   if(hasCollapse && (ocommon.BarsHeld >= 2) && false) {
+   if(hasCollapse && (ocommon.BarsHeld >= 2) && true) {
       if(printLogs && isNewCandle)
          Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation.");
       util.closeOrders(ocommon.magicNumber);
@@ -364,7 +364,7 @@ void ManageRiskAndExits(
 
    }
 // 3. FAST TACTICAL CLOSE — now fully scaled with your atrScale
-   else if((closeSIG == SAN_SIGNAL::CLOSE)&&(triggerSignal != SAN_SIGNAL::CLOSE)&&enoughHoldTime) {
+   else if((closeSIG == SAN_SIGNAL::CLOSE)&&enoughHoldTime) {
 
       //if(enoughHoldTime) {
       if(printLogs)
