@@ -324,7 +324,7 @@ void ManageRiskAndExits(
    STRATEGY_STATE& ocommon,
    int& totalOrders,
    const bool isNewCandle,
-   const bool hasCollapse,
+   const bool isNoTrade,
    const int physicsAction,
    const SAN_SIGNAL triggerSignal,
    const SAN_SIGNAL closeSIG,
@@ -344,7 +344,7 @@ void ManageRiskAndExits(
 
 // 1. MACRO PANIC (sage collapse) — keep 2-bar emergency gate (very fast on any TF)
 //   if(hasCollapse && (ocommon.BarsHeld >= 2)) {
-   if(hasCollapse && (ocommon.BarsHeld >= 2) && true) {
+   if(isNoTrade && (ocommon.BarsHeld >= 2) && true) {
       if(printLogs && isNewCandle)
          Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation.");
       util.closeOrders(ocommon.magicNumber);
@@ -505,8 +505,26 @@ void OnCycleTask1() {
 
 
    bool hasConsensus = (((physicsAction == 1) || (cobbsDouglasAction == 1)) && marketAction == 1);
-   bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
+   bool isRebirth = (physicsAction == -1 && cobbsDouglasAction == 1 && marketAction == 1);
+   bool isIgnition = (physicsAction == 0 && cobbsDouglasAction == 1 && marketAction == 1);
 
+   bool isReinforce = (physicsAction == 1 && cobbsDouglasAction == 0 && marketAction == 1);
+   bool isGrind = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 0);
+   bool isSaturation  = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 0);
+
+
+
+   bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
+   bool isRot  = (physicsAction == 1 && cobbsDouglasAction == -1 && marketAction == 1);
+   bool isMutiny  = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == -1);
+   bool isApathy  = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 0);
+   bool isTrap  = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 1);
+   bool isDesertion  = (physicsAction == 1 && cobbsDouglasAction == -1 && marketAction == -1);
+   bool isInertia = (physicsAction == 1 && cobbsDouglasAction == 0 && marketAction == -1);
+
+   bool isTrade = (hasConsensus||isRebirth||isIgnition||isReinforce);
+   bool isNoTrade = !isTrade;
+   
 
 //   double absF = MathAbs(f);
 //bool isSqueeze = (absF <= 0.15);
@@ -621,7 +639,7 @@ void OnCycleTask1() {
    if (activeStrategy == 1) {
       OnEntryExit_1(
          ocommon,
-         totalOrders, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+         totalOrders, dynamicLots, isTrade, isNoTrade, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
       );
@@ -629,14 +647,14 @@ void OnCycleTask1() {
    } else if (activeStrategy == 2) {
       OnEntryExit_2(
          ocommon,
-         totalOrders, isNewCandle, dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+         totalOrders, isNewCandle, dynamicLots, isTrade, isNoTrade, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
       );
    } else if (activeStrategy == 3) {
       OnEntryExit_3(
          ocommon,
-         totalOrders, isNewCandle,candleTraded, numOfTrades,dynamicLots, hasConsensus, hasCollapse, isSqueeze,
+         totalOrders, isNewCandle,candleTraded, numOfTrades,dynamicLots, isTrade, isNoTrade, isSqueeze,
          vanguardSignal, triggerSignal, closeSIG,
          physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
       );
@@ -660,8 +678,8 @@ void OnEntryExit_1(
    STRATEGY_STATE& ocommon,
    const int totalOrders,
    const double dynamicLots,
-   const bool hasConsensus,
-   const bool hasCollapse,
+   const bool isTrade,
+   const bool isNoTrade,
    const bool isSqueeze,
    const SAN_SIGNAL vanguardSignal,
    const SAN_SIGNAL triggerSignal,
@@ -675,7 +693,7 @@ void OnEntryExit_1(
 
 // --- ENTRY LOGIC ---
    if(totalOrders == 0) {
-      if(hasConsensus && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+      if(isTrade && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
          string phaseStr = isSqueeze ? "COMPRESSION SQUEEZE" : "MACRO EXPANSION";
 
          if(printStatus)PrintFormat("⚡ SNIPER [%s]: Sages Approved. Trigger dictates: %s. (Lots: %.2f)",
@@ -697,7 +715,7 @@ void OnEntryExit_1(
       SAN_SIGNAL tradePosition = util.getTradePosition(); // Relies on global 'util'
 
       // EXIT A: MACRO COLLAPSE
-      if(hasCollapse) {
+      if(isNoTrade) {
          if(printStatus)PrintFormat("🚨 GOVERNANCE: Macro Collapse Detected (Phy:%d, Cobb:%d, Mkt:%d). Forcing Exit.",
                                        physicsAction, cobbsDouglasAction, marketAction);
          orderMesg = util.closeOrders(magicNumber);
@@ -738,8 +756,8 @@ void OnEntryExit_2(
    int& totalOrders,
    const bool isNewCandle,
    const double dynamicLots,
-   const bool hasConsensus,
-   const bool hasCollapse,
+   const bool isTrade,
+   const bool isNoTrade,
    const bool isSqueeze,
    const SAN_SIGNAL vanguardSignal,
    const SAN_SIGNAL triggerSignal,
@@ -804,8 +822,8 @@ void OnEntryExit_3(
    const bool candleTraded,
    const int numOfTrades,
    const double dynamicLots,
-   const bool hasConsensus,
-   const bool hasCollapse,
+   const bool isTrade,
+   const bool isNoTrade,
    const bool isSqueeze,
    const SAN_SIGNAL vanguardSignal,
    const SAN_SIGNAL triggerSignal,
@@ -826,7 +844,7 @@ void OnEntryExit_3(
       ocommon,
       totalOrders,
       isNewCandle,
-      hasCollapse,
+      isNoTrade,
       physicsAction,
       triggerSignal,
       closeSIG,
