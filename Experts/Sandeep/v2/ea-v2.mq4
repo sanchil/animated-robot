@@ -352,17 +352,6 @@ void ManageRiskAndExits(
       ocommon.BarsHeld = 0;
       fullLiquidation = true;
    }
-// 2. FAST TACTICAL CLOSE — now fully scaled with your atrScale
-   else if((triggerSignal == SAN_SIGNAL::CLOSE)&&false)  {
-
-      if(printLogs)
-         PrintFormat("🛡️ FAST EXIT: Trade held for %d bars (adaptive). CLOSE accepted.", ocommon.BarsHeld);
-      util.closeOrders(ocommon.magicNumber);
-      totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
-      ocommon.BarsHeld = 0;
-      fullLiquidation = true;
-
-   }
 // 3. FAST TACTICAL CLOSE — now fully scaled with your atrScale
    else if((closeSIG == SAN_SIGNAL::CLOSE)&&enoughHoldTime) {
 
