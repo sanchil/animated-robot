@@ -390,6 +390,7 @@ void ManageEntries(
    STRATEGY_STATE& ocommon,
    const int totalOrders,
    const bool isNewCandle,
+   const bool isTrade,
    const bool isEntryApproved,      // Allows specific strategies to require 'hasConsensus'
    const SAN_SIGNAL triggerSignal,
    const double dynamicLots,
@@ -404,6 +405,7 @@ void ManageEntries(
 // Must be a new candle, must be approved by strategy rules, and must have a valid directional signal
    if(isNewCandle &&
          isEntryApproved &&
+         isTrade &&
          triggerSignal != SAN_SIGNAL::NOSIG &&
          triggerSignal != SAN_SIGNAL::SIDEWAYS &&
          triggerSignal != SAN_SIGNAL::CLOSE ) {
@@ -859,6 +861,7 @@ void OnEntryExit_3(
       ocommon,
       totalOrders,
       isNewCandle,
+      isTrade,      
       true,                // isEntryApproved
       triggerSignal,
       dynamicLots,
