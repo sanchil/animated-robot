@@ -1664,61 +1664,65 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v4(const DTYPE &fast, const DTYPE &slow,
 }
 
 //+------------------------------------------------------------------+
-//| tradeSlopeSIG_v5 - FULLY ASSET & TIMEFRAME AGNOSTIC             |
+//|  tradeSlopeSIG_v5 - Clean, Fully Asset & Timeframe Agnostic     |
 //+------------------------------------------------------------------+
 SAN_SIGNAL SanSignals::tradeSlopeSIG_v5(const DTYPE &fast, const DTYPE &slow,
                                         const double atr, ulong magicnumber = -1)
 {
-   if(Time[0] == m_last_bar) return m_cached;
+   // --- Early exit on same bar ---
+   if(Time[0] == m_last_bar)
+      return m_cached;
+
    m_last_bar = Time[0];
 
-   // Ghost peak reset (universal)
+   // --- Ghost Peak Fix (no open positions) ---
    if(util.OrdersTotalByMagic(magicnumber) == 0 && m_peakRatio > 0)
    {
       m_peakRatio = 0;
       m_cached = NOSIG;
    }
 
+   // --- Core values ---
    double fastSlope = fast.val1;
    double slowSlope = slow.val1;
    double absSlow   = MathAbs(slowSlope);
 
    // === 1. STATIC REGIME (Physical Army Strength) ===
    double s = (atr > 0) ? absSlow / atr : 0.0;
-   double k = ms.atrKinetic(atr);   // 0.0–1.0, already timeframe-aware
+   double k = ms.atrKinetic(atr);                     // 0.0–1.0, timeframe-aware
 
    // Base thresholds (sensible universal defaults)
-   // You can expose these as input parameters if you prefer full user control
-   double baseFlat  = 0.09;
-   double baseWeak  = 0.21;
-   double baseMid   = 0.41;
-   double baseStrong= 0.72;
+   double baseFlat   = 0.09;
+   double baseWeak   = 0.21;
+   double baseMid    = 0.41;
+   double baseStrong = 0.72;
 
-   // Gentle modulation by kinetic energy (prevents over-tuning)
-   double mod = 1.0 - 0.12 * k;   // high energy → slightly easier to reach higher regimes
+   // Gentle modulation by kinetic energy (high energy → easier to reach higher regimes)
+   double mod = 1.0 - 0.12 * k;
 
-   int regimeIdx = (s <= baseFlat  * mod) ? 0 :
-                   (s <= baseWeak  * mod) ? 1 :
-                   (s <= baseMid   * mod) ? 2 :
+   int regimeIdx = (s <= baseFlat   * mod) ? 0 :
+                   (s <= baseWeak   * mod) ? 1 :
+                   (s <= baseMid    * mod) ? 2 :
                    (s <= baseStrong * mod) ? 3 : 4;
 
-   // === 2. DYNAMIC ELASTIC GATES (Noise only) ===
+   // === 2. DYNAMIC ELASTIC GATE (Noise filter only) ===
    double FLAT_REGIME_ENTRY = ms.atrScale(atr, 0.0, atr * 0.14, 1.55);
 
-   // === 3. CLOSERATIO — now formula-based (no magic array) ===
-   double CLOSERATIO = 1.45 - (regimeIdx * 0.14);   // 1.45 → 0.89 across regimes
-   CLOSERATIO = MathMax(0.85, CLOSERATIO);          // safety floor
+   // === 3. CLOSERATIO (formula-based, no magic array) ===
+   double CLOSERATIO = 1.45 - (regimeIdx * 0.14);      // 1.45 down to ~0.89
+   CLOSERATIO = MathMax(0.85, CLOSERATIO);
 
-   // === 4. PEAK_DROP (already adaptive via getVolAdaptiveRetention) ===
+   // === 4. PEAK_DROP (already adaptive) ===
    double PEAK_DROP = MathMax(MathMin(ms.getVolAdaptiveRetention(atr), 0.975), 0.72);
 
+   // === Debug print ===
    PrintFormat("[TRADESLOPE] Ratio=%.3f | Peak=%.3f | Drop=%.3f | Limit=%.3f | Regime=%d | s=%.3f | k=%.3f | absSlow/ATR=%.3f",
                (slowSlope != 0 ? fastSlope/slowSlope : 0), m_peakRatio, PEAK_DROP,
                PEAK_DROP * m_peakRatio, regimeIdx, s, k, s);
 
-   // === 5. MIN_SLOW — now normalized (works on any symbol) ===
+   // === 5. Normalized MIN_SLOW (works on any symbol) ===
    double pipValue = util.getPipValue(_Symbol);
-   double MIN_SLOW = (pipValue > 0) ? pipValue * 0.25 : atr * 0.008;   // ~0.25 pips or 0.8% ATR fallback
+   double MIN_SLOW = (pipValue > 0) ? pipValue * 0.25 : atr * 0.008;
 
    // === FLAT MARKET BRANCH ===
    if(absSlow < MIN_SLOW)
@@ -1726,42 +1730,68 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v5(const DTYPE &fast, const DTYPE &slow,
       if((m_cached == BUY  && fastSlope < -FLAT_REGIME_ENTRY) ||
          (m_cached == SELL && fastSlope >  FLAT_REGIME_ENTRY))
       {
-         m_peakRatio = 0; m_cached = CLOSE; return CLOSE;
+         m_peakRatio = 0;
+         m_cached = CLOSE;
+         return CLOSE;
       }
 
       if(MathAbs(fastSlope) > FLAT_REGIME_ENTRY)
       {
-         if(m_peakRatio <= 0) m_peakRatio = CLOSERATIO * 1.07;   // mild head-start
+         if(m_peakRatio <= 0) m_peakRatio = CLOSERATIO * 1.07;
          m_cached = (fastSlope > 0) ? BUY : SELL;
          return m_cached;
       }
 
-      if(m_peakRatio > 0) { m_peakRatio = 0; m_cached = CLOSE; return CLOSE; }
+      if(m_peakRatio > 0)
+      {
+         m_peakRatio = 0;
+         m_cached = CLOSE;
+         return CLOSE;
+      }
 
-      m_cached = NOSIG; return NOSIG;
+      m_cached = NOSIG;
+      return NOSIG;
    }
 
    // === MAIN MOMENTUM LOGIC ===
    double ratio = (slowSlope != 0) ? fastSlope / slowSlope : 0.0;
 
-   // Ignition override (catches explosive starts on ANY asset)
-   if(ratio > 10.0 && regimeIdx < 3) regimeIdx = 3;   // force at least Strong regime
-
-   if(ratio <= 0)                                      // reversal
+   // --- Strong Reversal / Divergence Reset (fixes negative-ratio + old-peak bug) ---
+   if(ratio <= 0.0)
    {
-      m_peakRatio = 0; m_cached = CLOSE; return CLOSE;
+      if(m_peakRatio > 0)
+         PrintFormat("[TRADESLOPE] Reversal detected - Resetting peak from %.3f to 0", m_peakRatio);
+
+      m_peakRatio = 0;
+      m_cached = CLOSE;
+      return CLOSE;
    }
 
-   if(m_peakRatio > 0 && ratio < PEAK_DROP * m_peakRatio)   // momentum decay
+   // --- Adaptive Ignition Override (catches explosive starts on any asset) ---
+   if(m_peakRatio == 0)                                      // fresh move only
    {
-      m_peakRatio = 0; m_cached = CLOSE; return CLOSE;
+      double ignitionLevel = 7.5 + 15.0 * (1.0 - k);        // tighter in high-energy markets
+      if(ratio > ignitionLevel && regimeIdx < 3)
+         regimeIdx = 3;                                     // force at least Strong regime
    }
 
-   if(ratio <= CLOSERATIO)                             // hard floor
+   // --- Momentum Decay Exit (primary brake in strong regimes) ---
+   if(m_peakRatio > 0 && ratio < PEAK_DROP * m_peakRatio)
    {
-      m_peakRatio = 0; m_cached = CLOSE; return CLOSE;
+      m_peakRatio = 0;
+      m_cached = CLOSE;
+      return CLOSE;
    }
 
+   // --- Hard Floor Exit (more important in weak regimes) ---
+   if(ratio <= CLOSERATIO)
+   {
+      m_peakRatio = 0;
+      m_cached = CLOSE;
+      return CLOSE;
+   }
+
+   // --- Continuation + Peak Update ---
    if(ratio > CLOSERATIO)
    {
       if(ratio > m_peakRatio) m_peakRatio = ratio;
@@ -1772,6 +1802,8 @@ SAN_SIGNAL SanSignals::tradeSlopeSIG_v5(const DTYPE &fast, const DTYPE &slow,
    m_cached = NOSIG;
    return NOSIG;
 }
+
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
