@@ -19,6 +19,7 @@ input int maxPyramidTrades = 15; // Stop adding after 15 open trades
 input int noOfCandles = 21;
 input const double TAKE_PROFIT = 1.4; // TakeProfit
 input const double STOP_LOSS = 0.3; //StopLoss
+
 //input int SPREAD_LIMIT  = 30;
 
 // Data File Inputs
@@ -34,7 +35,7 @@ input SAN_SIGNAL recordSignal = SAN_SIGNAL::NOTRADE;
 input bool flipSig = false; // Flip Signal
 INDDATA_CB indData_cb;
 bool g_cbWarmedUp = false;
-
+const double SQUEEZE_LIMIT = 0.3; //SqueezeLimit
 // Lot size = 0.01.
 // 1 Microlot = 1*0.01=0.01, 10 Microlots = 10*0.01 = 0.1, 100 Microlots = 1,
 
@@ -405,7 +406,7 @@ void ManageEntries(
 // Must be a new candle, must be approved by strategy rules, and must have a valid directional signal
    if(isNewCandle &&
          isEntryApproved &&
-         //isTrade &&
+//isTrade &&
          triggerSignal != SAN_SIGNAL::NOSIG &&
          triggerSignal != SAN_SIGNAL::SIDEWAYS &&
          triggerSignal != SAN_SIGNAL::CLOSE ) {
@@ -526,11 +527,11 @@ void OnCycleTask1() {
 
    bool isTrade = (hasConsensus||isRebirth||isIgnition||isReinforce);
    bool isNoTrade = !isTrade;
-   
+
 
 //   double absF = MathAbs(f);
 //bool isSqueeze = (absF <= 0.15);
-   bool isSqueeze = (absF <= 0.4);
+   bool isSqueeze = (absF <= SQUEEZE_LIMIT);
 
    if(printStatus) {
       PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %d",
@@ -583,7 +584,8 @@ void OnCycleTask1() {
    SAN_SIGNAL triggerSignal = sig.squeezeFilter(
                                  indData.fMSR_Norm,
                                  (double)indData.baseSlope,
-                                 direction                   // raw direction, not closeSIG
+                                 direction,
+                                 SQUEEZE_LIMIT                   // raw direction, not closeSIG
                               );
 
 
@@ -592,7 +594,8 @@ void OnCycleTask1() {
    bool squeezeReversal = ms.isSqueezeReversal(
                              indData.fMSR_Norm,
                              (double)indData.baseSlope,
-                             direction                   // pre-filter so reversal is detectable
+                             direction,
+                             SQUEEZE_LIMIT                   // pre-filter so reversal is detectable
                           );
    Print("[SQPARAMS]: Squeeze: "+isSqueeze+" Squeeze reversal: "+squeezeReversal+" Squeezed trigger: "+ util.getSigString(triggerSignal));
 // #################### SQUEEZE BLOCK #################################################################
@@ -861,7 +864,7 @@ void OnEntryExit_3(
       ocommon,
       totalOrders,
       isNewCandle,
-      isTrade,      
+      isTrade,
       true,                // isEntryApproved
       triggerSignal,
       dynamicLots,
