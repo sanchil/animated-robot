@@ -35,7 +35,7 @@ input SAN_SIGNAL recordSignal = SAN_SIGNAL::NOTRADE;
 input bool flipSig = false; // Flip Signal
 INDDATA_CB indData_cb;
 bool g_cbWarmedUp = false;
-const double SQUEEZE_LIMIT = 0.3; //SqueezeLimit
+const double SQUEEZE_LIMIT = 0.4; //SqueezeLimit
 // Lot size = 0.01.
 // 1 Microlot = 1*0.01=0.01, 10 Microlots = 10*0.01 = 0.1, 100 Microlots = 1,
 
