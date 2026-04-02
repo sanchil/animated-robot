@@ -344,7 +344,7 @@ void ManageRiskAndExits(
 
 // 1. MACRO PANIC (sage collapse) — keep 2-bar emergency gate (very fast on any TF)
 //   if(hasCollapse && (ocommon.BarsHeld >= 2)) {
-   if(isNoTrade && (ocommon.BarsHeld >= 2) && true) {
+   if(isNoTrade && (ocommon.BarsHeld >= 2) && false) {
       if(printLogs && isNewCandle)
          Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation.");
       util.closeOrders(ocommon.magicNumber);
@@ -405,7 +405,7 @@ void ManageEntries(
 // Must be a new candle, must be approved by strategy rules, and must have a valid directional signal
    if(isNewCandle &&
          isEntryApproved &&
-         isTrade &&
+         //isTrade &&
          triggerSignal != SAN_SIGNAL::NOSIG &&
          triggerSignal != SAN_SIGNAL::SIDEWAYS &&
          triggerSignal != SAN_SIGNAL::CLOSE ) {
