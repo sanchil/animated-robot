@@ -148,7 +148,6 @@ void OnDeinit(const int reason) {
 
 //void OnTimer()
 void OnTick() {
-
    OnCycleTask1();
 }
 
@@ -352,6 +351,8 @@ void ManageRiskAndExits(
       totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
       ocommon.BarsHeld = 0;
       fullLiquidation = true;
+      slopesing.reset();
+      slopedouble.reset();
    }
 // 3. FAST TACTICAL CLOSE — now fully scaled with your atrScale
    else if((closeSIG == SAN_SIGNAL::CLOSE)&&enoughHoldTime) {
@@ -363,6 +364,8 @@ void ManageRiskAndExits(
       totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
       ocommon.BarsHeld = 0;
       fullLiquidation = true;
+      slopesing.reset();
+      slopedouble.reset();
       //}
 
    } else if(printLogs && isNewCandle) {
