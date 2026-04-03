@@ -318,6 +318,50 @@ void RefreshAll_CB(INDDATA_CB &data, STRATEGY_STATE& ocommon) {
 
 
 //+------------------------------------------------------------------+
+//| ENTRY MODULE: Evaluates Limits, Approvals, and Executes Trades   |
+//+------------------------------------------------------------------+
+void ManageEntries(
+   STRATEGY_STATE& ocommon,
+   const int totalOrders,
+   const bool isNewCandle,
+   const bool isTrade,
+   const bool isEntryApproved,      // Allows specific strategies to require 'hasConsensus'
+   const SAN_SIGNAL triggerSignal,
+   const double dynamicLots,
+   const string strategyName,       // For clean logging (e.g., "🚜 HARVESTER")
+   const bool printLogs,
+   ulong& orderMesg
+) {
+// === 1. PYRAMID LIMIT ===
+   if(totalOrders >= ocommon.maxPyramidTrades) return;
+
+// === 2. EXECUTION GATE ===
+// Must be a new candle, must be approved by strategy rules, and must have a valid directional signal
+   if(isNewCandle &&
+         isEntryApproved &&
+         isTrade &&
+         triggerSignal != SAN_SIGNAL::NOSIG &&
+         triggerSignal != SAN_SIGNAL::SIDEWAYS &&
+         triggerSignal != SAN_SIGNAL::CLOSE ) {
+
+      if(printLogs) {
+         PrintFormat("%s: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+                     strategyName,
+                     util.getSigString(triggerSignal),
+                     dynamicLots,
+                     TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
+      }
+
+      // Execute Order
+      int cmd = (triggerSignal == SAN_SIGNAL::BUY) ? OP_BUY : OP_SELL;
+      orderMesg = util.placeOrder(ocommon.magicNumber, dynamicLots, cmd, 30, 0, 0);
+
+      // Close the internal state gate to strictly enforce 1-trade-per-candle
+      ocommon.newCandleGate = false;
+   }
+}
+
+//+------------------------------------------------------------------+
 //| UNIVERSAL RISK & EXIT GOVERNANCE — uses your atrScale + atrKinetic |
 //+------------------------------------------------------------------+
 void ManageRiskAndExits(
@@ -344,7 +388,7 @@ void ManageRiskAndExits(
 
 // 1. MACRO PANIC (sage collapse) — keep 2-bar emergency gate (very fast on any TF)
 //   if(hasCollapse && (ocommon.BarsHeld >= 2)) {
-   if(isNoTrade && (ocommon.BarsHeld >= 2) && false) {
+   if(isNoTrade && (ocommon.BarsHeld >= 2)) {
       if(printLogs && isNewCandle)
          Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation.");
       util.closeOrders(ocommon.magicNumber);
@@ -387,49 +431,6 @@ void ManageRiskAndExits(
    }
 }
 
-//+------------------------------------------------------------------+
-//| ENTRY MODULE: Evaluates Limits, Approvals, and Executes Trades   |
-//+------------------------------------------------------------------+
-void ManageEntries(
-   STRATEGY_STATE& ocommon,
-   const int totalOrders,
-   const bool isNewCandle,
-   const bool isTrade,
-   const bool isEntryApproved,      // Allows specific strategies to require 'hasConsensus'
-   const SAN_SIGNAL triggerSignal,
-   const double dynamicLots,
-   const string strategyName,       // For clean logging (e.g., "🚜 HARVESTER")
-   const bool printLogs,
-   ulong& orderMesg
-) {
-// === 1. PYRAMID LIMIT ===
-   if(totalOrders >= ocommon.maxPyramidTrades) return;
-
-// === 2. EXECUTION GATE ===
-// Must be a new candle, must be approved by strategy rules, and must have a valid directional signal
-   if(isNewCandle &&
-         isEntryApproved &&
-//isTrade &&
-         triggerSignal != SAN_SIGNAL::NOSIG &&
-         triggerSignal != SAN_SIGNAL::SIDEWAYS &&
-         triggerSignal != SAN_SIGNAL::CLOSE ) {
-
-      if(printLogs) {
-         PrintFormat("%s: Volatility Signal → %s | Lots: %.2f | Candle: %s",
-                     strategyName,
-                     util.getSigString(triggerSignal),
-                     dynamicLots,
-                     TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
-      }
-
-      // Execute Order
-      int cmd = (triggerSignal == SAN_SIGNAL::BUY) ? OP_BUY : OP_SELL;
-      orderMesg = util.placeOrder(ocommon.magicNumber, dynamicLots, cmd, 30, 0, 0);
-
-      // Close the internal state gate to strictly enforce 1-trade-per-candle
-      ocommon.newCandleGate = false;
-   }
-}
 
 void OnCycleTask1() {
 
@@ -505,31 +506,57 @@ void OnCycleTask1() {
 // ===============================================
 // THE TRINITY CONSENSUS & PHASE TRIGGER
 // ===============================================
+//
+////bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
+////bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
+//
+//   bool hasConsensus = ((physicsAction == 1) || (cobbsDouglasAction == 1)) && (marketAction >= 0);
+//   bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
+//
+//   bool isRebirth = (physicsAction == -1 && cobbsDouglasAction == 1 && marketAction == 1);
+//   bool isIgnition = (physicsAction == 0 && cobbsDouglasAction == 1 && marketAction == 1);
+//
+//   bool isReinforce = (physicsAction == 1 && cobbsDouglasAction == 0 && marketAction == 1);
+//   bool isGrind = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 0);
+//   bool isSaturation  = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 0);
+//
+//
+//
+//   bool isRot  = (physicsAction == 1 && cobbsDouglasAction == -1 && marketAction == 1);
+//   bool isMutiny  = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == -1);
+//   bool isApathy  = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 0);
+//   bool isTrap  = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 1);
+//   bool isDesertion  = (physicsAction == 1 && cobbsDouglasAction == -1 && marketAction == -1);
+//   bool isInertia = (physicsAction == 1 && cobbsDouglasAction == 0 && marketAction == -1);
+//
+//   bool isTrade = (hasConsensus||isRebirth||isIgnition||isReinforce);
+//   bool isNoTrade = !isTrade;
 
-//bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
-//bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
 
+// ================================================================
+// SIMPLIFIED SAGE CONSENSUS ENGINE (MT4 Best Practice)
+// ================================================================
 
-   bool hasConsensus = (((physicsAction == 1) || (cobbsDouglasAction == 1)) && marketAction == 1);
-   bool isRebirth = (physicsAction == -1 && cobbsDouglasAction == 1 && marketAction == 1);
-   bool isIgnition = (physicsAction == 0 && cobbsDouglasAction == 1 && marketAction == 1);
-
-   bool isReinforce = (physicsAction == 1 && cobbsDouglasAction == 0 && marketAction == 1);
-   bool isGrind = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 0);
-   bool isSaturation  = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 0);
-
-
-
+   bool hasConsensus = ((physicsAction == 1) || (cobbsDouglasAction == 1)) && (marketAction >= 0);
    bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
-   bool isRot  = (physicsAction == 1 && cobbsDouglasAction == -1 && marketAction == 1);
-   bool isMutiny  = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == -1);
-   bool isApathy  = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 0);
-   bool isTrap  = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 1);
-   bool isDesertion  = (physicsAction == 1 && cobbsDouglasAction == -1 && marketAction == -1);
-   bool isInertia = (physicsAction == 1 && cobbsDouglasAction == 0 && marketAction == -1);
 
-   bool isTrade = (hasConsensus||isRebirth||isIgnition||isReinforce);
-   bool isNoTrade = !isTrade;
+// Core Trade Decision — this is what the EA actually uses
+   bool isTrade      = hasConsensus;
+
+// Optional high-resolution states (for logging / advanced risk rules)
+   bool isRebirth    = (physicsAction == -1 && cobbsDouglasAction == 1 && marketAction == 1);   // Squeeze reversal
+   bool isIgnition   = (physicsAction == 0 && cobbsDouglasAction == 1 && marketAction == 1);    // Fresh start
+   bool isReinforce  = (physicsAction == 1 && cobbsDouglasAction == 0 && marketAction == 1);    // Physics leads
+   bool isGrind      = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 0);    // Market neutral but sages agree
+
+// Risk / Governance flags (keep only the useful ones)
+   bool isMutiny     = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == -1);   // Market veto while sages agree → caution
+   bool isRot        = (physicsAction == 1 && cobbsDouglasAction == -1 && marketAction == 1);   // Cobb disagrees
+   bool isTrap       = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 1);    // Only Market wants to trade → dangerous
+
+// Derived safety flags
+   bool isDanger     = hasCollapse || isMutiny || isTrap || isRot;   // Use this for fast exits or reduced lot size
+   bool isNoTrade    = (!isTrade||isDanger);
 
 
 //   double absF = MathAbs(f);
