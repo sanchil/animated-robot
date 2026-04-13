@@ -46,8 +46,8 @@ const double SQUEEZE_LIMIT = 0.4; //SqueezeLimit
 input double physicsWeight      = 0.48;   // Slightly more voice to Hyperbolic
 input double cobbWeight         = 0.32;// Cobb-Douglas weight (balanced)
 input double cloudWeight        = 0.20;  // Market Cloud weight (conservative)
-input double consensusThreshold = 0.32;   // Slightly more aggressive
-
+//input double consensusThreshold = 0.32;   // Slightly more aggressive
+input double consensusThreshold = 0.42;
 input double maxMultiplier = 2.0; // Maximum risk for elite setups
 double minLotSize = 0.01;      // Terminal minimum
 input double microLots = 1; // Micro Lots
@@ -386,8 +386,8 @@ void ManageRiskAndExits(
    bool enoughHoldTime = (ocommon.BarsHeld >= adaptiveHoldBars);
 
 
-// 1. MACRO PANIC (sage collapse) — keep 2-bar emergency gate (very fast on any TF)
-//   if(hasCollapse && (ocommon.BarsHeld >= 2)) {
+ //1. MACRO PANIC (sage collapse) — keep 2-bar emergency gate (very fast on any TF)
+   //if(hasCollapse && (ocommon.BarsHeld >= 2)) {
    if(isNoTrade && (ocommon.BarsHeld >= 2)) {
       if(printLogs && isNewCandle)
          Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation.");
@@ -399,7 +399,9 @@ void ManageRiskAndExits(
       slopedouble.reset();
    }
 // 3. FAST TACTICAL CLOSE — now fully scaled with your atrScale
-   else if((closeSIG == SAN_SIGNAL::CLOSE)&&enoughHoldTime) {
+   else 
+   
+   if((closeSIG == SAN_SIGNAL::CLOSE)&&enoughHoldTime) {
 
       //if(enoughHoldTime) {
       if(printLogs)
@@ -416,19 +418,19 @@ void ManageRiskAndExits(
       PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE (age %d/%d bars).", ocommon.BarsHeld, adaptiveHoldBars);
    }
 
-// 3. PROFIT PROTECTOR — trailing % now scales with volatility
-   if(!fullLiquidation && totalOrders > 0 && isNewCandle && false) {
-
-      // Higher ATR → looser trailing (let winners breathe)
-      double retainPct = ms.atrScale(atrRaw, 0.70, 0.85);   // 70 % on very high ATR, 85 % on low ATR
-
-      int profitsHarvested = util.pruneByTrailingProfit(ocommon.magicNumber, retainPct, 0, 30);
-      if(profitsHarvested > 0 && printLogs) {
-         PrintFormat("✂️ PROFIT PROTECTOR: Harvested %d trades at %.0f%% trailing.",
-                     profitsHarvested, retainPct*100);
-         totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
-      }
-   }
+//// 3. PROFIT PROTECTOR — trailing % now scales with volatility
+//   if(!fullLiquidation && totalOrders > 0 && isNewCandle && false) {
+//
+//      // Higher ATR → looser trailing (let winners breathe)
+//      double retainPct = ms.atrScale(atrRaw, 0.70, 0.85);   // 70 % on very high ATR, 85 % on low ATR
+//
+//      int profitsHarvested = util.pruneByTrailingProfit(ocommon.magicNumber, retainPct, 0, 30);
+//      if(profitsHarvested > 0 && printLogs) {
+//         PrintFormat("✂️ PROFIT PROTECTOR: Harvested %d trades at %.0f%% trailing.",
+//                     profitsHarvested, retainPct*100);
+//         totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+//      }
+//   }
 }
 
 
@@ -501,36 +503,6 @@ void OnCycleTask1() {
    int physicsAction = ms.getHyperbolicCombinedScore(b, n,f_Raw, fra);
    int marketAction = ms.getMarketActionCombinedScore(indData);
 
-
-
-// ===============================================
-// THE TRINITY CONSENSUS & PHASE TRIGGER
-// ===============================================
-//
-////bool hasConsensus = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 1);
-////bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
-//
-//   bool hasConsensus = ((physicsAction == 1) || (cobbsDouglasAction == 1)) && (marketAction >= 0);
-//   bool hasCollapse  = (physicsAction == -1 && cobbsDouglasAction == -1 && marketAction == -1);
-//
-//   bool isRebirth = (physicsAction == -1 && cobbsDouglasAction == 1 && marketAction == 1);
-//   bool isIgnition = (physicsAction == 0 && cobbsDouglasAction == 1 && marketAction == 1);
-//
-//   bool isReinforce = (physicsAction == 1 && cobbsDouglasAction == 0 && marketAction == 1);
-//   bool isGrind = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 0);
-//   bool isSaturation  = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == 0);
-//
-//
-//
-//   bool isRot  = (physicsAction == 1 && cobbsDouglasAction == -1 && marketAction == 1);
-//   bool isMutiny  = (physicsAction == 1 && cobbsDouglasAction == 1 && marketAction == -1);
-//   bool isApathy  = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 0);
-//   bool isTrap  = (physicsAction == 0 && cobbsDouglasAction == 0 && marketAction == 1);
-//   bool isDesertion  = (physicsAction == 1 && cobbsDouglasAction == -1 && marketAction == -1);
-//   bool isInertia = (physicsAction == 1 && cobbsDouglasAction == 0 && marketAction == -1);
-//
-//   bool isTrade = (hasConsensus||isRebirth||isIgnition||isReinforce);
-//   bool isNoTrade = !isTrade;
 
 
 // ================================================================
@@ -611,14 +583,15 @@ void OnCycleTask1() {
 // ####################################################################################################
 
 // 2. Apply squeeze filter to entry direction only
-   SAN_SIGNAL triggerSignal = sig.squeezeFilter(
-                                 indData.fMSR_Norm,
-                                 (double)indData.baseSlope,
-                                 direction,
-                                 SQUEEZE_LIMIT                   // raw direction, not closeSIG
-                              );
+   //SAN_SIGNAL triggerSignal = sig.squeezeFilter(
+   //                              indData.fMSR_Norm,
+   //                              (double)indData.baseSlope,
+   //                              direction,
+   //                              SQUEEZE_LIMIT                   // raw direction, not closeSIG
+   //                           );
 
-
+// by pass disable squeeze temporaryily to test the pure tactile signal. 
+   SAN_SIGNAL triggerSignal = direction;
 
 // 3. Conviction sizing
    bool squeezeReversal = ms.isSqueezeReversal(
