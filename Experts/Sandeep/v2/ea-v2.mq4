@@ -399,22 +399,21 @@ void ManageRiskAndExits(
       slopedouble.reset();
    }
 // 3. FAST TACTICAL CLOSE — now fully scaled with your atrScale
-   else 
-   
-   if((closeSIG == SAN_SIGNAL::CLOSE)&&enoughHoldTime) {
-
-      //if(enoughHoldTime) {
-      if(printLogs)
-         PrintFormat("🛡️ FAST EXIT: Trade held for %d bars (adaptive). CLOSE accepted.", ocommon.BarsHeld);
-      util.closeOrders(ocommon.magicNumber);
-      totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
-      ocommon.BarsHeld = 0;
-      fullLiquidation = true;
-      slopesing.reset();
-      slopedouble.reset();
-      //}
-
-   } else if(printLogs && isNewCandle) {
+//   else if((closeSIG == SAN_SIGNAL::CLOSE)&&enoughHoldTime) {
+//
+//      //if(enoughHoldTime) {
+//      if(printLogs)
+//         PrintFormat("🛡️ FAST EXIT: Trade held for %d bars (adaptive). CLOSE accepted.", ocommon.BarsHeld);
+//      util.closeOrders(ocommon.magicNumber);
+//      totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+//      ocommon.BarsHeld = 0;
+//      fullLiquidation = true;
+//      slopesing.reset();
+//      slopedouble.reset();
+//      //}
+//
+//   } 
+   else if(printLogs && isNewCandle) {
       PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE (age %d/%d bars).", ocommon.BarsHeld, adaptiveHoldBars);
    }
 
