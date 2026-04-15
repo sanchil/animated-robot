@@ -386,34 +386,32 @@ void ManageRiskAndExits(
    bool enoughHoldTime = (ocommon.BarsHeld >= adaptiveHoldBars);
 
 
- //1. MACRO PANIC (sage collapse) — keep 2-bar emergency gate (very fast on any TF)
-   //if(hasCollapse && (ocommon.BarsHeld >= 2)) {
-   if(isNoTrade && (ocommon.BarsHeld >= 2)) {
-      if(printLogs && isNewCandle)
-         Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation.");
+//1. MACRO PANIC (sage collapse) — keep 2-bar emergency gate (very fast on any TF)
+
+//if(isNoTrade && (ocommon.BarsHeld >= 2)) {
+//   if(printLogs && isNewCandle)
+//      Print("🚨 MACRO COLLAPSE: Sages forced emergency liquidation.");
+//   util.closeOrders(ocommon.magicNumber);
+//   totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
+//   ocommon.BarsHeld = 0;
+//   fullLiquidation = true;
+//   slopesing.reset();
+//   slopedouble.reset();
+//}
+// 3. FAST TACTICAL CLOSE — now fully scaled with your atrScale
+//   else
+
+   if((closeSIG == SAN_SIGNAL::CLOSE)) { //&&enoughHoldTime) {
+
+      if(printLogs)
+         PrintFormat("🛡️ FAST EXIT: Trade held for %d bars (adaptive). CLOSE accepted.", ocommon.BarsHeld);
       util.closeOrders(ocommon.magicNumber);
       totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
       ocommon.BarsHeld = 0;
       fullLiquidation = true;
       slopesing.reset();
       slopedouble.reset();
-   }
-// 3. FAST TACTICAL CLOSE — now fully scaled with your atrScale
-//   else if((closeSIG == SAN_SIGNAL::CLOSE)&&enoughHoldTime) {
-//
-//      //if(enoughHoldTime) {
-//      if(printLogs)
-//         PrintFormat("🛡️ FAST EXIT: Trade held for %d bars (adaptive). CLOSE accepted.", ocommon.BarsHeld);
-//      util.closeOrders(ocommon.magicNumber);
-//      totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
-//      ocommon.BarsHeld = 0;
-//      fullLiquidation = true;
-//      slopesing.reset();
-//      slopedouble.reset();
-//      //}
-//
-//   } 
-   else if(printLogs && isNewCandle) {
+   } else if(printLogs && isNewCandle) {
       PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE (age %d/%d bars).", ocommon.BarsHeld, adaptiveHoldBars);
    }
 
@@ -430,6 +428,7 @@ void ManageRiskAndExits(
 //         totalOrders = util.OrdersTotalByMagic(ocommon.magicNumber);
 //      }
 //   }
+
 }
 
 
@@ -582,14 +581,14 @@ void OnCycleTask1() {
 // ####################################################################################################
 
 // 2. Apply squeeze filter to entry direction only
-   //SAN_SIGNAL triggerSignal = sig.squeezeFilter(
-   //                              indData.fMSR_Norm,
-   //                              (double)indData.baseSlope,
-   //                              direction,
-   //                              SQUEEZE_LIMIT                   // raw direction, not closeSIG
-   //                           );
+//SAN_SIGNAL triggerSignal = sig.squeezeFilter(
+//                              indData.fMSR_Norm,
+//                              (double)indData.baseSlope,
+//                              direction,
+//                              SQUEEZE_LIMIT                   // raw direction, not closeSIG
+//                           );
 
-// by pass disable squeeze temporaryily to test the pure tactile signal. 
+// by pass disable squeeze temporaryily to test the pure tactile signal.
    SAN_SIGNAL triggerSignal = direction;
 
 // 3. Conviction sizing
