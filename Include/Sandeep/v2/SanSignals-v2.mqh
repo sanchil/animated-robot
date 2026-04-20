@@ -39,8 +39,11 @@ class SanSignals {
    SAN_SIGNAL        tradeSlopeSIG_v5(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        phaseSpaceSIG(double fast, double slow);
    SAN_SIGNAL        simpleDivergenceSIG(double pFast, double pSlow, const double LIMIT=0.2);
-   SAN_SIGNAL        microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr);
-   SAN_SIGNAL        macroWaveSIG(const DTYPE &fast, const DTYPE &slow, const double atr);
+   //SAN_SIGNAL        microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr);
+   SAN_SIGNAL        microWaveSIG(const DTYPE &fast, const DTYPE &med, double noiseFloor);
+
+   //SAN_SIGNAL        macroWaveSIG(const DTYPE &fast, const DTYPE &slow, const double atr);
+   SAN_SIGNAL        macroWaveSIG(const DTYPE &fast, const DTYPE &slow, double noiseFloor);
    SAN_SIGNAL        waveTideSIG(const DTYPE &fast, const DTYPE &medium, const DTYPE &slow, double atr);
    //SAN_SIGNAL        slopeAnalyzerSIG(const DTYPE &slope, const double adx);
    SAN_SIGNAL        layeredMomentumSIG(const double &signal[], int N = 20);
@@ -162,10 +165,20 @@ class SanSignals {
       const int period = 5,
       const int shift = 1
    );
-   SAN_SIGNAL        fastSlowSIG(
+   //SAN_SIGNAL        fastSlowSIG(
+   //   const double fastSig,
+   //   const double slowSig,
+   //   const double factor = 10
+   //);
+
+   SAN_SIGNAL        SanSignals::fastSlowSIG(
       const double fastSig,
       const double slowSig,
-      const int factor = 10
+      const double atrRaw,
+      const double minBufferScale=20,
+      const double maxBufferScale=100,
+      const double elasticity=1.5
+
    );
 
 
@@ -497,6 +510,31 @@ SAN_SIGNAL SanSignals::adxSIG(const double ciAdxMain, const double ciAdxPlus, co
 //+------------------------------------------------------------------+
 
 
+////+------------------------------------------------------------------+
+////| When the fast signal moves over slow signal
+//// it is a buy and when a fast signal dives below a slow signal then it is a sell
+//// signal                                                      |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::fastSlowSIG(
+//   const double fastSig,
+//   const double slowSig,
+//   const double factor = 10
+//) {
+//   const double upperFACTOR = 1 + (factor / 100);
+//   const double lowerFACTOR = 1 - (factor / 100);
+//   if((fastSig >= (lowerFACTOR * slowSig)) && (fastSig <= (upperFACTOR * slowSig)))
+//      return SAN_SIGNAL::SIDEWAYS;
+//   if(fastSig > (upperFACTOR * slowSig))
+//      return SAN_SIGNAL::BUY;
+//   if(fastSig < (lowerFACTOR * slowSig))
+//      return SAN_SIGNAL::SELL;
+//   return SAN_SIGNAL::NOSIG;
+//}
+
+
+//+------------------------------------------------------------------+
+//| Refactored: Uses ATR or Points for the buffer instead of %       |
+//+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 //| When the fast signal moves over slow signal
 // it is a buy and when a fast signal dives below a slow signal then it is a sell
@@ -505,19 +543,28 @@ SAN_SIGNAL SanSignals::adxSIG(const double ciAdxMain, const double ciAdxPlus, co
 SAN_SIGNAL SanSignals::fastSlowSIG(
    const double fastSig,
    const double slowSig,
-   const int factor = 10
-) {
-   const double upperFACTOR = 1 + (factor / 100);
-   const double lowerFACTOR = 1 - (factor / 100);
-   if((fastSig >= (lowerFACTOR * slowSig)) && (fastSig <= (upperFACTOR * slowSig)))
-      return SAN_SIGNAL::SIDEWAYS;
-   if(fastSig > (upperFACTOR * slowSig))
-      return SAN_SIGNAL::BUY;
-   if(fastSig < (lowerFACTOR * slowSig))
-      return SAN_SIGNAL::SELL;
-   return SAN_SIGNAL::NOSIG;
-}
+   const double atrRaw,
+   const double minBufferScale=20,
+   const double maxBufferScale=100,
+   const double elasticity=1.5
 
+) {
+
+// 1. Define your min and max buffers in raw broker points (e.g., 20 points = 2 pips)
+   double minBuffer = minBufferScale * _Point;  // For USDJPY, this becomes 0.020
+   double maxBuffer = maxBufferScale * _Point; // For USDJPY, this becomes 0.100
+
+// 2. Get your dynamic buffer using your custom scaling logic
+// Assuming atrRaw is already fetched from your indicators
+   double bufferInPoints = ms.atrScale(atrRaw, minBuffer, maxBuffer, elasticity);
+   Print("[BUFFERINPOINTS]: "+bufferInPoints);
+   if(fastSig > (slowSig + bufferInPoints))
+      return SAN_SIGNAL::BUY;
+   if(fastSig < (slowSig - bufferInPoints))
+      return SAN_SIGNAL::SELL;
+
+   return SAN_SIGNAL::SIDEWAYS; // Caught inside the noise band
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1836,11 +1883,16 @@ SAN_SIGNAL SanSignals::simpleDivergenceSIG(double pFast, double pSlow, const dou
 }
 
 
-SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr) {
+//SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr) {
+SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double noiseFloor) {
+
 
 // 1. THE MICRO-FLOOR (Aggressive)
 // We lower the barrier to entry. We only need 10% of ATR to consider it "Active."
-   double MICRO_FLOOR = atr * 0.10;
+// This atr based noise floor is very specific to indicators used for slope calculation
+// This needs to come from external sources for microWaveSIG to be indicator agnostic
+//   double MICRO_FLOOR = atr * 0.10;
+   double MICRO_FLOOR = noiseFloor;
    const double NOTRADEZONE = MICRO_FLOOR*1.5;
 
 
@@ -1883,9 +1935,13 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
 }
 
 
-SAN_SIGNAL SanSignals::macroWaveSIG(const DTYPE &fast, const DTYPE &slow, double atr) {
+//SAN_SIGNAL SanSignals::macroWaveSIG(const DTYPE &fast, const DTYPE &slow, double atr) {
+SAN_SIGNAL SanSignals::macroWaveSIG(const DTYPE &fast, const DTYPE &slow, double noiseFloor) {
 
-   double floor    = atr * 0.30;
+
+//double floor    = atr * 0.30;
+   double floor    = noiseFloor;
+
    const double NOTRADEZONE = (floor * 1.5);
 
    double fS       = fast.val1;
