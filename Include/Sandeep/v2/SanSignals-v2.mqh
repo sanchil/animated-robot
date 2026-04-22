@@ -165,20 +165,21 @@ class SanSignals {
       const int period = 5,
       const int shift = 1
    );
-   //SAN_SIGNAL        fastSlowSIG(
-   //   const double fastSig,
-   //   const double slowSig,
-   //   const double factor = 10
-   //);
 
-   SAN_SIGNAL        SanSignals::fastSlowSIG(
+   SAN_SIGNAL        fastSlowSIG(
+      const double fastSig,
+      const double slowSig,
+      const int factor = 10
+   );
+
+
+   SAN_SIGNAL        fastSlowSIG_v1(
       const double fastSig,
       const double slowSig,
       const double atrRaw,
-      const double minBufferScale=20,
-      const double maxBufferScale=100,
+      const double minBufferScale=200,
+      const double maxBufferScale=1000,
       const double elasticity=1.5
-
    );
 
 
@@ -509,27 +510,40 @@ SAN_SIGNAL SanSignals::adxSIG(const double ciAdxMain, const double ciAdxPlus, co
 }
 //+------------------------------------------------------------------+
 
+//+------------------------------------------------------------------+
+//| When the fast signal moves over slow signal
+// it is a buy and when a fast signal dives below a slow signal then it is a sell
+// signal                                                      |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::fastSlowSIG(
+   const double fastSig,
+   const double slowSig,
+   const int factor = 10
+) {
+   const double upperFACTOR = 1 + (factor / 100);
+   const double lowerFACTOR = 1 - (factor / 100);
+// The upper and lower factors evaluate to 1 mostly because factor is int type
+// However this mistake showed accidentanlly a factor is ineffective and it is
+// better to keep it simple and compare the two signals directly
+// It results in better trades
 
-////+------------------------------------------------------------------+
-////| When the fast signal moves over slow signal
-//// it is a buy and when a fast signal dives below a slow signal then it is a sell
-//// signal                                                      |
-////+------------------------------------------------------------------+
-//SAN_SIGNAL SanSignals::fastSlowSIG(
-//   const double fastSig,
-//   const double slowSig,
-//   const double factor = 10
-//) {
-//   const double upperFACTOR = 1 + (factor / 100);
-//   const double lowerFACTOR = 1 - (factor / 100);
-//   if((fastSig >= (lowerFACTOR * slowSig)) && (fastSig <= (upperFACTOR * slowSig)))
-//      return SAN_SIGNAL::SIDEWAYS;
-//   if(fastSig > (upperFACTOR * slowSig))
-//      return SAN_SIGNAL::BUY;
-//   if(fastSig < (lowerFACTOR * slowSig))
-//      return SAN_SIGNAL::SELL;
-//   return SAN_SIGNAL::NOSIG;
-//}
+// Print("[FACTORS] UPPER: "+upperFACTOR+" LOWER: "+lowerFACTOR+" FastSIG: "+fastSig+" SlowSIG: "+slowSig);
+// if((fastSig >= (lowerFACTOR * slowSig)) && (fastSig <= (upperFACTOR * slowSig)))
+
+   if((fastSig >= (slowSig)) && (fastSig <= (slowSig)))
+      return SAN_SIGNAL::SIDEWAYS;
+
+//if(fastSig > (upperFACTOR * slowSig))
+
+   if(fastSig > (slowSig))
+      return SAN_SIGNAL::BUY;
+
+//if(fastSig < (lowerFACTOR * slowSig))
+
+   if(fastSig < (slowSig))
+      return SAN_SIGNAL::SELL;
+   return SAN_SIGNAL::NOSIG;
+}
 
 
 //+------------------------------------------------------------------+
@@ -540,12 +554,12 @@ SAN_SIGNAL SanSignals::adxSIG(const double ciAdxMain, const double ciAdxPlus, co
 // it is a buy and when a fast signal dives below a slow signal then it is a sell
 // signal                                                      |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::fastSlowSIG(
+SAN_SIGNAL SanSignals::fastSlowSIG_v1(
    const double fastSig,
    const double slowSig,
    const double atrRaw,
-   const double minBufferScale=20,
-   const double maxBufferScale=100,
+   const double minBufferScale=200,
+   const double maxBufferScale=1000,
    const double elasticity=1.5
 
 ) {
@@ -556,8 +570,10 @@ SAN_SIGNAL SanSignals::fastSlowSIG(
 
 // 2. Get your dynamic buffer using your custom scaling logic
 // Assuming atrRaw is already fetched from your indicators
+//double bufferInPoints = 0.2;
    double bufferInPoints = ms.atrScale(atrRaw, minBuffer, maxBuffer, elasticity);
-   Print("[BUFFERINPOINTS]: "+bufferInPoints);
+
+//   Print("[BUFFERINPOINTS]: "+bufferInPoints+ " AtrRaw: "+atrRaw);
    if(fastSig > (slowSig + bufferInPoints))
       return SAN_SIGNAL::BUY;
    if(fastSig < (slowSig - bufferInPoints))
@@ -1915,11 +1931,14 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
       return dir;
    }
 
-// 4. THE LIGHTNING EXIT
-// If the velocity score drops even slightly (e.g., below 0.70),
-// we BAIL. There is no macro structure to save us here.
-//   if((vScore > 0.40)&&(vScore < 0.60)) return CLOSE;
-   if((vScore < 0.70)&&(absSlow<=NOTRADEZONE)) return CLOSE;
+
+
+//// 4. THE LIGHTNING EXIT
+//// If the velocity score drops even slightly (e.g., below 0.70),
+//// we BAIL. There is no macro structure to save us here.
+////   if((vScore > 0.40)&&(vScore < 0.60)) return CLOSE;
+   if((vScore < 0.70)&&(absSlow<=NOTRADEZONE)) return SAN_SIGNAL::CLOSE;
+// if((vScore < 0.70)&&(absSlow<=NOTRADEZONE)) return SAN_SIGNAL::NOSIG;
 
    if((vScore < 0.70)&&(absSlow>NOTRADEZONE)) {
       //if(dir == SAN_SIGNAL::BUY) {
