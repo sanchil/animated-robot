@@ -172,6 +172,12 @@ class SanSignals {
       const int factor = 10
    );
 
+   SAN_SIGNAL        universalFastSlowSIG(
+      const double fastSig,
+      const double slowSig,
+      const double thresholdPct=0.0005 // e.g., 0.0005 for 0.05% separation
+   );
+
 
    SAN_SIGNAL        fastSlowSIG_v1(
       const double fastSig,
@@ -545,7 +551,32 @@ SAN_SIGNAL SanSignals::fastSlowSIG(
    return SAN_SIGNAL::NOSIG;
 }
 
+//+------------------------------------------------------------------+
+//| Universal PPO Structural Signal                                  |
+//| Inputs can be Prices, MAs, or zero-centered Oscillators.         |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::universalFastSlowSIG(
+   const double fastSig,
+   const double slowSig,
+   const double thresholdPct=0.0005 // e.g., 0.0005 for 0.05% separation
+) {
+// 1. Guard against division by zero (Epsilon check)
+   if(MathAbs(slowSig) < 0.000001) {
+      // If the slow baseline is effectively zero, we look at raw delta
+      if(fastSig > 0) return SAN_SIGNAL::BUY;
+      if(fastSig < 0) return SAN_SIGNAL::SELL;
+      return SAN_SIGNAL::SIDEWAYS;
+   }
 
+// 2. The Universal PPO Math (Absolute Denominator)
+   double ppo = (fastSig - slowSig) / MathAbs(slowSig);
+
+// 3. Directional Gates
+   if(ppo > thresholdPct)  return SAN_SIGNAL::BUY;
+   if(ppo < -thresholdPct) return SAN_SIGNAL::SELL;
+
+   return SAN_SIGNAL::SIDEWAYS; // Caught in the noise band
+}
 //+------------------------------------------------------------------+
 //| Refactored: Uses ATR or Points for the buffer instead of %       |
 //+------------------------------------------------------------------+
