@@ -166,13 +166,13 @@ class SanSignals {
       const int shift = 1
    );
 
-   SAN_SIGNAL        fastSlowSIG(
-      const double fastSig,
-      const double slowSig,
-      const int factor = 10
-   );
+   //SAN_SIGNAL        fastSlowSIG(
+   //   const double fastSig,
+   //   const double slowSig,
+   //   const int factor = 10
+   //);
 
-   SAN_SIGNAL        universalFastSlowSIG(
+   SAN_SIGNAL        fastSlowSIG(
       const double fastSig,
       const double slowSig,
       const double thresholdPct=0.0005 // e.g., 0.0005 for 0.05% separation
@@ -516,46 +516,48 @@ SAN_SIGNAL SanSignals::adxSIG(const double ciAdxMain, const double ciAdxPlus, co
 }
 //+------------------------------------------------------------------+
 
-//+------------------------------------------------------------------+
-//| When the fast signal moves over slow signal
-// it is a buy and when a fast signal dives below a slow signal then it is a sell
-// signal                                                      |
-//+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::fastSlowSIG(
-   const double fastSig,
-   const double slowSig,
-   const int factor = 10
-) {
-   const double upperFACTOR = 1 + (factor / 100);
-   const double lowerFACTOR = 1 - (factor / 100);
-// The upper and lower factors evaluate to 1 mostly because factor is int type
-// However this mistake showed accidentanlly a factor is ineffective and it is
-// better to keep it simple and compare the two signals directly
-// It results in better trades
-
-// Print("[FACTORS] UPPER: "+upperFACTOR+" LOWER: "+lowerFACTOR+" FastSIG: "+fastSig+" SlowSIG: "+slowSig);
-// if((fastSig >= (lowerFACTOR * slowSig)) && (fastSig <= (upperFACTOR * slowSig)))
-
-   if((fastSig >= (slowSig)) && (fastSig <= (slowSig)))
-      return SAN_SIGNAL::SIDEWAYS;
-
-//if(fastSig > (upperFACTOR * slowSig))
-
-   if(fastSig > (slowSig))
-      return SAN_SIGNAL::BUY;
-
-//if(fastSig < (lowerFACTOR * slowSig))
-
-   if(fastSig < (slowSig))
-      return SAN_SIGNAL::SELL;
-   return SAN_SIGNAL::NOSIG;
-}
+////+------------------------------------------------------------------+
+////| When the fast signal moves over slow signal
+//// it is a buy and when a fast signal dives below a slow signal then it is a sell
+//// signal                                                      |
+////+------------------------------------------------------------------+
+//SAN_SIGNAL SanSignals::fastSlowSIG(
+//   const double fastSig,
+//   const double slowSig,
+//   const int factor = 10
+//) {
+//   const double upperFACTOR = 1 + (factor / 100);
+//   const double lowerFACTOR = 1 - (factor / 100);
+//// The upper and lower factors evaluate to 1 mostly because factor is int type
+//// However this mistake showed accidentanlly a factor is ineffective and it is
+//// better to keep it simple and compare the two signals directly
+//// It results in better trades
+//
+//// Print("[FACTORS] UPPER: "+upperFACTOR+" LOWER: "+lowerFACTOR+" FastSIG: "+fastSig+" SlowSIG: "+slowSig);
+//// if((fastSig >= (lowerFACTOR * slowSig)) && (fastSig <= (upperFACTOR * slowSig)))
+//
+//   if((fastSig >= (slowSig)) && (fastSig <= (slowSig)))
+//      return SAN_SIGNAL::SIDEWAYS;
+//
+////if(fastSig > (upperFACTOR * slowSig))
+//
+//   if(fastSig > (slowSig))
+//      return SAN_SIGNAL::BUY;
+//
+////if(fastSig < (lowerFACTOR * slowSig))
+//
+//   if(fastSig < (slowSig))
+//      return SAN_SIGNAL::SELL;
+//   return SAN_SIGNAL::NOSIG;
+//}
 
 //+------------------------------------------------------------------+
 //| Universal PPO Structural Signal                                  |
 //| Inputs can be Prices, MAs, or zero-centered Oscillators.         |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::universalFastSlowSIG(
+//SAN_SIGNAL SanSignals::universalFastSlowSIG(
+SAN_SIGNAL SanSignals::fastSlowSIG(
+
    const double fastSig,
    const double slowSig,
    const double thresholdPct=0.0005 // e.g., 0.0005 for 0.05% separation
@@ -572,8 +574,12 @@ SAN_SIGNAL SanSignals::universalFastSlowSIG(
    double ppo = (fastSig - slowSig) / MathAbs(slowSig);
 
 // 3. Directional Gates
-   if(ppo > thresholdPct)  return SAN_SIGNAL::BUY;
-   if(ppo < -thresholdPct) return SAN_SIGNAL::SELL;
+//if(ppo > thresholdPct)  return SAN_SIGNAL::BUY;
+//if(ppo < -thresholdPct) return SAN_SIGNAL::SELL;
+
+   if(ppo > 0)  return SAN_SIGNAL::BUY;
+   if(ppo < 0) return SAN_SIGNAL::SELL;
+//  if(ppo == 0) return SAN_SIGNAL::SIDEWAYS;
 
    return SAN_SIGNAL::SIDEWAYS; // Caught in the noise band
 }
@@ -1941,6 +1947,10 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
 //   double MICRO_FLOOR = atr * 0.10;
    double MICRO_FLOOR = noiseFloor;
    const double NOTRADEZONE = MICRO_FLOOR*1.5;
+//const double VSCORE = 0.7;
+   //const double VSCORE = 0.6;
+   const double VSCORE = 0.55;
+
 
 
    double fS = fast.val1;
@@ -1954,11 +1964,16 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
 // We want to see the Wave pulling away from the Current.
    double vScore = ms.expansionCompressionRatio(fS, mS, MICRO_FLOOR);
 
+
+   if((vScore < VSCORE)&&(absSlow<=NOTRADEZONE)) return SAN_SIGNAL::CLOSE;
+   if(vScore < 0.5) return SAN_SIGNAL::CLOSE;
+   if(vScore == 0) return SAN_SIGNAL::CLOSE;
+
 // 3. THE MICRO-POLICY
 // We ONLY enter if the expansion is nearly perfect (>= 0.95)
 // This ensures we are catching the "Meat" of the micro-move.
 //   if(vScore >= 0.95) {
-   if(vScore >= 0.7) {
+   if(vScore >= VSCORE) {
       return dir;
    }
 
@@ -1968,10 +1983,11 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
 //// If the velocity score drops even slightly (e.g., below 0.70),
 //// we BAIL. There is no macro structure to save us here.
 ////   if((vScore > 0.40)&&(vScore < 0.60)) return CLOSE;
-   if((vScore < 0.70)&&(absSlow<=NOTRADEZONE)) return SAN_SIGNAL::CLOSE;
+
+
 // if((vScore < 0.70)&&(absSlow<=NOTRADEZONE)) return SAN_SIGNAL::NOSIG;
 
-   if((vScore < 0.70)&&(absSlow>NOTRADEZONE)) {
+   if((vScore < VSCORE)&&(absSlow>NOTRADEZONE)) {
       //if(dir == SAN_SIGNAL::BUY) {
       //   return SAN_SIGNAL::SELL;
       //}
@@ -1980,6 +1996,7 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
       //}
       return SAN_SIGNAL::NOSIG;
    };
+
 
    return SAN_SIGNAL::NOSIG;
 }
