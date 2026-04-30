@@ -4443,7 +4443,7 @@ SlopeSingle::~SlopeSingle() {}
 //+------------------------------------------------------------------+
 SAN_SIGNAL SlopeSingle::analyze(const DTYPE &slope, const double atr) {
    double pipValue = util.getPipValue(_Symbol);
-   const double DECAY = 0.85;
+   //const double DECAY = 0.85;
 
 // Normalize to Pips for scalability
    double s_pips = (pipValue > 0) ? (slope.val1 / pipValue) : slope.val1;
@@ -4473,12 +4473,26 @@ SAN_SIGNAL SlopeSingle::analyze(const DTYPE &slope, const double atr) {
       }
       return SAN_SIGNAL::NOSIG;
    }
+   
+   // =================================================================
+   // 3. THE DYNAMIC THERMOSTAT (Calculated on the fly)
+   // =================================================================
+   
+   // Get the absolute value of our current recorded peak
+   double currentAbsPeak = (currentIdx == SAN_SIGNAL::BUY) ? peakPositive : MathAbs(peakNegative);
+   
+   // Normalize the speed (0.0 to 1.0) based on how far above the entry gate the peak is
+   double normalizedSpeed = MathMax(0.0, MathMin(1.0, (currentAbsPeak - ENTRY_GATE) / 18.0));
+   
+   // Calculate Dynamic Leash: 
+   // Slow grinds get a loose 0.65 leash. Parabolic spikes get a tight 0.90 leash.
+   double DYNAMIC_DECAY = 0.65 + (0.25 * normalizedSpeed);
 
 // 3. HOLDING LOGIC (The Flow)
    if(currentIdx == SAN_SIGNAL::BUY) {
       if(s_pips > peakPositive) peakPositive = s_pips;
       // Removed s_pips < 0 to avoid minor pullback whipsaws
-      if(s_pips < (peakPositive * DECAY)) {
+      if(s_pips < (peakPositive * DYNAMIC_DECAY)) {
          reset();
          return SAN_SIGNAL::CLOSE;
       }
@@ -4489,7 +4503,7 @@ SAN_SIGNAL SlopeSingle::analyze(const DTYPE &slope, const double atr) {
       if(s_pips < peakNegative) peakNegative = s_pips;
 
       // Trailing Peak Exit OR Hard Reversal
-      if((s_pips > (peakNegative * DECAY))) {
+      if((s_pips > (peakNegative * DYNAMIC_DECAY))) {
          reset();
          return SAN_SIGNAL::CLOSE;
       }
@@ -4558,18 +4572,20 @@ SAN_SIGNAL SlopeDouble::tradeSlopeSIG(const DTYPE &fast, const DTYPE &slow,
    double absSlowPips = MathAbs(slowSlope) / pipValue;
    bool   inTrade     = (m_peakRatio > 0);
 
+// Commenting out the hard brake
+
 // Optional Safety Check: If user manually closed trade, reset memory.
 // if(inTrade && util.OrdersTotalByMagic(magicnumber) == 0) { reset(); inTrade = false; }
 
-// === 2. THE EMERGENCY BRAKE (Replaces Hard Stop Loss) ===
-// Instant closure on directional divergence.
-   if(fastSlope * slowSlope <= 0) {
-      if(inTrade) {
-         reset();
-         return SAN_SIGNAL::CLOSE;
-      }
-      return SAN_SIGNAL::NOSIG;
-   }
+//// === 2. THE EMERGENCY BRAKE (Replaces Hard Stop Loss) ===
+//// Instant closure on directional divergence.
+//   if(fastSlope * slowSlope <= 0) {
+//      if(inTrade) {
+//         reset();
+//         return SAN_SIGNAL::CLOSE;
+//      }
+//      return SAN_SIGNAL::NOSIG;
+//   }
 
 // === 3. THE STRUCTURAL FLOOR (Replaces Time-based Exits) ===
    const double ENTRY_GATE = 7.0;
