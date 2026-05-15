@@ -1963,7 +1963,7 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
 // We use slopeRatio but we pass our lower MICRO_FLOOR.
 // We want to see the Wave pulling away from the Current.
    double vScore = ms.expansionCompressionRatio(fS, mS, MICRO_FLOOR);
-   Print("[VSCORE]: "+VSCORE+" vScore: "+vScore+" MICRO_FLOOR: "+MICRO_FLOOR+" fast Slope: "+fS+" slow slope: "+mS+" NoTradeZone:"+NOTRADEZONE);
+   Print("[VSCORE]: "+VSCORE+" vScore: "+NormalizeDouble(vScore,5)+" MICRO_FLOOR: "+NormalizeDouble(MICRO_FLOOR,5)+" fast Slope: "+fS+" slow slope: "+mS+" NoTradeZone:"+NormalizeDouble(NOTRADEZONE,5));
 
    if((vScore < VSCORE)&&(absSlow<=NOTRADEZONE)) return SAN_SIGNAL::CLOSE;
    if(vScore < 0.5) return SAN_SIGNAL::CLOSE;
