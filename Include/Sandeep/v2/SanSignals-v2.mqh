@@ -37,6 +37,12 @@ class SanSignals {
    SAN_SIGNAL        tradeSlopeSIG_v3(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v4(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
    SAN_SIGNAL        tradeSlopeSIG_v5(const DTYPE &fast, const DTYPE &slow, const double atr, ulong magicnumber = -1);
+   SAN_SIGNAL        kineticAccelerationSIG(
+      const double fastSlope, // e.g., 3-period slope
+      const double slowSlope,  // e.g., 10-period slope
+      const double tradeZoneCheck = 0.05 // do not trade is abs slope of slow is between 0 and tradeZoneCheck
+      
+   );
    SAN_SIGNAL        phaseSpaceSIG(double fast, double slow);
    SAN_SIGNAL        simpleDivergenceSIG(double pFast, double pSlow, const double LIMIT=0.2);
    //SAN_SIGNAL        microWaveSIG(const DTYPE &fast, const DTYPE &med, double atr);
@@ -827,6 +833,49 @@ SAN_SIGNAL  SanSignals::obvCPSIG(
    if((dt.val1 < 0) && (obvSlope > 2))
       return SAN_SIGNAL::SELL;
 
+   return SAN_SIGNAL::NOSIG;
+}
+
+
+//+------------------------------------------------------------------+
+//| Kinetic Acceleration Engine (Unitless & Stationary)              |
+//| Computes acceleration of a single signal line over two periods.  |
+//+------------------------------------------------------------------+
+SAN_SIGNAL SanSignals::kineticAccelerationSIG(
+   const double fastSlope,      // e.g., 3-period slope
+   const double slowSlope,      // e.g., 10-period slope
+   const double tradeZoneCheck = 0.05 // do not trade if slow slope is flat-lining
+) {
+   double absSlow = MathAbs(slowSlope);
+
+   // 1. Zero-Divide Guard (Hard safety limit to prevent MQL4 crashes)
+   if(absSlow < 0.000001) {
+      return SAN_SIGNAL::NOSIG; 
+   }
+
+   // 2. The Macro Flat-Line Filter (The Kinetic Floor)
+   // If the macro trend lacks basic kinetic energy, the acceleration ratio is meaningless.
+   if(absSlow <= tradeZoneCheck) {
+      return SAN_SIGNAL::NOSIG;
+   }
+
+   // 3. The Acceleration Ratio
+   double ratio = (fastSlope - slowSlope) / slowSlope;
+
+   // 4. The Execution Gates
+   if(ratio > 0.0) {
+      // Momentum is accelerating in the direction of the fast slope
+      if(fastSlope > 0.0) return SAN_SIGNAL::BUY;
+      if(fastSlope < 0.0) return SAN_SIGNAL::SELL;
+   }
+   
+   if(ratio < -0.20) {
+      // Momentum is heavily decelerating or reversing (Kill switch)
+      return SAN_SIGNAL::CLOSE; 
+   }
+
+   // 5. The "No Man's Land" (-0.20 to 0.0)
+   // Mild deceleration. We hold current trades but don't force a close.
    return SAN_SIGNAL::NOSIG;
 }
 
@@ -1948,7 +1997,7 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
    double MICRO_FLOOR = noiseFloor;
    const double NOTRADEZONE = MICRO_FLOOR*1.5;
 //const double VSCORE = 0.7;
-   //const double VSCORE = 0.6;
+//const double VSCORE = 0.6;
    const double VSCORE = 0.55;
 
 
@@ -4443,7 +4492,7 @@ SlopeSingle::~SlopeSingle() {}
 //+------------------------------------------------------------------+
 SAN_SIGNAL SlopeSingle::analyze(const DTYPE &slope, const double atr) {
    double pipValue = util.getPipValue(_Symbol);
-   //const double DECAY = 0.85;
+//const double DECAY = 0.85;
 
 // Normalize to Pips for scalability
    double s_pips = (pipValue > 0) ? (slope.val1 / pipValue) : slope.val1;
@@ -4473,19 +4522,19 @@ SAN_SIGNAL SlopeSingle::analyze(const DTYPE &slope, const double atr) {
       }
       return SAN_SIGNAL::NOSIG;
    }
-   
-   // =================================================================
-   // 3. THE DYNAMIC THERMOSTAT (Calculated on the fly)
-   // =================================================================
-   
-   // Get the absolute value of our current recorded peak
+
+// =================================================================
+// 3. THE DYNAMIC THERMOSTAT (Calculated on the fly)
+// =================================================================
+
+// Get the absolute value of our current recorded peak
    double currentAbsPeak = (currentIdx == SAN_SIGNAL::BUY) ? peakPositive : MathAbs(peakNegative);
-   
-   // Normalize the speed (0.0 to 1.0) based on how far above the entry gate the peak is
+
+// Normalize the speed (0.0 to 1.0) based on how far above the entry gate the peak is
    double normalizedSpeed = MathMax(0.0, MathMin(1.0, (currentAbsPeak - ENTRY_GATE) / 18.0));
-   
-   // Calculate Dynamic Leash: 
-   // Slow grinds get a loose 0.65 leash. Parabolic spikes get a tight 0.90 leash.
+
+// Calculate Dynamic Leash:
+// Slow grinds get a loose 0.65 leash. Parabolic spikes get a tight 0.90 leash.
    double DYNAMIC_DECAY = 0.65 + (0.25 * normalizedSpeed);
 
 // 3. HOLDING LOGIC (The Flow)
