@@ -41,7 +41,7 @@ class SanSignals {
       const double fastSlope, // e.g., 3-period slope
       const double slowSlope,  // e.g., 10-period slope
       const double tradeZoneCheck = 0.05 // do not trade is abs slope of slow is between 0 and tradeZoneCheck
-      
+
    );
    SAN_SIGNAL        phaseSpaceSIG(double fast, double slow);
    SAN_SIGNAL        simpleDivergenceSIG(double pFast, double pSlow, const double LIMIT=0.2);
@@ -848,34 +848,34 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 ) {
    double absSlow = MathAbs(slowSlope);
 
-   // 1. Zero-Divide Guard (Hard safety limit to prevent MQL4 crashes)
+// 1. Zero-Divide Guard (Hard safety limit to prevent MQL4 crashes)
    if(absSlow < 0.000001) {
-      return SAN_SIGNAL::NOSIG; 
+      return SAN_SIGNAL::NOSIG;
    }
 
-   // 2. The Macro Flat-Line Filter (The Kinetic Floor)
-   // If the macro trend lacks basic kinetic energy, the acceleration ratio is meaningless.
+// 2. The Macro Flat-Line Filter (The Kinetic Floor)
+// If the macro trend lacks basic kinetic energy, the acceleration ratio is meaningless.
    if(absSlow <= tradeZoneCheck) {
       return SAN_SIGNAL::NOSIG;
    }
 
-   // 3. The Acceleration Ratio
+// 3. The Acceleration Ratio
    double ratio = (fastSlope - slowSlope) / slowSlope;
 
-   // 4. The Execution Gates
+// 4. The Execution Gates
    if(ratio > 0.0) {
       // Momentum is accelerating in the direction of the fast slope
       if(fastSlope > 0.0) return SAN_SIGNAL::BUY;
       if(fastSlope < 0.0) return SAN_SIGNAL::SELL;
    }
-   
+
    if(ratio < -0.20) {
       // Momentum is heavily decelerating or reversing (Kill switch)
-      return SAN_SIGNAL::CLOSE; 
+      return SAN_SIGNAL::CLOSE;
    }
 
-   // 5. The "No Man's Land" (-0.20 to 0.0)
-   // Mild deceleration. We hold current trades but don't force a close.
+// 5. The "No Man's Land" (-0.20 to 0.0)
+// Mild deceleration. We hold current trades but don't force a close.
    return SAN_SIGNAL::NOSIG;
 }
 
@@ -1996,9 +1996,9 @@ SAN_SIGNAL SanSignals::microWaveSIG(const DTYPE &fast, const DTYPE &med, double 
 //   double MICRO_FLOOR = atr * 0.10;
    double MICRO_FLOOR = noiseFloor;
    const double NOTRADEZONE = MICRO_FLOOR*1.5;
-//const double VSCORE = 0.7;
+   const double VSCORE = 0.7;
 //const double VSCORE = 0.6;
-   const double VSCORE = 0.55;
+//const double VSCORE = 0.55;
 
 
 
