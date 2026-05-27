@@ -863,13 +863,13 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
    double ratio = (fastSlope - slowSlope) / slowSlope;
    Print("SLOPERATIO: "+ ratio);
 // 4. The Execution Gates
-   if(ratio >= -0.1) {
+   if(ratio >= -0.05) {
       // Momentum is accelerating in the direction of the fast slope
       if(fastSlope > 0.0) return SAN_SIGNAL::BUY;
       if(fastSlope < 0.0) return SAN_SIGNAL::SELL;
    }
 
-   if(ratio < -0.2) {
+   if(ratio < -0.1) {
       // Momentum is heavily decelerating or reversing (Kill switch)
       return SAN_SIGNAL::CLOSE;
    }
