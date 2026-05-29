@@ -847,6 +847,13 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
    const double tradeZoneCheck = 0.05 // do not trade if slow slope is flat-lining
 ) {
    double absSlow = MathAbs(slowSlope);
+   
+   //const double TRADE_OPEN_LIMIT = -0.05;
+   //const double TRADE_CLOSE_LIMIT = -0.1;
+   
+   
+   const double TRADE_OPEN_LIMIT = 0;
+   const double TRADE_CLOSE_LIMIT = -0.05;
 
 // 1. Zero-Divide Guard (Hard safety limit to prevent MQL4 crashes)
    if(absSlow < 0.000001) {
@@ -863,13 +870,13 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
    double ratio = (fastSlope - slowSlope) / slowSlope;
    Print("SLOPERATIO: "+ ratio);
 // 4. The Execution Gates
-   if(ratio >= -0.05) {
+   if(ratio >= TRADE_OPEN_LIMIT) {
       // Momentum is accelerating in the direction of the fast slope
       if(fastSlope > 0.0) return SAN_SIGNAL::BUY;
       if(fastSlope < 0.0) return SAN_SIGNAL::SELL;
    }
 
-   if(ratio < -0.1) {
+   if(ratio < TRADE_CLOSE_LIMIT) {
       // Momentum is heavily decelerating or reversing (Kill switch)
       return SAN_SIGNAL::CLOSE;
    }
