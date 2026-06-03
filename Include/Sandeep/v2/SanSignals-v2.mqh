@@ -856,7 +856,7 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 //const double TRADE_CLOSE_LIMIT = -0.05;
 
    const double TRADE_OPEN_LIMIT = -0.1;
-   const double TRADE_CLOSE_LIMIT = -0.3;
+   const double TRADE_CLOSE_LIMIT = -0.2;
 
 // 1. Zero-Divide Guard (Hard safety limit to prevent MQL4 crashes)
    if(absSlow < 0.000001) {
@@ -892,7 +892,7 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 
 
 
-// 5. The "No Man's Land" (-0.30 to -0.10).
+// 5. The "No Man's Land" (-0.20 to -0.10).
 // Mild deceleration. We hold current trades but don't force a close.
    return SAN_SIGNAL::NOSIG;
 }
