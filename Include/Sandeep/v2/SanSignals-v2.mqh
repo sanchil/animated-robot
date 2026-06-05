@@ -860,13 +860,15 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 
 // 1. Zero-Divide Guard (Hard safety limit to prevent MQL4 crashes)
    if(absSlow < 0.000001) {
-      return SAN_SIGNAL::NOSIG;
+      //return SAN_SIGNAL::NOSIG;
+      return SAN_SIGNAL::CLOSE;
    }
 
 // 2. The Macro Flat-Line Filter (The Kinetic Floor)
 // If the macro trend lacks basic kinetic energy, the acceleration ratio is meaningless.
    if(absSlow <= tradeZoneCheck) {
-      return SAN_SIGNAL::NOSIG;
+      //return SAN_SIGNAL::NOSIG;
+      return SAN_SIGNAL::CLOSE;
    }
 
 // 3. The Acceleration Ratio
