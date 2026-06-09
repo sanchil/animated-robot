@@ -40,7 +40,7 @@ class SanSignals {
    SAN_SIGNAL        kineticAccelerationSIG(
       const double fastSlope, // e.g., 3-period slope
       const double slowSlope,  // e.g., 10-period slope
-      const double tradeZoneCheck = 0.05 // do not trade is abs slope of slow is between 0 and tradeZoneCheck
+      const double tradeZoneCheck = 0.02 // do not trade is abs slope of slow is between 0 and tradeZoneCheck
 
    );
    SAN_SIGNAL        phaseSpaceSIG(double fast, double slow);
@@ -844,7 +844,7 @@ SAN_SIGNAL  SanSignals::obvCPSIG(
 SAN_SIGNAL SanSignals::kineticAccelerationSIG(
    const double fastSlope,      // e.g., 3-period slope
    const double slowSlope,      // e.g., 10-period slope
-   const double tradeZoneCheck = 0.05 // do not trade if slow slope is flat-lining
+   const double tradeZoneCheck // do not trade if slow slope is flat-lining
 ) {
    double absSlow = MathAbs(slowSlope);
 
@@ -858,40 +858,43 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
    const double TRADE_OPEN_LIMIT = -0.1;
    const double TRADE_CLOSE_LIMIT = -0.2;
 
+
 // 1. Zero-Divide Guard (Hard safety limit to prevent MQL4 crashes)
    if(absSlow < 0.000001) {
       //return SAN_SIGNAL::NOSIG;
       return SAN_SIGNAL::CLOSE;
    }
-
+//Print("STEP 1");
 // 2. The Macro Flat-Line Filter (The Kinetic Floor)
 // If the macro trend lacks basic kinetic energy, the acceleration ratio is meaningless.
    if(absSlow <= tradeZoneCheck) {
       //return SAN_SIGNAL::NOSIG;
       return SAN_SIGNAL::CLOSE;
    }
+//Print("STEP 2");
 
 // 3. The Acceleration Ratio
    double ratio = (fastSlope - slowSlope) / slowSlope;
-   Print("SLOPERATIO: "+ ratio);
-   
+   Print("SLOPERATIO: "+ ratio+" absSlow: "+absSlow+" fast: "+fastSlope);
+//Print("[BOOLCHK]: Zero Chk: "+(absSlow < 0.000001)+" TradeZone Check: "+(absSlow <= tradeZoneCheck)+" absSlow: "+absSlow+" tradeZoneCheck: "+tradeZoneCheck);
+
 // 4. The Execution Gates
    if(ratio >= TRADE_OPEN_LIMIT) {
       // Momentum is accelerating in the direction of the fast slope
       if(fastSlope > 0.0) return SAN_SIGNAL::BUY;
       if(fastSlope < 0.0) return SAN_SIGNAL::SELL;
    }
-   
-   //if((ratio < TRADE_OPEN_LIMIT)&&(ratio>=TRADE_CLOSE_LIMIT)) {
-   //   if(slowSlope > 0.0) return SAN_SIGNAL::BUY;
-   //   if(slowSlope < 0.0) return SAN_SIGNAL::SELL;
-   //}
-   
+//Print("STEP 3");
+//if((ratio < TRADE_OPEN_LIMIT)&&(ratio>=TRADE_CLOSE_LIMIT)) {
+//   if(slowSlope > 0.0) return SAN_SIGNAL::BUY;
+//   if(slowSlope < 0.0) return SAN_SIGNAL::SELL;
+//}
+
    if(ratio < TRADE_CLOSE_LIMIT) {
       // Momentum is heavily decelerating or reversing (Kill switch)
       return SAN_SIGNAL::CLOSE;
    }
-
+//Print("STEP 4");
 
 
 // 5. The "No Man's Land" (-0.20 to -0.10).
