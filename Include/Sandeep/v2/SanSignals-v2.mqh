@@ -855,10 +855,12 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 //const double TRADE_OPEN_LIMIT = 0;
 //const double TRADE_CLOSE_LIMIT = -0.05;
 
-   const double TRADE_OPEN_LIMIT = -0.1;
-   const double TRADE_CLOSE_LIMIT = -0.2;
+   //const double TRADE_OPEN_LIMIT = -0.1;
+   //const double TRADE_CLOSE_LIMIT = -0.2;
 
-
+   const double TRADE_OPEN_LIMIT = -0.05;
+   const double TRADE_CLOSE_LIMIT = -0.08;
+   
 // 1. Zero-Divide Guard (Hard safety limit to prevent MQL4 crashes)
    if(absSlow < 0.000001) {
       //return SAN_SIGNAL::NOSIG;
