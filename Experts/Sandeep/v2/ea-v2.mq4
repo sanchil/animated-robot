@@ -865,7 +865,7 @@ void OnEntryExit_3(
       ocommon,
       totalOrders,
       isNewCandle,
-      isTrade,
+      true,                // isTrade
       true,                // isEntryApproved
       triggerSignal,
       dynamicLots,
