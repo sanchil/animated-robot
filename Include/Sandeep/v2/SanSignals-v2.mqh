@@ -855,12 +855,15 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 //const double TRADE_OPEN_LIMIT = 0;
 //const double TRADE_CLOSE_LIMIT = -0.05;
 
-   //const double TRADE_OPEN_LIMIT = -0.1;
-   //const double TRADE_CLOSE_LIMIT = -0.2;
+//const double TRADE_OPEN_LIMIT = -0.1;
+//const double TRADE_CLOSE_LIMIT = -0.2;
 
    const double TRADE_OPEN_LIMIT = -0.05;
    const double TRADE_CLOSE_LIMIT = -0.08;
-   
+
+   double ratioPrint = (fastSlope - slowSlope) / (slowSlope+0.0001);
+   Print("SLOPERATIO: "+ NormalizeDouble(ratioPrint,4)+" absSlow: "+NormalizeDouble(absSlow,4)+" fast: "+NormalizeDouble(fastSlope,4));
+
 // 1. Zero-Divide Guard (Hard safety limit to prevent MQL4 crashes)
    if(absSlow < 0.000001) {
       //return SAN_SIGNAL::NOSIG;
@@ -877,7 +880,7 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 
 // 3. The Acceleration Ratio
    double ratio = (fastSlope - slowSlope) / slowSlope;
-   Print("SLOPERATIO: "+ ratio+" absSlow: "+absSlow+" fast: "+fastSlope);
+//  Print("SLOPERATIO: "+ ratio+" absSlow: "+absSlow+" fast: "+fastSlope);
 //Print("[BOOLCHK]: Zero Chk: "+(absSlow < 0.000001)+" TradeZone Check: "+(absSlow <= tradeZoneCheck)+" absSlow: "+absSlow+" tradeZoneCheck: "+tradeZoneCheck);
 
 // 4. The Execution Gates
@@ -896,7 +899,7 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
       // Momentum is heavily decelerating or reversing (Kill switch)
       // return SAN_SIGNAL::CLOSE;
       // Return no sig on loss of momentum instead of close.
-      // This is an experiment because loss of momentum is usually temporary 
+      // This is an experiment because loss of momentum is usually temporary
       // Close on loss of momenttum seems to be capturing only losses.
       // Instead close only when the slope is flattening.
       return SAN_SIGNAL::NOSIG;
