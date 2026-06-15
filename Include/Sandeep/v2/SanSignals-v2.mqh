@@ -894,7 +894,12 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 
    if(ratio < TRADE_CLOSE_LIMIT) {
       // Momentum is heavily decelerating or reversing (Kill switch)
-      return SAN_SIGNAL::CLOSE;
+      // return SAN_SIGNAL::CLOSE;
+      // Return no sig on loss of momentum instead of close.
+      // This is an experiment because loss of momentum is usually temporary 
+      // Close on loss of momenttum seems to be capturing only losses.
+      // Instead close only when the slope is flattening.
+      return SAN_SIGNAL::NOSIG;
    }
 //Print("STEP 4");
 
