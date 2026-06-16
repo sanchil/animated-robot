@@ -41,6 +41,7 @@ class SanSignals {
       const double fastSlope, // e.g., 3-period slope
       const double slowSlope,  // e.g., 10-period slope
       const double tradeZoneCheck = 0.02, // do not trade is abs slope of slow is between 0 and tradeZoneCheck
+      const double tradeCloseLimit = -0.08,   // The ratio limit which closes this trade call
       string funcLabel = "" // Which function makes this call
 
    );
@@ -842,29 +843,20 @@ SAN_SIGNAL  SanSignals::obvCPSIG(
 //| Kinetic Acceleration Engine (Unitless & Stationary)              |
 //| Computes acceleration of a single signal line over two periods.  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::kineticAccelerationSIG(  
+SAN_SIGNAL SanSignals::kineticAccelerationSIG(
    const double fastSlope,      // e.g., 3-period slope
    const double slowSlope,      // e.g., 10-period slope
    const double tradeZoneCheck, // do not trade if slow slope is flat-lining
+   const double tradeCloseLimit,   // The ratio limit which closes this trade call
    string funcLabel    // Which function makes this call
 ) {
    double absSlow = MathAbs(slowSlope);
 
-//const double TRADE_OPEN_LIMIT = -0.05;
-//const double TRADE_CLOSE_LIMIT = -0.1;
-
-
-//const double TRADE_OPEN_LIMIT = 0;
-//const double TRADE_CLOSE_LIMIT = -0.05;
-
-//const double TRADE_OPEN_LIMIT = -0.1;
-//const double TRADE_CLOSE_LIMIT = -0.2;
-
-//const double TRADE_OPEN_LIMIT = -0.05;
-//const double TRADE_CLOSE_LIMIT = -0.08;
+   //const double TRADE_OPEN_LIMIT = -0.05;
+   //const double TRADE_CLOSE_LIMIT = -0.08;
 
    const double TRADE_OPEN_LIMIT = -0.05;
-   const double TRADE_CLOSE_LIMIT = -0.28;
+   const double TRADE_CLOSE_LIMIT = tradeCloseLimit;
 
    double ratioPrint = (fastSlope - slowSlope) / (slowSlope+0.000001);
    Print("SLOPERATIO-"+funcLabel+": "+ NormalizeDouble(ratioPrint,4)+" absSlow: "+NormalizeDouble(absSlow,4)+" fast: "+NormalizeDouble(fastSlope,4));
