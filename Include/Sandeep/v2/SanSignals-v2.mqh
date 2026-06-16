@@ -40,7 +40,8 @@ class SanSignals {
    SAN_SIGNAL        kineticAccelerationSIG(
       const double fastSlope, // e.g., 3-period slope
       const double slowSlope,  // e.g., 10-period slope
-      const double tradeZoneCheck = 0.02 // do not trade is abs slope of slow is between 0 and tradeZoneCheck
+      const double tradeZoneCheck = 0.02, // do not trade is abs slope of slow is between 0 and tradeZoneCheck
+      string funcLabel = "" // Which function makes this call
 
    );
    SAN_SIGNAL        phaseSpaceSIG(double fast, double slow);
@@ -841,10 +842,11 @@ SAN_SIGNAL  SanSignals::obvCPSIG(
 //| Kinetic Acceleration Engine (Unitless & Stationary)              |
 //| Computes acceleration of a single signal line over two periods.  |
 //+------------------------------------------------------------------+
-SAN_SIGNAL SanSignals::kineticAccelerationSIG(
+SAN_SIGNAL SanSignals::kineticAccelerationSIG(  
    const double fastSlope,      // e.g., 3-period slope
    const double slowSlope,      // e.g., 10-period slope
-   const double tradeZoneCheck // do not trade if slow slope is flat-lining
+   const double tradeZoneCheck, // do not trade if slow slope is flat-lining
+   string funcLabel    // Which function makes this call
 ) {
    double absSlow = MathAbs(slowSlope);
 
@@ -858,11 +860,14 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 //const double TRADE_OPEN_LIMIT = -0.1;
 //const double TRADE_CLOSE_LIMIT = -0.2;
 
-   const double TRADE_OPEN_LIMIT = -0.05;
-   const double TRADE_CLOSE_LIMIT = -0.08;
+//const double TRADE_OPEN_LIMIT = -0.05;
+//const double TRADE_CLOSE_LIMIT = -0.08;
 
-   double ratioPrint = (fastSlope - slowSlope) / (slowSlope+0.0001);
-   Print("SLOPERATIO: "+ NormalizeDouble(ratioPrint,4)+" absSlow: "+NormalizeDouble(absSlow,4)+" fast: "+NormalizeDouble(fastSlope,4));
+   const double TRADE_OPEN_LIMIT = -0.05;
+   const double TRADE_CLOSE_LIMIT = -2.08;
+
+   double ratioPrint = (fastSlope - slowSlope) / (slowSlope+0.000001);
+   Print("SLOPERATIO-"+funcLabel+": "+ NormalizeDouble(ratioPrint,4)+" absSlow: "+NormalizeDouble(absSlow,4)+" fast: "+NormalizeDouble(fastSlope,4));
 
 // 1. Zero-Divide Guard (Hard safety limit to prevent MQL4 crashes)
    if(absSlow < 0.000001) {
@@ -896,13 +901,20 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 //}
 
    if(ratio < TRADE_CLOSE_LIMIT) {
-      // Momentum is heavily decelerating or reversing (Kill switch)
-      // return SAN_SIGNAL::CLOSE;
-      // Return no sig on loss of momentum instead of close.
-      // This is an experiment because loss of momentum is usually temporary
-      // Close on loss of momenttum seems to be capturing only losses.
-      // Instead close only when the slope is flattening.
-      return SAN_SIGNAL::NOSIG;
+      //Momentum is heavily decelerating or reversing (Kill switch)
+      return SAN_SIGNAL::CLOSE;
+      //// Return no sig on loss of momentum instead of close.
+      //// This is an experiment because loss of momentum is usually temporary
+      //// Close on loss of momenttum seems to be capturing only losses.
+      //// Instead close only when the slope is flattening.
+      // Note:
+      // Must return close on less than Trade close limit
+      // It is better to train and fine tune the trade close limit
+      //  leaving close on flat is not a great idea
+      // definitely close trades on flat. That must be prune all losses
+      // however for profit booking we must plan our exits based on momentum losses
+
+      //return SAN_SIGNAL::NOSIG;
    }
 //Print("STEP 4");
 
