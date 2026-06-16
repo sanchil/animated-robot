@@ -864,7 +864,7 @@ SAN_SIGNAL SanSignals::kineticAccelerationSIG(
 //const double TRADE_CLOSE_LIMIT = -0.08;
 
    const double TRADE_OPEN_LIMIT = -0.05;
-   const double TRADE_CLOSE_LIMIT = -2.08;
+   const double TRADE_CLOSE_LIMIT = -0.28;
 
    double ratioPrint = (fastSlope - slowSlope) / (slowSlope+0.000001);
    Print("SLOPERATIO-"+funcLabel+": "+ NormalizeDouble(ratioPrint,4)+" absSlow: "+NormalizeDouble(absSlow,4)+" fast: "+NormalizeDouble(fastSlope,4));
