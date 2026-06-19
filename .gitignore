@@ -1,63 +1,110 @@
-Logs/
+# ==========================================
+# 1. MQL4 Compiled & Log Files
+# ==========================================
+*.ex4
 **/*.log
-# Compiled MQL4 files
-**/*.ex4
+Logs/
+logs/
 
-# ignore .csv files
-
-NEWDATA.csv
-NEWDATA.json
-NEWDATA_v1.json
-*.json
-
-# ignore swap files
-*.kate-swp
-
-# MetaTrader 4 temporary and log files
-*.log
+# ==========================================
+# 2. MetaTrader Tester & History Data
+# ==========================================
 *.hst
-#*.set
 *.fxt
 *.tks
 *.ord
-**/*.fxt
-**/*.hst
-
-# MetaEditor temporary files
-*.bak
-*.srl
-*.tmp
-Remote/
-
-# User-specific settings and environment files
-*.ini
-*.dat
-config/
 history/
-logs/
 tester/
+profiles/
 templates/
 
-# Project-specific build outputs
-*.exp
-*.lib
-
-# Common IDE and OS files
-.DS_Store
-Thumbs.db
-*.suo
-*.user
-*.code-workspace
-
-# ignore temp files
+# ==========================================
+# 3. Environment & Temporary Files
+# ==========================================
+*.ini
+*.dat
+*.bak
+*.srl
+config/
+Remote/
 _tmp_*
 _temp_*
 *.tmp
 *.temp
 *.swp
+*.kate-swp
+*.bkp
 
-# Dependency directories (if using external tools)
+# ==========================================
+# 4. Data Files (Ignored per your spec)
+# ==========================================
+NEWDATA.csv
+NEWDATA.json
+NEWDATA_v1.json
+*.json
+
+# ==========================================
+# 5. OS & IDE Common Files
+# ==========================================
+.DS_Store
+Thumbs.db
+*.suo
+*.user
+*.code-workspace
+*.exp
+*.lib
 node_modules/
 vendor/
 
-
+# ==========================================
+# 6. EXCLUDE MT4 STANDARD FILES
+# ==========================================
+# Ignore the default MetaQuotes files that bloat the repo
+Experts/MACD Sample.mq4
+Experts/Moving Average.mq4
+Include/Arrays/
+Include/Canvas/
+Include/ChartObjects/
+Include/Charts/
+Include/Controls/
+Include/Files/
+Include/Indicators/
+Include/Strings/
+Include/Tools/
+Include/Math/
+Include/MovingAverages.mqh
+Include/Object.mqh
+Include/StdLibErr.mqh
+Include/WinUser32.mqh
+Include/stderror.mqh
+Include/stdlib.mqh
+Indicators/ATR.mq4
+Indicators/Accelerator.mq4
+Indicators/Accumulation.mq4
+Indicators/Alligator.mq4
+Indicators/Awesome.mq4
+Indicators/Bears.mq4
+Indicators/Bulls.mq4
+Indicators/Bollinger Bands.mq4
+Indicators/CCI.mq4
+Indicators/Custom Moving Average.mq4
+Indicators/DeMarker.mq4
+Indicators/Envelopes.mq4
+Indicators/Fractals.mq4
+Indicators/Gator.mq4
+Indicators/Heiken Ashi.mq4
+Indicators/Ichimoku.mq4
+Indicators/MACD.mq4
+Indicators/Momentum.mq4
+Indicators/Money Flow Index.mq4
+Indicators/Moving Average of Oscillator.mq4
+Indicators/OsMA.mq4
+Indicators/Parabolic.mq4
+Indicators/RSI.mq4
+Indicators/RVI.mq4
+Indicators/Stochastic.mq4
+Indicators/Volumes.mq4
+Indicators/Williams' Percent Range.mq4
+Indicators/ZigZag.mq4
+Scripts/PeriodConverter.mq4
+Scripts/Examples/DLL/code-analyser.html
