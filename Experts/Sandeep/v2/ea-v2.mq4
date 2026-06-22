@@ -148,6 +148,7 @@ void OnDeinit(const int reason) {
 
 //void OnTimer()
 void OnTick() {
+   Print("[TICKING]");
    OnCycleTask1();
 }
 
