@@ -83,7 +83,8 @@ double pipValue;
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int OnInit() {
+int OnInit()
+  {
    EventSetTimer(1);
    opMain.initTrade(microLots, TAKE_PROFIT, STOP_LOSS);
    closeProfit = opMain.TAKEPROFIT; // Profit at which a trade is condsidered for closing.
@@ -130,27 +131,34 @@ int OnInit() {
    ocommon.isNewBar = false;
 
    return(INIT_SUCCEEDED);
-}
+  }
 //+------------------------------------------------------------------+
 //| Expert deinitialization function                                 |
 //+------------------------------------------------------------------+
-void OnDeinit(const int reason) {
+void OnDeinit(const int reason)
+  {
 //---
 //--- The first way to get the uninitialization reason code
    Print(__FUNCTION__, "_Uninitalization reason code = ", reason);
 //--- The second way to get the uninitialization reason code
    Print(__FUNCTION__, "_UninitReason = ", util.getUninitReasonText(_UninitReason));
    EventKillTimer();
-}
+  }
 
 
 //+------------------------------------------------------------------+
 
 //void OnTimer()
-void OnTick() {
-   Print("[TICKING]");
+void OnTick()
+  {
+//Print("[TICKING]");
+   //if(!IsTradeAllowed())
+   //  {
+   //   Print("Error: Automated trading is disabled in terminal settings!");
+   //   return;
+   //  }
    OnCycleTask1();
-}
+  }
 
 //######################################################################################################
 //######################################################################################################
@@ -177,16 +185,21 @@ void OnTick() {
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void RefreshAll_CB(INDDATA_CB &data, STRATEGY_STATE& ocommon) {
-   if(!ocommon.g_cbWarmedUp) {
+void RefreshAll_CB(INDDATA_CB &data, STRATEGY_STATE& ocommon)
+  {
+   if(!ocommon.g_cbWarmedUp)
+     {
       st1.WarmUpCache_CB(data,ocommon);
       g_cbWarmedUp = true;
       ocommon.g_cbWarmedUp = true;
-   } else if(ocommon.isNewBar) {
-      st1.PushNewBar_CB(data,ocommon);
-   }
+     }
+   else
+      if(ocommon.isNewBar)
+        {
+         st1.PushNewBar_CB(data,ocommon);
+        }
    st1.RefreshLiveScalars_CB(data,ocommon);
-}
+  }
 
 //+------------------------------------------------------------------+
 //| GOVERNANCE MODULE: Manages Macro Panics, Tactical Exits & Pruning|
@@ -332,26 +345,30 @@ void ManageEntries(
    const string strategyName,       // For clean logging (e.g., "🚜 HARVESTER")
    const bool printLogs,
    ulong& orderMesg
-) {
+)
+  {
 // === 1. PYRAMID LIMIT ===
-   if(totalOrders >= ocommon.maxPyramidTrades) return;
+   if(totalOrders >= ocommon.maxPyramidTrades)
+      return;
 
 // === 2. EXECUTION GATE ===
 // Must be a new candle, must be approved by strategy rules, and must have a valid directional signal
    if(isNewCandle &&
-         isEntryApproved &&
-         isTrade &&
-         triggerSignal != SAN_SIGNAL::NOSIG &&
-         triggerSignal != SAN_SIGNAL::SIDEWAYS &&
-         triggerSignal != SAN_SIGNAL::CLOSE ) {
+      isEntryApproved &&
+      isTrade &&
+      triggerSignal != SAN_SIGNAL::NOSIG &&
+      triggerSignal != SAN_SIGNAL::SIDEWAYS &&
+      triggerSignal != SAN_SIGNAL::CLOSE)
+     {
 
-      if(printLogs) {
+      if(printLogs)
+        {
          PrintFormat("%s: Volatility Signal → %s | Lots: %.2f | Candle: %s",
                      strategyName,
                      util.getSigString(triggerSignal),
                      dynamicLots,
                      TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
-      }
+        }
 
       // Execute Order
       int cmd = (triggerSignal == SAN_SIGNAL::BUY) ? OP_BUY : OP_SELL;
@@ -359,8 +376,8 @@ void ManageEntries(
 
       // Close the internal state gate to strictly enforce 1-trade-per-candle
       ocommon.newCandleGate = false;
-   }
-}
+     }
+  }
 
 //+------------------------------------------------------------------+
 //| UNIVERSAL RISK & EXIT GOVERNANCE — uses your atrScale + atrKinetic |
@@ -375,8 +392,10 @@ void ManageRiskAndExits(
    const SAN_SIGNAL closeSIG,
    const double atrRaw,
    const bool printLogs
-) {
-   if(totalOrders <= 0) return;
+)
+  {
+   if(totalOrders <= 0)
+      return;
 
    bool fullLiquidation = false;
 
@@ -402,7 +421,8 @@ void ManageRiskAndExits(
 // 3. FAST TACTICAL CLOSE — now fully scaled with your atrScale
 //   else
 
-   if((closeSIG == SAN_SIGNAL::CLOSE)) { //&&enoughHoldTime) {
+   if((closeSIG == SAN_SIGNAL::CLOSE))   //&&enoughHoldTime) {
+     {
 
       if(printLogs)
          PrintFormat("🛡️ FAST EXIT: Trade held for %d bars (adaptive). CLOSE accepted.", ocommon.BarsHeld);
@@ -412,9 +432,12 @@ void ManageRiskAndExits(
       fullLiquidation = true;
       slopesing.reset();
       slopedouble.reset();
-   } else if(printLogs && isNewCandle) {
-      PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE (age %d/%d bars).", ocommon.BarsHeld, adaptiveHoldBars);
-   }
+     }
+   else
+      if(printLogs && isNewCandle)
+        {
+         PrintFormat("🛡️ SHIELD ACTIVE: Ignored CLOSE (age %d/%d bars).", ocommon.BarsHeld, adaptiveHoldBars);
+        }
 
 //// 3. PROFIT PROTECTOR — trailing % now scales with volatility
 //   if(!fullLiquidation && totalOrders > 0 && isNewCandle && false) {
@@ -430,10 +453,14 @@ void ManageRiskAndExits(
 //      }
 //   }
 
-}
+  }
 
 
-void OnCycleTask1() {
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnCycleTask1()
+  {
 
 // 1. Capture Bar State ONCE per tick
    bool isNewBar = util.isNewBarTime();
@@ -466,19 +493,23 @@ void OnCycleTask1() {
    int numOfTrades = indData.currBarOrders;
    double atrRaw = indData.atr[SHIFT];
 
-   if(indData.newBar) {
+   if(indData.newBar)
+     {
       util.postFlightLog(indData, activeStrategy, ocommon.newCandleGate);
-      if(printStatus)Print("🔄 GLOBAL RESET: New bar started. Performance Logged.");
-   }
+      if(printStatus)
+         Print("🔄 GLOBAL RESET: New bar started. Performance Logged.");
+     }
 
 
-   if(indData.newBar) {
+   if(indData.newBar)
+     {
       ocommon.newCandleGate = true;
-   }
+     }
 
-   if(!(indData.newBar) && (numOfTrades > 0) && indData.candleTraded) {
+   if(!(indData.newBar) && (numOfTrades > 0) && indData.candleTraded)
+     {
       ocommon.newCandleGate = false;
-   }
+     }
 
 
 // Steering
@@ -534,7 +565,8 @@ void OnCycleTask1() {
 //bool isSqueeze = (absF <= 0.15);
    bool isSqueeze = (absF <= SQUEEZE_LIMIT);
 
-   if(printStatus) {
+   if(printStatus)
+     {
       PrintFormat("[COBBDOUGLAS] Bayes: %.2f | Neuron: %.2f | Fanness(fMSR): %.2f | Fractal: %.2f | Confidence: %.4f | CombinedScore: %d",
                   b, n, f, fra, totalConf, cobbsDouglasAction);
 
@@ -546,14 +578,17 @@ void OnCycleTask1() {
                   , marketAction, physicsAction,cobbsDouglasAction,util.boolToStr(isSqueeze));
 
 
-   }
+     }
 
 
-   if (activeStrategy == 1) {
+   if(activeStrategy == 1)
+     {
       signals = st1.imaSt2(indData);
-   } else {
+     }
+   else
+     {
       signals = st1.imaSt3(indData);
-   }
+     }
 
    SAN_SIGNAL direction = (SAN_SIGNAL)signals.buff1[0];
    SAN_SIGNAL closeSIG = (SAN_SIGNAL)signals.buff2[0];
@@ -561,9 +596,10 @@ void OnCycleTask1() {
 
 
    SAN_SIGNAL vanguardSignal = (SAN_SIGNAL)signals.buff5[0];
-   if (vanguardSignal == SAN_SIGNAL::NOSIG) {
+   if(vanguardSignal == SAN_SIGNAL::NOSIG)
+     {
       vanguardSignal = (SAN_SIGNAL)signals.buff5[1];
-   }
+     }
 
 
 // #####################################################################################################
@@ -618,21 +654,34 @@ void OnCycleTask1() {
    dynamicLots = NormalizeDouble(MathRound(dynamicLots / lotStep) * lotStep, 2);
 
 // Failsafe: Ensure it never drops below the terminal minimum
-   if (dynamicLots < minLotSize) dynamicLots = minLotSize;
+   if(dynamicLots < minLotSize)
+      dynamicLots = minLotSize;
 
-   if(isNewCandle) {
-      if(printStatus) PrintFormat("🔍 DIAGNOSTIC [%s]: Trigger: %s | Squeeze: %s | Consensus: %s | TotalOrders: %d",
-                                     _Symbol, util.getSigString(triggerSignal), (isSqueeze?"YES":"NO"), (hasConsensus?"YES":"NO"), totalOrders);
+   if(isNewCandle)
+     {
+      if(printStatus)
+         PrintFormat("🔍 DIAGNOSTIC [%s]: Trigger: %s | Squeeze: %s | Consensus: %s | TotalOrders: %d",
+                     _Symbol, util.getSigString(triggerSignal), (isSqueeze?"YES":"NO"), (hasConsensus?"YES":"NO"), totalOrders);
 
       // FIXED: Added explicit scope so the compiler evaluates the logic correctly
-      if(triggerSignal == SAN_SIGNAL::NOSIG) {
-         if(printStatus) Print("❌ SILENCE CAUSE: Tactical Brain (imaSt3) returned NOSIG.");
-      } else if(!hasConsensus && !isSqueeze) {
-         if(printStatus) Print("❌ SILENCE CAUSE: Sages (Physics/Cobb) Vetoed the Expansion trade.");
-      } else if(indData.currSpread > indData.spreadLimit) {
-         if(printStatus) PrintFormat("❌ SILENCE CAUSE: Spread (%d) is above Limit (%d).", indData.currSpread, indData.spreadLimit);
-      }
-   }
+      if(triggerSignal == SAN_SIGNAL::NOSIG)
+        {
+         if(printStatus)
+            Print("❌ SILENCE CAUSE: Tactical Brain (imaSt3) returned NOSIG.");
+        }
+      else
+         if(!hasConsensus && !isSqueeze)
+           {
+            if(printStatus)
+               Print("❌ SILENCE CAUSE: Sages (Physics/Cobb) Vetoed the Expansion trade.");
+           }
+         else
+            if(indData.currSpread > indData.spreadLimit)
+              {
+               if(printStatus)
+                  PrintFormat("❌ SILENCE CAUSE: Spread (%d) is above Limit (%d).", indData.currSpread, indData.spreadLimit);
+              }
+     }
 
 // Call the modular execution strategy
 
@@ -643,7 +692,8 @@ void OnCycleTask1() {
 //################################################################
 
 // Call the modular execution strategy
-   if (activeStrategy == 1) {
+   if(activeStrategy == 1)
+     {
       OnEntryExit_1(
          ocommon,
          totalOrders, dynamicLots, isTrade, isNoTrade, isSqueeze,
@@ -651,28 +701,34 @@ void OnCycleTask1() {
          physicsAction, cobbsDouglasAction, marketAction,atrRaw,orderMesg
       );
 
-   } else if (activeStrategy == 2) {
-      OnEntryExit_2(
-         ocommon,
-         totalOrders, isNewCandle, dynamicLots, isTrade, isNoTrade, isSqueeze,
-         vanguardSignal, triggerSignal, closeSIG,
-         physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
-      );
-   } else if (activeStrategy == 3) {
-      OnEntryExit_3(
-         ocommon,
-         totalOrders, isNewCandle,candleTraded, numOfTrades,dynamicLots, isTrade, isNoTrade, isSqueeze,
-         vanguardSignal, triggerSignal, closeSIG,
-         physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
-      );
-   }
+     }
+   else
+      if(activeStrategy == 2)
+        {
+         OnEntryExit_2(
+            ocommon,
+            totalOrders, isNewCandle, dynamicLots, isTrade, isNoTrade, isSqueeze,
+            vanguardSignal, triggerSignal, closeSIG,
+            physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
+         );
+        }
+      else
+         if(activeStrategy == 3)
+           {
+            OnEntryExit_3(
+               ocommon,
+               totalOrders, isNewCandle,candleTraded, numOfTrades,dynamicLots, isTrade, isNoTrade, isSqueeze,
+               vanguardSignal, triggerSignal, closeSIG,
+               physicsAction, cobbsDouglasAction, marketAction,atrRaw, orderMesg
+            );
+           }
 
 // Data Telemetry
    indData.convictionFactor = convictionFactor;
    if(recordData && isNewCandle)
       st1.writeOHLCVJsonData(dataFileName, indData, util, 1);
 
-}
+  }
 
 
 
@@ -696,59 +752,77 @@ void OnEntryExit_1(
    const int marketAction,
    const double atrRaw,
    ulong& orderMesg
-) {
+)
+  {
 
 // --- ENTRY LOGIC ---
-   if(totalOrders == 0) {
-      if(isTrade && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
+   if(totalOrders == 0)
+     {
+      if(isTrade && triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS)
+        {
          string phaseStr = isSqueeze ? "COMPRESSION SQUEEZE" : "MACRO EXPANSION";
 
-         if(printStatus)PrintFormat("⚡ SNIPER [%s]: Sages Approved. Trigger dictates: %s. (Lots: %.2f)",
-                                       phaseStr, util.getSigString(triggerSignal), dynamicLots);
+         if(printStatus)
+            PrintFormat("⚡ SNIPER [%s]: Sages Approved. Trigger dictates: %s. (Lots: %.2f)",
+                        phaseStr, util.getSigString(triggerSignal), dynamicLots);
 
          orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                      (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
          //BarsHeld = 0; // Note: BarsHeld is a global variable
          ocommon.BarsHeld = 0;
 
-      } else if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-         if(printStatus)PrintFormat("🛡️ ENTRY BLOCKED: Trigger %s fired, but Sages vetoed (Phy:%d, Cobb:%d, Mkt:%d)",
-                                       util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
-      }
-   }
+        }
+      else
+         if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS)
+           {
+            if(printStatus)
+               PrintFormat("🛡️ ENTRY BLOCKED: Trigger %s fired, but Sages vetoed (Phy:%d, Cobb:%d, Mkt:%d)",
+                           util.getSigString(triggerSignal), physicsAction, cobbsDouglasAction, marketAction);
+           }
+     }
 
 // --- EXIT LOGIC ---
-   else {
+   else
+     {
       SAN_SIGNAL tradePosition = util.getTradePosition(); // Relies on global 'util'
 
       // EXIT A: MACRO COLLAPSE
-      if(isNoTrade) {
-         if(printStatus)PrintFormat("🚨 GOVERNANCE: Macro Collapse Detected (Phy:%d, Cobb:%d, Mkt:%d). Forcing Exit.",
-                                       physicsAction, cobbsDouglasAction, marketAction);
+      if(isNoTrade)
+        {
+         if(printStatus)
+            PrintFormat("🚨 GOVERNANCE: Macro Collapse Detected (Phy:%d, Cobb:%d, Mkt:%d). Forcing Exit.",
+                        physicsAction, cobbsDouglasAction, marketAction);
          orderMesg = util.closeOrders(magicNumber);
          //BarsHeld = 0;
          ocommon.BarsHeld = 0;
-      }
+        }
       // EXIT B: TACTICAL TRAP
-      else if (!isSqueeze && vanguardSignal != SAN_SIGNAL::NOSIG && util.oppSignal(tradePosition, vanguardSignal)) {
-         if(printStatus)PrintFormat("🚨 GOVERNANCE: Tactical Trap! Vanguard violently flipped to %s. EJECTING.",
-                                       util.getSigString(vanguardSignal));
-         orderMesg = util.closeOrders(magicNumber);
-         //BarsHeld = 0;
-         ocommon.BarsHeld = 0;
-      }
-      // EXIT C: STANDARD CLOSE
-      else if(closeSIG == SAN_SIGNAL::CLOSE) {
-         if(printStatus)Print("🛡️ GOVERNANCE: Standard Close Signal honored. Exiting.");
-         orderMesg = util.closeOrders(magicNumber);
-         //BarsHeld = 0;
-         ocommon.BarsHeld = 0;
-      }
+      else
+         if(!isSqueeze && vanguardSignal != SAN_SIGNAL::NOSIG && util.oppSignal(tradePosition, vanguardSignal))
+           {
+            if(printStatus)
+               PrintFormat("🚨 GOVERNANCE: Tactical Trap! Vanguard violently flipped to %s. EJECTING.",
+                           util.getSigString(vanguardSignal));
+            orderMesg = util.closeOrders(magicNumber);
+            //BarsHeld = 0;
+            ocommon.BarsHeld = 0;
+           }
+         // EXIT C: STANDARD CLOSE
+         else
+            if(closeSIG == SAN_SIGNAL::CLOSE)
+              {
+               if(printStatus)
+                  Print("🛡️ GOVERNANCE: Standard Close Signal honored. Exiting.");
+               orderMesg = util.closeOrders(magicNumber);
+               //BarsHeld = 0;
+               ocommon.BarsHeld = 0;
+              }
 
       if(GetLastError() != ERR_NO_ERROR)
-         if(printStatus)Print("Order result: ", orderMesg, " :: Last Error: ", util.getUninitReasonText(GetLastError()));
-   }
-}
+         if(printStatus)
+            Print("Order result: ", orderMesg, " :: Last Error: ", util.getUninitReasonText(GetLastError()));
+     }
+  }
 
 //+------------------------------------------------------------------+
 
@@ -774,41 +848,49 @@ void OnEntryExit_2(
    const int marketAction,
    const double atrRaw,
    ulong& orderMesg
-) {
+)
+  {
 
 
 // CLOSE block if trigger Singal is CLOSE
-   if((triggerSignal == SAN_SIGNAL::CLOSE)||(closeSIG == SAN_SIGNAL::CLOSE)) {
+   if((triggerSignal == SAN_SIGNAL::CLOSE)||(closeSIG == SAN_SIGNAL::CLOSE))
+     {
       util.closeOrders(magicNumber);
       totalOrders = util.OrdersTotalByMagic(magicNumber);
-   }
+     }
 
-   if(totalOrders>0) {
+   if(totalOrders>0)
+     {
       int reverseTrades = 0;
-      if(isNewCandle) {
+      if(isNewCandle)
+        {
          reverseTrades = util.pruneReverseTrades(magicNumber,triggerSignal, 30);
-      }
-      if(reverseTrades>0) {
+        }
+      if(reverseTrades>0)
+        {
          totalOrders = util.OrdersTotalByMagic(magicNumber);
-      }
-   }
+        }
+     }
 
 // === 1. PYRAMID LIMIT ===
-   if (totalOrders >= maxPyramidTrades) return;
+   if(totalOrders >= maxPyramidTrades)
+      return;
 
 // === 2. ONE ENTRY PER CANDLE ONLY ===
 // We use the exact same gate that imaSt3 already computed
-   if (triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS) {
-      if(printStatus)PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
-                                    util.getSigString(triggerSignal), dynamicLots,
-                                    TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
+   if(triggerSignal != SAN_SIGNAL::NOSIG && triggerSignal != SAN_SIGNAL::SIDEWAYS)
+     {
+      if(printStatus)
+         PrintFormat("🚜 HARVESTER: Volatility Signal → %s | Lots: %.2f | Candle: %s",
+                     util.getSigString(triggerSignal), dynamicLots,
+                     TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
 
       orderMesg = util.placeOrder(magicNumber, dynamicLots,
                                   (triggerSignal == SAN_SIGNAL::BUY ? OP_BUY : OP_SELL), 30, 0, 0);
       //BarsHeld = 0;
       ocommon.BarsHeld = 0;
-   }
-}
+     }
+  }
 
 
 //+------------------------------------------------------------------+
@@ -840,11 +922,13 @@ void OnEntryExit_3(
    const int marketAction,
    const double atrRaw,
    ulong& orderMesg
-) {
+)
+  {
 
-   if(isNewCandle) {
+   if(isNewCandle)
+     {
       util.cleanUpOrphanedMemory();
-   }
+     }
 
 // ======================= 1. EXIT LOGIC (GOVERNANCE) =======================
    ManageRiskAndExits(
@@ -874,5 +958,5 @@ void OnEntryExit_3(
       printStatus,
       orderMesg
    );
-}
+  }
 //+------------------------------------------------------------------+
