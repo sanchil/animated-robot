@@ -62,16 +62,16 @@ vendor/
 # Ignore the default MetaQuotes files that bloat the repo
 Experts/MACD Sample.mq4
 Experts/Moving Average.mq4
-Include/Arrays/
-Include/Canvas/
-Include/ChartObjects/
-Include/Charts/
-Include/Controls/
-Include/Files/
-Include/Indicators/
-Include/Strings/
-Include/Tools/
-Include/Math/
+Include/Arrays/**
+Include/Canvas/**
+Include/ChartObjects/**
+Include/Charts/**
+Include/Controls/**
+Include/Files/**
+Include/Indicators/**
+Include/Strings/**
+Include/Tools/**
+Include/Math/**
 Include/MovingAverages.mqh
 Include/Object.mqh
 Include/StdLibErr.mqh
@@ -106,5 +106,14 @@ Indicators/Stochastic.mq4
 Indicators/Volumes.mq4
 Indicators/Williams' Percent Range.mq4
 Indicators/ZigZag.mq4
+Libraries/stdlib.mq4
+Scripts/Examples/DLL/DLLSample.cpp
+Scripts/Examples/DLL/DLLSample.vcxproj
+Scripts/Examples/DLL/DLLSampleTester.mq4
+Scripts/Examples/DLL/Libraries/DLLSample.dll
+Scripts/Examples/DLL/code-analyser.html
+Scripts/Examples/Pipes/PipeClient.mq4
+Scripts/Examples/Pipes/PipeClientPure.mq4
 Scripts/PeriodConverter.mq4
 Scripts/Examples/DLL/code-analyser.html
+
