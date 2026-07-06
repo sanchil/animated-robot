@@ -97,6 +97,8 @@ class Stats {
       const int shift = 1
    );
 
+   DTYPE             computeStencilKinematics(const double& sig[], int shift = 3);
+
    D20TYPE           slopeRange(
       const double &sig[],
       const int SLOPEDENOM = 3,
@@ -318,21 +320,21 @@ double Stats::Arctan2(double y, double x) {
 //| and the ray to the point (x, y). Returns [-PI, +PI]              |
 //+------------------------------------------------------------------+
 double Stats::MathArctan2(double y, double x) {
-   // Quadrant 1 and 4 (Right half)
+// Quadrant 1 and 4 (Right half)
    if (x > 0.0) return MathArctan(y / x);
-   
-   // Quadrant 2 and 3 (Left half)
+
+// Quadrant 2 and 3 (Left half)
    if (x < 0.0) {
       if (y >= 0.0) return MathArctan(y / x) + M_PI;   // Quadrant 2
       else          return MathArctan(y / x) - M_PI;   // Quadrant 3
    }
-   
-   // x is exactly 0 (Vertical lines)
+
+// x is exactly 0 (Vertical lines)
    if (y > 0.0) return M_PI_2;  // +90 degrees (Straight up)
    if (y < 0.0) return -M_PI_2; // -90 degrees (Straight down)
-   
-   // x and y are both 0 (The origin - undefined, return 0)
-   return 0.0; 
+
+// x and y are both 0 (The origin - undefined, return 0)
+   return 0.0;
 }
 
 //+------------------------------------------------------------------+
@@ -916,7 +918,43 @@ DTYPE Stats::slopeVal(
 }
 
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+DTYPE Stats::computeStencilKinematics(const double& sig[], int shift = 3) {
+   DTYPE dt;
 
+// Explicitly enforce that the central point cannot look into the forming bar [0]
+// shift must be at least 2 to allow shift - 2 = 0
+// To ensure total historical stability across ALL stencil elements, we enforce shift >= 2
+   const long ARRSIZE = ArraySize(sig);
+
+   if (shift < 2 || ARRSIZE < shift + 3) return dt;
+
+   double pipValue = util.getPipValue(_Symbol);  // ← TRUE pip normalization
+   if(pipValue <= 0)
+      pipValue = Point;
+
+// Convert raw values to absolute 'Pips' upfront
+   double y_minus2 = sig[shift - 2] / pipValue; // Newer data point (relative to target)
+   double y_minus1 = sig[shift - 1] / pipValue; // Newer data point
+   double y_now    = sig[shift]     / pipValue; // Symmetrical Center (Bar 3)
+   double y_plus1  = sig[shift + 1] / pipValue; // Older history point
+   double y_plus2  = sig[shift + 2] / pipValue; // Older history point
+
+// Velocity (First Derivative: dx/dt)
+// Fourth-order accurate local slope representation
+   dt.val1 = (-y_plus2 + 8 * y_plus1 - 8 * y_minus1 + y_minus2) / 12.0;
+
+// True Acceleration (Second Derivative: dv/dt)
+// Central difference curvature mapping
+   dt.val2 = y_plus1 - 2 * y_now + y_minus1;
+
+// Momentum State Representation (Velocity over Acceleration)
+   dt.val3 = MathAbs(dt.val2) < 1e-9 ? 0.0 : dt.val1 / dt.val2;
+
+   return dt;
+}
 ////+------------------------------------------------------------------+
 ////|                                                                  |
 ////+------------------------------------------------------------------+
